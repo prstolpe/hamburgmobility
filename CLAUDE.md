@@ -7,7 +7,7 @@ erklärbar, reproduzierbar und fortschreibbar machen.
 Automatik schlägt vor, Menschen entscheiden (overrides/overrides.csv).
 
 ## Pilotbezirk
-<Pilotbezirk eintragen, z. B. Altona>
+Eimsbüttel
 
 ## Wo was steht
 - docs/guide.md – vollständige fachliche Anleitung. Bei Fachfragen zuerst hier nachsehen.
