@@ -1,0 +1,212 @@
+# Hamburger Straßenfunktionsplan – Regelwerk (Entwurf, nicht amtlich)
+# source_type: swov_crow | de_regelwerk | hamburg | assumption
+# status: draft | reviewed | approved
+meta:
+  version: 0.1.0
+  date: 2026-10-27
+  crs_work: EPSG:25832
+  owner: "Allianz / Fachgruppe Methodik"
+  note: "Schwellen mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen."
+
+sources:
+  SWOV_FS_2023: {title: "Principles for a safe road network, SWOV fact sheet", date: 2023-04, url: "https://swov.nl/en/fact-sheet/principles-safe-road-network"}
+  SWOV_DV3_2018: {title: "DV3 – Achtergronden en uitwerking (R-2018-6B)", date: 2018, url: "https://swov.nl/node/16907"}
+  CROW_GOW30_2023: {title: "Handreiking voorlopige inrichtingskenmerken GOW30, v1.0", date: 2023-05, url: "https://www.amersfoort.nl/sites/default/files/2025-09/2023-crow-handreiking-voorlopige-inrichtingskenmerken-gow30.pdf"}
+  CROW_AFW30_2021: {title: "Afwegingskader 30 km/h", date: 2021, url: null}
+  KNSPV_OPS_2021: {title: "Operationalisatie voldoende veilige wegen en fietsinfrastructuur (RWS/Sweco)", date: 2021-07, url: "https://www.ndw.nu/binaries/ndw/documenten/publicaties/2021/7/23/operationalisatie-definitie-van-voldoende-veilige-wegen-en-fietsinfrastructuur/Operationalisatie+Definitie+KN+SPV+30-50-70-60-80-fietspaden+definitief+def.pdf"}
+  KNSPV_RI_2023: {title: "Risico-indicatoren, Kennisnetwerk SPV", date: 2023-04, url: "https://swov.nl/sites/default/files/bestanden/downloads/2023_SWOV_Risico-indicatoren-april2023_KennisnetwerkSPV.pdf"}
+  ERA_2010: {title: "Empfehlungen für Radverkehrsanlagen (FGSV)", date: 2010, url: null}
+  RAST_06: {title: "Richtlinien für die Anlage von Stadtstraßen (FGSV 200)", date: 2006, url: null}
+  RIN_2008: {title: "Richtlinien für integrierte Netzgestaltung (FGSV)", date: 2008, url: null}
+  HH_HVS_2023: {title: "Hauptverkehrsstraßen Hamburg, Karte Stand Sept. 2023 (BVM)", date: 2023-09, url: "https://www.hamburg.de/politik-und-verwaltung/behoerden/bvm/hauptverkehrsstrassen-193350"}
+
+categories:
+  SW:      {label_de: "Schnellverkehrsstraße", class_report2: null, speed_kmh: null, nl: "stroomweg"}
+  GOW50:   {label_de: "Stadtmagistrale",        class_report2: K1,  speed_kmh: 50, nl: "gebiedsontsluitingsweg 50"}
+  GOW30:   {label_de: "Stadtstraße 30",         class_report2: K2,  speed_kmh: 30, nl: "gebiedsontsluitingsweg 30"}
+  ETW30:   {label_de: "Quartiersstraße",        class_report2: K3,  speed_kmh: 30, nl: "erftoegangsweg 30"}
+  ETW_ERF: {label_de: "Aufenthaltsstraße",      class_report2: K4,  speed_kmh: 7,  nl: "erf", note: "Schrittgeschwindigkeit; 7 nur als Rechenwert"}
+  GOW80:   {label_de: "Landstraße (Verbindung)", rural: true, speed_kmh: 80}
+  ETW60:   {label_de: "Landstraße (Erschließung)", rural: true, speed_kmh: 60}
+
+# ---------------------------------------------------------------
+# Klassifikationskaskade: Reihenfolge = Priorität. Erste zutreffende Endregel gewinnt.
+# ---------------------------------------------------------------
+classification:
+  - id: C-SW-01
+    if: "highway in [motorway, motorway_link, trunk] and access_motor_only"
+    then: SW
+    source: SWOV_FS_2023
+    source_type: swov_crow
+    status: draft
+    note: "Stroomwegen nur anbaufrei; in Hamburg v. a. Autobahnen."
+
+  - id: C-RUR-01
+    if: "outside_builtup_area"
+    then: "GOW80 if conn_score >= thresholds.conn_gow else ETW60"
+    source: SWOV_FS_2023
+    source_type: swov_crow
+    status: draft
+
+  - id: C-ERF-01
+    if: "ist_verkehrsberuhigt or pedestrian_zone or override_school_street"
+    then: ETW_ERF
+    source: SWOV_FS_2023
+    source_type: swov_crow
+    status: draft
+
+  - id: C-GOW-01
+    description: "Verbindungsfunktion hoch → Gebiedsontsluitingsweg"
+    if: "conn_score >= thresholds.conn_gow or in_hvs"
+    then: "GOW (weiter mit C-G30-*)"
+    thresholds:
+      conn_gow: {value: 0.6, unit: "score 0-1", source_type: assumption, check: "Sensitivität ±20 %, Abgleich HVS"}
+    source: [SWOV_FS_2023, HH_HVS_2023]
+    source_type: swov_crow
+    status: draft
+
+  - id: C-G30-01
+    description: "GOW30-Auslöser a: Umfeld spricht für 30 (Schule, Leben, Querbarkeit)"
+    applies_to: GOW
+    if: "schools_or_kitas_within_m <= thresholds.sensitive_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high"
+    then: GOW30
+    thresholds:
+      sensitive_radius: {value: 150, unit: m, source_type: assumption}
+      frontage:         {value: 0.4, unit: "Anteil Erdgeschoss mit Publikumsnutzung", source_type: assumption}
+    source: [CROW_AFW30_2021, CROW_GOW30_2023]
+    source_type: swov_crow
+    status: draft
+
+  - id: C-G30-02
+    description: "GOW30-Auslöser b: 50 nicht sicher gestaltbar (kein getrennter Radweg möglich)"
+    applies_to: GOW
+    if: "not separated_cycle_track_present and width_p10_m < required_width.GOW50"
+    then: GOW30
+    source: [SWOV_FS_2023, CROW_GOW30_2023]
+    source_type: swov_crow
+    status: draft
+
+  - id: C-G50-01
+    applies_to: GOW
+    if: "no C-G30-* passed"
+    then: GOW50
+    source: SWOV_FS_2023
+    source_type: swov_crow
+    status: draft
+
+  - id: C-ETW-01
+    if: "default"
+    then: ETW30
+    source: SWOV_FS_2023
+    source_type: swov_crow
+    status: draft
+
+# Verbindungs- und Aufenthaltsscore (gewichtete Summe normierter Merkmale)
+scores:
+  conn_score:
+    weights:  # source_type: assumption (Sensitivitätsanalyse)
+      betweenness_norm: 0.35
+      in_hvs: 0.25
+      bus_trips_weekday_norm: 0.20
+      dtv_norm: 0.20
+    missing_value_policy: "Gewicht auf übrige Merkmale umlegen, confidence herabsetzen"
+  place_score:
+    weights:
+      building_density_norm: 0.3
+      population_100m_norm: 0.3
+      frontage_share: 0.2
+      sensitive_facilities_norm: 0.2
+
+# ---------------------------------------------------------------
+# Anforderungen je Kategorie (für Diskrepanz und Machbarkeit)
+# ---------------------------------------------------------------
+requirements:
+  GOW50:
+    cycling: {value: separated_mandatory_track_or_parallel_route, source: CROW_GOW30_2023, source_type: swov_crow}
+    cycle_lanes_allowed: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
+    cycle_track_width_m: {value: 2.00, source: ERA_2010, source_type: de_regelwerk}
+    buffer_to_parking_m: {value: 0.75, min: 0.50, source: ERA_2010, source_type: de_regelwerk}
+    median_if_lanes_per_dir_gte: {value: 2, source: CROW_GOW30_2023, source_type: swov_crow}
+    parking_along_carriageway: {value: false, source: KNSPV_OPS_2021, source_type: swov_crow}
+    angle_parking: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
+    carriageway_bus_m: {value: 7.00, source: CROW_GOW30_2023, source_type: swov_crow}
+    crossings: {value: "concentrated; zebra on plateau or refuge, or signal", source: KNSPV_OPS_2021, source_type: swov_crow}
+  GOW30:
+    cycling: {value: cycle_lanes_or_existing_track, source: CROW_GOW30_2023, source_type: swov_crow}
+    cycle_lane_width_m: {min: 1.70, ideal: 2.20, source: CROW_GOW30_2023, source_type: swov_crow}
+    cycle_lane_width_de_m: {value: 1.85, note: "inkl. Breitstrich; E Klima 2022 empfiehlt 2.25", source: ERA_2010, source_type: de_regelwerk}
+    centre_line: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
+    bicycle_street_allowed: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
+    profiles:
+      narrow: {carriageway_m: [5.80, 8.40], max_dtv: 6000, centre_runner_max_m: 3.80, avoid_runner_m: [3.80, 4.80], source: CROW_GOW30_2023, source_type: swov_crow}
+      wide:   {carriageway_m: [8.40, 10.70], max_dtv: 10000, source: CROW_GOW30_2023, source_type: swov_crow}
+      track:  {carriageway_min_m: 5.80, source: CROW_GOW30_2023, source_type: swov_crow}
+    parking_on_carriageway: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
+    priority_over_ETW: {value: true, source: CROW_GOW30_2023, source_type: swov_crow}
+  ETW30:
+    cycling: {value: mixed, source: SWOV_FS_2023, source_type: swov_crow}
+    cycle_lanes_allowed: {value: false, exception: "Hauptradroute -> Fahrradstraße", source: CROW_GOW30_2023, source_type: swov_crow}
+    carriageway_mixed_ideal_m: {value: 5.80, source: CROW_GOW30_2023, source_type: swov_crow}
+    carriageway_bus_m: {value: 6.50, source: CROW_GOW30_2023, source_type: swov_crow}
+    speed_reducer_spacing_m: {value: 100, note: "Option optimal", source: KNSPV_OPS_2021, source_type: swov_crow}
+    junction_priority: {value: equal_right_before_left, source: SWOV_FS_2023, source_type: swov_crow}
+  ETW_ERF:
+    cycling: {value: mixed, source: SWOV_FS_2023, source_type: swov_crow}
+
+# Erforderliche Straßenraumbreite (Grenze zu Grenze) – Summen aus Einzelmaßen
+required_width:
+  sidewalk_m: {value: 2.50, source: RAST_06, source_type: de_regelwerk, status: "am Original prüfen"}
+  carriageway_2lane_m: {value: 6.50, source: RAST_06, source_type: assumption, status: "aus Erinnerung, am Original prüfen"}
+  GOW50: {value: 16.50, formula: "2*sidewalk + 2*cycle_track + 2*0.50 + carriageway_2lane", source_type: assumption}
+  GOW50_bus: {value: 17.00, source_type: assumption}
+  GOW30_narrow: {range: [10.80, 13.40], source_type: assumption}
+  GOW30_wide: {range: [13.40, 15.70], source_type: assumption}
+  ETW30: {value: 10.80, source_type: assumption}
+
+feasibility_classes:  # width_ratio = width_p10 / required_width
+  fits: {min: 1.00, source_type: assumption}
+  tight: {min: 0.85, max: 1.00, source_type: assumption}
+  does_not_fit: {max: 0.85, source_type: assumption}
+
+# ---------------------------------------------------------------
+# Netzkohärenz
+# ---------------------------------------------------------------
+coherence:
+  - {id: N1, rule: "GOW-Züge enden an GOW, SW oder Stadtgrenze", source: SWOV_FS_2023, source_type: swov_crow}
+  - {id: N2, rule: "Kategoriewechsel < min_run_m zwischen gleichen Kategorien markieren", min_run_m: 200, source_type: assumption}
+  - {id: N3, rule: "Aufenthaltsbereiche (von GOW/SW umschlossen) < min_area_ha markieren", min_area_ha: 25, source: SWOV_FS_2023, source_type: assumption}
+  - {id: N4, rule: "Kürzester Weg zwischen GOW-Knoten nutzt > max_etw_m ETW -> Schleichverkehrsflag", max_etw_m: 300, source: SWOV_FS_2023, source_type: assumption}
+  - {id: N5, rule: "Übergang GOW50->GOW30 und GOW->ETW braucht Torsituation; kein direkter Übergang 70/80->30", source: CROW_GOW30_2023, source_type: swov_crow}
+  - {id: N6, rule: "Soll-Knotentyp aus Kategoriepaar ableiten (Kreisverkehr, Signal mit Plateau, Gehwegüberfahrt, gleichrangig)", source: [SWOV_FS_2023, CROW_GOW30_2023], source_type: swov_crow}
+
+# ---------------------------------------------------------------
+# Diskrepanz ("grijze wegen") und Priorisierung
+# ---------------------------------------------------------------
+discrepancy:
+  speed:
+    rule: "ist_limit_kmh > categories[soll].speed_kmh"
+    severity: {"+20": 2, "+30_or_more": 3}
+    source: KNSPV_RI_2023
+    source_type: swov_crow
+  design:
+    checks: [cycling, cycle_lanes_allowed, centre_line, parking_along_carriageway, median_if_lanes_per_dir_gte]
+    severity: "Anzahl verletzter Anforderungen, gekappt bei 3"
+    source: [CROW_GOW30_2023, KNSPV_OPS_2021]
+    source_type: swov_crow
+  use:
+    rule: "dtv > requirements[soll].profiles.*.max_dtv"
+    source: CROW_GOW30_2023
+    source_type: swov_crow
+  types:
+    D1: "Erschließungsfunktion, aber Durchfluss-Gestaltung"
+    D2: "Verbindungsfunktion, sparsame Gestaltung (z. B. Radverkehr auf Fahrbahn bei 50)"
+    D3: "Mischform mit Merkmalen beider Kategorien"
+
+priority:
+  formula: "max(severity) * risk"
+  risk_weights:  # source_type: assumption
+    injury_crashes_ped_cyc_per_km_5y: 0.4
+    severe_or_fatal_weight: 3
+    cycle_network: 0.2
+    population_100m: 0.2
+    school_kita_within_150m: 0.2

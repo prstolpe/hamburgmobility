@@ -1,0 +1,240 @@
+# Datenquellen – Stand der Prüfung 2026-10-27 (siehe docs/guide.md, Anhang B)
+# check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
+# url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
+meta:
+  version: 0.1.0
+  date: 2026-10-27
+  crs_work: EPSG:25832
+
+sources:
+  hvs_network_map:
+    title: Hauptverkehrsstraßennetz Hamburg (Karte, Listen je Bezirk)
+    provider: BVM
+    access: webpage_pdf
+    url: https://www.hamburg.de/politik-und-verwaltung/behoerden/bvm/hauptverkehrsstrassen-193350
+    format: PDF
+    license: unknown  # TODO: auf der Seite prüfen
+    as_of: 2023-09
+    purpose: [comparison_layer, feature_in_hvs]
+    check_status: verified
+    todo: "Prüfen, ob HH_WFS_Strategisches_Strassennetz ein HVS-Attribut mit Stand 2023 führt; sonst Bezirkslisten digitalisieren."
+
+  strategic_road_network:
+    title: WFS Strategisches Straßennetz Hamburg (HH-SIB)
+    provider: BVM / LGV
+    access: wfs
+    url: https://geodienste.hamburg.de/HH_WFS_Strategisches_Strassennetz
+    format: GML
+    license: dl-de/by-2.0
+    attribution: "Freie und Hansestadt Hamburg, Behörde für Wirtschaft, Verkehr und Innovation"
+    as_of: "Metadaten-Revision 2019-12-16"
+    purpose: [official_network, conflation]
+    check_status: verified
+
+  dedications:
+    title: WFS Widmungen (HWG)
+    provider: LGV
+    access: wfs
+    url: https://geodienste.hamburg.de/HH_WFS_Widmungen
+    format: GML
+    license: unknown  # TODO
+    purpose: [street_status, pedestrian_zones]
+    check_status: catalog
+
+  speed_limits:
+    title: Zulässige Höchstgeschwindigkeiten Hamburg
+    provider: Freie und Hansestadt Hamburg
+    access: ogc_api_features
+    url: https://api.hamburg.de/datasets/v1/zulaessige_hoechstgeschwindigkeiten
+    collections_seen: [tempo30zonen, verkehrsberuhigte_bereiche]  # weitere über /collections abfragen
+    format: GeoJSON
+    license: unknown  # TODO: Landing Page prüfen
+    as_of: "Abruf 2026-10-27"
+    purpose: [actual_speed]
+    check_status: verified
+
+  traffic_volumes:
+    title: Verkehrsmengen auf Hauptverkehrsstraßen in Hamburg
+    provider: BVM
+    access: ogc_api_features
+    url: https://api.hamburg.de/datasets/v1/verkehrsmengen
+    collections_seen: [verkehrsmengen_dtv_bab_2019]  # TODO: aktuellste Jahrgänge über /collections ermitteln
+    format: GeoJSON
+    license: unknown  # TODO
+    purpose: [use_dimension, conn_score]
+    check_status: verified
+
+  traffic_counters:
+    title: Verkehrszählstellen Kfz/Rad (SensorThings)
+    provider: Urban Data Platform
+    access: sensorthings
+    url: https://iot.hamburg.de/v1.1  # Inhalt (welche Zählstellen) im Projekt prüfen
+    format: JSON
+    license: unknown
+    purpose: [dtv_calibration]
+    check_status: open
+
+  bike_volumes_dbradplus:
+    title: Radverkehrsmengen (DB Rad+)
+    provider: Freie und Hansestadt Hamburg
+    access: ogc_api_features
+    url: https://api.hamburg.de/datasets/v1/dbradplus
+    collections_seen: [jahr2022]
+    format: GeoJSON
+    license: unknown  # TODO
+    purpose: [cycling_exposure]
+    check_status: verified
+    note: "Stichprobe aus App-Nutzenden, nicht repräsentativ."
+
+  cycle_network:
+    title: Radnetz Hamburg (Radrouten, Radrouten+), ersetzt seit 2025 die Velorouten
+    provider: BVM
+    access: unknown
+    url: null  # TODO: Dienst im Geoportal unter Fachdaten/Verkehr/Radnetz Hamburg ermitteln
+    purpose: [overlay_cycle_network]
+    check_status: catalog
+    fallback: "OSM relations cycle_network=DE:HH:Radnetz_Hamburg"
+
+  alkis:
+    title: ALKIS Flurstücke, Gebäude, tatsächliche Nutzung
+    provider: LGV
+    access: wfs_or_download
+    url: null  # TODO: WFS 'ALKIS – Liegenschaften und Verwaltungseinheiten' bzw. NAS-Download im Transparenzportal
+    metadata: https://gdk.gdi-de.org/geonetwork/srv/api/records/00F5606E-4563-49C6-960A-72617C9E5256
+    license: dl-de/by-2.0
+    attribution: "Freie und Hansestadt Hamburg, Landesbetrieb Geoinformation und Vermessung (LGV)"
+    purpose: [street_space_width, land_use, district_boundary]
+    check_status: verified_metadata
+
+  buildings_3d:
+    title: 3D-Gebäudemodell LoD2-DE (ab 2016), LoD3.0-HH
+    provider: LGV
+    access: download
+    url: null  # TODO: Transparenzportal
+    metadata: https://gdk.gdi-de.org/geonetwork/srv/api/records/D63EFF3A-B354-4C21-8248-2F3F989AFF8C
+    license: dl-de/by-2.0
+    purpose: [facade_to_facade_width, setback]
+    check_status: verified_metadata
+
+  orthophotos:
+    title: Digitale Orthophotos DOP20 (jährliche Frühjahrsbefliegung)
+    provider: LGV
+    access: download_or_wms
+    url: null  # TODO: Transparenzportal / WMS
+    info: https://www.hamburg.de/politik-und-verwaltung/behoerden/behoerde-fuer-stadtentwicklung-und-wohnen/aemter-und-landesbetrieb/landesbetrieb-geoinformation-und-vermessung/produkte-und-dienstleistungen/geodaten-des-lgv/digitaleorthophotos-244130
+    license: dl-de/by-2.0
+    purpose: [validation, segmentation]
+    check_status: verified
+
+  laserscan:
+    title: Laserscandaten / DGM / DOM
+    provider: LGV
+    access: download
+    url: null  # TODO
+    license: unknown
+    purpose: [curb_detection]
+    check_status: catalog
+
+  street_trees:
+    title: Straßenbaumkataster
+    provider: BUKEA
+    access: wfs_or_download
+    url: null  # TODO: Transparenzportal
+    license: unknown  # vermutlich dl-de/by-2.0, prüfen
+    purpose: [place_function, obstacles]
+    check_status: verified_info
+
+  road_condition_zeb:
+    title: WFS ZEB Zustandsklassen
+    provider: LGV / BVM
+    access: wfs
+    url: https://geodienste.hamburg.de/HH_WFS_ZEB_Zustandsklassen
+    license: unknown
+    purpose: [context]
+    check_status: verified_metadata
+
+  road_surface:
+    title: WFS Straßendeckschichttypen nach RLS-19
+    provider: BVM
+    access: wfs
+    url: https://geodienste.hamburg.de/HH_WFS_Strassendecke
+    license: unknown
+    purpose: [actual_design_surface]
+    check_status: verified_metadata
+
+  quiet_areas:
+    title: WFS Ruhige Gebiete Hamburg
+    provider: BUKEA
+    access: wfs
+    url: https://geodienste.hamburg.de/HH_WFS_Ruhige_Gebiete
+    license: unknown
+    purpose: [context]
+    check_status: verified_metadata
+
+  noise_maps:
+    title: Strategische Lärmkarten Straßenverkehr
+    provider: BUKEA
+    access: unknown
+    url: null  # TODO
+    purpose: [context_speed_justification]
+    check_status: open
+
+  schools:
+    title: Schulen
+    provider: BSB / LGV
+    access: unknown
+    url: null  # TODO: WFS hinter dem Schulinfosystem ermitteln; Fallback OSM amenity=school
+    purpose: [sensitive_facilities]
+    check_status: catalog
+
+  kitas:
+    title: Kitas
+    provider: Sozialbehörde / LGV
+    access: unknown
+    url: null  # TODO; Fallback OSM amenity=kindergarten
+    purpose: [sensitive_facilities]
+    check_status: open
+
+  population_grid:
+    title: Zensus 2022 Bevölkerung im 100-m-Gitter
+    provider: Statistische Ämter des Bundes und der Länder
+    access: download
+    url: https://zensus2022.de/EN/Census_results/02-release-of-results.html?nn=470744  # Seite mit Download-Links
+    format: CSV (zip)
+    license: unknown  # TODO
+    as_of: 2022-05-15
+    purpose: [exposure, place_score]
+    check_status: verified
+
+  gtfs_hvv:
+    title: HVV-Fahrplandaten (GTFS)
+    provider: Hamburger Verkehrsverbund GmbH
+    access: download
+    url: null  # TODO: aktuellen Datensatz im Transparenzportal wählen ("hvv Fahrplandaten GTFS")
+    format: GTFS (zip)
+    license: dl-de/by-2.0
+    attribution: "Hamburger Verkehrsverbund GmbH"
+    as_of: "gültig 2026-04-08 bis 2026-12-12 (laut Mobility Database)"
+    purpose: [bus_network, bus_trips_weekday]
+    check_status: verified
+
+  accidents:
+    title: Unfallatlas der Statistischen Ämter
+    provider: Statistische Ämter des Bundes und der Länder
+    access: download
+    url: null  # TODO: Opendata-Seite auf unfallatlas.statistikportal.de, Jahre einzeln
+    license: dl-de/by-2.0
+    purpose: [risk, priority]
+    check_status: verified_license
+    todo: "Abdeckung Hamburgs je Jahr prüfen."
+
+  osm:
+    title: OpenStreetMap-Auszug Hamburg
+    provider: OSM-Beitragende (Geofabrik-Auszug)
+    access: download
+    url: null  # TODO: Geofabrik-Auszug Hamburg (.osm.pbf); Datum einfrieren
+    format: PBF
+    license: ODbL-1.0
+    attribution: "© OpenStreetMap-Beitragende"
+    purpose: [network, maxspeed, lanes, width, cycleway, sidewalk, parking]
+    check_status: known
