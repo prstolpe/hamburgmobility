@@ -112,3 +112,24 @@
 - Wirkung (Arbeitsgebiet, 562 km): SW 28,4 km, GOW50 38,1, GOW30 57,5, ETW30 427,4, ETW_ERF 10,6; confidence nach
   Länge hoch 5,1 %, mittel 85,4 %, niedrig 9,6 %.
 
+
+## rules.yaml 0.9.0 – 2026-10-28
+- Abschnitt `coherence` für die Netzkohärenz (pipeline/s06_coherence.py, prompts/09_coherence_overrides.md) ausgebaut.
+  Bestehende Schwellen (N2 200 m, N3 25 ha, N4 300 m) unverändert.
+  - Alle Netzregeln haben jetzt `status: draft` (offene Frage aus Prompt 02).
+  - N1: `boundary_tolerance_m` 50 m (assumption) für „endet an der Stadtgrenze“ (OSM admin_level 4);
+    `gow_categories`, `end_ok_categories`.
+  - N2: Straßenzug über `max_deflection_deg` 30° und `bearing_sample_m` 15 m (assumption).
+  - N3: Kompaktheit wird nur berichtet; Flächen ohne ETW-Abschnitt (Verkehrsinseln, Grün) zählen nicht als
+    Aufenthaltsbereich.
+  - N4: Reisezeit mit Soll-Tempo, SW mit travel_speed_kmh (`speed_fallback`); highway=pedestrian gesperrt;
+    OD-Paare ohne GOW/SW-Weg werden gezählt, nicht markiert.
+  - N5: `gate_transitions` (GOW50→GOW30, GOW→ETW) und `min_speed_kmh` 70 / `target_speed_kmh` 30 (aus CROW-Tabelle 4).
+  - N6: `node_types` nach guide.md Tabelle 1.4, `category_rank`, `ist_check` (Ist-Typ aus OSM: Kreisverkehr, Ampel,
+    Plateau) und `signal_radius_m` 30 m (assumption). Knoten = OSM-Knoten (Entscheidung Projektteam 2026-10-28).
+  - Neu N7: Glättungsvorschlag für N2-Inseln, nur als Flag.
+- Schema: `CoherenceRule` mit status (Pflicht), thresholds und Prüfung der Kategorien, Rangfolge und ist_check.
+- Korrekturebene: overrides/overrides.csv mit review_status draft | approved | rejected (Entscheidung Projektteam
+  2026-10-28); nur approved wird übernommen (pipeline/s06b_overrides.py).
+- Wirkung (Arbeitsgebiet): Flags N1 91 GOW-Enden, N2/N7 132 Abschnitte, N3 106, N4 1 082, N5 0, N6 758 Knoten mit
+  Abweichung (siehe reports/coherence.md).

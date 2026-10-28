@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.8.0
+  version: 0.9.0
   date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -506,12 +506,107 @@ crosssection:
 # Netzkohärenz
 # ---------------------------------------------------------------
 coherence:
-  - {id: N1, rule: "GOW-Züge enden an GOW, SW oder Stadtgrenze", source: SWOV_FS_2023, source_type: swov_crow}
-  - {id: N2, rule: "Kategoriewechsel < min_run_m zwischen gleichen Kategorien markieren", min_run_m: 200, source_type: assumption}
-  - {id: N3, rule: "Aufenthaltsbereiche (von GOW/SW umschlossen) < min_area_ha markieren", min_area_ha: 25, source: SWOV_FS_2023, source_type: assumption}
-  - {id: N4, rule: "Kürzester Weg zwischen GOW-Knoten nutzt > max_etw_m ETW -> Schleichverkehrsflag", max_etw_m: 300, source: SWOV_FS_2023, source_type: assumption}
-  - {id: N5, rule: "Übergang GOW50->GOW30 und GOW->ETW braucht Torsituation; kein direkter Übergang 70/80->30", source: CROW_GOW30_2023, source_type: swov_crow}
-  - {id: N6, rule: "Soll-Knotentyp aus Kategoriepaar ableiten (Kreisverkehr, Signal mit Plateau, Gehwegüberfahrt, gleichrangig)", source: [SWOV_FS_2023, CROW_GOW30_2023], source_type: swov_crow}
+  # Netzregeln auf dem Graphen der vorgeschlagenen Kategorien (pipeline/s06_coherence.py, prompts/09).
+  # Sie klassifizieren nie um, sondern schreiben flags. Knoten = OSM-Knoten (node_u/node_v), ohne
+  # Zusammenfassen getrennter Richtungsfahrbahnen (Entscheidung Projektteam 2026-10-28).
+  # Neue Parameter ab 0.9.0 stehen unter thresholds und sind Annahmen.
+  - id: N1
+    rule: "GOW-Züge enden an GOW, SW oder Stadtgrenze"
+    source: SWOV_FS_2023
+    source_type: swov_crow
+    status: draft
+    note: "Ende am Rand des Arbeitsgebiets ist nicht prüfbar (Status unbekannt, kein Flag)."
+    gow_categories: [GOW80, GOW50, GOW30]
+    end_ok_categories: [SW]
+    thresholds:
+      boundary_tolerance_m: {value: 50, unit: m, source_type: assumption, check: "Stadtgrenze = OSM admin_level 4 Hamburg"}
+  - id: N2
+    rule: "Kategoriewechsel < min_run_m zwischen gleichen Kategorien markieren"
+    min_run_m: 200
+    source_type: assumption
+    status: draft
+    note: >-
+      Ein Straßenzug läuft an Knoten mit Grad 2 immer weiter, an Knoten mit Grad >= 3 zu dem Abschnitt mit der
+      kleinsten Richtungsänderung, wenn beide Abschnitte sich gegenseitig wählen und die Änderung höchstens
+      max_deflection_deg beträgt. Die Richtung wird über die ersten bearing_sample_m des Abschnitts bestimmt.
+    thresholds:
+      max_deflection_deg: {value: 30, unit: "°", source_type: assumption}
+      bearing_sample_m: {value: 15, unit: m, source_type: assumption}
+  - id: N3
+    rule: "Aufenthaltsbereiche (von GOW/SW umschlossen) < min_area_ha markieren"
+    min_area_ha: 25
+    source: SWOV_FS_2023
+    source_type: assumption
+    status: draft
+    note: >-
+      Flächen aus GOW/SW-Linien und Stadtgrenze; Flächen am Rand des Arbeitsgebiets sind unvollständig und werden
+      nicht markiert. Für „sehr lange Grenze im Verhältnis zur Fläche“ (guide.md 1.5) gibt es keine Schwelle;
+      die Kompaktheit wird nur berichtet (docs/open_questions.md).
+  - id: N4
+    rule: "Kürzester Weg zwischen GOW-Knoten nutzt > max_etw_m ETW -> Schleichverkehrsflag"
+    max_etw_m: 300
+    source: SWOV_FS_2023
+    source_type: assumption
+    status: draft
+    note: >-
+      Reisezeit mit categories[cat].speed_kmh; SW hat kein Soll-Tempo, dort gilt travel_speed_kmh (speed_fallback).
+      Ungerichtet; highway in exclude_highway ist für Kfz gesperrt. OD-Paare = alle Paare von Knoten des
+      GOW/SW-Netzes im Arbeitsgebiet.
+    speed_fallback: travel_speed_kmh
+    exclude_highway: [pedestrian]
+    etw_categories: [ETW30, ETW_ERF, ETW60]
+    restricted_categories: [SW, GOW80, GOW50, GOW30]
+  - id: N5
+    rule: "Übergang GOW50->GOW30 und GOW->ETW braucht Torsituation; kein direkter Übergang 70/80->30"
+    source: CROW_GOW30_2023
+    source_type: swov_crow
+    status: draft
+    note: >-
+      Übergänge werden je Knoten gelistet; ob eine Torsituation vorhanden ist, lässt sich aus den Daten nicht
+      ablesen (docs/open_questions.md). Direkter Übergang: Abschnitt mit Tempo >= min_speed_kmh (Soll-Tempo, bei SW
+      travel_speed_kmh) trifft auf eine Kategorie mit Soll-Tempo target_speed_kmh.
+    gate_transitions:
+      - {from: [GOW50], to: [GOW30]}
+      - {from: [GOW80, GOW50, GOW30], to: [ETW30, ETW_ERF, ETW60]}
+    thresholds:
+      min_speed_kmh: {value: 70, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
+      target_speed_kmh: {value: 30, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
+  - id: N6
+    rule: "Soll-Knotentyp aus Kategoriepaar ableiten (Kreisverkehr, Signal mit Plateau, Gehwegüberfahrt, gleichrangig)"
+    source: [SWOV_FS_2023, CROW_GOW30_2023]
+    source_type: swov_crow
+    status: draft
+    note: >-
+      Nur Knoten mit Grad >= 3. Kategoriepaar: höchste Kategorie am Knoten (bis zu zwei ihrer Abschnitte bilden den
+      durchgehenden Zug) und höchste der übrigen; Rang nach category_rank. Tabelle nach guide.md Tabelle 1.4; erste
+      passende Zeile gilt, kein Treffer = not_defined. Ist-Typ aus OSM: junction=roundabout, highway=traffic_signals
+      und traffic_calming=table im Umkreis signal_radius_m. Gehwegüberfahrten sind in OSM nicht erfasst; dann
+      not_checkable statt Abweichung.
+    category_rank: [SW, GOW80, GOW50, GOW30, ETW60, ETW30, ETW_ERF]
+    node_types:
+      - {pair: [GOW50, GOW50], type: roundabout_or_signal_plateau}
+      - {pair: [GOW50, GOW30], type: roundabout_or_signal_plateau}
+      - {pair: [GOW30, GOW30], type: roundabout}
+      - {pair: [GOW50, ETW30], type: priority_gow_sidewalk_crossover}
+      - {pair: [GOW30, ETW30], type: sidewalk_crossover_or_priority_plateau}
+      - {pair: [ETW30, ETW30], type: equal_right_before_left}
+      - {pair: [GOW50, ETW_ERF], type: sidewalk_crossover}
+      - {pair: [GOW30, ETW_ERF], type: sidewalk_crossover}
+      - {pair: [ETW30, ETW_ERF], type: sidewalk_crossover}
+    ist_check:
+      roundabout_or_signal_plateau: {ok: [roundabout, signal_plateau], not_checkable: [signal]}
+      roundabout: {ok: [roundabout], not_checkable: []}
+      priority_gow_sidewalk_crossover: {ok: [], not_checkable: [none_mapped, plateau]}
+      sidewalk_crossover_or_priority_plateau: {ok: [plateau], not_checkable: [none_mapped]}
+      equal_right_before_left: {ok: [plateau], not_checkable: [none_mapped]}
+      sidewalk_crossover: {ok: [], not_checkable: [none_mapped, plateau]}
+    thresholds:
+      signal_radius_m: {value: 30, unit: m, source_type: assumption, check: "Ampeln sind oft an der Haltlinie erfasst"}
+  - id: N7
+    rule: "Glättungsvorschlag: Insel aus N2 erhält die Kategorie der gleichen Nachbarn (nur Vorschlag, keine Umklassifizierung)"
+    source_type: assumption
+    status: draft
+    note: "Übernahme nur über overrides/overrides.csv mit review_status approved."
 
 # ---------------------------------------------------------------
 # Diskrepanz ("grijze wegen") und Priorisierung

@@ -32,6 +32,10 @@ def _rule(data: dict, rule_id: str) -> dict:
     return next(r for r in data["classification"] if r["id"] == rule_id)
 
 
+def _coh(data: dict, rule_id: str) -> dict:
+    return next(r for r in data["coherence"] if r["id"] == rule_id)
+
+
 # --- the real file ---------------------------------------------------------------------------
 
 
@@ -116,11 +120,28 @@ def test_valid_raw_passes(raw):
         ("network threshold without unit", lambda d: d["network"]["rules"][2]["thresholds"]["min_length_m"].pop("unit")),
         ("duplicate highway class", lambda d: d["network"]["highway_classes"]["values"].append("residential")),
         ("no highway classes", lambda d: d["network"]["highway_classes"].update(values=[])),
+        ("coherence rule without status", lambda d: d["coherence"][0].pop("status")),
+        ("coherence threshold without unit", lambda d: d["coherence"][0]["thresholds"]["boundary_tolerance_m"].pop("unit")),
+        ("N6 pair with unknown category", lambda d: _coh(d, "N6")["node_types"][0].update(pair=["GOW50", "XYZ"])),
+        ("N6 rank with duplicate", lambda d: _coh(d, "N6")["category_rank"].append("SW")),
+        ("N6 rank incomplete", lambda d: _coh(d, "N6")["category_rank"].remove("ETW60")),
+        ("N6 node type without ist_check", lambda d: _coh(d, "N6")["ist_check"].pop("roundabout")),
+        ("N5 gate with unknown category", lambda d: _coh(d, "N5")["gate_transitions"][0].update(to=["GOW31"])),
     ],
 )
 def test_schema_rejects(raw, description, mutate):
     with pytest.raises(ValidationError):
         RuleSet.model_validate(_mutated(raw, mutate))
+
+
+def test_coherence_rules():
+    rules = load_rules()
+    assert [r.id for r in rules.coherence] == ["N1", "N2", "N3", "N4", "N5", "N6", "N7"]
+    assert all(r.status == "draft" for r in rules.coherence)
+    assert rules.coherence_rule("N2").param("min_run_m") == 200
+    assert rules.coherence_rule("N1").param("boundary_tolerance_m") == 50
+    with pytest.raises(KeyError):
+        rules.coherence_rule("N2").param("not_there")
 
 
 def test_assumption_rule_may_omit_source(raw):

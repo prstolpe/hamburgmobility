@@ -163,16 +163,64 @@ class PolicyRule(_Strict):
     note: str | None = None
 
 
+class GateTransition(_Strict):
+    from_: list[str] = Field(alias="from", min_length=1)
+    to: list[str] = Field(min_length=1)
+
+
+class NodeTypeEntry(_Strict):
+    pair: list[str] = Field(min_length=2, max_length=2)
+    type: str
+
+
+class IstCheck(_Strict):
+    ok: list[str]
+    not_checkable: list[str]
+
+
 class CoherenceRule(BaseModel):
     # Extra keys are rule parameters (e.g. min_run_m); their units are checked in RuleSet.
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     id: str = Field(pattern=r"^N\d+$")
     rule: str
     source: str | list[str] | None = None
     source_type: SourceType
-    # TODO(open_questions): N1–N6 have no status in rules.yaml yet.
-    status: Status | None = None
+    status: Status
+    note: str | None = None
+    thresholds: dict[str, Threshold] = {}
+    # N1
+    gow_categories: list[str] = []
+    end_ok_categories: list[str] = []
+    # N4
+    speed_fallback: str | None = None
+    exclude_highway: list[str] = []
+    etw_categories: list[str] = []
+    restricted_categories: list[str] = []
+    # N5
+    gate_transitions: list[GateTransition] = []
+    # N6
+    category_rank: list[str] = []
+    node_types: list[NodeTypeEntry] = []
+    ist_check: dict[str, IstCheck] = {}
+
+    def param(self, name: str) -> float:
+        """Numeric parameter: flat key (e.g. min_run_m) or thresholds entry."""
+        if name in self.thresholds:
+            return self.thresholds[name].value
+        extra = self.model_extra or {}
+        if name not in extra:
+            raise KeyError(f"coherence[{self.id}]: parameter {name!r} missing in rules.yaml")
+        return extra[name]
+
+    def categories_used(self) -> set[str]:
+        cats = (set(self.gow_categories) | set(self.end_ok_categories) | set(self.etw_categories)
+                | set(self.restricted_categories) | set(self.category_rank))
+        for g in self.gate_transitions:
+            cats |= set(g.from_) | set(g.to)
+        for n in self.node_types:
+            cats |= set(n.pair)
+        return cats
 
 
 class ScoreDef(_Strict):
@@ -359,6 +407,12 @@ class RuleSet(_Strict):
     discrepancy: Discrepancy
     priority: Priority
 
+    def coherence_rule(self, rule_id: str) -> CoherenceRule:
+        for rule in self.coherence:
+            if rule.id == rule_id:
+                return rule
+        raise KeyError(f"coherence rule {rule_id} not in rules.yaml")
+
     @model_validator(mode="after")
     def _cross_checks(self) -> "RuleSet":
         source_ids = set(self.sources)
@@ -425,6 +479,17 @@ class RuleSet(_Strict):
             path = f"coherence[{rule.id}]"
             _check_provenance(rule.model_dump(include={"source", "source_type"}), path, source_ids)
             _check_units(rule.model_extra or {}, path, None)
+            for name, threshold in rule.thresholds.items():
+                _check_provenance(threshold.model_dump(include={"source", "source_type"}),
+                                  f"{path}.thresholds.{name}", source_ids)
+            unknown = sorted(rule.categories_used() - set(cats))
+            if unknown:
+                raise ValueError(f"{path}: unknown categories {unknown}")
+            if rule.category_rank and (set(rule.category_rank) != set(cats) or len(rule.category_rank) != len(cats)):
+                raise ValueError(f"{path}.category_rank must list every category exactly once")
+            missing_checks = sorted({n.type for n in rule.node_types} - set(rule.ist_check))
+            if missing_checks:
+                raise ValueError(f"{path}.ist_check: missing node types {missing_checks}")
 
         for cat, reqs in self.requirements.items():
             if cat not in cats:

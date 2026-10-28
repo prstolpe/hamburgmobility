@@ -12,7 +12,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 PIPELINE_TARGETS := fetch network conflate features crosssection classify coherence discrepancy export validate
-.PHONY: help install dirs test web $(PIPELINE_TARGETS)
+.PHONY: help install dirs test web override-template $(PIPELINE_TARGETS)
 
 # run_step(target, script): run pipeline/<script>.py if it exists, otherwise report that it is missing.
 define run_step
@@ -25,7 +25,7 @@ endef
 
 help: ## Show available targets
 	@echo "Ziele:"
-	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-13s %s\n", $$1, $$2}'
+	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
 
 install: ## Install dependencies (uv sync)
 	uv sync
@@ -54,6 +54,9 @@ classify: dirs ## Rule-based target category
 coherence: dirs ## Network coherence flags and overrides
 	$(call run_step,coherence,s06_coherence)
 	$(call run_step,coherence,s06b_overrides)
+
+override-template: ## Template rows for new overrides (IDS="seg_... seg_...")
+	@uv run python -m pipeline.override_template $(IDS)
 
 discrepancy: dirs ## Discrepancy types and priority
 	$(call run_step,discrepancy,s08_discrepancy)
