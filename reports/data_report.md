@@ -1,6 +1,6 @@
 # Datenbericht – Abruf Pilotbezirk
 
-Erzeugt: 2026-10-28T09:45:02+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-10-28T10:45:37+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.
 
 ## Arbeitsgebiet
 
@@ -19,7 +19,7 @@ Erzeugt: 2026-10-28T09:45:02+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | dedications | ok | 6259 | dl-de/by-2.0 | 2026-10-28 |  |
 | speed_limits | ok | 8010 | unknown | 2026-10-28 |  |
 | traffic_volumes | ok | 690 | unknown | 2026-10-28 |  |
-| traffic_counters | ok | 3137 | unknown | 2026-10-28 | nur Bestand (Locations + Things), keine Messwerte |
+| traffic_counters | ok | 3138 | unknown | 2026-10-28 | nur Bestand (Locations + Things), keine Messwerte |
 | bike_volumes_dbradplus | fehler | – | ODbL-1.0 | – | https://api.hamburg.de/datasets/v1/dbradplus/collections/jahr2025/items?f=json&bbox=557002.1468911578%2C5934196.7297488125%2C567274.8341519193%2C5946089.7089329&bbox-crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&limit=1000&offset=10000: invalid JSON after 63156 bytes (Expecting ',' delimiter: line 1 column 63157 (char 63156)) |
 | cycle_network | fallback | 11 | ODbL-1.0 | 2026-10-28 | Fallback OSM: {"relations": {"cycle_network": ["DE:HH:Radnetz_Hamburg"]}} |
 | alkis | fehlt | – | dl-de/by-2.0 | – | TODO: WFS 'ALKIS – Liegenschaften und Verwaltungseinheiten' bzw. NAS-Download im Transparenzportal |
@@ -33,8 +33,8 @@ Erzeugt: 2026-10-28T09:45:02+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | noise_maps | fehlt | – | unbekannt | – | TODO |
 | schools | fallback | 93 | ODbL-1.0 | 2026-10-28 | Fallback OSM: {"tags": {"amenity": ["school"]}} |
 | kitas | fallback | 220 | ODbL-1.0 | 2026-10-28 | Fallback OSM: {"tags": {"amenity": ["kindergarten"]}} |
-| population_grid | manuell | – | unknown | – | kein maschinenlesbarer Direktzugriff in sources.yaml (Webseite/PDF) |
-| gtfs_hvv | fehlt | – | dl-de/by-2.0 | – | TODO: aktuellen Datensatz im Transparenzportal wählen ("hvv Fahrplandaten GTFS") |
+| population_grid | ok | 4274 | dl-de/by-2.0 | 2026-10-28 |  |
+| gtfs_hvv | ok | 0 | dl-de/by-2.0 | 2026-10-28 |  |
 | accidents | fehlt | – | dl-de/by-2.0 | – | TODO: Opendata-Seite auf unfallatlas.statistikportal.de, Jahre einzeln |
 | osm | ok | 1 | ODbL-1.0 | 2026-10-28 | lokale Datei wiederverwendet (Stand Wed, 28 Oct 2026 03:56:24 GMT) |
 
@@ -51,7 +51,7 @@ Erzeugt: 2026-10-28T09:45:02+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | speed_limits | zulaessige_hoechstgeschwindigkeiten_sonderregelung | 162 | EPSG:25832 | [558472.0, 5934911.0, 565856.8, 5944500.3] | `data/raw/speed_limits__zulaessige_hoechstgeschwindigkeiten_sonderregelung.parquet` |
 | traffic_volumes | verkehrsmengen_dtv_hvs_2019 | 598 | EPSG:25832 | [557979.4, 5934259.0, 567018.7, 5945253.2] | `data/raw/traffic_volumes__verkehrsmengen_dtv_hvs_2019.parquet` |
 | traffic_volumes | verkehrsmengen_dtv_bab_2019 | 92 | EPSG:25832 | [557583.4, 5936922.6, 561516.1, 5945291.2] | `data/raw/traffic_volumes__verkehrsmengen_dtv_bab_2019.parquet` |
-| traffic_counters | locations_things | 3137 | EPSG:25832 | [557869.1, 5933864.0, 566909.7, 5945067.0] | `data/raw/traffic_counters__locations_things.parquet` |
+| traffic_counters | locations_things | 3138 | EPSG:25832 | [557869.1, 5933864.0, 566909.7, 5945067.0] | `data/raw/traffic_counters__locations_things.parquet` |
 | cycle_network | osm | 11 | EPSG:25832 | [559477.1, 5934127.3, 567331.8, 5943928.0] | `data/raw/cycle_network__osm.parquet` |
 | road_condition_zeb | de.hh.up:zeb2025_geb | 18529 | EPSG:25832 | [557375.7, 5934189.9, 567196.9, 5945503.7] | `data/raw/road_condition_zeb__zeb2025_geb.parquet` |
 | road_condition_zeb | de.hh.up:zeb2025_gw | 55587 | EPSG:25832 | [557375.7, 5934189.9, 567196.9, 5945503.7] | `data/raw/road_condition_zeb__zeb2025_gw.parquet` |
@@ -60,6 +60,9 @@ Erzeugt: 2026-10-28T09:45:02+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | quiet_areas | de.hh.up:ruhige_gebiete_hamburg | 0 | EPSG:25832 | None | `data/raw/quiet_areas__ruhige_gebiete_hamburg.parquet` |
 | schools | osm | 93 | EPSG:25832 | [557647.5, 5934652.4, 566606.5, 5944650.8] | `data/raw/schools__osm.parquet` |
 | kitas | osm | 220 | EPSG:25832 | [558525.5, 5935025.8, 566075.0, 5944951.6] | `data/raw/kitas__osm.parquet` |
+| population_grid | zip | – | – | – | `data/raw/population_grid/Zensus2022_Bevoelkerungszahl.zip` |
+| population_grid | 100m | 4274 | EPSG:25832 | [556956.0, 5934137.8, 567325.9, 5946066.6] | `data/raw/population_grid__100m.parquet` |
+| gtfs_hvv | zip | – | – | – | `data/raw/gtfs_hvv/Upload__hvv_Rohdaten_GTFS_Fpl_20260408.ZIP` |
 | osm | pbf | – | – | – | `data/raw/osm/hamburg_2026-10-28.osm.pbf` |
 | osm | district_boundary | 1 | EPSG:25832 | [557501.6, 5934696.6, 566774.9, 5945590.0] | `data/raw/district_boundary.parquet` |
 
@@ -86,6 +89,8 @@ Neuester Jahrgang Verkehrsmengen Hauptverkehrsstraßen: **2019**.
 - quiet_areas: Quellenvermerk unbekannt – klären (unknown)
 - schools: © OpenStreetMap-Beitragende (ODbL-1.0)
 - kitas: © OpenStreetMap-Beitragende (ODbL-1.0)
+- population_grid: © Statistische Ämter des Bundes und der Länder, Zensus 2022 (dl-de/by-2.0)
+- gtfs_hvv: Hamburger Verkehrsverbund GmbH (dl-de/by-2.0)
 - osm: © OpenStreetMap-Beitragende (ODbL-1.0)
 
 ## Stichprobe (30 zufällige Objekte, Seed 42)
@@ -95,31 +100,31 @@ Links auf OpenStreetMap. Orthophoto- und Panoramax-Links folgen, sobald das Link
 | Quelle | Ebene | Bezeichnung | Karte |
 | --- | --- | --- | --- |
 | dedications | widmung_linie | Gazellenkamp | [OSM](https://www.openstreetmap.org/?mlat=53.599347&mlon=9.944359#map=18/53.599347/9.944359) |
-| road_condition_zeb | zeb2025_geb | Försterweg | [OSM](https://www.openstreetmap.org/?mlat=53.579679&mlon=9.927565#map=18/53.579679/9.927565) |
-| road_condition_zeb | zeb2025_geb | Hagenbeckallee | [OSM](https://www.openstreetmap.org/?mlat=53.595323&mlon=9.938769#map=18/53.595323/9.938769) |
-| road_condition_zeb | zeb2025_geb | Julius-Vosseler-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.584340&mlon=9.950270#map=18/53.584340/9.950270) |
-| road_condition_zeb | zeb2025_geb | Jungfrauenthal | [OSM](https://www.openstreetmap.org/?mlat=53.581229&mlon=9.982964#map=18/53.581229/9.982964) |
-| road_condition_zeb | zeb2025_geb | Milchstraße | [OSM](https://www.openstreetmap.org/?mlat=53.570696&mlon=9.997618#map=18/53.570696/9.997618) |
-| road_condition_zeb | zeb2025_geb | Zum Niendorfer Grenzhaus | [OSM](https://www.openstreetmap.org/?mlat=53.648958&mlon=9.947508#map=18/53.648958/9.947508) |
-| road_condition_zeb | zeb2025_gw | Ernst-Horn-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.584095&mlon=9.925511#map=18/53.584095/9.925511) |
-| road_condition_zeb | zeb2025_gw | Gaedechensweg | [OSM](https://www.openstreetmap.org/?mlat=53.588120&mlon=9.993855#map=18/53.588120/9.993855) |
-| road_condition_zeb | zeb2025_gw | Susannenstraße | [OSM](https://www.openstreetmap.org/?mlat=53.562408&mlon=9.963691#map=18/53.562408/9.963691) |
-| road_condition_zeb | zeb2025_gw | Baumacker | [OSM](https://www.openstreetmap.org/?mlat=53.621322&mlon=9.895255#map=18/53.621322/9.895255) |
-| road_condition_zeb | zeb2025_gw | Borsteler Chaussee | [OSM](https://www.openstreetmap.org/?mlat=53.611002&mlon=9.974597#map=18/53.611002/9.974597) |
-| road_condition_zeb | zeb2025_gw | Burgunderweg | [OSM](https://www.openstreetmap.org/?mlat=53.631589&mlon=9.975962#map=18/53.631589/9.975962) |
-| road_condition_zeb | zeb2025_gw | Dorpsfelde | [OSM](https://www.openstreetmap.org/?mlat=53.609955&mlon=9.914971#map=18/53.609955/9.914971) |
-| road_condition_zeb | zeb2025_gw | Grandweg | [OSM](https://www.openstreetmap.org/?mlat=53.589434&mlon=9.964373#map=18/53.589434/9.964373) |
-| road_condition_zeb | zeb2025_gw | Keltenweg | [OSM](https://www.openstreetmap.org/?mlat=53.645741&mlon=9.954785#map=18/53.645741/9.954785) |
-| road_condition_zeb | zeb2025_gw | Waterloostraße | [OSM](https://www.openstreetmap.org/?mlat=53.566988&mlon=9.955933#map=18/53.566988/9.955933) |
-| road_condition_zeb | zeb2025_gw | Wunderbrunnen | [OSM](https://www.openstreetmap.org/?mlat=53.645833&mlon=9.926063#map=18/53.645833/9.926063) |
-| road_condition_zeb | zeb2025_gw | Winsbergring | [OSM](https://www.openstreetmap.org/?mlat=53.576692&mlon=9.918472#map=18/53.576692/9.918472) |
-| road_condition_zeb | zeb2025_gw | Seerosenweg | [OSM](https://www.openstreetmap.org/?mlat=53.614163&mlon=9.875769#map=18/53.614163/9.875769) |
-| road_condition_zeb | zeb2025_gw | Syringenweg | [OSM](https://www.openstreetmap.org/?mlat=53.615646&mlon=9.881108#map=18/53.615646/9.881108) |
-| road_condition_zeb | zeb2025_sub | Winsbergring | [OSM](https://www.openstreetmap.org/?mlat=53.576667&mlon=9.918173#map=18/53.576667/9.918173) |
-| road_condition_zeb | zeb2025_sub | Nyswanderweg | [OSM](https://www.openstreetmap.org/?mlat=53.619648&mlon=9.894300#map=18/53.619648/9.894300) |
-| road_condition_zeb | zeb2025_sub | Abendrothsweg | [OSM](https://www.openstreetmap.org/?mlat=53.585434&mlon=9.978398#map=18/53.585434/9.978398) |
-| road_condition_zeb | zeb2025_sub | Hegestieg | [OSM](https://www.openstreetmap.org/?mlat=53.585113&mlon=9.983577#map=18/53.585113/9.983577) |
-| road_surface | strassendeckschicht | Döhrnstraße | [OSM](https://www.openstreetmap.org/?mlat=53.598463&mlon=9.953053#map=18/53.598463/9.953053) |
+| road_condition_zeb | zeb2025_geb | Försterweg | [OSM](https://www.openstreetmap.org/?mlat=53.579772&mlon=9.927407#map=18/53.579772/9.927407) |
+| road_condition_zeb | zeb2025_geb | Hagenbeckallee | [OSM](https://www.openstreetmap.org/?mlat=53.595280&mlon=9.938553#map=18/53.595280/9.938553) |
+| road_condition_zeb | zeb2025_geb | Julius-Vosseler-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.584178&mlon=9.950277#map=18/53.584178/9.950277) |
+| road_condition_zeb | zeb2025_geb | Jungfrauenthal | [OSM](https://www.openstreetmap.org/?mlat=53.581228&mlon=9.982664#map=18/53.581228/9.982664) |
+| road_condition_zeb | zeb2025_geb | Milchstraße | [OSM](https://www.openstreetmap.org/?mlat=53.570672&mlon=9.997352#map=18/53.570672/9.997352) |
+| road_condition_zeb | zeb2025_geb | Zum Niendorfer Grenzhaus | [OSM](https://www.openstreetmap.org/?mlat=53.648878&mlon=9.947318#map=18/53.648878/9.947318) |
+| road_condition_zeb | zeb2025_gw | Ernst-Horn-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.584038&mlon=9.925755#map=18/53.584038/9.925755) |
+| road_condition_zeb | zeb2025_gw | Gaedechensweg | [OSM](https://www.openstreetmap.org/?mlat=53.587869&mlon=9.993470#map=18/53.587869/9.993470) |
+| road_condition_zeb | zeb2025_gw | Susannenstraße | [OSM](https://www.openstreetmap.org/?mlat=53.562295&mlon=9.963403#map=18/53.562295/9.963403) |
+| road_condition_zeb | zeb2025_gw | Baumacker | [OSM](https://www.openstreetmap.org/?mlat=53.621137&mlon=9.895311#map=18/53.621137/9.895311) |
+| road_condition_zeb | zeb2025_gw | Borsteler Chaussee | [OSM](https://www.openstreetmap.org/?mlat=53.618636&mlon=9.974605#map=18/53.618636/9.974605) |
+| road_condition_zeb | zeb2025_gw | Burgunderweg | [OSM](https://www.openstreetmap.org/?mlat=53.631449&mlon=9.975773#map=18/53.631449/9.975773) |
+| road_condition_zeb | zeb2025_gw | Dorpsfelde | [OSM](https://www.openstreetmap.org/?mlat=53.609884&mlon=9.915311#map=18/53.609884/9.915311) |
+| road_condition_zeb | zeb2025_gw | Grandweg | [OSM](https://www.openstreetmap.org/?mlat=53.589291&mlon=9.964558#map=18/53.589291/9.964558) |
+| road_condition_zeb | zeb2025_gw | Keltenweg | [OSM](https://www.openstreetmap.org/?mlat=53.645783&mlon=9.954634#map=18/53.645783/9.954634) |
+| road_condition_zeb | zeb2025_gw | Waterloostraße | [OSM](https://www.openstreetmap.org/?mlat=53.566939&mlon=9.955602#map=18/53.566939/9.955602) |
+| road_condition_zeb | zeb2025_gw | Wunderbrunnen | [OSM](https://www.openstreetmap.org/?mlat=53.645646&mlon=9.926104#map=18/53.645646/9.926104) |
+| road_condition_zeb | zeb2025_gw | Winsbergring | [OSM](https://www.openstreetmap.org/?mlat=53.576667&mlon=9.918173#map=18/53.576667/9.918173) |
+| road_condition_zeb | zeb2025_gw | Sedanstraße | [OSM](https://www.openstreetmap.org/?mlat=53.569866&mlon=9.978941#map=18/53.569866/9.978941) |
+| road_condition_zeb | zeb2025_gw | Syringenweg | [OSM](https://www.openstreetmap.org/?mlat=53.615695&mlon=9.880902#map=18/53.615695/9.880902) |
+| road_condition_zeb | zeb2025_sub | Winsbergring | [OSM](https://www.openstreetmap.org/?mlat=53.576642&mlon=9.917875#map=18/53.576642/9.917875) |
+| road_condition_zeb | zeb2025_sub | Nyswanderweg | [OSM](https://www.openstreetmap.org/?mlat=53.619667&mlon=9.894572#map=18/53.619667/9.894572) |
+| road_condition_zeb | zeb2025_sub | Abendrothsweg | [OSM](https://www.openstreetmap.org/?mlat=53.585513&mlon=9.978669#map=18/53.585513/9.978669) |
+| road_condition_zeb | zeb2025_sub | Hegestieg | [OSM](https://www.openstreetmap.org/?mlat=53.584997&mlon=9.983803#map=18/53.584997/9.983803) |
+| road_surface | strassendeckschicht | Schwalbenweg | [OSM](https://www.openstreetmap.org/?mlat=53.620757&mlon=9.963045#map=18/53.620757/9.963045) |
 | speed_limits | tempo30zonen | Geschwister-Witonski-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.648291&mlon=9.911816#map=18/53.648291/9.911816) |
 | speed_limits | tempo30zonen | Puckholm | [OSM](https://www.openstreetmap.org/?mlat=53.624451&mlon=9.892527#map=18/53.624451/9.892527) |
 | speed_limits | tempo30zonen | Eduardstraße | [OSM](https://www.openstreetmap.org/?mlat=53.572723&mlon=9.945544#map=18/53.572723/9.945544) |

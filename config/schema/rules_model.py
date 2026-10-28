@@ -233,6 +233,28 @@ class Conflation(_Strict):
         return next(r for r in self.rules if r.id == rule_id)
 
 
+class FeatureRule(_Strict):
+    id: str = Field(pattern=r"^S-[A-Z]+-\d{2}$")
+    description: str
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    method: str | None = None
+    ties: Literal["min", "average"] | None = None  # percentile rank: rank of equal values
+    thresholds: dict[str, Threshold] = {}
+    exclude_highway: list[str] = []
+    amenity_excluded: list[str] = []
+    route_types: list[int] = []
+    note: str | None = None
+
+
+class Features(_Strict):
+    rules: list[FeatureRule] = Field(min_length=1)
+
+    def rule(self, rule_id: str) -> FeatureRule:
+        return next(r for r in self.rules if r.id == rule_id)
+
+
 class FeasibilityClass(_Strict):
     source_type: SourceType
     min: float | None = None
@@ -283,6 +305,7 @@ class RuleSet(_Strict):
     feasibility_classes: dict[str, FeasibilityClass]
     network: Network
     conflation: Conflation
+    features: Features
     coherence: list[CoherenceRule]
     discrepancy: Discrepancy
     priority: Priority
@@ -297,7 +320,8 @@ class RuleSet(_Strict):
             raise ValueError(f"categories must be {sorted(EXPECTED_CATEGORIES)}, got {sorted(cats)}")
 
         ids = ([r.id for r in self.classification] + [r.id for r in self.coherence]
-               + [r.id for r in self.network.rules] + [r.id for r in self.conflation.rules])
+               + [r.id for r in self.network.rules] + [r.id for r in self.conflation.rules]
+               + [r.id for r in self.features.rules])
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
             raise ValueError(f"duplicate rule ids: {duplicates}")
@@ -334,7 +358,8 @@ class RuleSet(_Strict):
         _check_provenance(self.network.highway_classes.model_dump(include={"source", "source_type"}),
                           "network.highway_classes", source_ids)
         stage_rules = ([(f"network.rules[{r.id}]", r) for r in self.network.rules]
-                       + [(f"conflation.rules[{r.id}]", r) for r in self.conflation.rules])
+                       + [(f"conflation.rules[{r.id}]", r) for r in self.conflation.rules]
+                       + [(f"features.rules[{r.id}]", r) for r in self.features.rules])
         for path, rule in stage_rules:
             _check_provenance(rule.model_dump(include={"source", "source_type"}), path, source_ids)
             for name, threshold in rule.thresholds.items():

@@ -37,12 +37,28 @@ Format: `- [ ] Frage – Wer klärt – Status/Antwort`. Claude Code trägt hier
 - [ ] Abschnitte über einen Namenswechsel hinweg (z. B. „Sperlingsweg / Bayernweg“, bis ca. 1 km): S-NET-02 teilt nur bei highway-Wechsel. Auch bei Namenswechsel teilen (ändert segment_id)? – Methodik
 - [ ] Fußgängerzonen (highway=pedestrian) sind in den Tempo-/Widmungsebenen meist nicht enthalten (86 % none) – amtliche Quelle für Fußgängerzonen? widmung_flaeche („für den Fußgängerverkehr“) nutzen? – GIS
 
+## Merkmale (Prompt 06, rules.yaml 0.4.0)
+- [ ] Standardtempo je highway-Klasse für die Reisezeit (S-FEAT-02: motorway 100, trunk 70, residential 30, living_street 7, übrige 50 km/h) freigeben. Betrifft 5,5 % der Abschnitte im Arbeitsgebiet – Verkehrsplaner*in
+- [ ] Puffer freigeben: Gebäudedichte 50 m, Einwohner 100 m, Publikumsnutzung 20 m, Knoten-Fangradius 1 m (S-FEAT-03/04/05/10) – Verkehrsplaner*in
+- [ ] Betweenness ungerichtet, weil die Abschnitte keine Einbahn-Information tragen; Zufahrtsbeschränkungen (access, motor_vehicle) werden nicht berücksichtigt. Reicht das, oder oneway/access in s02 mitführen? – Methodik
+- [ ] Autobahnen fahren keine Busse; seit rules.yaml 0.5.0 zählt das als 0 und senkt ihren conn_score (Median 0,60 → 0,52). Für C-SW-01 ohne Wirkung; soll bus_trips_weekday auf Autobahnen nicht gewertet werden (Gewicht umlegen)? – Methodik
+- [ ] Normierung über das Arbeitsgebiet (Eimsbüttel + 500 m): Werte ändern sich, wenn das Gebiet wächst. Bei Ausweitung auf ganz Hamburg über die ganze Stadt normieren? – Methodik
+- [ ] DTV liegt nur für Hauptverkehrsstraßen vor (19 % der Abschnitte); `dtv_norm` rangiert nur innerhalb der HVS, alle übrigen Abschnitte bekommen das Gewicht umgelegt. Fehlendes DTV auf Nebenstraßen als „niedrig“ werten? – Verkehrsplaner*in
+- [ ] Publikumsnutzung: Definition (Anteil Gebäude statt Fassadenlänge, Geschoss der POIs nicht geprüft) und Liste `amenity_excluded` prüfen; ALKIS-Gebäudefunktion ergänzen, sobald ALKIS vorliegt – Methodik
+- [ ] `outside_builtup_area` (C-RUR-01) hat keine Datenquelle (Ortsgrenze/Ortstafeln). Quelle festlegen; in Eimsbüttel vermutlich überall innerorts – GIS
+- [ ] OSM-Gestaltungsmerkmale ohne Tag bleiben null (z. B. centre_line 84 %, parking 57 %, lanes 53 % null). Für die Diskrepanz (Prompt 10) fehlende Tags als „nein“ werten oder als unbekannt? – Methodik
+- [ ] `access_motor_only` = motorway/motorway_link oder motorroad=yes, sonst nein (nicht null, weil motorroad nur positiv erfasst wird). Passt das? – Methodik
+- [x] Zensus-Gitter: direkte Download-URL und Spaltennamen prüfen – 2026-10-28: Zensus2022_Bevoelkerungszahl.zip (destatis.de), Spalten laut Datensatzbeschreibung im ZIP, sources.yaml 0.1.3
+- [x] GTFS HVV: Download-URL in sources.yaml eintragen – 2026-10-28: Transparenzportal, Fahrplan 2026-04-08 bis 2026-12-12, sources.yaml 0.1.3
+- [x] Gleiche Werte im Perzentilrang (S-FEAT-01) bekommen den mittleren Rang. – 2026-10-28: geändert auf kleinsten Rang (rules.yaml 0.5.0). Ursprünglich: Folge: Abschnitte ohne Bus (70 %) erhalten bus_trips_weekday_norm 0,35 statt 0; ähnlich Sackgassen bei der Betweenness. Vorschlag: Bindungen mit dem kleinsten Rang (Wert 0 → Norm 0); ändert conn_score und braucht rules.yaml 0.5.0 – Methodik
+- [ ] GTFS-Fahrplanperiode endet 2026-12-12; danach neuen Datensatz wählen. Repräsentativer Werktag des aktuellen Feeds: 2026-04-29 (Mi). Getrennte Richtungsfahrbahnen erhalten nur die Fahrten ihrer Richtung – Team
+
 ## Daten
 - [ ] Führt HH_WFS_Strategisches_Strassennetz ein Attribut „Hauptverkehrsstraße“ mit Stand 2023? – GIS
 - [x] Welche Jahrgänge enthält api.hamburg.de/datasets/v1/verkehrsmengen (DTV Hauptverkehrsstraßen)? – GIS – 2026-10-28: dtv_hvs_2019, dtvw_hvs_2014, dtv_bab_2019, dtvw_bab_2013 (siehe reports/data_report.md)
 - [ ] Gibt es Kfz-Zählungen auf Bezirksstraßen? Transparenzanfrage an Bezirksämter – Team
 - [ ] Dienst-URL für „Radnetz Hamburg“ im Geoportal – GIS
-- [ ] Endpunkte für Schulen, Kitas, Lärmkarten, Laserscan, Baumkataster, ALKIS-Download – GIS
+- [ ] Endpunkte für Schulen, Kitas, Lärmkarten, Laserscan, Baumkataster, ALKIS-Download – GIS (GTFS und Zensus 2026-10-28 erledigt)
 - [ ] Abdeckung Hamburgs im Unfallatlas je Jahr – GIS
 - [ ] Gibt es amtliche Flächen für Fahrbahn/Radweg/Gehweg (LSBG, Bezirke)? Transparenzanfrage – Team
 - [ ] Lizenzen der OGC-API-Datensätze (api.hamburg.de) auf den Landing Pages prüfen – GIS
@@ -50,7 +66,7 @@ Format: `- [ ] Frage – Wer klärt – Status/Antwort`. Claude Code trägt hier
 - [ ] DB Rad+ (api.hamburg.de/datasets/v1/dbradplus, jahr2025): Abfrage mit bbox bricht reproduzierbar ab (HTTP 200, abgeschnittenes JSON bei offset 10000/11000). Fehler an die Urban Data Platform melden; danach erneut `make fetch` – Team
 - [ ] Lizenz fehlt in der API für „Zulässige Höchstgeschwindigkeiten“ und „Verkehrsmengen“ sowie in GetCapabilities von „Ruhige Gebiete“ – GIS
 - [ ] Verkehrsmengen auf Hauptverkehrsstraßen liegen in der API nur bis 2019 (DTV) vor. Gibt es neuere Zählungen? – GIS
-- [ ] Direkter Download-Link für das Zensus-2022-Gitter (100 m, Bevölkerung) in sources.yaml eintragen; bisher nur die Übersichtsseite – GIS
+- [x] Direkter Download-Link für das Zensus-2022-Gitter (100 m, Bevölkerung) in sources.yaml eintragen – 2026-10-28 erledigt (sources.yaml 0.1.3)
 - [ ] Linkformat für Orthophoto (Geoportal Hamburg) und Panoramax in den Stichproben-Reports festlegen; bisher nur OSM-Links – Team
 - [ ] SensorThings (iot.hamburg.de): 3.137 Locations im Arbeitsgebiet, gemischte IoT-Daten. Welche Things sind Kfz-/Rad-Zählstellen (Filterkriterium)? – GIS
 

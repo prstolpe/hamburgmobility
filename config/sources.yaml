@@ -2,7 +2,7 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.2
+  version: 0.1.3
   date: 2026-10-28
   crs_work: EPSG:25832
 
@@ -213,24 +213,39 @@ sources:
     title: Zensus 2022 Bevölkerung im 100-m-Gitter
     provider: Statistische Ämter des Bundes und der Länder
     access: download
-    url: https://zensus2022.de/EN/Census_results/02-release-of-results.html?nn=470744  # Seite mit Download-Links
+    url: https://www.destatis.de/static/DE/zensus/gitterdaten/Zensus2022_Bevoelkerungszahl.zip  # 2026-10-28: Link auf destatis.de/zensus2022, HTTP 200, 18,5 MB
+    info: https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Zensus2022/_inhalt.html
     format: CSV (zip)
-    license: unknown  # TODO
+    license: dl-de/by-2.0  # 2026-10-28: laut Downloadseite (Datenlizenz Deutschland – Namensnennung 2.0)
+    attribution: "© Statistische Ämter des Bundes und der Länder, Zensus 2022"
     as_of: 2022-05-15
     purpose: [exposure, place_score]
-    check_status: verified
+    check_status: verified  # 2026-10-28: ZIP geladen, Datensatzbeschreibung gelesen
+    fetch:
+      download: zip
+      grid:  # Spalten laut Datensatzbeschreibung_Bevoelkerungszahl_Gitterzellen.xlsx (im ZIP)
+        member: Zensus2022_Bevoelkerungszahl_100m-Gitter.csv
+        separator: ";"
+        x: x_mp_100m  # Mittelpunkt der Gitterzelle, EPSG:3035
+        y: y_mp_100m
+        value: Einwohner
+        crs: EPSG:3035
+        cell_m: 100
+    note: "Zellen ohne Einwohner fehlen in der Datei (= 0). Werte sind durch das Geheimhaltungsverfahren leicht verändert."
 
   gtfs_hvv:
     title: HVV-Fahrplandaten (GTFS)
     provider: Hamburger Verkehrsverbund GmbH
     access: download
-    url: null  # TODO: aktuellen Datensatz im Transparenzportal wählen ("hvv Fahrplandaten GTFS")
+    url: https://daten.transparenz.hamburg.de/Dataport.HmbTG.ZS.Webservice.GetRessource100/GetRessource100.svc/f0073555-962c-4d55-870e-b94bb676ad9d/Upload__hvv_Rohdaten_GTFS_Fpl_20260408.ZIP  # 2026-10-28: Transparenzportal (Producer-URL laut Mobility Database mdb-3362), HTTP 200, 40,4 MB
     format: GTFS (zip)
     license: dl-de/by-2.0
     attribution: "Hamburger Verkehrsverbund GmbH"
-    as_of: "gültig 2026-04-08 bis 2026-12-12 (laut Mobility Database)"
+    as_of: "gültig 2026-04-08 bis 2026-12-12 (feed_info.txt)"
     purpose: [bus_network, bus_trips_weekday]
-    check_status: verified
+    check_status: verified  # 2026-10-28: ZIP geladen, feed_info.txt gelesen
+    fetch: {download: zip}
+    note: "Fahrplanperiode endet 2026-12-12; danach neuen Datensatz im Transparenzportal wählen und URL ersetzen."
 
   accidents:
     title: Unfallatlas der Statistischen Ämter

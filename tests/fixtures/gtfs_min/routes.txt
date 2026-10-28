@@ -1,0 +1,4 @@
+route_id,agency_id,route_short_name,route_type
+bus1,A,5,3
+bus2,A,M5,700
+sub1,A,U2,1

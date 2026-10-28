@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.3.0
+  version: 0.5.0
   date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -248,6 +248,110 @@ conflation:
       note: >-
         Ersatz für die HVS-Karte 2023 (HH_HVS_2023, nur PDF) und den WFS Strategisches Straßennetz (HTTP 404).
         Stand 2019; Abweichungen zur Karte 2023 sind möglich. Entscheidung Projektteam 2026-10-28.
+
+# ---------------------------------------------------------------
+# Merkmale je Abschnitt (pipeline/s04_features.py, guide.md 3.2 Stufe 4, prompts/06)
+# Fehlende Werte bleiben null; scores.*.missing_value_policy gilt.
+# ---------------------------------------------------------------
+features:
+  rules:
+    - id: S-FEAT-01
+      description: "Normierung auf 0-1 als Perzentilrang (empirische Verteilungsfunktion) über alle Abschnitte im Arbeitsgebiet mit bekanntem Wert"
+      method: percentile_rank
+      ties: min
+      source_type: assumption
+      status: draft
+      note: >-
+        Gleiche Werte erhalten den kleinsten Rang ihrer Gruppe (seit 0.5.0; vorher mittlerer Rang), damit der kleinste
+        Wert auf 0 fällt: ohne Bus (rund 70 % der Abschnitte) bus_trips_weekday_norm 0 statt 0,35, Sackgassen mit
+        Betweenness 0 ebenso. Ohne Streuung (ein Wert oder alle gleich) ist der Normwert 0. in_hvs geht als 0/1 ein, shop_frontage_share ist schon ein Anteil
+        0-1 und wird nicht umgerechnet. Folge: conn_gow 0,6 bedeutet bei einem einzelnen Merkmal 'oberste 40 %'.
+        Entscheidung Projektteam 2026-10-28.
+    - id: S-FEAT-02
+      description: "Edge betweenness, zeitgewichtet: Reisezeit = Länge / Tempo; Tempo amtlich vor OSM maxspeed vor Standardwert je highway-Klasse"
+      method: igraph_edge_betweenness_undirected
+      exclude_highway: [pedestrian]
+      thresholds:
+        default_speed_motorway:       {value: 100, unit: km/h, source_type: assumption}
+        default_speed_motorway_link:  {value: 60,  unit: km/h, source_type: assumption}
+        default_speed_trunk:          {value: 70,  unit: km/h, source_type: assumption}
+        default_speed_trunk_link:     {value: 50,  unit: km/h, source_type: assumption}
+        default_speed_primary:        {value: 50,  unit: km/h, source_type: assumption}
+        default_speed_primary_link:   {value: 50,  unit: km/h, source_type: assumption}
+        default_speed_secondary:      {value: 50,  unit: km/h, source_type: assumption}
+        default_speed_secondary_link: {value: 50,  unit: km/h, source_type: assumption}
+        default_speed_tertiary:       {value: 50,  unit: km/h, source_type: assumption}
+        default_speed_tertiary_link:  {value: 50,  unit: km/h, source_type: assumption}
+        default_speed_unclassified:   {value: 50,  unit: km/h, source_type: assumption}
+        default_speed_residential:    {value: 30,  unit: km/h, source_type: assumption}
+        default_speed_living_street:  {value: 7,   unit: km/h, source_type: assumption, check: "Rechenwert wie categories.ETW_ERF"}
+      source_type: assumption
+      status: draft
+      note: >-
+        Graph über das ganze Hamburger Netz (kein Randeffekt am Arbeitsgebiet), ungerichtet, weil die Abschnitte
+        keine Einbahn-Information tragen. Fußgängerzonen sind kein Kfz-Netz und bleiben außen vor (betweenness null).
+        Vollständige Berechnung ohne Stichprobe (Laufzeit ca. 1 min). Standardtempo nur, wenn weder amtliches noch
+        OSM-Tempo bekannt ist (docs/open_questions.md).
+    - id: S-FEAT-03
+      description: "Gebäudedichte = Grundfläche der OSM-Gebäude im Puffer / Pufferfläche"
+      thresholds:
+        buffer_m: {value: 50, unit: m, source_type: assumption}
+      source_type: assumption
+      status: draft
+      note: "Gebäude aus OSM, solange ALKIS fehlt (Entscheidung Projektteam 2026-10-28). Puffer mit runden Enden."
+    - id: S-FEAT-04
+      description: "Einwohner im Puffer, flächenanteilig aus dem Zensus-Gitter 100 m"
+      thresholds:
+        buffer_m: {value: 100, unit: m, source_type: assumption, check: "Name population_100m aus scores/priority"}
+      source_type: assumption
+      status: draft
+      note: "Zensus-Gitter liegt noch nicht in data/raw (Download-URL fehlt in sources.yaml); bis dahin null."
+    - id: S-FEAT-05
+      description: "Anteil Erdgeschoss mit Publikumsnutzung = Anteil der Gebäude im Puffer mit shop/amenity (Tag am Gebäude oder POI-Knoten im Gebäude)"
+      thresholds:
+        buffer_m: {value: 20, unit: m, source_type: assumption}
+      amenity_excluded: [parking, parking_space, parking_entrance, bicycle_parking, motorcycle_parking, bench,
+                         waste_basket, waste_disposal, recycling, vending_machine, post_box, telephone, charging_station,
+                         shelter, drinking_water, clock, grit_bin, letter_box, loading_dock, atm, toilets]
+      source_type: assumption
+      status: draft
+      note: >-
+        Zählt Gebäude, nicht Fassadenlänge. Das Stockwerk von POIs wird nicht geprüft. ALKIS-Gebäudefunktion fehlt
+        noch; dann ergänzen. Liste amenity_excluded: Stadtmöblierung und Infrastruktur ohne Publikumsverkehr (Vorschlag).
+    - id: S-FEAT-06
+      description: "Entfernung zur nächsten Schule oder Kita (OSM amenity=school/kindergarten, Fläche oder Punkt); Normierung über den Perzentilrang der negativen Entfernung"
+      source_type: assumption
+      status: draft
+    - id: S-FEAT-07
+      description: "Zugehörigkeit zum Radnetz über den Längenanteil wie S-CONF-02 (Puffer, Winkel und Mindestanteil von dort)"
+      source_type: assumption
+      status: draft
+      note: "Radnetz aus OSM-Relationen cycle_network=DE:HH:Radnetz_Hamburg (Fallback in sources.yaml)."
+    - id: S-FEAT-08
+      description: "Busfahrten pro Werktag aus GTFS: repräsentativer Werktag, Fahrten je shape, Zuordnung shape -> Abschnitt über den Längenanteil wie S-CONF-02"
+      route_types: [3, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714, 715, 716]
+      source_type: assumption
+      status: draft
+      note: >-
+        Repräsentativer Werktag = der Dienstag, Mittwoch oder Donnerstag in der Gültigkeit des Feeds mit den meisten
+        aktiven service_id (calendar und calendar_dates). route_types: 3 und 7xx (Bus) nach GTFS-Spezifikation bzw.
+        erweiterten Routentypen. GTFS liegt noch nicht in data/raw (URL fehlt in sources.yaml); bis dahin null.
+    - id: S-FEAT-09
+      description: "Ist-Tempo: amtliches Regeltempo vor OSM maxspeed; beide bekannt und verschieden -> speed_sources_conflict"
+      source: HH_TEMPO
+      source_type: hamburg
+      status: draft
+    - id: S-FEAT-10
+      description: "Ist-Gestaltung aus OSM-Tags: Mehrheitswert über die Ways des Abschnitts, gewichtet mit der Länge im Abschnitt; ohne Tag null"
+      source_type: assumption
+      status: draft
+      note: >-
+        separated_cycle_track_present: cycleway[:both|left|right] = track oder separate, oder bicycle = use_sidepath.
+        cycle_lane_present: cycleway… = lane. centre_line: lane_markings. parking: parking:[both|left|right] bzw.
+        parking:lane:… (altes Schema). crossings/traffic_calming: Knoten highway=crossing bzw. traffic_calming=* höchstens
+        node_snap_m vom Abschnitt. Fehlende Tags heißen 'unbekannt', nicht 'nein'.
+      thresholds:
+        node_snap_m: {value: 1, unit: m, source_type: assumption}
 
 # ---------------------------------------------------------------
 # Netzkohärenz

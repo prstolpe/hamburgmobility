@@ -23,6 +23,7 @@ from pipeline.lib import ogcapi, wfs
 from pipeline.lib.boundary import BoundaryError, boundaries_from_pbf, buffered_area, select_district
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.geo import clean, features_to_gdf, keep_intersecting, parquet_safe
+from pipeline.lib.grid import read_grid_zip
 from pipeline.lib.http import FetchError, get, get_json, make_session
 from pipeline.lib.links import osm_map_link
 from pipeline.lib.manifest import REPO_ROOT, file_record, load_manifest, save_manifest, sha256_file
@@ -133,6 +134,51 @@ def fetch_osm_fallback(pbf: Path, source_id: str, src: dict, area_wgs84) -> Resu
     keep = [c for c in ("id", "osm_type", "name", "amenity", "cycle_network", "network", "ref", "route",
                         "geometry") if c in gdf.columns]
     result.files = [_write_layer(clean(gdf[keep]), source_id, "osm")]
+    return result
+
+
+# --- file downloads (GTFS, Zensus grid) ----------------------------------------------------
+
+
+def _download(session, url: str, path: Path) -> None:
+    response = get(session, url, stream=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".part")
+    with open(tmp, "wb") as f:
+        for chunk in response.iter_content(chunk_size=1 << 20):
+            f.write(chunk)
+    tmp.replace(path)
+
+
+def fetch_download(session, source_id: str, src: dict, area, manifest: dict, refresh: bool) -> Result:
+    """Download a file once (reused while its hash matches the manifest); optionally extract a grid layer."""
+    result = Result(source_id, src["title"], "ok", url=src["url"], license=src.get("license"),
+                    attribution=src.get("attribution"))
+    previous = manifest["sources"].get(source_id, {})
+    old = next((f for f in previous.get("files", []) if f.get("layer") == "zip"), None)
+    path = RAW_DIR / source_id / Path(src["url"].split("?")[0]).name
+    reuse = (not refresh and old is not None and old["path"] == str(path.relative_to(REPO_ROOT))
+             and path.exists() and sha256_file(path) == old["sha256"])
+    if reuse:
+        result.retrieved_at = previous.get("retrieved_at")
+        result.note = "lokale Datei wiederverwendet"
+    else:
+        try:
+            _download(session, src["url"], path)
+        except (FetchError, OSError) as exc:
+            result.status, result.error = "fehler", str(exc)
+            return result
+        result.retrieved_at = _now()
+    result.files = [{"layer": "zip", **file_record(path)}]
+    grid = src["fetch"].get("grid")
+    if grid:
+        area_grid = gpd.GeoSeries([area], crs=WORK_CRS).to_crs(grid["crs"]).iloc[0]
+        try:
+            cells = read_grid_zip(path, grid, area_grid).to_crs(WORK_CRS)
+        except (KeyError, ValueError) as exc:
+            result.status, result.error = "fehler", f"{grid['member']}: {exc}"
+            return result
+        result.files.append(_write_layer(cells, source_id, f"{int(grid['cell_m'])}m"))
     return result
 
 
@@ -314,7 +360,7 @@ def _manifest_entry(r: Result, src: dict, previous: dict) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--only", help="comma-separated source ids (OSM and boundary always run)")
-    parser.add_argument("--refresh", action="store_true", help="download the OSM extract again")
+    parser.add_argument("--refresh", action="store_true", help="download the OSM extract and other files again")
     args = parser.parse_args(argv)
 
     sources = _load_yaml(SOURCES_PATH)["sources"]
@@ -370,7 +416,8 @@ def main(argv: list[str] | None = None) -> int:
             result = Result(source_id, src["title"], "fehler", url=url, license=src.get("license"),
                             error="kein Arbeitsgebiet (Bezirksgrenze fehlt)")
         else:
-            handlers = {"wfs": lambda: fetch_wfs(session, source_id, src, area),
+            handlers = {"download": lambda: fetch_download(session, source_id, src, area, manifest, args.refresh),
+                        "wfs": lambda: fetch_wfs(session, source_id, src, area),
                         "ogc_api_features": lambda: fetch_ogcapi(session, source_id, src, area),
                         "sensorthings": lambda: fetch_sensorthings(session, source_id, src, area, area_wgs84)}
             try:
