@@ -133,3 +133,28 @@
   2026-10-28); nur approved wird übernommen (pipeline/s06b_overrides.py).
 - Wirkung (Arbeitsgebiet): Flags N1 91 GOW-Enden, N2/N7 132 Abschnitte, N3 106, N4 1 082, N5 0, N6 758 Knoten mit
   Abweichung (siehe reports/coherence.md).
+
+
+## sources.yaml 0.1.6 – 2026-10-28
+- accidents (Unfallatlas): Basis-URL https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/ (OpenData-Seite
+  laut unfallatlas.statistikportal.de), Unfalljahre 2021–2025 als `fetch.files`, Spalten und Codes laut
+  Datensatzbeschreibung DSB_Unfallatlas.pdf (Stand 10.06.2025) in `fetch.points`; check_status verified.
+- Hamburg (ULAND 02) ist in allen fünf Jahren enthalten: 6 397 / 7 174 / 7 332 / 7 031 / 7 057 Unfälle mit Personenschaden.
+- s01_fetch lädt mehrere Dateien je Quelle (`fetch_download_files`) und zählt die Unfälle je Jahr; Einzelunfälle bleiben
+  nur in den ZIPs in data/raw, es wird keine Punktebene geschrieben.
+
+## rules.yaml 0.10.0 – 2026-10-28
+- Abschnitte `discrepancy` und `priority` für pipeline/s08_discrepancy.py (prompts/10_discrepancy.md) ausgebaut.
+  Bestehende Werte (+20 → 2, +30 → 3, max_dtv, risk_weights) unverändert. Lücken als Annahmen gefüllt (Entscheidung
+  Projektteam 2026-10-28), alle `status: draft`:
+  - D-SPD-01: Stufen als `levels`; neu Stärke 1 bei 1–19 km/h Überschreitung (assumption).
+  - D-DES-01: `violations` übersetzen die Anforderungen in dreiwertige Bedingungen auf Ist-Merkmale; fehlende OSM-Tags
+    sind unbekannt, kein Verstoß. Je Verstoß `direction` flow/sparse (assumption). Mitteltrennung über
+    bahnigkeit_official; Abschnitte ohne Gegenrichtung zählen nicht.
+  - D-USE-01: Profil track bei baulichem Radweg (ohne max_dtv), sonst wide; Stärke 2 ab 1,5-fach, 3 ab 2-fach (assumption).
+  - D-TYPE-01: nur flow → D1, nur sparse → D2, beides → D3.
+  - P-RISK-01: Komponenten-Zuordnung, Zuordnung der Unfälle zum nächsten Abschnitt ≤ 15 m, Mindestlänge 100 m für
+    „je km“, Schule/Kita ≤ 150 m (wie C-G30-01), 5 Jahre; Normierung über den Perzentilrang (S-FEAT-01).
+- Schema: Modelle für levels, violations, type_rule und risk; IDs D-*/P-* in der Prüfung auf doppelte IDs.
+- Wirkung (Arbeitsgebiet, 4 787 Abschnitte): Diskrepanz bei 2 102 Abschnitten (201,7 km, 35,9 % der Länge),
+  D1 1 824, D2 212, D3 66; Tempo-Diskrepanz Stärke 2 bei 1 713 Abschnitten (meist Ist 50 auf Soll 30).

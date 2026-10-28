@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.9.0
+  version: 0.10.0
   date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -609,27 +609,82 @@ coherence:
     note: "Übernahme nur über overrides/overrides.csv mit review_status approved."
 
 # ---------------------------------------------------------------
-# Diskrepanz ("grijze wegen") und Priorisierung
+# Diskrepanz ("grijze wegen") und Priorisierung (pipeline/s08_discrepancy.py, guide.md 1.6, prompts/10)
+# Richtung je Verstoß (für D-TYPE-01): flow = Durchfluss-Merkmal, passt zu einer Verbindungsstraße;
+# sparse = Merkmal der Soll-Kategorie fehlt (sparsame Gestaltung). Fehlende Ist-Merkmale (null) gelten als
+# unbekannt, nicht als Verstoß (S-FEAT-10, Entscheidung Projektteam 2026-10-28).
 # ---------------------------------------------------------------
 discrepancy:
   speed:
-    rule: "ist_limit_kmh > categories[soll].speed_kmh"
-    severity: {"+20": 2, "+30_or_more": 3}
+    id: D-SPD-01
+    rule: "excess_kmh = speed_ist_kmh - categories[cat_final].speed_kmh; Stärke = höchste Stufe mit excess_kmh >= min_excess_kmh"
+    levels:
+      - {severity: 1, min_excess_kmh: 1, source_type: assumption, check: "In 0.9.0 nicht festgelegt; jede Überschreitung unter 20 km/h"}
+      - {severity: 2, min_excess_kmh: 20, source: KNSPV_RI_2023, source_type: swov_crow}
+      - {severity: 3, min_excess_kmh: 30, source: KNSPV_RI_2023, source_type: swov_crow}
+    direction: flow
     source: KNSPV_RI_2023
     source_type: swov_crow
+    status: draft
+    note: "Ohne Soll-Tempo (SW) oder ohne Ist-Tempo nicht geprüft (null). ETW_ERF mit dem Rechenwert 7 km/h."
   design:
+    id: D-DES-01
     checks: [cycling, cycle_lanes_allowed, centre_line, parking_along_carriageway, median_if_lanes_per_dir_gte]
     severity: "Anzahl verletzter Anforderungen, gekappt bei 3"
+    max_severity: 3
+    # Prüfung je Anforderung: gilt, wenn die Soll-Kategorie die Anforderung `check` mit dem Wert `requirement`
+    # hat (ohne `requirement`: bei jedem Wert, der dann in violated_if als `requirement` steht).
+    # violated_if wird dreiwertig ausgewertet (pipeline/lib/expr.py); unbekannt -> disc_design_unknown.
+    violations:
+      - {check: cycling, requirement: separated_mandatory_track_or_parallel_route, violated_if: "not separated_cycle_track_present",
+         direction: sparse, label_de: "kein baulicher Radweg", source_type: assumption,
+         note: "Parallelroute ist nicht prüfbar; ein Abschnitt mit Parallelroute wird als Verstoß gezählt"}
+      - {check: cycling, requirement: cycle_lanes_or_existing_track, violated_if: "not (cycle_lane_present or separated_cycle_track_present)",
+         direction: sparse, label_de: "Radverkehr auf der Fahrbahn ohne Radfahrstreifen", source_type: assumption}
+      - {check: cycling, requirement: mixed, violated_if: "separated_cycle_track_present",
+         direction: flow, label_de: "baulicher Radweg statt Mischverkehr", source_type: assumption}
+      - {check: cycle_lanes_allowed, requirement: false, violated_if: "cycle_lane_present",
+         direction: {GOW50: sparse, ETW30: flow}, label_de: "Radfahr- oder Schutzstreifen", source_type: assumption}
+      - {check: centre_line, requirement: false, violated_if: "centre_line",
+         direction: flow, label_de: "Mittelmarkierung", source_type: assumption}
+      - {check: parking_along_carriageway, requirement: false, violated_if: "parking_along_carriageway",
+         direction: sparse, label_de: "Parken längs der Fahrbahn", source_type: assumption}
+      - check: median_if_lanes_per_dir_gte
+        violated_if: "lanes_per_dir_max >= requirement and bahnigkeit_official == 1 and lanes_official_in > 0 and lanes_official_gegen > 0"
+        direction: sparse
+        label_de: "mehrere Fahrstreifen je Richtung ohne Mitteltrennung"
+        source_type: assumption
+        note: >-
+          lanes_per_dir_max = max(lanes_official_in, lanes_official_gegen); Mitteltrennung über bahnigkeit_official
+          (2 = zweibahnig, Bedeutung nicht amtlich bestätigt). Abschnitte mit Fahrstreifen nur in einer Richtung
+          (Richtungsfahrbahn einer zweibahnigen Straße, Einbahnstraße) haben keinen Gegenverkehr und gelten nicht als Verstoß.
     source: [CROW_GOW30_2023, KNSPV_OPS_2021]
     source_type: swov_crow
+    status: draft
   use:
-    rule: "dtv > requirements[soll].profiles.*.max_dtv"
+    id: D-USE-01
+    rule: "dtv_official > factor * requirements[cat_final].profiles[profile].max_dtv"
+    profile_if_track: track     # separated_cycle_track_present -> Profil track (ohne max_dtv: kein Verstoß)
+    profile_default: wide       # sonst das großzügigere Profil
+    profile_reported: narrow    # Grenze des schmalen Profils nur im Trace
+    levels:
+      - {severity: 1, factor: 1.0, source: CROW_GOW30_2023, source_type: swov_crow}
+      - {severity: 2, factor: 1.5, source_type: assumption}
+      - {severity: 3, factor: 2.0, source_type: assumption}
+    direction: flow
     source: CROW_GOW30_2023
     source_type: swov_crow
+    status: draft
+    note: "Nur Kategorien mit profiles.*.max_dtv (bisher GOW30). DTV nur auf Hauptverkehrsstraßen (2019), sonst null."
   types:
     D1: "Erschließungsfunktion, aber Durchfluss-Gestaltung"
     D2: "Verbindungsfunktion, sparsame Gestaltung (z. B. Radverkehr auf Fahrbahn bei 50)"
     D3: "Mischform mit Merkmalen beider Kategorien"
+  type_rule:
+    id: D-TYPE-01
+    rule: "nur Verstöße mit direction flow -> D1; nur sparse -> D2; beide -> D3; ohne Verstoß null"
+    source_type: assumption
+    status: draft
 
 priority:
   formula: "max(severity) * risk"
@@ -639,3 +694,24 @@ priority:
     cycle_network: 0.2
     population_100m: 0.2
     school_kita_within_150m: 0.2
+  risk:
+    id: P-RISK-01
+    description: >-
+      risk = gewichtete Summe der Komponenten (risk_weights) mit Umlegung fehlender Gewichte wie conn_score.
+      Unfälle mit Fuß- oder Radbeteiligung (Unfallatlas IstFuss/IstRad), Unfälle mit Getöteten oder
+      Schwerverletzten zählen severe_or_fatal_weight-fach, je km (Länge mindestens min_length_m) über period_years,
+      normiert über den Perzentilrang (S-FEAT-01). Zuordnung zum nächsten Abschnitt höchstens snap_m entfernt.
+    components:  # Gewicht -> Spalte (0-1)
+      injury_crashes_ped_cyc_per_km_5y: crash_norm
+      cycle_network: in_cycle_network
+      population_100m: population_100m_norm
+      school_kita_within_150m: school_kita_near
+    severe_weight_key: severe_or_fatal_weight
+    thresholds:
+      snap_m: {value: 15, unit: m, source_type: assumption, check: "wie buffer_m in S-CONF-01; Unfallorte liegen laut Datensatzbeschreibung auf dem Straßenabschnitt"}
+      min_length_m: {value: 100, unit: m, source_type: assumption, check: "verhindert sehr hohe Werte je km auf kurzen Knotenstücken"}
+      school_kita_radius_m: {value: 150, unit: m, source_type: assumption, check: "wie sensitive_radius in C-G30-01"}
+      period_years: {value: 5, unit: Jahre, source_type: assumption, check: "prompts/10; guide.md 3.2 nennt 3-5 Jahre"}
+    source_type: assumption
+    status: draft
+    note: "Unfälle an Knoten gehen an genau einen der anliegenden Abschnitte (den nächsten). Nur aggregiert je Abschnitt gespeichert."

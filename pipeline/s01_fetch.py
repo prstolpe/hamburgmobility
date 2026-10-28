@@ -12,6 +12,7 @@ import json
 import random
 import re
 import sys
+import zipfile
 from dataclasses import dataclass, field
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -137,7 +138,7 @@ def fetch_osm_fallback(pbf: Path, source_id: str, src: dict, area_wgs84) -> Resu
     return result
 
 
-# --- file downloads (GTFS, Zensus grid) ----------------------------------------------------
+# --- file downloads (GTFS, Zensus grid, Unfallatlas) ----------------------------------------------------
 
 
 def _download(session, url: str, path: Path) -> None:
@@ -150,8 +151,59 @@ def _download(session, url: str, path: Path) -> None:
     tmp.replace(path)
 
 
+def _reusable(previous: dict, layer: str, path: Path, refresh: bool) -> bool:
+    old = next((f for f in previous.get("files", []) if f.get("layer") == layer), None)
+    return (not refresh and old is not None and old["path"] == str(path.relative_to(REPO_ROOT))
+            and path.exists() and sha256_file(path) == old["sha256"])
+
+
+def fetch_download_files(session, source_id: str, src: dict, manifest: dict, refresh: bool) -> Result:
+    """Several files below one base URL (fetch.files: key -> file name), e.g. one Unfallatlas ZIP per year.
+
+    With fetch.points the records of the state are counted per file (coverage); no point layer is written,
+    because single crashes are only kept in the original ZIPs (CLAUDE.md: Unfalldaten nur aggregiert).
+    """
+    from pipeline.lib.accidents import read_accidents_zip
+
+    result = Result(source_id, src["title"], "ok", url=src["url"], license=src.get("license"),
+                    attribution=src.get("attribution"))
+    previous = manifest["sources"].get(source_id, {})
+    spec = src["fetch"].get("points")
+    reused, empty = 0, []
+    for key, name in src["fetch"]["files"].items():
+        layer, path = f"zip_{key}", RAW_DIR / source_id / name
+        if _reusable(previous, layer, path, refresh):
+            reused += 1
+        else:
+            try:
+                _download(session, src["url"] + name, path)
+            except (FetchError, OSError) as exc:
+                result.status, result.error = "fehler", f"{name}: {exc}"
+                return result
+        result.files.append({"layer": layer, **file_record(path)})
+        if spec:
+            try:
+                n = len(read_accidents_zip(path, spec))
+            except (KeyError, ValueError, zipfile.BadZipFile) as exc:
+                result.status, result.error = "fehler", f"{name}: {exc}"
+                return result
+            result.listing[str(key)] = f"{n} Unfälle Hamburg" if n else "keine Unfälle Hamburg"
+            if n == 0:
+                empty.append(str(key))
+    result.retrieved_at = previous.get("retrieved_at") if reused == len(result.files) else _now()
+    notes = []
+    if reused:
+        notes.append(f"{reused} lokale Datei(en) wiederverwendet")
+    if empty:
+        notes.append(f"ohne Daten für Hamburg: {', '.join(empty)}")
+    result.note = "; ".join(notes) or None
+    return result
+
+
 def fetch_download(session, source_id: str, src: dict, area, manifest: dict, refresh: bool) -> Result:
     """Download a file once (reused while its hash matches the manifest); optionally extract a grid layer."""
+    if "files" in src["fetch"]:
+        return fetch_download_files(session, source_id, src, manifest, refresh)
     result = Result(source_id, src["title"], "ok", url=src["url"], license=src.get("license"),
                     attribution=src.get("attribution"))
     previous = manifest["sources"].get(source_id, {})

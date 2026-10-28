@@ -357,36 +357,111 @@ class FeasibilityClass(_Strict):
     source: str | list[str] | None = None
 
 
+Direction = Literal["flow", "sparse"]
+
+
+class SpeedLevel(_Strict):
+    severity: int = Field(ge=1, le=3)
+    min_excess_kmh: float
+    source_type: SourceType
+    source: str | list[str] | None = None
+    check: str | None = None
+
+
 class DiscrepancySpeed(_Strict):
+    id: str = Field(pattern=r"^D-[A-Z]+-\d{2}$")
     rule: str
-    severity: dict[str, int]
+    levels: list[SpeedLevel] = Field(min_length=1)
+    direction: Direction
     source: str | list[str]
     source_type: SourceType
+    status: Status
+    note: str | None = None
+
+
+class DesignViolation(_Strict):
+    check: str
+    requirement: Any = None  # applies only if the category's requirement value equals this (None: any value)
+    violated_if: str
+    direction: Direction | dict[str, Direction]
+    label_de: str
+    source_type: SourceType
+    source: str | list[str] | None = None
+    note: str | None = None
+
+    def direction_for(self, category: str) -> str:
+        if isinstance(self.direction, str):
+            return self.direction
+        if category not in self.direction:
+            raise KeyError(f"discrepancy.design: no direction for {self.check} in category {category}")
+        return self.direction[category]
 
 
 class DiscrepancyDesign(_Strict):
+    id: str = Field(pattern=r"^D-[A-Z]+-\d{2}$")
     checks: list[str]
     severity: str
+    max_severity: int = Field(ge=1, le=3)
+    violations: list[DesignViolation] = Field(min_length=1)
     source: str | list[str]
     source_type: SourceType
+    status: Status
+    note: str | None = None
+
+
+class UseLevel(_Strict):
+    severity: int = Field(ge=1, le=3)
+    factor: float = Field(gt=0)
+    source_type: SourceType
+    source: str | list[str] | None = None
 
 
 class DiscrepancyUse(_Strict):
+    id: str = Field(pattern=r"^D-[A-Z]+-\d{2}$")
     rule: str
+    profile_if_track: str
+    profile_default: str
+    profile_reported: str | None = None
+    levels: list[UseLevel] = Field(min_length=1)
+    direction: Direction
     source: str | list[str]
     source_type: SourceType
+    status: Status
+    note: str | None = None
+
+
+class TypeRule(_Strict):
+    id: str = Field(pattern=r"^D-[A-Z]+-\d{2}$")
+    rule: str
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
 
 
 class Discrepancy(_Strict):
     speed: DiscrepancySpeed
     design: DiscrepancyDesign
     use: DiscrepancyUse
-    types: dict[str, str]
+    types: dict[Literal["D1", "D2", "D3"], str]
+    type_rule: TypeRule
+
+
+class RiskRule(_Strict):
+    id: str = Field(pattern=r"^P-[A-Z]+-\d{2}$")
+    description: str
+    components: dict[str, str]  # risk weight key -> column (0-1)
+    severe_weight_key: str
+    thresholds: dict[str, Threshold]
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    note: str | None = None
 
 
 class Priority(_Strict):
     formula: str
     risk_weights: dict[str, float]
+    risk: RiskRule
 
 
 class RuleSet(_Strict):
@@ -425,7 +500,9 @@ class RuleSet(_Strict):
         ids = ([r.id for r in self.classification] + [r.id for r in self.classification_policy]
                + [r.id for r in self.coherence]
                + [r.id for r in self.network.rules] + [r.id for r in self.conflation.rules]
-               + [r.id for r in self.features.rules] + [r.id for r in self.crosssection.rules])
+               + [r.id for r in self.features.rules] + [r.id for r in self.crosssection.rules]
+               + [self.discrepancy.speed.id, self.discrepancy.design.id, self.discrepancy.use.id,
+                  self.discrepancy.type_rule.id, self.priority.risk.id])
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
             raise ValueError(f"duplicate rule ids: {duplicates}")
@@ -508,10 +585,7 @@ class RuleSet(_Strict):
             _check_provenance(cls.model_dump(include={"source", "source_type"}),
                               f"feasibility_classes.{key}", source_ids)
 
-        for name in ("speed", "design", "use"):
-            part = getattr(self.discrepancy, name)
-            _check_provenance(part.model_dump(include={"source", "source_type"}),
-                              f"discrepancy.{name}", source_ids)
+        self._check_discrepancy(source_ids, cats)
         for rule in self.crosssection.rules:
             unknown_targets = [t for t in rule.targets if t not in self.required_width]
             if unknown_targets:
@@ -522,6 +596,43 @@ class RuleSet(_Strict):
             raise ValueError(f"discrepancy.design.checks: not defined in requirements: {sorted(unknown_checks)}")
 
         return self
+
+    def _check_discrepancy(self, source_ids: set[str], cats: set[str]) -> None:
+        d = self.discrepancy
+        for name in ("speed", "design", "use", "type_rule"):
+            _check_provenance(getattr(d, name).model_dump(include={"source", "source_type"}),
+                              f"discrepancy.{name}", source_ids)
+        for name, levels in (("speed", d.speed.levels), ("use", d.use.levels)):
+            for i, level in enumerate(levels):
+                _check_provenance(level.model_dump(include={"source", "source_type"}),
+                                  f"discrepancy.{name}.levels[{i}]", source_ids)
+            if [lv.severity for lv in levels] != sorted({lv.severity for lv in levels}):
+                raise ValueError(f"discrepancy.{name}.levels: severities must be unique and ascending")
+        if [lv.min_excess_kmh for lv in d.speed.levels] != sorted(lv.min_excess_kmh for lv in d.speed.levels):
+            raise ValueError("discrepancy.speed.levels: min_excess_kmh must ascend with severity")
+        if [lv.factor for lv in d.use.levels] != sorted(lv.factor for lv in d.use.levels):
+            raise ValueError("discrepancy.use.levels: factor must ascend with severity")
+        for i, v in enumerate(d.design.violations):
+            path = f"discrepancy.design.violations[{i}]"
+            _check_provenance(v.model_dump(include={"source", "source_type"}), path, source_ids)
+            if v.check not in d.design.checks:
+                raise ValueError(f"{path}: check {v.check!r} not in discrepancy.design.checks")
+            if isinstance(v.direction, dict):
+                unknown = sorted(set(v.direction) - cats)
+                if unknown:
+                    raise ValueError(f"{path}.direction: unknown categories {unknown}")
+        for path, rule in ((f"priority.risk[{self.priority.risk.id}]", self.priority.risk),):
+            _check_provenance(rule.model_dump(include={"source", "source_type"}), path, source_ids)
+            for name, threshold in rule.thresholds.items():
+                _check_provenance(threshold.model_dump(include={"source", "source_type"}),
+                                  f"{path}.thresholds.{name}", source_ids)
+        risk = self.priority.risk
+        weights = set(self.priority.risk_weights)
+        if risk.severe_weight_key not in weights:
+            raise ValueError(f"priority.risk.severe_weight_key {risk.severe_weight_key!r} not in risk_weights")
+        if set(risk.components) != weights - {risk.severe_weight_key}:
+            raise ValueError("priority.risk.components must name every risk weight except severe_weight_key: "
+                             f"{sorted(weights - {risk.severe_weight_key})}")
 
     @staticmethod
     def _check_requirement_group(group: dict, path: str, source_ids: set[str]) -> None:

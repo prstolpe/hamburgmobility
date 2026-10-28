@@ -1,6 +1,6 @@
 # Datenbericht – Abruf Pilotbezirk
 
-Erzeugt: 2026-10-28T11:02:19+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-10-28T14:14:26+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.
 
 ## Arbeitsgebiet
 
@@ -19,7 +19,7 @@ Erzeugt: 2026-10-28T11:02:19+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | dedications | ok | 6259 | dl-de/by-2.0 | 2026-10-28 |  |
 | speed_limits | ok | 8010 | unknown | 2026-10-28 |  |
 | traffic_volumes | ok | 690 | unknown | 2026-10-28 |  |
-| traffic_counters | ok | 3138 | unknown | 2026-10-28 | nur Bestand (Locations + Things), keine Messwerte |
+| traffic_counters | ok | 3139 | unknown | 2026-10-28 | nur Bestand (Locations + Things), keine Messwerte |
 | bike_volumes_dbradplus | fehler | – | ODbL-1.0 | – | https://api.hamburg.de/datasets/v1/dbradplus/collections/jahr2025/items?f=json&bbox=557002.1468911578%2C5934196.7297488125%2C567274.8341519193%2C5946089.7089329&bbox-crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&limit=1000&offset=10000: invalid JSON after 63156 bytes (Expecting ',' delimiter: line 1 column 63157 (char 63156)) |
 | cycle_network | fallback | 11 | ODbL-1.0 | 2026-10-28 | Fallback OSM: {"relations": {"cycle_network": ["DE:HH:Radnetz_Hamburg"]}} |
 | alkis | ok | 72433 | dl-de/by-2.0 | 2026-10-28 |  |
@@ -35,7 +35,7 @@ Erzeugt: 2026-10-28T11:02:19+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | kitas | fallback | 220 | ODbL-1.0 | 2026-10-28 | Fallback OSM: {"tags": {"amenity": ["kindergarten"]}} |
 | population_grid | ok | 4274 | dl-de/by-2.0 | 2026-10-28 | lokale Datei wiederverwendet |
 | gtfs_hvv | ok | 0 | dl-de/by-2.0 | 2026-10-28 | lokale Datei wiederverwendet |
-| accidents | fehlt | – | dl-de/by-2.0 | – | TODO: Opendata-Seite auf unfallatlas.statistikportal.de, Jahre einzeln |
+| accidents | ok | 0 | dl-de/by-2.0 | 2026-10-28 |  |
 | osm | ok | 1 | ODbL-1.0 | 2026-10-28 | lokale Datei wiederverwendet (Stand Wed, 28 Oct 2026 03:56:24 GMT) |
 
 ## Ebenen
@@ -51,7 +51,7 @@ Erzeugt: 2026-10-28T11:02:19+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | speed_limits | zulaessige_hoechstgeschwindigkeiten_sonderregelung | 162 | EPSG:25832 | [558472.0, 5934911.0, 565856.8, 5944500.3] | `data/raw/speed_limits__zulaessige_hoechstgeschwindigkeiten_sonderregelung.parquet` |
 | traffic_volumes | verkehrsmengen_dtv_hvs_2019 | 598 | EPSG:25832 | [557979.4, 5934259.0, 567018.7, 5945253.2] | `data/raw/traffic_volumes__verkehrsmengen_dtv_hvs_2019.parquet` |
 | traffic_volumes | verkehrsmengen_dtv_bab_2019 | 92 | EPSG:25832 | [557583.4, 5936922.6, 561516.1, 5945291.2] | `data/raw/traffic_volumes__verkehrsmengen_dtv_bab_2019.parquet` |
-| traffic_counters | locations_things | 3138 | EPSG:25832 | [557869.1, 5933864.0, 566909.7, 5945067.0] | `data/raw/traffic_counters__locations_things.parquet` |
+| traffic_counters | locations_things | 3139 | EPSG:25832 | [557869.1, 5933864.0, 566909.7, 5945067.0] | `data/raw/traffic_counters__locations_things.parquet` |
 | cycle_network | osm | 11 | EPSG:25832 | [559477.1, 5934127.3, 567331.8, 5943928.0] | `data/raw/cycle_network__osm.parquet` |
 | alkis | ave:Nutzung | 12381 | EPSG:25832 | [556939.5, 5934001.7, 567665.8, 5945590.9] | `data/raw/alkis__Nutzung.parquet` |
 | alkis | ave:GebaeudeBauwerk | 60052 | EPSG:25832 | [557310.5, 5934160.9, 567192.1, 5945353.4] | `data/raw/alkis__GebaeudeBauwerk.parquet` |
@@ -65,6 +65,11 @@ Erzeugt: 2026-10-28T11:02:19+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | population_grid | zip | – | – | – | `data/raw/population_grid/Zensus2022_Bevoelkerungszahl.zip` |
 | population_grid | 100m | 4274 | EPSG:25832 | [556956.0, 5934137.8, 567325.9, 5946066.6] | `data/raw/population_grid__100m.parquet` |
 | gtfs_hvv | zip | – | – | – | `data/raw/gtfs_hvv/Upload__hvv_Rohdaten_GTFS_Fpl_20260408.ZIP` |
+| accidents | zip_2021 | – | – | – | `data/raw/accidents/Unfallorte2021_EPSG25832_CSV.zip` |
+| accidents | zip_2022 | – | – | – | `data/raw/accidents/Unfallorte2022_EPSG25832_CSV.zip` |
+| accidents | zip_2023 | – | – | – | `data/raw/accidents/Unfallorte2023_EPSG25832_CSV.zip` |
+| accidents | zip_2024 | – | – | – | `data/raw/accidents/Unfallorte2024_EPSG25832_CSV.zip` |
+| accidents | zip_2025 | – | – | – | `data/raw/accidents/Unfallorte2025_EPSG25832_CSV.zip` |
 | osm | pbf | – | – | – | `data/raw/osm/hamburg_2026-10-28.osm.pbf` |
 | osm | district_boundary | 1 | EPSG:25832 | [557501.6, 5934696.6, 566774.9, 5945590.0] | `data/raw/district_boundary.parquet` |
 
@@ -77,6 +82,7 @@ Erzeugt: 2026-10-28T11:02:19+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 - **road_condition_zeb**: de.hh.up:zeb2014_geb, de.hh.up:zeb2014_gw, de.hh.up:zeb2014_sub, de.hh.up:zeb2016_geb, de.hh.up:zeb2016_gw, de.hh.up:zeb2016_sub, de.hh.up:zeb2018_geb, de.hh.up:zeb2018_gw, de.hh.up:zeb2018_sub, de.hh.up:zeb2020_geb, de.hh.up:zeb2020_gw, de.hh.up:zeb2020_sub, de.hh.up:zeb2021_geb, de.hh.up:zeb2021_gw, de.hh.up:zeb2021_sub, de.hh.up:zeb2024_geb, de.hh.up:zeb2024_gw, de.hh.up:zeb2024_sub, de.hh.up:zeb2025_geb ✔, de.hh.up:zeb2025_gw ✔, de.hh.up:zeb2025_sub ✔
 - **road_surface**: de.hh.up:strassendeckschicht ✔
 - **quiet_areas**: de.hh.up:ruhige_gebiete_hamburg ✔
+- **accidents**: 2021, 2022, 2023, 2024, 2025
 
 Neuester Jahrgang Verkehrsmengen Hauptverkehrsstraßen: **2019**.
 
@@ -95,6 +101,7 @@ Neuester Jahrgang Verkehrsmengen Hauptverkehrsstraßen: **2019**.
 - kitas: © OpenStreetMap-Beitragende (ODbL-1.0)
 - population_grid: © Statistische Ämter des Bundes und der Länder, Zensus 2022 (dl-de/by-2.0)
 - gtfs_hvv: Hamburger Verkehrsverbund GmbH (dl-de/by-2.0)
+- accidents: © Statistische Ämter des Bundes und der Länder, Unfallatlas (dl-de/by-2.0)
 - osm: © OpenStreetMap-Beitragende (ODbL-1.0)
 
 ## Stichprobe (30 zufällige Objekte, Seed 42)
@@ -103,32 +110,32 @@ Links auf OpenStreetMap. Orthophoto- und Panoramax-Links folgen, sobald das Link
 
 | Quelle | Ebene | Bezeichnung | Karte |
 | --- | --- | --- | --- |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.593464&mlon=9.897217#map=18/53.593464/9.897217) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.598298&mlon=9.969454#map=18/53.598298/9.969454) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.597078&mlon=9.892582#map=18/53.597078/9.892582) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.580053&mlon=9.986653#map=18/53.580053/9.986653) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.650715&mlon=9.907648#map=18/53.650715/9.907648) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.643816&mlon=9.951906#map=18/53.643816/9.951906) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.629798&mlon=9.946051#map=18/53.629798/9.946051) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.644735&mlon=9.911974#map=18/53.644735/9.911974) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.604394&mlon=9.919954#map=18/53.604394/9.919954) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.588298&mlon=9.991846#map=18/53.588298/9.991846) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.617282&mlon=9.898785#map=18/53.617282/9.898785) |
-| road_condition_zeb | zeb2025_gw | Bekstück | [OSM](https://www.openstreetmap.org/?mlat=53.610929&mlon=9.964637#map=18/53.610929/9.964637) |
-| road_condition_zeb | zeb2025_gw | Friedrich-Ebert-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.626019&mlon=9.937050#map=18/53.626019/9.937050) |
-| road_condition_zeb | zeb2025_gw | Stellinger Steindamm | [OSM](https://www.openstreetmap.org/?mlat=53.594334&mlon=9.928068#map=18/53.594334/9.928068) |
-| road_condition_zeb | zeb2025_gw | Stresemannstraße | [OSM](https://www.openstreetmap.org/?mlat=53.559330&mlon=9.961151#map=18/53.559330/9.961151) |
-| road_condition_zeb | zeb2025_gw | Alte Volksparkstraße | [OSM](https://www.openstreetmap.org/?mlat=53.592420&mlon=9.925788#map=18/53.592420/9.925788) |
-| road_condition_zeb | zeb2025_gw | Jugendstraße | [OSM](https://www.openstreetmap.org/?mlat=53.591587&mlon=9.931016#map=18/53.591587/9.931016) |
-| road_condition_zeb | zeb2025_gw | Nienkamp | [OSM](https://www.openstreetmap.org/?mlat=53.625080&mlon=9.964355#map=18/53.625080/9.964355) |
-| road_condition_zeb | zeb2025_sub | Dachsberg | [OSM](https://www.openstreetmap.org/?mlat=53.626294&mlon=9.926971#map=18/53.626294/9.926971) |
-| road_condition_zeb | zeb2025_sub | Grabenstraße | [OSM](https://www.openstreetmap.org/?mlat=53.559950&mlon=9.971833#map=18/53.559950/9.971833) |
-| road_condition_zeb | zeb2025_sub | Pöseldorfer Weg | [OSM](https://www.openstreetmap.org/?mlat=53.571921&mlon=9.998164#map=18/53.571921/9.998164) |
-| road_condition_zeb | zeb2025_sub | Ameisenkamp | [OSM](https://www.openstreetmap.org/?mlat=53.618505&mlon=9.884487#map=18/53.618505/9.884487) |
-| road_condition_zeb | zeb2025_sub | Fettstraße | [OSM](https://www.openstreetmap.org/?mlat=53.567225&mlon=9.962885#map=18/53.567225/9.962885) |
-| road_condition_zeb | zeb2025_sub | Langenfelder Straße | [OSM](https://www.openstreetmap.org/?mlat=53.568648&mlon=9.945807#map=18/53.568648/9.945807) |
-| road_condition_zeb | zeb2025_sub | Mergenthalerweg | [OSM](https://www.openstreetmap.org/?mlat=53.611303&mlon=9.896435#map=18/53.611303/9.896435) |
-| road_condition_zeb | zeb2025_sub | Moltkestraße | [OSM](https://www.openstreetmap.org/?mlat=53.579500&mlon=9.972893#map=18/53.579500/9.972893) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.601088&mlon=9.973745#map=18/53.601088/9.973745) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.634533&mlon=9.940800#map=18/53.634533/9.940800) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.570511&mlon=9.986601#map=18/53.570511/9.986601) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.605160&mlon=9.896512#map=18/53.605160/9.896512) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.632304&mlon=9.942138#map=18/53.632304/9.942138) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.585456&mlon=9.928895#map=18/53.585456/9.928895) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.615638&mlon=9.882284#map=18/53.615638/9.882284) |
+| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.632891&mlon=9.911688#map=18/53.632891/9.911688) |
+| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.573033&mlon=9.945775#map=18/53.573033/9.945775) |
+| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.584974&mlon=9.969315#map=18/53.584974/9.969315) |
+| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.635527&mlon=9.970052#map=18/53.635527/9.970052) |
+| road_condition_zeb | zeb2025_gw | Bekstück | [OSM](https://www.openstreetmap.org/?mlat=53.610750&mlon=9.964687#map=18/53.610750/9.964687) |
+| road_condition_zeb | zeb2025_gw | Friedrich-Ebert-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.626159&mlon=9.936836#map=18/53.626159/9.936836) |
+| road_condition_zeb | zeb2025_gw | Stellinger Steindamm | [OSM](https://www.openstreetmap.org/?mlat=53.594170&mlon=9.928102#map=18/53.594170/9.928102) |
+| road_condition_zeb | zeb2025_gw | Stresemannstraße | [OSM](https://www.openstreetmap.org/?mlat=53.559445&mlon=9.960944#map=18/53.559445/9.960944) |
+| road_condition_zeb | zeb2025_gw | Alte Volksparkstraße | [OSM](https://www.openstreetmap.org/?mlat=53.592373&mlon=9.925526#map=18/53.592373/9.925526) |
+| road_condition_zeb | zeb2025_gw | Jugendstraße | [OSM](https://www.openstreetmap.org/?mlat=53.591567&mlon=9.930715#map=18/53.591567/9.930715) |
+| road_condition_zeb | zeb2025_gw | Nienkamp | [OSM](https://www.openstreetmap.org/?mlat=53.624912&mlon=9.964192#map=18/53.624912/9.964192) |
+| road_condition_zeb | zeb2025_sub | Dachsberg | [OSM](https://www.openstreetmap.org/?mlat=53.626260&mlon=9.926675#map=18/53.626260/9.926675) |
+| road_condition_zeb | zeb2025_sub | Gottschalkweg | [OSM](https://www.openstreetmap.org/?mlat=53.634757&mlon=9.948519#map=18/53.634757/9.948519) |
+| road_condition_zeb | zeb2025_sub | Pöseldorfer Weg | [OSM](https://www.openstreetmap.org/?mlat=53.571744&mlon=9.998214#map=18/53.571744/9.998214) |
+| road_condition_zeb | zeb2025_sub | Ameisenkamp | [OSM](https://www.openstreetmap.org/?mlat=53.618391&mlon=9.884243#map=18/53.618391/9.884243) |
+| road_condition_zeb | zeb2025_sub | Fettstraße | [OSM](https://www.openstreetmap.org/?mlat=53.567065&mlon=9.963021#map=18/53.567065/9.963021) |
+| road_condition_zeb | zeb2025_sub | Langenfelder Straße | [OSM](https://www.openstreetmap.org/?mlat=53.568570&mlon=9.946080#map=18/53.568570/9.946080) |
+| road_condition_zeb | zeb2025_sub | Mergenthalerweg | [OSM](https://www.openstreetmap.org/?mlat=53.611146&mlon=9.896288#map=18/53.611146/9.896288) |
+| road_condition_zeb | zeb2025_sub | Moltkestraße | [OSM](https://www.openstreetmap.org/?mlat=53.579355&mlon=9.973068#map=18/53.579355/9.973068) |
 | speed_limits | tempo30zonen | Geschwister-Witonski-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.648291&mlon=9.911816#map=18/53.648291/9.911816) |
 | speed_limits | tempo30zonen | Puckholm | [OSM](https://www.openstreetmap.org/?mlat=53.624451&mlon=9.892527#map=18/53.624451/9.892527) |
 | speed_limits | tempo30zonen | Eduardstraße | [OSM](https://www.openstreetmap.org/?mlat=53.572723&mlon=9.945544#map=18/53.572723/9.945544) |

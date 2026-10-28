@@ -85,13 +85,25 @@ Format: `- [ ] Frage – Wer klärt – Status/Antwort`. Claude Code trägt hier
 - [ ] Flag-Liste fachlich durchsehen (reports/coherence.md, Stichprobe, reports/coherence_flags.geojson) – Verkehrsplaner*in
 - [ ] reports/coherence_flags.geojson ist 1,5 MB (alle markierten Abschnitte, Knoten, Flächen). In Git lassen oder nur erzeugen? – Team
 
+## Diskrepanz und Priorisierung (Prompt 10, rules.yaml 0.10.0)
+- [ ] **Top 30 gegenlesen** (reports/priority_top30.md, Spalte „Prüfung“) – Ortskundige
+- [ ] Neue Annahmen freigeben: Stärke 1 bei 1–19 km/h über Soll (D-SPD-01); DTV-Faktoren 1,5/2,0 für Stärke 2/3 (D-USE-01); Zuordnung flow/sparse je Verstoß und damit D1–D3 (D-DES-01, D-TYPE-01); Unfallzuordnung ≤ 15 m, Mindestlänge 100 m für „je km“, Schule/Kita ≤ 150 m, 5 Jahre (P-RISK-01) – Verkehrsplaner*in
+- [ ] Die Top 30 werden von HVS-Abschnitten mit Soll GOW30 bestimmt: 14 von 30 sind HVS mit Soll GOW30 und DTV 2019 von 21 000–39 000 Kfz/Tag (Nutzung Stärke 3), 6 weitere GOW30, 10 ETW30. Das hängt an der offenen Frage aus Prompt 08 (60 % der HVS-km werden GOW30). Erst klären, dann Liste neu erzeugen – Verkehrsplaner*in
+- [ ] Top 30 enthält mehrere Abschnitte derselben Straße (z. B. Hallerstraße 8×: 6 GOW30, 2 ETW30). Liste je Straßenzug zusammenfassen? Hallerstraße-Abschnitte mit Soll ETW30 und Ist 50 sind vermutlich Lücken im HVS-Abgleich (in_hvs false) – Methodik
+- [ ] `bahnigkeit_official` als Mitteltrennung: Bedeutung des Attributs (1/2) in der Quelle nicht bestätigt. 173 von 367 GOW50-Abschnitten haben ≥ 2 Fahrstreifen je Richtung bei bahnigkeit 1 (z. B. Kieler Straße) – GIS
+- [ ] D-DES-01 GOW50 „Radweg oder Parallelroute“: Parallelroute ist nicht prüfbar, jeder GOW50 ohne baulichen Radweg zählt als Verstoß (74 Abschnitte) – Methodik
+- [ ] Nutzung nur für GOW30 prüfbar (nur dort max_dtv) und DTV nur auf Hauptverkehrsstraßen 2019 (918 von 4 787 Abschnitten). max_dtv für ETW30 (Erschließung) und GOW50 festlegen? – Verkehrsplaner*in
+- [ ] Mittelmarkierung (GOW30) ist bei 98,7 % unbekannt (OSM lane_markings kaum erfasst); Gestaltungs-Diskrepanz auf GOW30 daher fast nur über die Radführung – GIS
+- [ ] Unfälle an Knoten gehen an genau einen anliegenden Abschnitt (den nächsten). Auf alle Arme verteilen oder Knoten gesondert ausweisen? 666 von 17 534 Unfällen mit Fuß-/Radbeteiligung liegen > 15 m von jedem Abschnitt – Methodik
+- [ ] Risiko berücksichtigt nur Unfälle mit Fuß-/Radbeteiligung (polizeilich erfasst). Rettungsdienstdaten wie in Amsterdam (guide.md) verfügbar? – Team
+
 ## Daten
 - [ ] Führt HH_WFS_Strategisches_Strassennetz ein Attribut „Hauptverkehrsstraße“ mit Stand 2023? – GIS
 - [x] Welche Jahrgänge enthält api.hamburg.de/datasets/v1/verkehrsmengen (DTV Hauptverkehrsstraßen)? – GIS – 2026-10-28: dtv_hvs_2019, dtvw_hvs_2014, dtv_bab_2019, dtvw_bab_2013 (siehe reports/data_report.md)
 - [ ] Gibt es Kfz-Zählungen auf Bezirksstraßen? Transparenzanfrage an Bezirksämter – Team
 - [ ] Dienst-URL für „Radnetz Hamburg“ im Geoportal – GIS
 - [ ] Endpunkte für Schulen, Kitas, Lärmkarten, Laserscan, Baumkataster, ALKIS-Download – GIS (GTFS, Zensus und ALKIS 2026-10-28 erledigt: WFS_HH_ALKIS_vereinfacht)
-- [ ] Abdeckung Hamburgs im Unfallatlas je Jahr – GIS
+- [x] Abdeckung Hamburgs im Unfallatlas je Jahr – GIS – 2026-10-28: laut Datensatzbeschreibung ab 2016; 2021–2025 je 6 397–7 332 Unfälle (sources.yaml 0.1.6)
 - [ ] Gibt es amtliche Flächen für Fahrbahn/Radweg/Gehweg (LSBG, Bezirke)? Transparenzanfrage – Team
 - [ ] Lizenzen der OGC-API-Datensätze (api.hamburg.de) auf den Landing Pages prüfen – GIS
 - [ ] HH_WFS_Strategisches_Strassennetz liefert seit 2026-10-28 HTTP 404 (Dataport-Fehlerseite). Neue Dienst-URL ermitteln (Geoportal/Transparenzportal); wird für die Conflation (Prompt 05) gebraucht – GIS

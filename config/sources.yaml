@@ -2,7 +2,7 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.5
+  version: 0.1.6
   date: 2026-10-28
   crs_work: EPSG:25832
 
@@ -254,11 +254,40 @@ sources:
     title: Unfallatlas der Statistischen Ämter
     provider: Statistische Ämter des Bundes und der Länder
     access: download
-    url: null  # TODO: Opendata-Seite auf unfallatlas.statistikportal.de, Jahre einzeln
+    url: https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/  # 2026-10-28: Basis-URL der OpenData-Seite im Unfallatlas (unfallatlas.statistikportal.de, Komponente OpenData, pfad), Dateiliste und alle fünf ZIPs HTTP 200
+    info: https://unfallatlas.statistikportal.de/
+    description: https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/DSB_Unfallatlas.pdf  # Datensatzbeschreibung, Stand 10.06.2025
+    format: CSV (zip), eine Datei je Jahr, Koordinaten EPSG:25832
     license: dl-de/by-2.0
+    attribution: "© Statistische Ämter des Bundes und der Länder, Unfallatlas"
+    as_of: "Unfalljahre 2021-2025 (Dateien vom 2024-11-29, 2023-06-19, 2024-05-17, 2025-07-09, 2026-07-07)"
     purpose: [risk, priority]
-    check_status: verified_license
-    todo: "Abdeckung Hamburgs je Jahr prüfen."
+    check_status: verified  # 2026-10-28: ZIPs geladen, Spalten in allen Jahren laut Datensatzbeschreibung; Hamburg (ULAND 02) laut Beschreibung ab 2016 enthalten
+    fetch:
+      download: zip
+      files:  # letzte fünf Unfalljahre (P-RISK-01 period_years)
+        2021: Unfallorte2021_EPSG25832_CSV.zip
+        2022: Unfallorte2022_EPSG25832_CSV.zip
+        2023: Unfallorte2023_EPSG25832_CSV.zip
+        2024: Unfallorte2024_EPSG25832_CSV.zip
+        2025: Unfallorte2025_EPSG25832_CSV.zip
+      points:  # Spalten und Codes laut DSB_Unfallatlas.pdf
+        member_suffixes: [".csv", ".txt"]  # Dateiname im ZIP wechselt je Jahr (2021: .txt)
+        separator: ";"
+        decimal: ","
+        encoding: utf-8-sig
+        x: LINREFX  # Unfallort auf dem Straßenabschnitt, ETRS89 / UTM 32N
+        y: LINREFY
+        crs: EPSG:25832
+        land_column: ULAND
+        land: "02"  # Hamburg
+        year: UJAHR
+        category: UKATEGORIE
+        severe_or_fatal: ["1", "2"]  # 1 Getötete, 2 Schwerverletzte (3 Leichtverletzte)
+        pedestrian: IstFuss
+        cyclist: IstRad
+        flag_true: "1"
+    note: "Nur polizeilich erfasste Unfälle mit Personenschaden; Alleinunfälle von Radfahrenden untererfasst. Einzelunfälle bleiben in den ZIPs in data/raw; gespeichert und dargestellt werden nur Summen je Abschnitt."
 
   osm:
     title: OpenStreetMap-Auszug Hamburg
