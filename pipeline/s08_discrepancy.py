@@ -36,6 +36,7 @@ TOP_PATH = REPO_ROOT / "reports" / "priority_top30.md"
 REPORT_PATH = REPO_ROOT / "reports" / "discrepancy.md"
 ACCIDENT_SOURCE = "accidents"
 TOP_N = 30
+TOP_STREETS = 30
 SAMPLE_SIZE = 30
 SAMPLE_SEED = 42
 FIXED_INPUTS = ["speed_ist_kmh", "dtv_official", "separated_cycle_track_present", "lanes_official_in",
@@ -250,6 +251,24 @@ def _type_table(df: pd.DataFrame, cats: list[str]) -> list[str]:
     return lines
 
 
+def street_summary(df: pd.DataFrame, top_ids: set[str]) -> pd.DataFrame:
+    """Named streets with priority > 0, grouped by street name and sorted by their highest priority.
+
+    Groups by name only (pieces of one name need not be connected). best_segment_id = segment with the highest priority.
+    """
+    d = df[(df["priority"] > 0) & df["name"].map(lambda v: isinstance(v, str) and v != "")]
+    d = d.sort_values(["priority", "segment_id"], ascending=[False, True])
+    rows = []
+    for name, g in d.groupby("name", sort=False):
+        rows.append({"name": name, "cats": ", ".join(dict.fromkeys(g["cat_final"])), "n_segments": len(g),
+                     "length_m": float(g["length_m"].sum()), "max_priority": float(g["priority"].iloc[0]),
+                     "crashes_ped_cyc": int(g["crashes_ped_cyc"].sum()),
+                     "crashes_severe_fatal": int(g["crashes_severe_fatal"].sum()),
+                     "n_in_top": int(g["segment_id"].isin(top_ids).sum()), "best_segment_id": g["segment_id"].iloc[0]})
+    return pd.DataFrame(rows, columns=["name", "cats", "n_segments", "length_m", "max_priority", "crashes_ped_cyc",
+                                       "crashes_severe_fatal", "n_in_top", "best_segment_id"])
+
+
 def write_top30(pilot: gpd.GeoDataFrame, ctx: dict) -> None:
     rules, viewers, stats = ctx["rules"], ctx["viewers"], ctx["stats"]
     cats = [c for c in rules.categories if c in set(pilot["cat_final"])]
@@ -259,13 +278,29 @@ def write_top30(pilot: gpd.GeoDataFrame, ctx: dict) -> None:
         f"# Prioritätenliste – Top {TOP_N} im Bezirk {ctx['pilot']}", "",
         f"Erzeugt: {_now()} von `pipeline/s08_discrepancy.py`, rules.yaml {rules.meta.version}. Nicht amtlicher Entwurf: "
         "Diskrepanz und Priorität sind Vorschläge zur Diskussion, keine Bewertung einzelner Straßen. "
-        "**Prüfschritt:** Liste von Ortskundigen gegenlesen (Spalte „Prüfung“).", "",
+        "**Prüfschritt:** Listen von Ortskundigen gegenlesen (Spalte „Prüfung“), zuerst die Straßenliste.", "",
         f"Priorität = {rules.priority.formula} (0–3). risk = gewichtete Summe aus Unfällen mit Fuß-/Radbeteiligung je km "
         f"(Perzentilrang, Schwere gewichtet), Radnetz, Einwohner und Schule/Kita im Umkreis "
         f"{rules.priority.risk.thresholds['school_kita_radius_m'].value:.0f} m (P-RISK-01). Alle Gewichte sind Annahmen.",
         "", f"Unfalljahre: {', '.join(f'{y} ({_fmt(n)} Unfälle in Hamburg)' for y, n in cov.items())}. "
         + ("Alle Jahre mit Daten für Hamburg." if all(cov.values()) else
            f"**Ohne Hamburg-Daten:** {', '.join(str(y) for y, n in cov.items() if not n)}."), "",
+        f"## Top {TOP_STREETS} Straßen", "",
+        "Abschnitte mit Priorität > 0, zusammengefasst nach Straßenname (Teile mit gleichem Namen müssen nicht "
+        "zusammenhängen; Abschnitte ohne Namen nur in der Abschnittsliste). Links auf den Abschnitt mit der höchsten "
+        "Priorität. Prüfung je Straße.", "",
+        "| # | Straße | Soll | Abschnitte (km) | davon in Top 30 | Unfälle Fuß/Rad (schwer) | höchste Priorität | "
+        "Links | Prüfung |",
+        "| ---: | --- | --- | ---: | ---: | ---: | ---: | --- | --- |",
+    ]
+    streets = street_summary(pilot, set(top["segment_id"])).head(TOP_STREETS)
+    by_id = pilot.set_index("segment_id")
+    for i, s in enumerate(streets.itertuples(index=False), start=1):
+        best = by_id.loc[s.best_segment_id]
+        lines.append(f"| {i} | {s.name} | {s.cats} | {s.n_segments} ({_km(s.length_m)}) | {s.n_in_top} | "
+                     f"{s.crashes_ped_cyc} ({s.crashes_severe_fatal}) | {s.max_priority:.2f} | {_links(best, viewers)} | ☐ |")
+    lines += [
+        "", f"## Top {TOP_N} Abschnitte", "",
         "| # | Name | Soll | Typ | Stärke T/G/N | Unfälle Fuß/Rad | Risiko | Priorität | Begründung | Links | Prüfung |",
         "| ---: | --- | --- | --- | --- | ---: | ---: | ---: | --- | --- | --- |",
     ]

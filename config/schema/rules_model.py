@@ -414,6 +414,7 @@ class UseLevel(_Strict):
     factor: float = Field(gt=0)
     source_type: SourceType
     source: str | list[str] | None = None
+    check: str | None = None
 
 
 class DiscrepancyUse(_Strict):

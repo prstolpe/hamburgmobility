@@ -87,14 +87,15 @@ Format: `- [ ] Frage – Wer klärt – Status/Antwort`. Claude Code trägt hier
 
 ## Diskrepanz und Priorisierung (Prompt 10, rules.yaml 0.10.0)
 - [ ] **Top 30 gegenlesen** (reports/priority_top30.md, Spalte „Prüfung“) – Ortskundige
-- [ ] Neue Annahmen freigeben: Stärke 1 bei 1–19 km/h über Soll (D-SPD-01); DTV-Faktoren 1,5/2,0 für Stärke 2/3 (D-USE-01); Zuordnung flow/sparse je Verstoß und damit D1–D3 (D-DES-01, D-TYPE-01); Unfallzuordnung ≤ 15 m, Mindestlänge 100 m für „je km“, Schule/Kita ≤ 150 m, 5 Jahre (P-RISK-01) – Verkehrsplaner*in
+- [x] Stärke 1 bei 1–19 km/h über Soll (D-SPD-01), DTV-Faktoren 1,5/2,0 (D-USE-01, Arbeitswert), Unfallzuordnung ≤ 15 m und Mindestlänge 100 m (P-RISK-01) – 2026-10-28: freigegeben (Entscheidung Projektteam 2026-10-28, rules.yaml 0.10.1)
+- [ ] Zuordnung flow/sparse je Verstoß und damit D1–D3 (D-DES-01, D-TYPE-01) an Beispielen der Sichtprüfung beurteilen (reports/discrepancy.md, Stichprobe) – Verkehrsplaner*in
 - [ ] Die Top 30 werden von HVS-Abschnitten mit Soll GOW30 bestimmt: 14 von 30 sind HVS mit Soll GOW30 und DTV 2019 von 21 000–39 000 Kfz/Tag (Nutzung Stärke 3), 6 weitere GOW30, 10 ETW30. Das hängt an der offenen Frage aus Prompt 08 (60 % der HVS-km werden GOW30). Erst klären, dann Liste neu erzeugen – Verkehrsplaner*in
-- [ ] Top 30 enthält mehrere Abschnitte derselben Straße (z. B. Hallerstraße 8×: 6 GOW30, 2 ETW30). Liste je Straßenzug zusammenfassen? Hallerstraße-Abschnitte mit Soll ETW30 und Ist 50 sind vermutlich Lücken im HVS-Abgleich (in_hvs false) – Methodik
+- [ ] Top 30 enthält mehrere Abschnitte derselben Straße (z. B. Hallerstraße 8×: 6 GOW30, 2 ETW30). – 2026-10-28: Straßenliste (Top 30 Straßen nach Name) vor der Abschnittsliste ergänzt (Entscheidung Projektteam 2026-10-28). Offen: Hallerstraße-Abschnitte mit Soll ETW30 und Ist 50 sind vermutlich Lücken im HVS-Abgleich (in_hvs false) – Methodik
 - [ ] `bahnigkeit_official` als Mitteltrennung: Bedeutung des Attributs (1/2) in der Quelle nicht bestätigt. 173 von 367 GOW50-Abschnitten haben ≥ 2 Fahrstreifen je Richtung bei bahnigkeit 1 (z. B. Kieler Straße) – GIS
 - [ ] D-DES-01 GOW50 „Radweg oder Parallelroute“: Parallelroute ist nicht prüfbar, jeder GOW50 ohne baulichen Radweg zählt als Verstoß (74 Abschnitte) – Methodik
 - [ ] Nutzung nur für GOW30 prüfbar (nur dort max_dtv) und DTV nur auf Hauptverkehrsstraßen 2019 (918 von 4 787 Abschnitten). max_dtv für ETW30 (Erschließung) und GOW50 festlegen? – Verkehrsplaner*in
 - [ ] Mittelmarkierung (GOW30) ist bei 98,7 % unbekannt (OSM lane_markings kaum erfasst); Gestaltungs-Diskrepanz auf GOW30 daher fast nur über die Radführung – GIS
-- [ ] Unfälle an Knoten gehen an genau einen anliegenden Abschnitt (den nächsten). Auf alle Arme verteilen oder Knoten gesondert ausweisen? 666 von 17 534 Unfällen mit Fuß-/Radbeteiligung liegen > 15 m von jedem Abschnitt – Methodik
+- [ ] Unfälle an Knoten gehen an genau einen anliegenden Abschnitt (den nächsten). Vorerst so belassen (Entscheidung Projektteam 2026-10-28); mit der Webkarte (Prompt 11) erneut prüfen: auf alle Arme verteilen oder Knoten gesondert ausweisen? 666 von 17 534 Unfällen mit Fuß-/Radbeteiligung liegen > 15 m von jedem Abschnitt – Methodik
 - [ ] Risiko berücksichtigt nur Unfälle mit Fuß-/Radbeteiligung (polizeilich erfasst). Rettungsdienstdaten wie in Amsterdam (guide.md) verfügbar? – Team
 
 ## Daten

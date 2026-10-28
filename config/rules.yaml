@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.10.0
+  version: 0.10.1
   date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -619,7 +619,7 @@ discrepancy:
     id: D-SPD-01
     rule: "excess_kmh = speed_ist_kmh - categories[cat_final].speed_kmh; Stärke = höchste Stufe mit excess_kmh >= min_excess_kmh"
     levels:
-      - {severity: 1, min_excess_kmh: 1, source_type: assumption, check: "In 0.9.0 nicht festgelegt; jede Überschreitung unter 20 km/h"}
+      - {severity: 1, min_excess_kmh: 1, source_type: assumption, check: "In 0.9.0 nicht festgelegt; jede Überschreitung unter 20 km/h. Als Arbeitswert freigegeben (Entscheidung Projektteam 2026-10-28)"}
       - {severity: 2, min_excess_kmh: 20, source: KNSPV_RI_2023, source_type: swov_crow}
       - {severity: 3, min_excess_kmh: 30, source: KNSPV_RI_2023, source_type: swov_crow}
     direction: flow
@@ -669,8 +669,8 @@ discrepancy:
     profile_reported: narrow    # Grenze des schmalen Profils nur im Trace
     levels:
       - {severity: 1, factor: 1.0, source: CROW_GOW30_2023, source_type: swov_crow}
-      - {severity: 2, factor: 1.5, source_type: assumption}
-      - {severity: 3, factor: 2.0, source_type: assumption}
+      - {severity: 2, factor: 1.5, source_type: assumption, check: "Arbeitswert (Entscheidung Projektteam 2026-10-28)"}
+      - {severity: 3, factor: 2.0, source_type: assumption, check: "Arbeitswert (Entscheidung Projektteam 2026-10-28)"}
     direction: flow
     source: CROW_GOW30_2023
     source_type: swov_crow
@@ -708,10 +708,10 @@ priority:
       school_kita_within_150m: school_kita_near
     severe_weight_key: severe_or_fatal_weight
     thresholds:
-      snap_m: {value: 15, unit: m, source_type: assumption, check: "wie buffer_m in S-CONF-01; Unfallorte liegen laut Datensatzbeschreibung auf dem Straßenabschnitt"}
-      min_length_m: {value: 100, unit: m, source_type: assumption, check: "verhindert sehr hohe Werte je km auf kurzen Knotenstücken"}
+      snap_m: {value: 15, unit: m, source_type: assumption, check: "wie buffer_m in S-CONF-01; Unfallorte liegen laut Datensatzbeschreibung auf dem Straßenabschnitt. Freigegeben (Entscheidung Projektteam 2026-10-28)"}
+      min_length_m: {value: 100, unit: m, source_type: assumption, check: "verhindert sehr hohe Werte je km auf kurzen Knotenstücken. Freigegeben (Entscheidung Projektteam 2026-10-28)"}
       school_kita_radius_m: {value: 150, unit: m, source_type: assumption, check: "wie sensitive_radius in C-G30-01"}
       period_years: {value: 5, unit: Jahre, source_type: assumption, check: "prompts/10; guide.md 3.2 nennt 3-5 Jahre"}
     source_type: assumption
     status: draft
-    note: "Unfälle an Knoten gehen an genau einen der anliegenden Abschnitte (den nächsten). Nur aggregiert je Abschnitt gespeichert."
+    note: "Unfälle an Knoten gehen an genau einen der anliegenden Abschnitte (den nächsten); vorerst so belassen, mit der Webkarte erneut prüfen (Entscheidung Projektteam 2026-10-28). Nur aggregiert je Abschnitt gespeichert."

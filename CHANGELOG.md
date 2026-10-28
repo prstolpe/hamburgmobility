@@ -158,3 +158,9 @@
 - Schema: Modelle für levels, violations, type_rule und risk; IDs D-*/P-* in der Prüfung auf doppelte IDs.
 - Wirkung (Arbeitsgebiet, 4 787 Abschnitte): Diskrepanz bei 2 102 Abschnitten (201,7 km, 35,9 % der Länge),
   D1 1 824, D2 212, D3 66; Tempo-Diskrepanz Stärke 2 bei 1 713 Abschnitten (meist Ist 50 auf Soll 30).
+
+## rules.yaml 0.10.1 – 2026-10-28
+- Keine Werte geändert. Entscheidung Projektteam 2026-10-28 in `check`/`note` vermerkt: D-SPD-01 Stärke 1 bei
+  1–19 km/h und P-RISK-01 snap_m 15 m / min_length_m 100 m freigegeben; D-USE-01 Faktoren 1,5/2,0 als Arbeitswert;
+  Unfälle an Knoten vorerst beim nächsten Abschnitt, mit der Webkarte erneut prüfen.
+- reports/priority_top30.md: neue Straßenliste (Top 30 Straßen, zusammengefasst nach Name) vor der Abschnittsliste.

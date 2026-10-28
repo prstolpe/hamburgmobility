@@ -231,3 +231,25 @@ def test_priority(sev, risk, expected):
 def test_crashes_per_km_uses_minimum_length():
     per_km = disc.crashes_per_km(pd.Series([2.0, 2.0, 0.0]), pd.Series([20.0, 400.0, 50.0]), RULES)
     assert list(per_km) == pytest.approx([20.0, 5.0, 0.0])  # 2 / 0.1 km, 2 / 0.4 km
+
+
+# --- street summary in reports/priority_top30.md ---------------------------------------------
+
+
+def test_street_summary_groups_by_name():
+    from pipeline.s08_discrepancy import street_summary
+
+    df = pd.DataFrame({
+        "segment_id": ["s1", "s2", "s3", "s4", "s5"],
+        "name": ["A-Straße", "A-Straße", "B-Weg", None, "C-Allee"],
+        "cat_final": ["GOW30", "ETW30", "ETW30", "ETW30", "GOW50"],
+        "priority": [2.0, 1.0, 1.5, 2.5, 0.0],
+        "length_m": [100.0, 50.0, 80.0, 30.0, 40.0],
+        "crashes_ped_cyc": [3, 1, 0, 2, 5],
+        "crashes_severe_fatal": [1, 0, 0, 0, 1],
+    })
+    out = street_summary(df, top_ids={"s1", "s4"})
+    assert list(out["name"]) == ["A-Straße", "B-Weg"]  # unnamed and priority 0 left out, sorted by max priority
+    a = out.iloc[0]
+    assert (a["n_segments"], a["length_m"], a["max_priority"], a["crashes_ped_cyc"], a["crashes_severe_fatal"],
+            a["n_in_top"], a["cats"], a["best_segment_id"]) == (2, 150.0, 2.0, 4, 1, 1, "GOW30, ETW30", "s1")
