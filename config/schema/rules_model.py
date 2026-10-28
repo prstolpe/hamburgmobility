@@ -182,6 +182,40 @@ class WidthEntry(_Strict):
         return self
 
 
+class HighwayClasses(_Strict):
+    values: list[str] = Field(min_length=1)
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    note: str | None = None
+
+    @field_validator("values")
+    @classmethod
+    def _unique(cls, v: list[str]) -> list[str]:
+        if len(set(v)) != len(v):
+            raise ValueError("highway_classes.values must be unique")
+        return v
+
+
+class NetworkRule(_Strict):
+    id: str = Field(pattern=r"^S-[A-Z]+-\d{2}$")
+    description: str
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    attribute: str | None = None  # OSM tag whose change ends a segment
+    thresholds: dict[str, Threshold] = {}
+    note: str | None = None
+
+
+class Network(_Strict):
+    highway_classes: HighwayClasses
+    rules: list[NetworkRule] = Field(min_length=1)
+
+    def rule(self, rule_id: str) -> NetworkRule:
+        return next(r for r in self.rules if r.id == rule_id)
+
+
 class FeasibilityClass(_Strict):
     source_type: SourceType
     min: float | None = None
@@ -230,6 +264,7 @@ class RuleSet(_Strict):
     requirements: dict[str, dict[str, Any]]
     required_width: dict[str, WidthEntry]
     feasibility_classes: dict[str, FeasibilityClass]
+    network: Network
     coherence: list[CoherenceRule]
     discrepancy: Discrepancy
     priority: Priority
@@ -243,7 +278,8 @@ class RuleSet(_Strict):
         if cats != EXPECTED_CATEGORIES:
             raise ValueError(f"categories must be {sorted(EXPECTED_CATEGORIES)}, got {sorted(cats)}")
 
-        ids = [r.id for r in self.classification] + [r.id for r in self.coherence]
+        ids = ([r.id for r in self.classification] + [r.id for r in self.coherence]
+               + [r.id for r in self.network.rules])
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
             raise ValueError(f"duplicate rule ids: {duplicates}")
@@ -276,6 +312,15 @@ class RuleSet(_Strict):
         defaults = [r.id for r in self.classification if r.if_.strip() == "default"]
         if not defaults or self.classification[-1].if_.strip() != "default" or len(defaults) > 1:
             raise ValueError("cascade must end with exactly one rule with if: default")
+
+        _check_provenance(self.network.highway_classes.model_dump(include={"source", "source_type"}),
+                          "network.highway_classes", source_ids)
+        for rule in self.network.rules:
+            path = f"network.rules[{rule.id}]"
+            _check_provenance(rule.model_dump(include={"source", "source_type"}), path, source_ids)
+            for name, threshold in rule.thresholds.items():
+                _check_provenance(threshold.model_dump(include={"source", "source_type"}),
+                                  f"{path}.thresholds.{name}", source_ids)
 
         for rule in self.coherence:
             path = f"coherence[{rule.id}]"

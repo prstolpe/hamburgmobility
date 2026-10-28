@@ -108,6 +108,14 @@ def test_valid_raw_passes(raw):
         ("wrong working CRS", lambda d: d["meta"].update(crs_work="EPSG:4326")),
         ("version not semver", lambda d: d["meta"].update(version="v1")),
         ("unknown top-level key", lambda d: d.update(extra_section={})),
+        ("network section missing", lambda d: d.pop("network")),
+        ("network rule without source_type", lambda d: d["network"]["rules"][0].pop("source_type")),
+        ("network rule without status", lambda d: d["network"]["rules"][0].pop("status")),
+        ("network rule with bad id", lambda d: d["network"]["rules"][0].update(id="NET-1")),
+        ("network rule id duplicates cascade", lambda d: d["network"]["rules"][0].update(id="C-SW-01")),
+        ("network threshold without unit", lambda d: d["network"]["rules"][2]["thresholds"]["min_length_m"].pop("unit")),
+        ("duplicate highway class", lambda d: d["network"]["highway_classes"]["values"].append("residential")),
+        ("no highway classes", lambda d: d["network"]["highway_classes"].update(values=[])),
     ],
 )
 def test_schema_rejects(raw, description, mutate):
@@ -121,3 +129,11 @@ def test_assumption_rule_may_omit_source(raw):
     n2 = next(c for c in data["coherence"] if c["id"] == "N2")
     assert "source" not in n2
     RuleSet.model_validate(data)
+
+
+def test_network_rules():
+    network = load_rules().network
+    assert [r.id for r in network.rules] == ["S-NET-01", "S-NET-02", "S-NET-03"]
+    assert "service" not in network.highway_classes.values
+    assert {"living_street", "pedestrian"} <= set(network.highway_classes.values)
+    assert network.rule("S-NET-03").thresholds["min_length_m"].unit == "m"

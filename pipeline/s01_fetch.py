@@ -24,6 +24,7 @@ from pipeline.lib.boundary import BoundaryError, boundaries_from_pbf, buffered_a
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.geo import clean, features_to_gdf, keep_intersecting, parquet_safe
 from pipeline.lib.http import FetchError, get, get_json, make_session
+from pipeline.lib.links import osm_map_link
 from pipeline.lib.manifest import REPO_ROOT, file_record, load_manifest, save_manifest, sha256_file
 
 SOURCES_PATH = REPO_ROOT / "config" / "sources.yaml"
@@ -212,11 +213,6 @@ def fetch_sensorthings(session, source_id: str, src: dict, area, area_wgs84) -> 
 # --- report ----------------------------------------------------------------------------------
 
 
-def _osm_link(point) -> str:
-    lat, lon = point.y, point.x
-    return f"https://www.openstreetmap.org/?mlat={lat:.6f}&mlon={lon:.6f}#map=18/{lat:.6f}/{lon:.6f}"
-
-
 def _samples(results: list[Result]) -> list[dict]:
     rows = []
     for r in results:
@@ -234,7 +230,7 @@ def _samples(results: list[Result]) -> list[dict]:
         point = gpd.GeoSeries([row.geometry.representative_point()], crs=WORK_CRS).to_crs("EPSG:4326").iloc[0]
         label = next((str(row[c]) for c in ("strassenname", "name", "location_name", "bezeichnung")
                       if c in gdf.columns and row[c] not in (None, "")), "")
-        out.append({"source": source_id, "layer": layer.split(":")[-1], "label": label, "link": _osm_link(point)})
+        out.append({"source": source_id, "layer": layer.split(":")[-1], "label": label, "link": osm_map_link(point)})
     return out
 
 

@@ -2,8 +2,8 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.1.0
-  date: 2026-10-27
+  version: 0.2.0
+  date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
   note: "Schwellen mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen."
@@ -167,6 +167,37 @@ feasibility_classes:  # width_ratio = width_p10 / required_width
   fits: {min: 1.00, source_type: assumption}
   tight: {min: 0.85, max: 1.00, source_type: assumption}
   does_not_fit: {max: 0.85, source_type: assumption}
+
+# ---------------------------------------------------------------
+# Netz und Segmentierung (pipeline/s02_network.py, guide.md 3.2 Stufe 2)
+# ---------------------------------------------------------------
+network:
+  highway_classes:
+    values: [motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link,
+             tertiary, tertiary_link, unclassified, residential, living_street, pedestrian]
+    source_type: assumption
+    status: draft
+    note: "guide.md 3.2: Klassen bis living_street, ohne service. *_link mitgeführt (Annahme); pedestrian als eigene Abschnitte, weil sie ETW_ERF werden können (prompts/04_network.md). Nicht enthalten: service, road, busway, track."
+  rules:
+    - id: S-NET-01
+      description: "Abschnittsende an jedem Knoten mit Grad != 2 (Kreuzung, Einmündung, Sackgassenende)"
+      source_type: assumption
+      status: draft
+      note: "guide.md 3.2 Stufe 2"
+    - id: S-NET-02
+      description: "Abschnittsende an Knoten mit Grad 2, an denen sich die highway-Klasse ändert"
+      attribute: highway
+      source_type: assumption
+      status: draft
+      note: "Jeder Abschnitt hat genau eine highway-Klasse; Fußgängerzonen werden so eigene Abschnitte."
+    - id: S-NET-03
+      description: "Abschnitte länger als min_length_m an Knoten teilen, an denen sich maxspeed ändert (nur Wechsel zwischen zwei bekannten Werten)"
+      attribute: maxspeed
+      thresholds:
+        min_length_m: {value: 400, unit: m, source_type: assumption, check: "fachlich freigeben (docs/open_questions.md)"}
+      source_type: assumption
+      status: draft
+      note: "guide.md 3.2 Stufe 2 nennt auch Querschnittswechsel; Querschnittsdaten liegen erst nach Prompt 07 vor."
 
 # ---------------------------------------------------------------
 # Netzkohärenz
