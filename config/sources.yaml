@@ -2,7 +2,7 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.6
+  version: 0.1.7
   date: 2026-10-28
   crs_work: EPSG:25832
 
@@ -320,3 +320,28 @@ viewers:
     license: "je Bild, meist CC-BY-SA 4.0 oder etalab-2.0"
     check_status: verified  # 2026-10-28: Viewer @panoramax/web-viewer 5.3.1, Hash-Parameter map=zoom/lat/lon und focus=map
     note: "Link: #focus=map&map=zoom/lat/lon. Abdeckung in Hamburg ungleich; ein leerer Kartenausschnitt heißt: keine Bilder."
+
+# Hintergrundkarte der Webseite (keine Datenquelle der Pipeline; geladen mit `make basemap`, ausgeliefert mit der Seite).
+web_assets:
+  basemap:
+    title: Protomaps Basemap (Tagesbuild, Vektorkacheln aus OpenStreetMap und Natural Earth)
+    provider: Protomaps
+    url: https://build.protomaps.com/{build}.pmtiles  # 2026-10-28: Build 20261028 (Version 4.15.2) laut https://build-metadata.protomaps.dev/builds.json, HTTP 200, pmtiles show gelesen
+    info: https://docs.protomaps.com/basemaps/downloads
+    license: ODbL-1.0
+    attribution: "© OpenStreetMap-Beitragende; Protomaps"
+    check_status: verified
+    note: "Nur der Ausschnitt Eimsbüttel mit Puffer (pmtiles extract, bis Zoom 15) wird ausgeliefert; kein Abruf zur Laufzeit."
+  basemap_assets:
+    title: Protomaps basemaps-assets (Schriften als Glyphen-PBF, Sprites)
+    provider: Protomaps
+    url: https://github.com/protomaps/basemaps-assets/archive/refs/heads/main.zip  # 2026-10-28: laut README des Repositorys
+    license: "Schriften Noto Sans: SIL Open Font License 1.1; Sprites: MIT (abgeleitet aus tangrams/icons)"
+    attribution: "Noto Sans (SIL OFL 1.1); Icons nach tangrams/icons (MIT)"
+    check_status: verified  # 2026-10-28: README und Lizenzangaben gelesen
+  basemap_style:
+    title: "@protomaps/basemaps (Kartenstil, npm)"
+    provider: Protomaps
+    url: https://www.npmjs.com/package/@protomaps/basemaps
+    license: BSD-3-Clause
+    check_status: verified  # 2026-10-28: npm view license

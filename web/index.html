@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nicht amtlicher Diskussionsentwurf: Soll-Funktion der Straßen in Hamburg nach Duurzaam Veilig, Diskrepanzen zum heutigen Zustand.">
+  <meta name="color-scheme" content="light">
+  <title>Straßenfunktionsplan Hamburg – Entwurf</title>
+</head>
+<body>
+  <a class="skip" href="#main">Zum Inhalt springen</a>
+  <div class="banner" role="note"><strong>Entwurf:</strong> <span id="banner-text">Nicht amtlicher Diskussionsentwurf – keine Planung oder Anordnung der Freien und Hansestadt Hamburg</span></div>
+  <header class="site">
+    <p class="site-title">Straßenfunktionsplan Hamburg <span class="muted">– Entwurf</span></p>
+    <nav class="main" aria-label="Hauptnavigation">
+      <a href="#karte">Karte</a>
+      <a href="#tabelle">Tabelle</a>
+      <a href="#methode">Methode</a>
+      <a href="#downloads">Downloads</a>
+      <a href="#quellen">Quellen &amp; Lizenzen</a>
+      <a href="#impressum">Impressum</a>
+    </nav>
+    <div class="search" role="search">
+      <label for="search" class="visually-hidden">Straße suchen</label>
+      <input id="search" type="search" placeholder="Straße suchen" autocomplete="off" role="combobox"
+             aria-autocomplete="list" aria-expanded="false" aria-controls="search-list">
+      <ul id="search-list" role="listbox" aria-label="Vorschläge" hidden></ul>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section data-page="karte" class="map-page" aria-labelledby="h-karte">
+      <h1 id="h-karte" class="visually-hidden">Karte</h1>
+      <details class="controls" open>
+        <summary>Ebenen, Legende und Filter</summary>
+        <div id="controls-body"></div>
+      </details>
+      <div id="map" class="map"></div>
+    </section>
+    <section data-page="tabelle" class="page" hidden aria-labelledby="h-tabelle">
+      <h1 id="h-tabelle">Tabelle</h1>
+      <p>Alle Inhalte der Karte als Tabelle. Filter aus der Kartenansicht gelten auch hier.</p>
+      <div id="table-root"></div>
+    </section>
+    <section data-page="methode" class="page prose" hidden></section>
+    <section data-page="downloads" class="page prose" hidden></section>
+    <section data-page="quellen" class="page prose" hidden></section>
+    <section data-page="impressum" class="page prose" hidden></section>
+  </main>
+
+  <aside id="panel" class="panel" hidden tabindex="-1" aria-labelledby="panel-title">
+    <div class="panel-bar">
+      <button type="button" id="panel-show" class="secondary" hidden>Auf der Karte zeigen</button>
+      <button type="button" id="panel-close" aria-label="Steckbrief schließen">Schließen ✕</button>
+    </div>
+    <div id="panel-body"></div>
+  </aside>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

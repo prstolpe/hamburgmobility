@@ -1,0 +1,139 @@
+# Klartexte für Steckbriefe und Webseite (pipeline/s09_export.py, prompts/11_web.md).
+# Nur Texte, keine Schwellenwerte: Platzhalter {merkmal|format} nehmen Eingangswerte aus rule_trace,
+# {thresholds.name|format} und {required_width.name|format} die Werte aus config/rules.yaml.
+# Formate: .0f, .1f, .2f (Zahl, deutsches Komma), % (Anteil als Prozent), yesno (ja/nein).
+# `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
+# erscheint nur, wenn die Bedingung sicher wahr ist.
+meta:
+  version: 0.1.0
+  date: 2026-10-28
+
+categories:
+  SW: "Schnellverkehrsstraße – anbaufrei, nur für Kraftfahrzeuge; Fuß- und Radverkehr getrennt geführt"
+  GOW50: "Stadtmagistrale – verbindet Stadtteile, Tempo 50, Radverkehr auf baulich getrenntem Radweg"
+  GOW30: "Stadtstraße 30 – verbindet Quartiere, Tempo 30, Radverkehr auf Radfahrstreifen oder vorhandenem Radweg"
+  ETW30: "Quartiersstraße – erschließt das Quartier, Tempo 30, Radverkehr gemeinsam mit dem Kfz-Verkehr"
+  ETW_ERF: "Aufenthaltsstraße – Schrittgeschwindigkeit, Aufenthalt und Fußverkehr haben Vorrang"
+  GOW80: "Landstraße (Verbindung) – außerorts, Tempo 80"
+  ETW60: "Landstraße (Erschließung) – außerorts, Tempo 60"
+
+# Klartext je Regel der Kaskade: passed = Regel hat gegriffen, failed = Regel wurde geprüft und hat nicht gegriffen
+# (nur wo das für die Begründung hilft). Fragmente werden mit „; “ verbunden.
+rules:
+  C-SW-01:
+    passed:
+      - {text: "Autobahn oder Kraftfahrstraße nur für Kraftfahrzeuge (OSM highway={highway})"}
+  C-RUR-01:
+    passed:
+      - {text: "außerorts"}
+  C-ERF-01:
+    passed:
+      - {when: "ist_verkehrsberuhigt", text: "heute verkehrsberuhigter Bereich"}
+      - {when: "pedestrian_zone", text: "heute Fußgängerzone"}
+      - {when: "override_school_street", text: "als Schulstraße eingetragen"}
+  C-GOW-01:
+    passed:
+      - {when: "in_hvs", text: "Hauptverkehrsstraße der BVM"}
+      - {when: "conn_score >= thresholds.conn_gow", text: "hohe Verbindungsfunktion: Verbindungswert {conn_score|.2f} (ab {thresholds.conn_gow|.2f})"}
+    failed:
+      - {text: "geringe Verbindungsfunktion: Verbindungswert {conn_score|.2f} (unter {thresholds.conn_gow|.2f}), keine Hauptverkehrsstraße"}
+  C-G30-01:
+    passed:
+      - {when: "schools_or_kitas_within_m <= thresholds.sensitive_radius", text: "Schule oder Kita in {schools_or_kitas_within_m|.0f} m (bis {thresholds.sensitive_radius|.0f} m)"}
+      - {when: "shop_frontage_share >= thresholds.frontage", text: "viele Gebäude mit Läden oder Publikumsverkehr: {shop_frontage_share|%} (ab {thresholds.frontage|%})"}
+      - {when: "crossing_demand == high", text: "hoher Querungsbedarf"}
+    failed:
+      - {text: "keine Schule oder Kita in der Nähe und wenig Publikumsverkehr"}
+  C-G30-02:
+    passed:
+      - {text: "kein baulicher Radweg, und für einen fehlt der Platz: Straßenraum {width_p10_m|.1f} m, nötig {required_width.GOW50|.1f} m"}
+    failed:
+      - {when: "separated_cycle_track_present", text: "baulicher Radweg vorhanden"}
+      - {when: "width_p10_m >= required_width.GOW50", text: "Platz für einen baulichen Radweg: Straßenraum {width_p10_m|.1f} m (nötig {required_width.GOW50|.1f} m)"}
+  C-G50-01:
+    passed:
+      - {text: "kein Grund für Tempo 30 auf dieser Verbindungsstraße gefunden"}
+  C-ETW-01:
+    passed:
+      - {text: "darum Quartiersstraße: Die Straße erschließt das Quartier"}
+
+# Namen der Merkmale für die Datenunsicherheit (confidence_reasons) und die Datenbeschreibung
+features:
+  outside_builtup_area: "Lage inner-/außerorts (keine Datenquelle, Standardwert innerorts)"
+  override_school_street: "Schulstraße (nur über Korrekturen, Standardwert nein)"
+  crossing_demand: "Querungsbedarf (nicht erhoben)"
+  in_hvs: "Hauptverkehrsstraße (Verkehrsmengenkarte 2019 statt HVS-Karte 2023)"
+  conn_score: "Verbindungswert (nicht alle Merkmale bekannt)"
+  schools_or_kitas_within_m: "Entfernung Schule/Kita (aus OpenStreetMap statt amtlich)"
+  shop_frontage_share: "Anteil Gebäude mit Publikumsverkehr"
+  width_p10_m: "Straßenraumbreite"
+  separated_cycle_track_present: "baulicher Radweg"
+
+confidence:
+  hoch: "Alle entscheidenden Werte stammen aus Primärquellen und liegen nicht nahe an einer Schwelle."
+  mittel: "Mindestens ein entscheidender Wert stammt aus einer Ersatzquelle oder ist ein Standardwert."
+  niedrig: "Ein entscheidender Wert fehlt oder liegt nahe an einer Schwelle."
+  reasons:
+    fallback: "{feature}: Ersatzquelle oder Standardwert"
+    fehlt: "{feature}: fehlt"
+    nahe_schwelle: "{feature}: nahe an der Schwelle"
+
+feasibility:
+  fits: "passt"
+  tight: "knapp"
+  does_not_fit: "passt nicht"
+
+speed_source:
+  official: "amtlich (Zulässige Höchstgeschwindigkeiten)"
+  osm: "OpenStreetMap"
+
+disclaimer: "Nicht amtlicher Diskussionsentwurf – keine Planung oder Anordnung der Freien und Hansestadt Hamburg"
+
+# Datenbeschreibung der Download-Dateien (Spalten wie PUBLIC_COLUMNS in pipeline/lib/export.py)
+columns:
+  segment_id: "Stabile Abschnitts-ID (Hash aus OSM-Way-IDs und gerundeten Knotenkoordinaten)"
+  name: "Straßenname (OSM)"
+  bezirk: "Bezirk"
+  highway: "OSM-Straßenklasse (highway)"
+  length_m: "Länge in Metern"
+  osm_way_ids: "OSM-Way-IDs des Abschnitts, durch ; getrennt"
+  cat_final: "Soll-Kategorie nach fachlicher Korrektur (SW, GOW50, GOW30, ETW30, ETW_ERF)"
+  cat_proposed: "Soll-Kategorie der Automatik"
+  cat_final_source: "proposed = Automatik, override = fachlich korrigiert (overrides.csv)"
+  override_reason: "Begründung der Korrektur"
+  confidence: "Datenunsicherheit der Einstufung: hoch, mittel, niedrig"
+  rule_path: "Gegriffene Regeln der Kaskade (IDs aus rules.yaml)"
+  speed_ist_kmh: "Heute zulässige Höchstgeschwindigkeit in km/h"
+  speed_ist_source: "Quelle des Ist-Tempos: official (amtlich) oder osm"
+  in_hvs: "Hauptverkehrsstraße laut Verkehrsmengenkarte 2019 (true/false)"
+  dtv_official: "Durchschnittliche tägliche Verkehrsstärke (Kfz/24 h), Stand 2019, nur Hauptverkehrsstraßen"
+  bus_trips_weekday: "Busfahrten an einem Werktag (HVV-Fahrplan)"
+  in_cycle_network: "Teil des Radnetzes Hamburg (OSM-Relationen)"
+  separated_cycle_track_present: "Baulicher Radweg vorhanden (OSM); leer = unbekannt"
+  cycle_lane_present: "Radfahr- oder Schutzstreifen vorhanden (OSM); leer = unbekannt"
+  centre_line: "Mittelmarkierung (OSM); leer = unbekannt"
+  parking_along_carriageway: "Parken längs der Fahrbahn (OSM); leer = unbekannt"
+  conn_score: "Verbindungswert 0–1"
+  place_score: "Aufenthaltswert 0–1"
+  schools_or_kitas_within_m: "Entfernung zur nächsten Schule oder Kita in Metern (OSM)"
+  population_100m: "Einwohner im 100-m-Umkreis (Zensus 2022)"
+  shop_frontage_share: "Anteil der Gebäude im 20-m-Umkreis mit Publikumsverkehr"
+  width_median_m: "Straßenraumbreite (Median) in Metern"
+  width_p10_m: "Straßenraumbreite an Engstellen (10-%-Quantil) in Metern"
+  feasibility_GOW50: "Passt der Querschnitt einer Stadtmagistrale: fits, tight, does_not_fit"
+  feasibility_GOW30_narrow: "Passt der schmale Querschnitt einer Stadtstraße 30"
+  feasibility_ETW30: "Passt der Querschnitt einer Quartiersstraße"
+  flags: "Hinweise der Netzprüfung (N1–N7)"
+  disc_speed: "Tempo-Diskrepanz 0–3 (leer = nicht prüfbar)"
+  disc_design: "Gestaltungs-Diskrepanz 0–3"
+  disc_use: "Nutzungs-Diskrepanz 0–3"
+  disc_max: "Größte Diskrepanz 0–3"
+  disc_type: "Diskrepanztyp D1, D2, D3 (leer = keine)"
+  crashes_ped_cyc: "Unfälle mit Fuß- oder Radbeteiligung im Zeitraum crash_years (nur Summe)"
+  crashes_ped: "davon mit Fußbeteiligung"
+  crashes_cyc: "davon mit Radbeteiligung"
+  crashes_severe_fatal: "davon mit Getöteten oder Schwerverletzten"
+  crash_years: "Unfalljahre"
+  risk: "Risikowert 0–1 (Unfälle, Radnetz, Einwohner, Schule/Kita)"
+  priority: "Priorität = größte Diskrepanz × Risiko (0–3)"
+  geometry: "Linie in WGS 84 (EPSG:4326)"

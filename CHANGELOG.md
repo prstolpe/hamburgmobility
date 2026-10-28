@@ -164,3 +164,13 @@
   1–19 km/h und P-RISK-01 snap_m 15 m / min_length_m 100 m freigegeben; D-USE-01 Faktoren 1,5/2,0 als Arbeitswert;
   Unfälle an Knoten vorerst beim nächsten Abschnitt, mit der Webkarte erneut prüfen.
 - reports/priority_top30.md: neue Straßenliste (Top 30 Straßen, zusammengefasst nach Name) vor der Abschnittsliste.
+
+## sources.yaml 0.1.7 – 2026-10-28
+- Neu: Abschnitt `web_assets` (keine Pipeline-Quelle): Protomaps-Tagesbuild 20261028 (ODbL, Ausschnitt mit
+  `make basemap`), basemaps-assets (Noto Sans, SIL OFL 1.1; Sprites MIT), Kartenstil @protomaps/basemaps (BSD-3-Clause).
+
+## config/plain_language.yaml 0.1.0 – 2026-10-28
+- Neu: Klartexte für Steckbriefe (je Regel der Kaskade mit Platzhaltern für Eingangswerte und Schwellen aus
+  rules.yaml), Kategorien, Datenunsicherheit, Machbarkeit und die Datenbeschreibung der Downloads. Keine Schwellenwerte.
+- Export (pipeline/s09_export.py) und Webseite (web/) für den Bezirk Eimsbüttel; Version der Seite = Regelversion +
+  Datenstand (0.10.1+2026-10-28).

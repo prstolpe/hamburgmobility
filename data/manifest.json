@@ -645,6 +645,38 @@
     }
   },
   "updated_at": "2026-10-28T14:14:26+00:00",
+  "web_assets": {
+    "basemap": {
+      "assets": {
+        "fonts": [
+          "Noto Sans Regular",
+          "Noto Sans Medium",
+          "Noto Sans Italic"
+        ],
+        "glyph_files": 768,
+        "sprites": "v4/light",
+        "url": "https://github.com/protomaps/basemaps-assets/archive/refs/heads/main.zip"
+      },
+      "bbox_wgs84": [
+        9.86164,
+        53.5525,
+        10.01578,
+        53.66001
+      ],
+      "files": [
+        {
+          "bytes": 13408470,
+          "layer": "basemap",
+          "path": "data/out/basemap/basemap.pmtiles",
+          "sha256": "e936adea2f0c3f662d6841e54e17e2075665d37c7572c13531b9ddef2ffd286d"
+        }
+      ],
+      "license": "ODbL-1.0",
+      "maxzoom": 15,
+      "retrieved_at": "2026-10-28T14:40:48+00:00",
+      "url": "https://build.protomaps.com/20261028.pmtiles"
+    }
+  },
   "work_area": {
     "admin_level": 9,
     "area_buffered_km2": 69.73863193813347,

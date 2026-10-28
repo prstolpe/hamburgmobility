@@ -1,0 +1,27 @@
+{
+  "name": "sfp-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Straßenfunktionsplan Hamburg – nicht amtlicher Entwurf (statische Karte)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "test": "vitest run",
+    "a11y": "playwright test && node scripts/a11y-report.mjs"
+  },
+  "dependencies": {
+    "@protomaps/basemaps": "5.7.2",
+    "fuse.js": "7.5.0",
+    "maplibre-gl": "6.14.0",
+    "marked": "18.1.1",
+    "pmtiles": "4.5.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.64.0",
+    "vite": "8.3.4",
+    "vitest": "5.0.4"
+  }
+}

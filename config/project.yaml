@@ -3,3 +3,13 @@ pilot_district:
   name: Eimsbüttel            # CLAUDE.md, Pilotbezirk
   osm_admin_level: 9          # geprüft 2026-10-28 im OSM-Auszug: Level 9 = Bezirk (49,8 km²), Level 10 = Stadtteil (3,2 km²)
   buffer_m: 500               # prompts/03_fetch.md: Puffer, damit Randabschnitte vollständig sind
+
+# Webseite (prompts/11_web.md, pipeline/s09_export.py). Keine fachlichen Inhalte.
+web:
+  site_title: "Straßenfunktionsplan Hamburg – Entwurf"
+  github_repo: null       # TODO: "owner/repo" für den Rückmelde-Link (GitHub-Issue); ohne Wert kein Issue-Link
+  feedback_email: null    # TODO: Adresse für mailto-Rückmeldungen; ohne Wert kein mailto-Link
+  tiles_base_url: null    # null = relativ zur Seite (GitHub Pages); später z. B. Cloudflare R2 mit Range und CORS
+  basemap:
+    build: "20261028"     # Protomaps-Tagesbuild (config/sources.yaml web_assets.basemap)
+    maxzoom: 15

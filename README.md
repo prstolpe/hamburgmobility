@@ -66,3 +66,29 @@ Begründung und neuer Version ändern oder eine Korrektur in `overrides/override
 
 Diskussionsentwurf zivilgesellschaftlicher Akteure. Keine Planung und keine Anordnung der
 Freien und Hansestadt Hamburg.
+
+## Webseite (Prompt 11)
+
+Statische Karte mit MapLibre GL JS und PMTiles in `web/` (Vite, Vanilla JS). Daten aus `data/out/` (nicht in Git).
+
+```bash
+make export      # Downloads, Steckbriefe, search.json, table.json, tiles/segments.pmtiles (tippecanoe)
+make basemap     # Hintergrundkarte: Protomaps-Ausschnitt, Schriften, Sprites (pmtiles CLI)
+make web         # npm ci + vite build -> web/dist
+npm --prefix web run preview   # lokal ansehen: http://localhost:4173/
+make a11y        # Smoke-Tests und axe-core -> reports/web_accessibility.md (vorher: npx --prefix web playwright install chromium)
+```
+
+Einstellungen in `config/project.yaml` unter `web:` (Repository für Rückmeldungen, E-Mail, Kachel-URL). Ohne
+`github_repo` und `feedback_email` blendet die Seite den Rückmeldeknopf aus.
+
+### Veröffentlichen (GitHub Pages)
+
+1. Repository auf GitHub anlegen, `web.github_repo` in `config/project.yaml` eintragen, unter Settings → Pages als
+   Quelle „GitHub Actions“ wählen.
+2. Lokal `make export basemap site-data` und `data/site-data.tar.gz` als Asset an das Release `data-latest` hängen
+   (Web-Oberfläche oder `gh release upload data-latest data/site-data.tar.gz --clobber`).
+3. Push auf `main` startet `.github/workflows/pages.yml`: Tests → Daten aus dem Release → Build → Deployment.
+4. Danach `web/scripts/check-range.sh https://<owner>.github.io/<repo>/` (PMTiles brauchen HTTP-Range, Antwort 206).
+
+Später Kacheln auf Cloudflare R2: `web.tiles_base_url` setzen (R2 mit Range und CORS für die Pages-Domain).

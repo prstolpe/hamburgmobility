@@ -12,7 +12,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 PIPELINE_TARGETS := fetch network conflate features crosssection classify coherence discrepancy export validate
-.PHONY: help install dirs test web override-template $(PIPELINE_TARGETS)
+.PHONY: help install dirs test web web-test a11y basemap site-data override-template $(PIPELINE_TARGETS)
 
 # run_step(target, script): run pipeline/<script>.py if it exists, otherwise report that it is missing.
 define run_step
@@ -61,18 +61,29 @@ override-template: ## Template rows for new overrides (IDS="seg_... seg_...")
 discrepancy: dirs ## Discrepancy types and priority
 	$(call run_step,discrepancy,s08_discrepancy)
 
-export: dirs ## Export GeoParquet, GeoJSON, PMTiles
+export: dirs ## Export downloads, profiles, search index and PMTiles (data/out)
 	$(call run_step,export,s09_export)
 
-web: ## Build the static website
-	@if [ -f web/package.json ]; then \
-		npm --prefix web run build; \
-	else \
-		echo "web: noch nicht implementiert (web/package.json fehlt)"; \
-	fi
+basemap: dirs ## Background map extract, fonts and sprites for the website (data/out/basemap)
+	uv run python -m pipeline.s09b_basemap
+
+web: ## Build the static website (needs make export and make basemap)
+	npm --prefix web ci --no-fund --no-audit
+	npm --prefix web run build
+
+web-test: ## Unit tests of the website
+	npm --prefix web test
+
+a11y: ## Smoke and accessibility tests (axe-core) of the built site -> reports/web_accessibility.md
+	npm --prefix web run a11y
+
+site-data: ## Pack data/out for the GitHub release "data-latest" (deployment workflow)
+	tar -czf data/site-data.tar.gz -C data/out .
+	@echo "data/site-data.tar.gz: als Asset an das Release data-latest hängen (README, Abschnitt Veröffentlichen)"
 
 validate: dirs ## Validation report
 	$(call run_step,validate,validate)
 
-test: ## Run tests
+test: ## Run tests (Python and website unit tests)
 	uv run pytest
+	@if [ -d web/node_modules ]; then npm --prefix web test; fi

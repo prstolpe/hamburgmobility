@@ -98,6 +98,16 @@ Format: `- [ ] Frage – Wer klärt – Status/Antwort`. Claude Code trägt hier
 - [ ] Unfälle an Knoten gehen an genau einen anliegenden Abschnitt (den nächsten). Vorerst so belassen (Entscheidung Projektteam 2026-10-28); mit der Webkarte (Prompt 11) erneut prüfen: auf alle Arme verteilen oder Knoten gesondert ausweisen? 666 von 17 534 Unfällen mit Fuß-/Radbeteiligung liegen > 15 m von jedem Abschnitt – Methodik
 - [ ] Risiko berücksichtigt nur Unfälle mit Fuß-/Radbeteiligung (polizeilich erfasst). Rettungsdienstdaten wie in Amsterdam (guide.md) verfügbar? – Team
 
+## Export und Webseite (Prompt 11)
+- [ ] GitHub-Repository anlegen und `web.github_repo` sowie `web.feedback_email` in config/project.yaml eintragen (ohne Werte kein Rückmeldeknopf) – Team
+- [ ] Impressum: Verantwortliche Person/Organisation eintragen (web/src/pages.js, derzeit Platzhalter) – Team
+- [ ] Nach dem ersten Deployment HTTP-Range auf GitHub Pages prüfen (`web/scripts/check-range.sh <URL>`); lokal mit vite preview: 206 für beide PMTiles – GIS
+- [ ] Test auf einem echten Smartphone und mit Bildschirmleser (VoiceOver/NVDA); automatisch geprüft sind nur axe-core und emuliertes Pixel 7 (reports/web_accessibility.md) – Team
+- [ ] Lizenz der amtlichen Tempo- und Verkehrsmengendaten fehlt in der API („Lizenz in der Quelle nicht angegeben“ im Steckbrief). Vor der Veröffentlichung klären, ob die abgeleiteten Werte gezeigt werden dürfen – GIS, Team
+- [ ] Texte der Methodenseite und der Steckbriefe (config/plain_language.yaml) fachlich und auf einfache Sprache prüfen; Fotos aus Panoramax je Kategorie fehlen noch (guide.md 5.5) – Verkehrsplaner*in
+- [ ] Cloudflare R2 für die PMTiles erst nötig, wenn mehrere Bezirke dazukommen (jetzt 1,6 MB + 13 MB Hintergrundkarte, Seite gesamt ca. 66 MB). Entscheidung später – Team
+- [ ] Querschnittsskizze im Steckbrief zeigt nur „vorhanden vs. nötig“; Soll-Aufteilung (Gehweg/Radweg/Fahrbahn) als Skizze fehlt noch (guide.md 5.3) – Methodik
+
 ## Daten
 - [ ] Führt HH_WFS_Strategisches_Strassennetz ein Attribut „Hauptverkehrsstraße“ mit Stand 2023? – GIS
 - [x] Welche Jahrgänge enthält api.hamburg.de/datasets/v1/verkehrsmengen (DTV Hauptverkehrsstraßen)? – GIS – 2026-10-28: dtv_hvs_2019, dtvw_hvs_2014, dtv_bab_2019, dtvw_bab_2013 (siehe reports/data_report.md)
