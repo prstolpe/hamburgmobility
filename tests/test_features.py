@@ -20,6 +20,7 @@ from pipeline.lib.features import (
     area_weighted_sum,
     building_density,
     count_near,
+    alkis_buildings,
     frontage_share,
     ist_speed,
     majority,
@@ -193,6 +194,40 @@ def test_frontage_share_and_counts(params):
     # Building 1 has a cafe inside, building 2 is a shop, building 3 only parking (excluded), building 4 too far.
     assert (n_total.iloc[0], n_public.iloc[0]) == (3, 2)
     assert share.iloc[0] == pytest.approx(2 / 3)
+
+
+def test_alkis_buildings_filters_type_and_position(params):
+    b = gpd.GeoDataFrame(
+        {"gebnutzbez": ["Gebaeude", "Gebaeude", "Bauteil", "Gebaeude"],
+         "funktion": ["Wohnhaus", "Tiefgarage", "Wohnhaus", "Garage"],
+         "rellage": [None, "Unter der Erdoberfläche", None, None]},
+        geometry=[box(0, 0, 1, 1)] * 4, crs=CRS)
+    got = alkis_buildings(b, params)
+    assert list(got["funktion"]) == ["Wohnhaus", "Garage"]
+    assert list(got["public"]) == [False, False]
+    assert list(got["ancillary"]) == [False, True]
+
+
+def test_frontage_share_with_alkis_function(params):
+    seg = _gs(LineString([(0, 0), (100, 0)]))
+    public_fn = sorted(params.alkis_public_functions)[0]
+    raw = gpd.GeoDataFrame(
+        {"gebnutzbez": ["Gebaeude"] * 4, "funktion": [public_fn, "Wohnhaus", "Wohnhaus", "Garage"],
+         "rellage": [None] * 4},
+        geometry=[box(0, 5, 10, 15), box(20, 5, 30, 15), box(40, 5, 50, 15), box(60, 5, 70, 15)], crs=CRS)
+    b = alkis_buildings(raw, params)
+    pois = gpd.GeoDataFrame({"shop": ["bakery"], "amenity": [None]}, geometry=[Point(25, 10)], crs=CRS)
+    share, n_total, n_public = frontage_share(seg, b, pois, params.frontage_buffer_m, params.amenity_excluded)
+    # ALKIS public use + OSM shop inside the second building; the garage is not counted at all.
+    assert (n_total.iloc[0], n_public.iloc[0]) == (3, 2)
+    assert share.iloc[0] == pytest.approx(2 / 3)
+
+
+def test_public_function_lists_use_real_alkis_values(params):
+    assert "Gebäude für Handel und Dienstleistungen" in params.alkis_public_functions
+    assert "Allgemein bildende Schule" not in params.alkis_public_functions  # counted by S-FEAT-06
+    assert "Garage" in params.alkis_ancillary_functions
+    assert not params.alkis_public_functions & params.alkis_ancillary_functions
 
 
 def test_frontage_share_null_without_buildings(params):

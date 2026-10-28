@@ -28,6 +28,7 @@ from pipeline.lib.conflate import MatchParams, zone_share
 from pipeline.lib.crs import WORK_CRS, to_work_crs
 from pipeline.lib.features import (
     FeatureParams,
+    alkis_buildings,
     area_weighted_sum,
     building_density,
     count_near,
@@ -71,12 +72,12 @@ FEATURE_DOC = {
     "dtv_norm": ("DTV-Linien HVS 2019", "S-FEAT-01", "scores.conn_score"),
     "conn_score": ("abgeleitet", "scores.conn_score", "C-RUR-01, C-GOW-01"),
     "conn_weight_available": ("abgeleitet", "scores.conn_score", "missing_value_policy (confidence, Prompt 08)"),
-    "building_density": ("OSM-Gebäude", "S-FEAT-03", "Rohwert für building_density_norm"),
-    "building_density_norm": ("OSM-Gebäude", "S-FEAT-01/03", "scores.place_score"),
+    "building_density": ("ALKIS-Gebäude", "S-FEAT-03", "Rohwert für building_density_norm"),
+    "building_density_norm": ("ALKIS-Gebäude", "S-FEAT-01/03", "scores.place_score"),
     "population_100m": ("Zensus 2022 Gitter", "S-FEAT-04", "priority.risk_weights, Rohwert"),
     "population_100m_norm": ("Zensus 2022 Gitter", "S-FEAT-01/04", "scores.place_score"),
-    "shop_frontage_share": ("OSM shop/amenity", "S-FEAT-05", "C-G30-01, scores.place_score (frontage_share)"),
-    "frontage_buildings": ("OSM-Gebäude", "S-FEAT-05", "Nenner von shop_frontage_share (Nachvollziehbarkeit)"),
+    "shop_frontage_share": ("ALKIS-Gebäudefunktion + OSM shop/amenity", "S-FEAT-05", "C-G30-01, scores.place_score (frontage_share)"),
+    "frontage_buildings": ("ALKIS-Gebäude", "S-FEAT-05", "Nenner von shop_frontage_share (Nachvollziehbarkeit)"),
     "schools_or_kitas_within_m": ("OSM Schulen/Kitas", "S-FEAT-06", "C-G30-01, priority.school_kita_within_150m"),
     "sensitive_facilities_norm": ("OSM Schulen/Kitas", "S-FEAT-01/06", "scores.place_score"),
     "place_score": ("abgeleitet", "scores.place_score", "Prompt 08/10 (Funktionskonflikt, Diskrepanz)"),
@@ -106,7 +107,7 @@ FEATURE_DOC = {
     "width_p10_m": ("Querschnitt (Prompt 07)", "–", "C-G30-02"),
 }
 # Raw inputs per data source for the null table; status comes from the manifest.
-SOURCE_OF = {"Zensus 2022 Gitter": "population_grid", "GTFS HVV": "gtfs_hvv", "OSM Schulen/Kitas": "schools",
+SOURCE_OF = {"Zensus 2022 Gitter": "population_grid", "ALKIS-Gebäude": "alkis", "GTFS HVV": "gtfs_hvv", "OSM Schulen/Kitas": "schools",
              "OSM Radnetz Hamburg": "cycle_network", "DTV-Linien HVS 2019": "traffic_volumes",
              "Tempo amtlich/OSM": "speed_limits"}
 NULL_REASON = {
@@ -138,9 +139,10 @@ def _round(v, digits: int = 3):
 # --- inputs ----------------------------------------------------------------------------------
 
 
-def _layer(manifest: dict, source: str) -> gpd.GeoDataFrame | None:
+def _layer(manifest: dict, source: str, layer: str | None = None) -> gpd.GeoDataFrame | None:
     files = (manifest["sources"].get(source) or {}).get("files") or []
-    paths = [REPO_ROOT / f["path"] for f in files if str(f.get("path", "")).endswith(".parquet")]
+    paths = [REPO_ROOT / f["path"] for f in files if str(f.get("path", "")).endswith(".parquet")
+             and (layer is None or f.get("layer") == layer)]
     if not paths or not all(p.exists() for p in paths):
         return None
     return to_work_crs(pd.concat([gpd.read_parquet(p) for p in paths], ignore_index=True))
@@ -153,20 +155,18 @@ def _gtfs_path(manifest: dict):
 
 
 def read_osm(pbf, work_area_wgs84) -> dict[str, gpd.GeoDataFrame]:
-    """Ways with tags, buildings, shop/amenity POIs, crossing and traffic_calming nodes in the work area."""
+    """Ways with tags, shop/amenity POIs, crossing and traffic_calming nodes in the work area."""
     from pyrosm import OSM
 
     osm = OSM(str(pbf), bounding_box=work_area_wgs84.buffer(OSM_BBOX_MARGIN_DEG))
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ways = osm.get_network(network_type="all")
-        buildings = osm.get_buildings()
         pois = osm.get_pois(custom_filter={"shop": True, "amenity": True})
         node_kw = dict(filter_type="keep", keep_nodes=True, keep_ways=False, keep_relations=False)
         crossings = osm.get_data_by_custom_criteria(custom_filter={"highway": ["crossing"]}, **node_kw)
         calming = osm.get_data_by_custom_criteria(custom_filter={"traffic_calming": True}, **node_kw)
-    buildings = buildings[buildings.geom_type.isin(["Polygon", "MultiPolygon"])]
-    out = {"ways": ways, "buildings": buildings, "pois": pois, "crossings": crossings, "calming": calming}
+    out = {"ways": ways, "pois": pois, "crossings": crossings, "calming": calming}
     return {k: to_work_crs(v.reset_index(drop=True)) for k, v in out.items()}
 
 
@@ -253,8 +253,10 @@ def compute(seg: gpd.GeoDataFrame, layers: dict, osm: dict, feed_path, rules) ->
     out.loc[in_area, "speed_ist_source"] = [s for _, s, _ in speeds]
     out.loc[in_area, "speed_sources_conflict"] = [c for _, _, c in speeds]
 
-    out.loc[in_area, "building_density"] = building_density(g, osm["buildings"].geometry, params.building_buffer_m)
-    share, n_total, n_public = frontage_share(g, osm["buildings"], osm["pois"], params.frontage_buffer_m,
+    buildings = alkis_buildings(layers["alkis_buildings"], params)
+    info["alkis_buildings"] = len(buildings)
+    out.loc[in_area, "building_density"] = building_density(g, buildings.geometry, params.building_buffer_m)
+    share, n_total, n_public = frontage_share(g, buildings, osm["pois"], params.frontage_buffer_m,
                                               params.amenity_excluded)
     out.loc[in_area, "shop_frontage_share"] = share
     out.loc[in_area, "frontage_buildings"] = n_total
@@ -422,7 +424,8 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
                                       f"{params.population_buffer_m:.0f}-m-Puffer flächenanteilig; Zellen ohne Einwohner "
                                       "fehlen in der Datei und zählen 0; Werte durch Geheimhaltung leicht verändert"
                                       if ctx["n_grid_cells"] else "fehlt in data/raw – population_100m ist null")),
-        "- ALKIS: fehlt – Gebäude und Gebäudefunktion vorläufig aus OSM (Entscheidung 2026-10-28)",
+        f"- ALKIS-Gebäude: {_fmt(ctx['info']['alkis_buildings'])} oberirdische Gebäude im Arbeitsgebiet "
+        "(WFS_HH_ALKIS_vereinfacht, seit rules.yaml 0.6.0 statt OSM)",
         "",
         "## Prüfungen", "", "| Prüfung | Ergebnis | Detail |", "| --- | --- | --- |",
         *[f"| {c['name']} | {'ok' if c['ok'] else 'FEHLER'} | {c['detail']} |" for c in checks],
@@ -439,9 +442,13 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         "zeigen, welcher Gewichtsanteil Werte hatte. Die Herabstufung der confidence folgt in Prompt 08.",
         f"- **Betweenness (S-FEAT-02):** Reisezeit = Länge / Tempo (amtlich → OSM maxspeed → Standardwert je Klasse). "
         f"Ohne {', '.join(params.exclude_highway)}. Mehrere OSM-Werte je Abschnitt (z. B. „50 / 30“) gelten als unbekannt.",
-        f"- **Gebäudedichte (S-FEAT-03):** OSM-Gebäudegrundfläche im {params.building_buffer_m:.0f}-m-Puffer / Pufferfläche.",
-        f"- **Publikumsnutzung (S-FEAT-05):** Anteil der Gebäude im {params.frontage_buffer_m:.0f}-m-Puffer mit shop/amenity "
-        "(Tag am Gebäude oder POI darin), ohne Stadtmöblierung (amenity_excluded). Das Geschoss wird nicht geprüft.",
+        f"- **Gebäudedichte (S-FEAT-03):** Grundfläche der oberirdischen ALKIS-Gebäude (gebnutzbez Gebaeude) im "
+        f"{params.building_buffer_m:.0f}-m-Puffer / Pufferfläche.",
+        f"- **Publikumsnutzung (S-FEAT-05):** Anteil der ALKIS-Gebäude im {params.frontage_buffer_m:.0f}-m-Puffer mit "
+        f"Publikumsnutzung: Gebäudefunktion aus der Liste in rules.yaml ({len(params.alkis_public_functions)} Werte) "
+        "oder OSM-shop/amenity-Punkt im Gebäude (ohne Stadtmöblierung). Nebengebäude "
+        f"({len(params.alkis_ancillary_functions)} Funktionen, z. B. Garage, Gartenhaus) zählen nicht. Schulen und Kitas "
+        "gehen über S-FEAT-06 ein, nicht hier. Das Geschoss wird nicht geprüft.",
         "- **Radnetz, Busfahrten (S-FEAT-07/08):** Längenanteil wie S-CONF-02 (Puffer, Winkel, Mindestanteil).",
         f"- **Ist-Gestaltung (S-FEAT-10):** Mehrheitswert über die Ways des Abschnitts (Gewicht: Länge im "
         f"{WAY_WEIGHT_BUFFER_M:.0f}-m-Puffer). Kein Tag = unbekannt (null), nicht „nein“. Querungen und "
@@ -502,8 +509,9 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
                      f"{f(r['shop_frontage_share'])} | {f(r['schools_or_kitas_within_m'], 0)} | "
                      f"[Karte]({osm_map_link(pt)}) | [Way]({osm_way_link(r['osm_way_ids'][0])}) |")
     lines += ["", "## Lizenz", "",
-              "Abschnitte, Gebäude, POIs, Schulen, Kitas und Radnetz aus OpenStreetMap © OpenStreetMap-Beitragende, "
-              "ODbL 1.0; abgeleitete Merkmale stehen ebenfalls unter ODbL. Busfahrten: Hamburger Verkehrsverbund GmbH, "
+              "Abschnitte, POIs, Schulen, Kitas und Radnetz aus OpenStreetMap © OpenStreetMap-Beitragende, "
+              "ODbL 1.0; abgeleitete Merkmale stehen ebenfalls unter ODbL. Gebäude: Freie und Hansestadt Hamburg, "
+              "Landesbetrieb Geoinformation und Vermessung (LGV), dl-de/by-2.0. Busfahrten: Hamburger Verkehrsverbund GmbH, "
               "dl-de/by-2.0. Einwohner: © Statistische Ämter des Bundes und der Länder, Zensus 2022, dl-de/by-2.0. "
               "Amtliche Attribute: Freie und Hansestadt Hamburg (Höchstgeschwindigkeiten und Verkehrsmengen: Lizenz in "
               "der API nicht angegeben, siehe docs/open_questions.md).", ""]
@@ -534,12 +542,21 @@ def main() -> int:
     work_area = to_work_crs(district).geometry.union_all().buffer(project["buffer_m"])
     work_area_wgs84 = gpd.GeoSeries([work_area], crs=WORK_CRS).to_crs(4326).iloc[0]
     layers = {k: _layer(manifest, k) for k in ("schools", "kitas", "cycle_network", "population_grid")}
+    layers["alkis_buildings"] = _layer(manifest, "alkis", "ave:GebaeudeBauwerk")
+    if layers["alkis_buildings"] is None:
+        print("features: ALKIS buildings (ave:GebaeudeBauwerk) missing in data/raw; run `make fetch` first",
+              file=sys.stderr)
+        return 1
     print("features: reading OSM extract")
     osm = read_osm(REPO_ROOT / pbf["path"], work_area_wgs84)
-    print(f"features: {len(osm['ways'])} ways, {len(osm['buildings'])} buildings, {len(osm['pois'])} POIs")
+    print(f"features: {len(osm['ways'])} ways, {len(layers['alkis_buildings'])} ALKIS objects, {len(osm['pois'])} POIs")
 
     out, info = compute(seg, layers, osm, _gtfs_path(manifest), rules)
     checks = run_checks(seg, out, params)
+    present = set(layers["alkis_buildings"]["funktion"].dropna())
+    unknown = sorted((params.alkis_public_functions | params.alkis_ancillary_functions) - present)
+    checks.append({"name": "Gebäudefunktionen aus rules.yaml kommen in ALKIS vor", "ok": not unknown,
+                   "detail": ", ".join(unknown) or "alle"})
     pilot = out[(out["bezirk"] == project["name"]) & out["conflated"].astype(bool)]
     rnd = random.Random(SAMPLE_SEED)
     sample = pilot.loc[sorted(rnd.sample(list(pilot.index), min(SAMPLE_SIZE, len(pilot))))]

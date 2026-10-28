@@ -244,6 +244,10 @@ class FeatureRule(_Strict):
     thresholds: dict[str, Threshold] = {}
     exclude_highway: list[str] = []
     amenity_excluded: list[str] = []
+    alkis_gebnutzbez: list[str] = []
+    alkis_rellage_excluded: list[str] = []
+    alkis_public_functions: list[str] = []
+    alkis_ancillary_functions: list[str] = []
     route_types: list[int] = []
     note: str | None = None
 

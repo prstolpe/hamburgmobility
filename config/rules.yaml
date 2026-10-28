@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.5.0
+  version: 0.6.0
   date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -293,12 +293,16 @@ features:
         Vollständige Berechnung ohne Stichprobe (Laufzeit ca. 1 min). Standardtempo nur, wenn weder amtliches noch
         OSM-Tempo bekannt ist (docs/open_questions.md).
     - id: S-FEAT-03
-      description: "Gebäudedichte = Grundfläche der OSM-Gebäude im Puffer / Pufferfläche"
+      description: "Gebäudedichte = Grundfläche der ALKIS-Gebäude (oberirdisch) im Puffer / Pufferfläche"
       thresholds:
         buffer_m: {value: 50, unit: m, source_type: assumption}
+      alkis_gebnutzbez: [Gebaeude]
+      alkis_rellage_excluded: ["Unter der Erdoberfläche"]
       source_type: assumption
       status: draft
-      note: "Gebäude aus OSM, solange ALKIS fehlt (Entscheidung Projektteam 2026-10-28). Puffer mit runden Enden."
+      note: >-
+        Seit 0.6.0 ALKIS (WFS_HH_ALKIS_vereinfacht, ave:GebaeudeBauwerk) statt OSM. Nur gebnutzbez Gebaeude (Bauteile
+        liegen in Gebäuden und würden doppelt zählen), ohne unterirdische Objekte (Tiefgaragen, Bunker). Puffer mit runden Enden.
     - id: S-FEAT-04
       description: "Einwohner im Puffer, flächenanteilig aus dem Zensus-Gitter 100 m"
       thresholds:
@@ -307,17 +311,74 @@ features:
       status: draft
       note: "Zensus-Gitter liegt noch nicht in data/raw (Download-URL fehlt in sources.yaml); bis dahin null."
     - id: S-FEAT-05
-      description: "Anteil Erdgeschoss mit Publikumsnutzung = Anteil der Gebäude im Puffer mit shop/amenity (Tag am Gebäude oder POI-Knoten im Gebäude)"
+      description: "Anteil Erdgeschoss mit Publikumsnutzung = Anteil der ALKIS-Gebäude im Puffer mit Publikumsnutzung (Gebäudefunktion oder OSM-shop/amenity-Punkt im Gebäude); Nebengebäude zählen nicht"
       thresholds:
         buffer_m: {value: 20, unit: m, source_type: assumption}
+      alkis_public_functions:
+        - "Wohngebäude mit Handel und Dienstleistungen"
+        - "Gebäude für Handel und Dienstleistungen"
+        - "Gebäude für Handel und Dienstleistung mit Wohnen"
+        - "Geschäftsgebäude"
+        - "Gemischt genutztes Gebäude mit Wohnen"
+        - "Gebäude für Bewirtung"
+        - "Hotel, Motel, Pension"
+        - "Krankenhaus"
+        - "Gebäude für Gesundheitswesen"
+        - "Gebäude für soziale Zwecke"
+        - "Wohngebäude mit Gemeinbedarf"
+        - "Gebäude für kulturelle Zwecke"
+        - "Museum"
+        - "Theater, Oper"
+        - "Konzertgebäude"
+        - "Bibliothek, Bücherei"
+        - "Veranstaltungsgebäude"
+        - "Freizeit- und Vergnügungsstätte"
+        - "Freizeit-, Vereinsheim, Dorfgemeinschafts-, Bürgerhaus"
+        - "Jugendfreizeitheim"
+        - "Kirche"
+        - "Gotteshaus"
+        - "Kapelle"
+        - "Moschee"
+        - "Synagoge"
+        - "Gebäude fuer religiöse Zwecke"
+        - "Gemeindehaus"
+        - "Rathaus"
+        - "Verwaltungsgebäude"
+        - "Gericht"
+        - "Polizei"
+        - "Bahnhofsgebäude"
+        - "Gebäude zum Busbahnhof"
+        - "Hallenbad"
+        - "Sport-, Turnhalle"
+        - "Tankstelle"
+      alkis_ancillary_functions:
+        - "Garage"
+        - "Gartenhaus"
+        - "Tiefgarage"
+        - "Gebäude zum Parken"
+        - "Parkdeck"
+        - "Parkhaus"
+        - "Toilette"
+        - "Gebäude zur Elektrizitätsversorgung"
+        - "Gebäude zur Versorgungsanlage"
+        - "Gebäude zur Wasserversorgung"
+        - "Gebäude zur Gasversorgung"
+        - "Gebäude an unterirdischen Leitungen"
+        - "Müllbunker"
+        - "Schutzbunker"
+        - "Treibhaus, Gewächshaus"
+        - "Scheune und Stall"
+        - "Stall"
       amenity_excluded: [parking, parking_space, parking_entrance, bicycle_parking, motorcycle_parking, bench,
                          waste_basket, waste_disposal, recycling, vending_machine, post_box, telephone, charging_station,
                          shelter, drinking_water, clock, grit_bin, letter_box, loading_dock, atm, toilets]
       source_type: assumption
       status: draft
       note: >-
-        Zählt Gebäude, nicht Fassadenlänge. Das Stockwerk von POIs wird nicht geprüft. ALKIS-Gebäudefunktion fehlt
-        noch; dann ergänzen. Liste amenity_excluded: Stadtmöblierung und Infrastruktur ohne Publikumsverkehr (Vorschlag).
+        Seit 0.6.0 ALKIS-Gebäude (Auswahl wie S-FEAT-03) mit Gebäudefunktion `funktion`; die Listen enthalten nur Werte,
+        die in den Daten vorkommen (Abruf 2026-10-28). Schulen und Kitas zählen hier nicht, weil sie über S-FEAT-06 schon
+        in place_score eingehen. Bürogebäude zählen nicht (kein Publikumsverkehr). Zählt Gebäude, nicht Fassadenlänge;
+        das Geschoss von OSM-POIs wird nicht geprüft. amenity_excluded: Stadtmöblierung ohne Publikumsverkehr.
     - id: S-FEAT-06
       description: "Entfernung zur nächsten Schule oder Kita (OSM amenity=school/kindergarten, Fläche oder Punkt); Normierung über den Perzentilrang der negativen Entfernung"
       source_type: assumption

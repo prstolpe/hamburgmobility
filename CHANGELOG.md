@@ -62,3 +62,23 @@
   0,21 → 0,10, motorway 0,60 → 0,52, primary 0,83 → 0,82; Anteil conn_score ≥ 0,6: 18,8 % → 18,1 %. place_score
   unverändert (keine Bindungen).
 - Schema: Feld `ties` (min | average) für Merkmalsregeln.
+
+## sources.yaml 0.1.4 – 2026-10-28
+- alkis: WFS „ALKIS – Liegenschaften und Verwaltungseinheiten“ (https://geodienste.hamburg.de/WFS_HH_ALKIS_vereinfacht),
+  URL aus dem GDI-DE-Metadatensatz 00F5606E-…; dl-de/by-2.0; Abruf von `ave:Nutzung` (tatsächliche Nutzung, Feld
+  `nutzart`) und `ave:GebaeudeBauwerk` (Feld `funktion` = Gebäudefunktion, `gebnutzbez`, `rellage`). Im Arbeitsgebiet
+  12 381 Nutzungsflächen (u. a. Strassenverkehr 4 125, Weg 979, Platz 89) und 60 052 Gebäude/Bauwerke.
+- Die INSPIRE-Dienste HH_WFS_INSPIRE_Gebaeude_2D_ALKIS und HH_WFS_INSPIRE_Bodenbedeckungsvektor_ALKIS wurden geprüft, aber
+  nicht übernommen: Die Bodenbedeckung unterscheidet Straßenverkehr/Weg/Platz nicht, das vereinfachte ALKIS-Schema
+  enthält Gebäude mit Gebäudefunktion.
+
+## rules.yaml 0.6.0 – 2026-10-28
+- S-FEAT-03 Gebäudedichte: ALKIS-Gebäude (ave:GebaeudeBauwerk, gebnutzbez Gebaeude, ohne „Unter der Erdoberfläche“)
+  statt OSM-Gebäude (Entscheidung Projektteam 2026-10-28, nachdem ALKIS mit sources.yaml 0.1.4 verfügbar ist).
+- S-FEAT-05 Publikumsnutzung: ALKIS-Gebäudefunktion (Liste alkis_public_functions, 36 Werte aus den Daten) oder
+  OSM-shop/amenity-Punkt im Gebäude; Nebengebäude (alkis_ancillary_functions, 17 Werte, z. B. Garage, Gartenhaus) zählen
+  nicht. Schulen/Kitas nicht als Publikumsnutzung, weil sie über S-FEAT-06 eingehen. Listen sind Annahmen (status draft).
+- Wirkung (Arbeitsgebiet): Gebäudedichte Median 0,179 → 0,173; shop_frontage_share Mittel 0,19 → 0,33, Anteil ≥ 0,4
+  (C-G30-01) 17 % → 27 %, null 14,5 % → 19,2 %; place_score Mittel 0,44 → 0,46 (Korrelation 0,97).
+- Schema: Felder alkis_gebnutzbez, alkis_rellage_excluded, alkis_public_functions, alkis_ancillary_functions.
+- s04_features prüft, dass alle Gebäudefunktionen aus rules.yaml in den ALKIS-Daten vorkommen.

@@ -26,6 +26,10 @@ class FeatureParams:
     population_buffer_m: float
     frontage_buffer_m: float
     amenity_excluded: frozenset[str]
+    alkis_gebnutzbez: frozenset[str]
+    alkis_rellage_excluded: frozenset[str]
+    alkis_public_functions: frozenset[str]
+    alkis_ancillary_functions: frozenset[str]
     bus_route_types: tuple[int, ...]
     node_snap_m: float
 
@@ -43,6 +47,10 @@ class FeatureParams:
             population_buffer_m=f.rule("S-FEAT-04").thresholds["buffer_m"].value,
             frontage_buffer_m=f.rule("S-FEAT-05").thresholds["buffer_m"].value,
             amenity_excluded=frozenset(f.rule("S-FEAT-05").amenity_excluded),
+            alkis_gebnutzbez=frozenset(f.rule("S-FEAT-03").alkis_gebnutzbez),
+            alkis_rellage_excluded=frozenset(f.rule("S-FEAT-03").alkis_rellage_excluded),
+            alkis_public_functions=frozenset(f.rule("S-FEAT-05").alkis_public_functions),
+            alkis_ancillary_functions=frozenset(f.rule("S-FEAT-05").alkis_ancillary_functions),
             bus_route_types=tuple(f.rule("S-FEAT-08").route_types),
             node_snap_m=f.rule("S-FEAT-10").thresholds["node_snap_m"].value,
         )
@@ -167,20 +175,33 @@ def area_weighted_sum(seg: gpd.GeoSeries, cells: gpd.GeoDataFrame, column: str, 
     return pd.Series(total, index=seg.index)
 
 
+def alkis_buildings(buildings: gpd.GeoDataFrame, params: "FeatureParams") -> gpd.GeoDataFrame:
+    """S-FEAT-03/05: above-ground ALKIS buildings with flags 'public' (building function) and 'ancillary'."""
+    keep = buildings["gebnutzbez"].isin(params.alkis_gebnutzbez) & ~buildings["rellage"].isin(params.alkis_rellage_excluded)
+    out = buildings[keep].reset_index(drop=True)
+    out["public"] = out["funktion"].isin(params.alkis_public_functions)
+    out["ancillary"] = out["funktion"].isin(params.alkis_ancillary_functions)
+    return out
+
+
 def _public(df: pd.DataFrame, amenity_excluded: frozenset[str]) -> np.ndarray:
-    """shop=* or amenity=* not in the excluded list."""
+    """Column 'public' if present, or shop=* / amenity=* not in the excluded list."""
+    base = df["public"].fillna(False).to_numpy(dtype=bool) if "public" in df else np.zeros(len(df), bool)
     shop = df["shop"].notna().to_numpy() if "shop" in df else np.zeros(len(df), bool)
     amenity = df["amenity"] if "amenity" in df else pd.Series([None] * len(df), index=df.index)
     am = (amenity.notna() & ~amenity.isin(amenity_excluded)).to_numpy()
-    return shop | am
+    return base | shop | am
 
 
 def frontage_share(seg: gpd.GeoSeries, buildings: gpd.GeoDataFrame, pois: gpd.GeoDataFrame, buffer_m: float,
                    amenity_excluded: frozenset[str]) -> tuple[pd.Series, pd.Series, pd.Series]:
     """S-FEAT-05: share of buildings in the buffer with public use (tag on the building or POI inside).
 
-    Returns (share, n_buildings, n_public); share is NaN where no building is in the buffer.
+    Buildings flagged 'ancillary' (garages, sheds, ...) are left out. Returns (share, n_buildings, n_public);
+    share is NaN where no building is in the buffer.
     """
+    if "ancillary" in buildings:
+        buildings = buildings[~buildings["ancillary"].fillna(False).to_numpy(dtype=bool)].reset_index(drop=True)
     public = _public(buildings, amenity_excluded)
     if len(pois) and len(buildings):
         poi_pub = pois[_public(pois, amenity_excluded)]
