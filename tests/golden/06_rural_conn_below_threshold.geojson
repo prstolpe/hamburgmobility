@@ -1,0 +1,54 @@
+{
+  "type": "FeatureCollection",
+  "name": "rural_conn_below_threshold",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "rural_conn_below_threshold",
+        "description": "Außerorts, conn_score knapp unter Schwelle",
+        "expected_category": "ETW60",
+        "expected_rules": [
+          "C-RUR-01"
+        ],
+        "boundary": {
+          "ref": "thresholds.conn_gow",
+          "value": 0.6,
+          "side": "below"
+        },
+        "highway": "secondary",
+        "access_motor_only": false,
+        "outside_builtup_area": true,
+        "conn_score": 0.59,
+        "in_hvs": false,
+        "ist_verkehrsberuhigt": false,
+        "pedestrian_zone": false,
+        "override_school_street": false,
+        "schools_or_kitas_within_m": 600.0,
+        "shop_frontage_share": 0.1,
+        "crossing_demand": "low",
+        "separated_cycle_track_present": false,
+        "width_p10_m": 12.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            563200.0,
+            5938000.0
+          ],
+          [
+            563300.0,
+            5938000.0
+          ]
+        ]
+      }
+    }
+  ]
+}

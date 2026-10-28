@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "name": "erf_verkehrsberuhigt",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "erf_verkehrsberuhigt",
+        "description": "Verkehrsberuhigter Bereich",
+        "expected_category": "ETW_ERF",
+        "expected_rules": [
+          "C-ERF-01"
+        ],
+        "boundary": null,
+        "highway": "living_street",
+        "access_motor_only": false,
+        "outside_builtup_area": false,
+        "conn_score": 0.2,
+        "in_hvs": false,
+        "ist_verkehrsberuhigt": true,
+        "pedestrian_zone": false,
+        "override_school_street": false,
+        "schools_or_kitas_within_m": 600.0,
+        "shop_frontage_share": 0.1,
+        "crossing_demand": "low",
+        "separated_cycle_track_present": false,
+        "width_p10_m": 12.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            563400.0,
+            5938000.0
+          ],
+          [
+            563500.0,
+            5938000.0
+          ]
+        ]
+      }
+    }
+  ]
+}

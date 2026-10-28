@@ -1,0 +1,51 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_track_narrow",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_track_narrow",
+        "description": "Vorhandener Radweg: C-G30-02 greift auch bei 13 m nicht",
+        "expected_category": "GOW50",
+        "expected_rules": [
+          "C-GOW-01",
+          "C-G50-01"
+        ],
+        "boundary": null,
+        "highway": "primary",
+        "access_motor_only": false,
+        "outside_builtup_area": false,
+        "conn_score": 0.8,
+        "in_hvs": true,
+        "ist_verkehrsberuhigt": false,
+        "pedestrian_zone": false,
+        "override_school_street": false,
+        "schools_or_kitas_within_m": 600.0,
+        "shop_frontage_share": 0.1,
+        "crossing_demand": "low",
+        "separated_cycle_track_present": true,
+        "width_p10_m": 13.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            565600.0,
+            5938000.0
+          ],
+          [
+            565700.0,
+            5938000.0
+          ]
+        ]
+      }
+    }
+  ]
+}

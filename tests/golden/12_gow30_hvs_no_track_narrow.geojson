@@ -1,0 +1,51 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow30_hvs_no_track_narrow",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow30_hvs_no_track_narrow",
+        "description": "HVS ohne Radweg, width_p10 13 m",
+        "expected_category": "GOW30",
+        "expected_rules": [
+          "C-GOW-01",
+          "C-G30-02"
+        ],
+        "boundary": null,
+        "highway": "primary",
+        "access_motor_only": false,
+        "outside_builtup_area": false,
+        "conn_score": 0.8,
+        "in_hvs": true,
+        "ist_verkehrsberuhigt": false,
+        "pedestrian_zone": false,
+        "override_school_street": false,
+        "schools_or_kitas_within_m": 600.0,
+        "shop_frontage_share": 0.1,
+        "crossing_demand": "low",
+        "separated_cycle_track_present": false,
+        "width_p10_m": 13.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            564400.0,
+            5938000.0
+          ],
+          [
+            564500.0,
+            5938000.0
+          ]
+        ]
+      }
+    }
+  ]
+}
