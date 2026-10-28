@@ -1,6 +1,6 @@
 """Golden cases: synthetic segments with expected category (tests/golden/*.geojson).
 
-Structure tests run now; the classification itself follows in prompt 08 (xfail until then).
+Structure tests check the cases; test_golden_classification runs pipeline/s05_classify.py on them.
 """
 
 import json
@@ -83,7 +83,6 @@ def test_every_rule_path_has_a_case():
     assert {r.id for r in RULES.classification} <= covered
 
 
-@pytest.mark.xfail(strict=True, reason="Klassifikation folgt in Prompt 08 (pipeline/s05_classify.py)")
 @pytest.mark.parametrize("path", GOLDEN_FILES, ids=lambda p: p.stem)
 def test_golden_classification(path):
     from pipeline.s05_classify import classify_segment

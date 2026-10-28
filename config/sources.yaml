@@ -2,7 +2,7 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.4
+  version: 0.1.5
   date: 2026-10-28
   crs_work: EPSG:25832
 
@@ -272,3 +272,22 @@ sources:
     check_status: verified  # 2026-10-28: HTTP 200, ca. 54 MB, täglich aktualisiert
     fetch: {download: pbf}
     note: "'latest' ändert sich täglich: Stand beim Abruf über Last-Modified, Abrufdatum und SHA-256 in data/manifest.json einfrieren; Datei danach nicht erneut laden, sondern lokal wiederverwenden."
+
+# Links für die manuelle Prüfung in den Stichproben-Reports (keine Datenquellen; werden nicht geladen).
+viewers:
+  orthophoto:
+    title: Geoportal Hamburg (Masterportal) mit Digitalen Orthophotos (belaubt) Hamburg mit Umland
+    provider: LGV
+    url: https://geoportal-hamburg.de/
+    params: {layer_id: "19968", zoom_level: 10, projection: "EPSG:25832"}
+    license: dl-de/by-2.0
+    check_status: verified  # 2026-10-28: Layer-ID aus https://geoportal-hamburg.de/config.json (baselayer), URL-Parameter MAP/CENTER, MAP/ZOOMLEVEL, MAP/LAYERIDS, MAP/PROJECTION aus Masterportal 3.27.1
+    note: "zoom_level 10 = 0,26 m/Pixel laut config.json. Link: ?MAP/PROJECTION=…&MAP/CENTER=[x,y]&MAP/ZOOMLEVEL=…&MAP/LAYERIDS=…"
+  panoramax:
+    title: Panoramax (Straßenbilder, Meta-Katalog)
+    provider: Panoramax
+    url: https://api.panoramax.xyz/
+    params: {zoom: 18}
+    license: "je Bild, meist CC-BY-SA 4.0 oder etalab-2.0"
+    check_status: verified  # 2026-10-28: Viewer @panoramax/web-viewer 5.3.1, Hash-Parameter map=zoom/lat/lon und focus=map
+    note: "Link: #focus=map&map=zoom/lat/lon. Abdeckung in Hamburg ungleich; ein leerer Kartenausschnitt heißt: keine Bilder."

@@ -94,3 +94,21 @@
   - S-XS-06 Machbarkeit für GOW50, GOW30_narrow (Untergrenze 10,80 m), ETW30 mit feasibility_classes.
   Alle Werte assumption/draft.
 - Schema: Modell `Crosssection`; Ziele müssen in required_width stehen.
+
+## rules.yaml 0.8.0, sources.yaml 0.1.5 – 2026-10-28
+- Neu: Abschnitt `classification_policy` für die Auswertung der Kaskade (pipeline/s05_classify.py, prompts/08_classify.md).
+  - C-MISS-01: fehlende Werte mit dreiwertiger Logik (Kleene); eine Regel greift nur bei sicher wahrer Bedingung.
+    Defaults für Merkmale ohne Datenquelle: outside_builtup_area = false, override_school_street = false,
+    crossing_demand = not_assessed (zählt als nicht high). Entscheidung Projektteam 2026-10-28 (offene Frage aus Prompt 02).
+  - C-CONF-01: confidence niedrig bei fehlendem entscheidendem Wert oder Wert innerhalb ±10 % einer Schwelle
+    (near_threshold 0,10, Vorgabe aus prompts/08); mittel bei Fallback-Quellen (Schulen/Kitas aus OSM, in_hvs aus
+    DTV-Linien 2019, conn_score mit umgelegtem Gewicht) und bei Defaults aus C-MISS-01; sonst hoch. Es zählen nur Werte,
+    die das Ergebnis bestimmt haben. Entscheidung Projektteam 2026-10-28.
+  - Schwellen der Kaskade unverändert.
+- Schema: Modell `PolicyRule` (defaults, fallback_inputs, thresholds); IDs gehen in die Dublettenprüfung ein.
+- sources.yaml: neuer Abschnitt `viewers` (keine Datenquellen) mit Linkformat für die Stichproben: Geoportal Hamburg
+  (Masterportal, Layer 19968 „Digitale Orthophotos (belaubt) Hamburg mit Umland“, laut config.json) und Panoramax
+  (Hash `#focus=map&map=zoom/lat/lon`, laut @panoramax/web-viewer 5.3.1).
+- Wirkung (Arbeitsgebiet, 562 km): SW 28,4 km, GOW50 38,1, GOW30 57,5, ETW30 427,4, ETW_ERF 10,6; confidence nach
+  Länge hoch 5,1 %, mittel 85,4 %, niedrig 9,6 %.
+

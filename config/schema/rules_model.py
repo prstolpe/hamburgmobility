@@ -140,6 +140,29 @@ class ClassificationRule(_Strict):
     note: str | None = None
 
 
+class MissingDefault(_Strict):
+    value: bool | str
+    note: str | None = None
+
+
+class FallbackInput(_Strict):
+    when: str | None = None  # condition on the segment; absent = always a fallback
+    note: str | None = None
+
+
+class PolicyRule(_Strict):
+    """How the cascade is evaluated (C-MISS-*: missing values, C-CONF-*: confidence)."""
+    id: str = Field(pattern=r"^C-[A-Z]+-\d{2}$")
+    description: str
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    thresholds: dict[str, Threshold] = {}
+    defaults: dict[str, MissingDefault] = {}
+    fallback_inputs: dict[str, FallbackInput] = {}
+    note: str | None = None
+
+
 class CoherenceRule(BaseModel):
     # Extra keys are rule parameters (e.g. min_run_m); their units are checked in RuleSet.
     model_config = ConfigDict(extra="allow")
@@ -323,6 +346,7 @@ class RuleSet(_Strict):
     sources: dict[str, Source]
     categories: dict[str, Category]
     classification: list[ClassificationRule]
+    classification_policy: list[PolicyRule]
     scores: dict[str, ScoreDef]
     requirements: dict[str, dict[str, Any]]
     required_width: dict[str, WidthEntry]
@@ -344,7 +368,8 @@ class RuleSet(_Strict):
         if cats != EXPECTED_CATEGORIES:
             raise ValueError(f"categories must be {sorted(EXPECTED_CATEGORIES)}, got {sorted(cats)}")
 
-        ids = ([r.id for r in self.classification] + [r.id for r in self.coherence]
+        ids = ([r.id for r in self.classification] + [r.id for r in self.classification_policy]
+               + [r.id for r in self.coherence]
                + [r.id for r in self.network.rules] + [r.id for r in self.conflation.rules]
                + [r.id for r in self.features.rules] + [r.id for r in self.crosssection.rules])
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
@@ -380,9 +405,13 @@ class RuleSet(_Strict):
         if not defaults or self.classification[-1].if_.strip() != "default" or len(defaults) > 1:
             raise ValueError("cascade must end with exactly one rule with if: default")
 
+        if not any(r.thresholds.get("near_threshold") for r in self.classification_policy):
+            raise ValueError("classification_policy: threshold near_threshold missing (confidence)")
+
         _check_provenance(self.network.highway_classes.model_dump(include={"source", "source_type"}),
                           "network.highway_classes", source_ids)
-        stage_rules = ([(f"network.rules[{r.id}]", r) for r in self.network.rules]
+        stage_rules = ([(f"classification_policy[{r.id}]", r) for r in self.classification_policy]
+                       + [(f"network.rules[{r.id}]", r) for r in self.network.rules]
                        + [(f"conflation.rules[{r.id}]", r) for r in self.conflation.rules]
                        + [(f"features.rules[{r.id}]", r) for r in self.features.rules]
                        + [(f"crosssection.rules[{r.id}]", r) for r in self.crosssection.rules])

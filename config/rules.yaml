@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.7.0
+  version: 0.8.0
   date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -102,6 +102,42 @@ classification:
     source: SWOV_FS_2023
     source_type: swov_crow
     status: draft
+
+# ---------------------------------------------------------------
+# Auswertung der Kaskade: fehlende Werte und confidence (pipeline/s05_classify.py, prompts/08_classify.md)
+# ---------------------------------------------------------------
+classification_policy:
+  - id: C-MISS-01
+    description: >-
+      Fehlende Werte: dreiwertige Logik (Kleene). Ein Vergleich mit einem fehlenden Wert ist unbekannt; „oder“ ist wahr,
+      sobald ein Teil wahr ist, „und“ ist falsch, sobald ein Teil falsch ist. Eine Regel greift nur, wenn ihre Bedingung
+      sicher wahr ist. Hängt das Ergebnis an einem unbekannten Wert, ist confidence niedrig (C-CONF-01).
+    defaults:
+      outside_builtup_area: {value: false, note: "Keine Datenquelle (Ortsgrenze/Ortstafeln); Eimsbüttel vermutlich vollständig innerorts"}
+      override_school_street: {value: false, note: "Leer heißt: keine Schulstraße in overrides/overrides.csv eingetragen"}
+      crossing_demand: {value: not_assessed, note: "Querungsbedarf ist nicht definiert; not_assessed zählt als nicht high"}
+    source_type: assumption
+    status: draft
+    note: "Entscheidung Projektteam 2026-10-28. Defaults gelten nur für fehlende Werte und zählen als Fallback-Quelle (C-CONF-01)."
+
+  - id: C-CONF-01
+    description: >-
+      confidence je Abschnitt: niedrig, wenn ein entscheidender Eingangswert fehlt oder innerhalb ±near_threshold
+      einer Schwelle (thresholds.* oder required_width.*) liegt; mittel, wenn ein entscheidender Eingangswert aus einer
+      Fallback-Quelle stammt oder ein Default aus C-MISS-01 ist; sonst hoch.
+    thresholds:
+      near_threshold: {value: 0.10, unit: "Anteil der Schwelle (±)", source_type: assumption}
+    fallback_inputs:
+      schools_or_kitas_within_m: {note: "Schulen/Kitas aus OSM amenity=school/kindergarten statt amtlicher Quelle (sources.yaml fallback_osm)"}
+      in_hvs: {note: "DTV-Linien HVS 2019 statt HVS-Karte 2023 (S-CONF-04)"}
+      conn_score: {when: "conn_weight_available < 1.0", note: "Gewicht fehlender Merkmale umgelegt (scores.missing_value_policy)"}
+    source_type: assumption
+    status: draft
+    note: >-
+      Prompt 08, Entscheidung Projektteam 2026-10-28. Es zählen nur Eingangswerte, die das Ergebnis einer Regel bestimmt
+      haben: bei wahrem „oder“ der sicherste wahre Teil, bei falschem „und“ der sicherste falsche Teil, sonst alle Teile.
+      Die confidence des Abschnitts ist das Minimum über alle geprüften Regeln des Entscheidungswegs. Ist die
+      when-Bedingung einer Fallback-Quelle unbekannt, zählt der Wert als Fallback.
 
 # Verbindungs- und Aufenthaltsscore (gewichtete Summe normierter Merkmale)
 scores:
