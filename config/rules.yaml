@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.2.0
+  version: 0.3.0
   date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -19,6 +19,8 @@ sources:
   RAST_06: {title: "Richtlinien für die Anlage von Stadtstraßen (FGSV 200)", date: 2006, url: null}
   RIN_2008: {title: "Richtlinien für integrierte Netzgestaltung (FGSV)", date: 2008, url: null}
   HH_HVS_2023: {title: "Hauptverkehrsstraßen Hamburg, Karte Stand Sept. 2023 (BVM)", date: 2023-09, url: "https://www.hamburg.de/politik-und-verwaltung/behoerden/bvm/hauptverkehrsstrassen-193350"}
+  HH_DTV_HVS_2019: {title: "Verkehrsmengen auf Hauptverkehrsstraßen in Hamburg, Collection verkehrsmengen_dtv_hvs_2019 (BVM)", date: 2019, url: "https://api.hamburg.de/datasets/v1/verkehrsmengen"}
+  HH_TEMPO: {title: "Zulässige Höchstgeschwindigkeiten Hamburg (OGC API)", date: 2026-10-28, url: "https://api.hamburg.de/datasets/v1/zulaessige_hoechstgeschwindigkeiten"}
 
 categories:
   SW:      {label_de: "Schnellverkehrsstraße", class_report2: null, speed_kmh: null, nl: "stroomweg"}
@@ -198,6 +200,54 @@ network:
       source_type: assumption
       status: draft
       note: "guide.md 3.2 Stufe 2 nennt auch Querschnittswechsel; Querschnittsdaten liegen erst nach Prompt 07 vor."
+
+# ---------------------------------------------------------------
+# Conflation amtlich <-> OSM (pipeline/s03_conflate.py, guide.md 3.2 Stufe 3, prompts/05)
+# ---------------------------------------------------------------
+conflation:
+  rules:
+    - id: S-CONF-01
+      description: "Linienabgleich amtlich -> Abschnitt: Kandidaten im Puffer, Filter nach Richtungswinkel und Überdeckungsanteil, Zuordnung nach Hausdorff-Abstand"
+      thresholds:
+        buffer_m:          {value: 15,  unit: m, source_type: assumption, check: "per Stichprobe kalibrieren (reports/conflation_sample.csv)"}
+        max_angle_deg:     {value: 20,  unit: "Grad (ungerichtet, 0-90)", source_type: assumption, check: "per Stichprobe kalibrieren"}
+        min_overlap_share: {value: 0.6, unit: "Anteil 0-1", source_type: assumption, check: "per Stichprobe kalibrieren"}
+      source_type: assumption
+      status: draft
+      note: >-
+        Startwerte aus guide.md 3.2 / prompts/05. Kandidat gilt, wenn Winkel <= max_angle_deg und
+        (Anteil Abschnitt im Puffer des amtlichen Stücks >= min_overlap_share oder Anteil amtliches Stück im
+        Abschnittspuffer >= min_overlap_share). Puffer mit flachen Enden. match_quality: exact = Abschnitt zu
+        >= min_overlap_share von gültigen Kandidaten überdeckt; partial = gültiger Kandidat, Überdeckung kleiner;
+        none = kein gültiger Kandidat. Attribute vom gültigen Kandidaten mit kleinstem Hausdorff-Abstand.
+        Definition exact/partial ist Vorschlag (docs/open_questions.md).
+    - id: S-CONF-02
+      description: "Zonen (Tempo 30, Tempo 20, verkehrsberuhigte Bereiche) über Längenanteil zuordnen"
+      thresholds:
+        min_length_share: {value: 0.5, unit: "Anteil 0-1 der Abschnittslänge", source_type: assumption, check: "per Stichprobe kalibrieren"}
+      source_type: assumption
+      status: draft
+      note: >-
+        Die Zonenebenen der OGC API sind Linien (Abschnitte des amtlichen Netzes), keine Flächen. Längenanteil =
+        Anteil der Abschnittslänge im Puffer (buffer_m aus S-CONF-01) der richtungsgleichen Zonenlinien
+        (max_angle_deg aus S-CONF-01), damit Querstraßen an Knoten nicht zählen. Anteil >= min_length_share: Zone gilt.
+    - id: S-CONF-03
+      description: "Zeitlich begrenzte Regelungen (sonderregelung) getrennt speichern, nie als Regeltempo"
+      source: HH_TEMPO
+      source_type: hamburg
+      status: draft
+      note: >-
+        Regeltempo bei 'sonst N km/h' = N; bei '<N> km/h <Zeitfenster>' ist N das zeitlich begrenzte Tempo und das
+        Regeltempo das Feld geschwindigkeit, wenn es davon abweicht, sonst unbekannt. Mehrdeutige Fälle siehe
+        docs/open_questions.md.
+    - id: S-CONF-04
+      description: "in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist"
+      source: HH_DTV_HVS_2019
+      source_type: hamburg
+      status: draft
+      note: >-
+        Ersatz für die HVS-Karte 2023 (HH_HVS_2023, nur PDF) und den WFS Strategisches Straßennetz (HTTP 404).
+        Stand 2019; Abweichungen zur Karte 2023 sind möglich. Entscheidung Projektteam 2026-10-28.
 
 # ---------------------------------------------------------------
 # Netzkohärenz

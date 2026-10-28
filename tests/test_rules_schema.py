@@ -131,6 +131,33 @@ def test_assumption_rule_may_omit_source(raw):
     RuleSet.model_validate(data)
 
 
+def test_conflation_rules():
+    conflation = load_rules().conflation
+    assert [r.id for r in conflation.rules] == ["S-CONF-01", "S-CONF-02", "S-CONF-03", "S-CONF-04"]
+    for rule in conflation.rules:
+        assert rule.status == "draft"
+        for threshold in rule.thresholds.values():
+            assert threshold.source_type == "assumption"
+            assert threshold.unit.strip()
+    assert conflation.rule("S-CONF-01").thresholds["buffer_m"].unit == "m"
+
+
+def test_duplicate_conflation_id_rejected(raw):
+    def mutate(d):
+        d["conflation"]["rules"][1]["id"] = d["conflation"]["rules"][0]["id"]
+
+    with pytest.raises(ValidationError, match="duplicate"):
+        RuleSet.model_validate(_mutated(raw, mutate))
+
+
+def test_conflation_rule_needs_source_unless_assumption(raw):
+    def mutate(d):
+        del d["conflation"]["rules"][3]["source"]  # S-CONF-04, source_type hamburg
+
+    with pytest.raises(ValidationError, match="source missing"):
+        RuleSet.model_validate(_mutated(raw, mutate))
+
+
 def test_network_rules():
     network = load_rules().network
     assert [r.id for r in network.rules] == ["S-NET-01", "S-NET-02", "S-NET-03"]
