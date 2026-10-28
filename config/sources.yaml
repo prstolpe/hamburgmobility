@@ -2,7 +2,7 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.1
+  version: 0.1.2
   date: 2026-10-28
   crs_work: EPSG:25832
 
@@ -29,7 +29,8 @@ sources:
     attribution: "Freie und Hansestadt Hamburg, Behörde für Wirtschaft, Verkehr und Innovation"
     as_of: "Metadaten-Revision 2019-12-16"
     purpose: [official_network, conflation]
-    check_status: verified
+    check_status: open  # 2026-10-28: GetCapabilities liefert HTTP 404 (Dataport-Fehlerseite); neue URL ermitteln
+    fetch: {typenames: all}
 
   dedications:
     title: WFS Widmungen (HWG)
@@ -37,16 +38,19 @@ sources:
     access: wfs
     url: https://geodienste.hamburg.de/HH_WFS_Widmungen
     format: GML
-    license: unknown  # TODO
+    license: dl-de/by-2.0  # 2026-10-28: laut GetCapabilities (ows:Fees)
+    attribution: "Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM)"  # laut ows:Fees
     purpose: [street_status, pedestrian_zones]
-    check_status: catalog
+    check_status: verified  # 2026-10-28: GetCapabilities gelesen (WFS 2.0.0, EPSG:25832)
+    fetch: {typenames: ["de.hh.up:widmung_flaeche", "de.hh.up:widmung_linie"]}
 
   speed_limits:
     title: Zulässige Höchstgeschwindigkeiten Hamburg
     provider: Freie und Hansestadt Hamburg
     access: ogc_api_features
     url: https://api.hamburg.de/datasets/v1/zulaessige_hoechstgeschwindigkeiten
-    collections_seen: [tempo30zonen, verkehrsberuhigte_bereiche]  # weitere über /collections abfragen
+    collections_seen: [tempo20zonen, tempo30zonen, verkehrsberuhigte_bereiche, zulaessige_hoechstgeschwindigkeiten, zulaessige_hoechstgeschwindigkeiten_sonderregelung]  # /collections am 2026-10-28
+    fetch: {collections: [tempo20zonen, tempo30zonen, verkehrsberuhigte_bereiche, zulaessige_hoechstgeschwindigkeiten, zulaessige_hoechstgeschwindigkeiten_sonderregelung]}
     format: GeoJSON
     license: unknown  # TODO: Landing Page prüfen
     as_of: "Abruf 2026-10-27"
@@ -58,7 +62,8 @@ sources:
     provider: BVM
     access: ogc_api_features
     url: https://api.hamburg.de/datasets/v1/verkehrsmengen
-    collections_seen: [verkehrsmengen_dtv_bab_2019]  # TODO: aktuellste Jahrgänge über /collections ermitteln
+    collections_seen: [verkehrsmengen_dtv_bab_2019, verkehrsmengen_dtv_hvs_2019, verkehrsmengen_dtvw_bab_2013, verkehrsmengen_dtvw_hvs_2014]  # /collections am 2026-10-28; neuester HVS-Jahrgang 2019
+    fetch: {collections: [verkehrsmengen_dtv_hvs_2019, verkehrsmengen_dtv_bab_2019]}
     format: GeoJSON
     license: unknown  # TODO
     purpose: [use_dimension, conn_score]
@@ -72,19 +77,22 @@ sources:
     format: JSON
     license: unknown
     purpose: [dtv_calibration]
-    check_status: open
+    check_status: open  # 2026-10-28: Endpunkt erreichbar (9.279 Things, gemischte IoT-Daten)
+    fetch: {inventory: locations_things}  # nur Bestand im Bezirk (Locations + Things), keine Messwerte
 
   bike_volumes_dbradplus:
     title: Radverkehrsmengen (DB Rad+)
     provider: Freie und Hansestadt Hamburg
     access: ogc_api_features
     url: https://api.hamburg.de/datasets/v1/dbradplus
-    collections_seen: [jahr2022]
+    collections_seen: [aktuelles_jahr, jahr2022, jahr2023, jahr2024, jahr2025, letzte_woche]  # /collections am 2026-10-28
+    fetch: {collections: [jahr2025]}  # neuestes vollständiges Jahr (Entscheidung 2026-10-28)
     format: GeoJSON
-    license: unknown  # TODO
+    license: ODbL-1.0  # 2026-10-28: license-Link der Landing Page (api.hamburg.de)
     purpose: [cycling_exposure]
     check_status: verified
     note: "Stichprobe aus App-Nutzenden, nicht repräsentativ."
+    fetch_issue: "2026-10-28: Abruf jahr2025 mit bbox scheitert reproduzierbar – der Server liefert HTTP 200 mit abgebrochenem JSON (offset 10000 nach 63.156 Bytes, offset 11000 nach 153.435 Bytes; auch mit bbox in CRS84). Ohne bbox funktionieren dieselben Offsets. Bei der Datenstelle melden; keine Umgehung eingebaut."
 
   cycle_network:
     title: Radnetz Hamburg (Radrouten, Radrouten+), ersetzt seit 2025 die Velorouten
@@ -94,6 +102,7 @@ sources:
     purpose: [overlay_cycle_network]
     check_status: catalog
     fallback: "OSM relations cycle_network=DE:HH:Radnetz_Hamburg"
+    fallback_osm: {relations: {cycle_network: ["DE:HH:Radnetz_Hamburg"]}}
 
   alkis:
     title: ALKIS Flurstücke, Gebäude, tatsächliche Nutzung
@@ -149,27 +158,30 @@ sources:
     provider: LGV / BVM
     access: wfs
     url: https://geodienste.hamburg.de/HH_WFS_ZEB_Zustandsklassen
-    license: unknown
+    license: dl-de/by-2.0  # 2026-10-28: laut GetCapabilities (ows:Fees)
     purpose: [context]
-    check_status: verified_metadata
+    check_status: verified  # 2026-10-28: GetCapabilities gelesen; Jahrgänge 2014–2025
+    fetch: {typenames: ["de.hh.up:zeb2025_geb", "de.hh.up:zeb2025_gw", "de.hh.up:zeb2025_sub"]}  # neuester Jahrgang
 
   road_surface:
     title: WFS Straßendeckschichttypen nach RLS-19
     provider: BVM
     access: wfs
     url: https://geodienste.hamburg.de/HH_WFS_Strassendecke
-    license: unknown
+    license: dl-de/by-2.0  # 2026-10-28: laut GetCapabilities (ows:Fees)
     purpose: [actual_design_surface]
-    check_status: verified_metadata
+    check_status: verified  # 2026-10-28: GetCapabilities gelesen
+    fetch: {typenames: ["de.hh.up:strassendeckschicht"]}
 
   quiet_areas:
     title: WFS Ruhige Gebiete Hamburg
     provider: BUKEA
     access: wfs
     url: https://geodienste.hamburg.de/HH_WFS_Ruhige_Gebiete
-    license: unknown
+    license: unknown  # GetCapabilities nennt keine Lizenz (2026-10-28)
     purpose: [context]
-    check_status: verified_metadata
+    check_status: verified  # 2026-10-28: GetCapabilities gelesen
+    fetch: {typenames: ["de.hh.up:ruhige_gebiete_hamburg"]}
 
   noise_maps:
     title: Strategische Lärmkarten Straßenverkehr
@@ -186,6 +198,7 @@ sources:
     url: null  # TODO: WFS hinter dem Schulinfosystem ermitteln; Fallback OSM amenity=school
     purpose: [sensitive_facilities]
     check_status: catalog
+    fallback_osm: {tags: {amenity: [school]}}
 
   kitas:
     title: Kitas
@@ -194,6 +207,7 @@ sources:
     url: null  # TODO; Fallback OSM amenity=kindergarten
     purpose: [sensitive_facilities]
     check_status: open
+    fallback_osm: {tags: {amenity: [kindergarten]}}
 
   population_grid:
     title: Zensus 2022 Bevölkerung im 100-m-Gitter
@@ -238,4 +252,5 @@ sources:
     attribution: "© OpenStreetMap-Beitragende"
     purpose: [network, maxspeed, lanes, width, cycleway, sidewalk, parking]
     check_status: verified  # 2026-10-28: HTTP 200, ca. 54 MB, täglich aktualisiert
+    fetch: {download: pbf}
     note: "'latest' ändert sich täglich: Stand beim Abruf über Last-Modified, Abrufdatum und SHA-256 in data/manifest.json einfrieren; Datei danach nicht erneut laden, sondern lokal wiederverwenden."

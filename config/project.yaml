@@ -1,0 +1,5 @@
+# Projekt-Einstellungen (keine fachlichen Schwellen; die stehen in rules.yaml)
+pilot_district:
+  name: Eimsbüttel            # CLAUDE.md, Pilotbezirk
+  osm_admin_level: 9          # geprüft 2026-10-28 im OSM-Auszug: Level 9 = Bezirk (49,8 km²), Level 10 = Stadtteil (3,2 km²)
+  buffer_m: 500               # prompts/03_fetch.md: Puffer, damit Randabschnitte vollständig sind

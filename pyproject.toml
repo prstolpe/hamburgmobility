@@ -7,6 +7,7 @@ dependencies = [
     "geopandas>=1.2.0",
     "networkx>=3.7",
     "osmnx>=2.1.1",
+    "pyarrow>=26.0.0",
     "pydantic>=2.14.1",
     "pyogrio>=0.13.0",
     "pyproj>=3.8.0",
