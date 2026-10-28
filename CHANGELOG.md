@@ -82,3 +82,15 @@
   (C-G30-01) 17 % → 27 %, null 14,5 % → 19,2 %; place_score Mittel 0,44 → 0,46 (Korrelation 0,97).
 - Schema: Felder alkis_gebnutzbez, alkis_rellage_excluded, alkis_public_functions, alkis_ancillary_functions.
 - s04_features prüft, dass alle Gebäudefunktionen aus rules.yaml in den ALKIS-Daten vorkommen.
+
+## rules.yaml 0.7.0 – 2026-10-28
+- Neu: Abschnitt `crosssection` für Straßenraumbreite und Machbarkeit (pipeline/s07_crosssection.py, prompts/07_crosssection.md).
+  - S-XS-01 Transekte (vereinfachen 2 m, alle 20 m, ± 40 m, Tangente ± 10 m; Werte aus guide.md 4.3 a).
+  - S-XS-02 Variante Verkehrsfläche: ALKIS nutzart Strassenverkehr, Weg, Platz (Werte aus den Daten); liefert width_p10_m
+    für C-G30-02, weil required_width Grenze zu Grenze gilt. Mittelpunkt außerhalb → Transekt verworfen.
+  - S-XS-03 Variante Fassade: erste oberirdische ALKIS-Gebäude links/rechts.
+  - S-XS-04 Knoten (Grad ≠ 2) 20 m, Brücken/Tunnel aus OSM, open_space.
+  - S-XS-05 Median, p10, Minimum, Engstellen (≥ 3 Transekte unter p10).
+  - S-XS-06 Machbarkeit für GOW50, GOW30_narrow (Untergrenze 10,80 m), ETW30 mit feasibility_classes.
+  Alle Werte assumption/draft.
+- Schema: Modell `Crosssection`; Ziele müssen in required_width stehen.

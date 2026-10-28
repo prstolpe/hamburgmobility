@@ -259,6 +259,26 @@ class Features(_Strict):
         return next(r for r in self.rules if r.id == rule_id)
 
 
+class CrosssectionRule(_Strict):
+    id: str = Field(pattern=r"^S-[A-Z]+-\d{2}$")
+    description: str
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    thresholds: dict[str, Threshold] = {}
+    alkis_nutzart: list[str] = []
+    targets: list[str] = []
+    range_reference: Literal["min", "max"] | None = None
+    note: str | None = None
+
+
+class Crosssection(_Strict):
+    rules: list[CrosssectionRule] = Field(min_length=1)
+
+    def rule(self, rule_id: str) -> CrosssectionRule:
+        return next(r for r in self.rules if r.id == rule_id)
+
+
 class FeasibilityClass(_Strict):
     source_type: SourceType
     min: float | None = None
@@ -310,6 +330,7 @@ class RuleSet(_Strict):
     network: Network
     conflation: Conflation
     features: Features
+    crosssection: Crosssection
     coherence: list[CoherenceRule]
     discrepancy: Discrepancy
     priority: Priority
@@ -325,7 +346,7 @@ class RuleSet(_Strict):
 
         ids = ([r.id for r in self.classification] + [r.id for r in self.coherence]
                + [r.id for r in self.network.rules] + [r.id for r in self.conflation.rules]
-               + [r.id for r in self.features.rules])
+               + [r.id for r in self.features.rules] + [r.id for r in self.crosssection.rules])
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
             raise ValueError(f"duplicate rule ids: {duplicates}")
@@ -363,7 +384,8 @@ class RuleSet(_Strict):
                           "network.highway_classes", source_ids)
         stage_rules = ([(f"network.rules[{r.id}]", r) for r in self.network.rules]
                        + [(f"conflation.rules[{r.id}]", r) for r in self.conflation.rules]
-                       + [(f"features.rules[{r.id}]", r) for r in self.features.rules])
+                       + [(f"features.rules[{r.id}]", r) for r in self.features.rules]
+                       + [(f"crosssection.rules[{r.id}]", r) for r in self.crosssection.rules])
         for path, rule in stage_rules:
             _check_provenance(rule.model_dump(include={"source", "source_type"}), path, source_ids)
             for name, threshold in rule.thresholds.items():
@@ -396,6 +418,10 @@ class RuleSet(_Strict):
             part = getattr(self.discrepancy, name)
             _check_provenance(part.model_dump(include={"source", "source_type"}),
                               f"discrepancy.{name}", source_ids)
+        for rule in self.crosssection.rules:
+            unknown_targets = [t for t in rule.targets if t not in self.required_width]
+            if unknown_targets:
+                raise ValueError(f"crosssection.rules[{rule.id}].targets: not in required_width: {unknown_targets}")
         requirement_keys = {k for reqs in self.requirements.values() for k in reqs}
         unknown_checks = set(self.discrepancy.design.checks) - requirement_keys
         if unknown_checks:

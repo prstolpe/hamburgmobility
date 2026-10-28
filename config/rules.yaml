@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.6.0
+  version: 0.7.0
   date: 2026-10-28
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -413,6 +413,58 @@ features:
         node_snap_m vom Abschnitt. Fehlende Tags heißen 'unbekannt', nicht 'nein'.
       thresholds:
         node_snap_m: {value: 1, unit: m, source_type: assumption}
+
+# ---------------------------------------------------------------
+# Querschnitt: Straßenraumbreite und Machbarkeit (pipeline/s07_crosssection.py, guide.md 4.3 a und c, prompts/07)
+# ---------------------------------------------------------------
+crosssection:
+  rules:
+    - id: S-XS-01
+      description: "Transekte: Mittellinie glätten, in festem Abstand Senkrechte nach beiden Seiten, Richtung aus der über ein Stück gemittelten Tangente"
+      thresholds:
+        simplify_m:     {value: 2,  unit: m, source_type: assumption}
+        spacing_m:      {value: 20, unit: m, source_type: assumption}
+        half_length_m:  {value: 40, unit: m, source_type: assumption}
+        tangent_half_m: {value: 10, unit: m, source_type: assumption}
+      source_type: assumption
+      status: draft
+      note: "Werte aus guide.md 4.3 a. Erstes Transekt bei spacing_m/2 vom Abschnittsanfang, damit auch kurze Abschnitte eines bekommen."
+    - id: S-XS-02
+      description: "Variante Verkehrsfläche: zusammenhängender Teil des Transekts in ALKIS-Flächen der tatsächlichen Nutzung Straßenverkehr, Weg, Platz um den Mittelpunkt; Breite = Abstand der ersten Grenzen links und rechts"
+      alkis_nutzart: [Strassenverkehr, Weg, Platz]
+      source_type: assumption
+      status: draft
+      note: >-
+        Werte von nutzart aus den Daten (ave:Nutzung, Abruf 2026-10-28). Liegt der Mittelpunkt (OSM-Mittellinie) nicht in
+        einer dieser Flächen, wird das Transekt für diese Variante verworfen (Flag centre_outside). width_p10_m für C-G30-02
+        kommt aus dieser Variante, weil required_width als Breite Grenze zu Grenze definiert ist.
+    - id: S-XS-03
+      description: "Variante Fassade: Abstand der ersten oberirdischen ALKIS-Gebäude links und rechts (Gebäudeauswahl wie S-FEAT-03)"
+      source_type: assumption
+      status: draft
+      note: "Liegt der Mittelpunkt in einem Gebäude (Durchfahrt, Arkade), wird das Transekt für diese Variante verworfen (Flag centre_in_building)."
+    - id: S-XS-04
+      description: "Sonderfälle: Transekte nahe Knoten verwerfen; ohne Grenze innerhalb half_length_m auf einer Seite Flag open_space; Brücken und Tunnel (OSM bridge/tunnel) ausschließen"
+      thresholds:
+        node_exclusion_m: {value: 20, unit: m, source_type: assumption}
+      source_type: assumption
+      status: draft
+      note: "Knoten = Abschnittsenden mit Grad ≠ 2 (wie S-NET-01). open_space-Transekte gehen nicht in die Breitenstatistik ein."
+    - id: S-XS-05
+      description: "Aggregation je Abschnitt: Median, Quantil (p10), Minimum; Engstelle = mindestens min_run aufeinanderfolgende gültige Transekte unter dem p10 des Abschnitts"
+      thresholds:
+        quantile: {value: 0.1, unit: "Anteil 0-1", source_type: assumption}
+        min_run:  {value: 3,   unit: "Transekte (Anzahl)", source_type: assumption}
+      source_type: assumption
+      status: draft
+      note: "guide.md 4.3 a Schritt 4. Ein ungültiges Transekt unterbricht eine Engstelle."
+    - id: S-XS-06
+      description: "Machbarkeit: width_ratio = width_p10_m / required_width je möglicher Soll-Kategorie, Klassen aus feasibility_classes"
+      targets: [GOW50, GOW30_narrow, ETW30]
+      range_reference: min
+      source_type: assumption
+      status: draft
+      note: "Bei Bereichen (GOW30_narrow 10,80-13,40 m) gilt die Untergrenze als erforderliche Breite (range_reference: min)."
 
 # ---------------------------------------------------------------
 # Netzkohärenz
