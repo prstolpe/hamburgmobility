@@ -2,8 +2,8 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.0
-  date: 2026-10-27
+  version: 0.1.1
+  date: 2026-10-28
   crs_work: EPSG:25832
 
 sources:
@@ -232,9 +232,10 @@ sources:
     title: OpenStreetMap-Auszug Hamburg
     provider: OSM-Beitragende (Geofabrik-Auszug)
     access: download
-    url: null  # TODO: Geofabrik-Auszug Hamburg (.osm.pbf); Datum einfrieren
+    url: https://download.geofabrik.de/europe/germany/hamburg-latest.osm.pbf
     format: PBF
     license: ODbL-1.0
     attribution: "© OpenStreetMap-Beitragende"
     purpose: [network, maxspeed, lanes, width, cycleway, sidewalk, parking]
-    check_status: known
+    check_status: verified  # 2026-10-28: HTTP 200, ca. 54 MB, täglich aktualisiert
+    note: "'latest' ändert sich täglich: Stand beim Abruf über Last-Modified, Abrufdatum und SHA-256 in data/manifest.json einfrieren; Datei danach nicht erneut laden, sondern lokal wiederverwenden."
