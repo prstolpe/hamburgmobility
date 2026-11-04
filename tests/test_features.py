@@ -31,7 +31,7 @@ from pipeline.lib.features import (
     way_design,
     weighted_score,
 )
-from pipeline.lib.rules import load_rules
+from pipeline.lib.rules import load_rules, network_highways
 
 CRS = "EPSG:25832"
 GTFS_DIR = Path(__file__).parent / "fixtures" / "gtfs_min"
@@ -60,7 +60,7 @@ def test_feature_rules_in_rules_yaml():
 
 def test_default_speed_for_every_routed_highway_class(params):
     rules = load_rules()
-    routed = set(rules.network.highway_classes.values) - set(params.exclude_highway)
+    routed = set(network_highways(rules)) - set(params.exclude_highway)
     assert routed == set(params.default_speed_kmh)
 
 

@@ -1,12 +1,12 @@
 # Netzbericht – Abschnitte (Stufe 2)
 
-Erzeugt: 2026-10-28T10:02:04+00:00 von `pipeline/s02_network.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-04T20:32:13+00:00 von `pipeline/s02_network.py`. Nicht amtlicher Entwurf.
 
 ## Eingabe
 
 - OSM-Auszug: `data/raw/osm/hamburg_2026-10-28.osm.pbf` (Abruf 2026-10-28, SHA-256 `700d2e2603a7ffb5…`)
-- Regelwerk: config/rules.yaml 0.2.0
-- highway-Klassen: motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link, unclassified, residential, living_street, pedestrian
+- Regelwerk: config/rules.yaml 0.11.0
+- highway-Klassen: motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link, unclassified, residential, living_street, pedestrian, service, track
 - Netz für ganz Hamburg berechnet, damit IDs am Rand des Pilotbezirks nicht vom Zuschnitt abhängen.
 
 ## Segmentierungsregeln
@@ -14,29 +14,30 @@ Erzeugt: 2026-10-28T10:02:04+00:00 von `pipeline/s02_network.py`. Nicht amtliche
 - **S-NET-01** (assumption, draft): Abschnittsende an jedem Knoten mit Grad != 2 (Kreuzung, Einmündung, Sackgassenende)
 - **S-NET-02** (assumption, draft): Abschnittsende an Knoten mit Grad 2, an denen sich die highway-Klasse ändert
 - **S-NET-03** (assumption, draft): Abschnitte länger als min_length_m an Knoten teilen, an denen sich maxspeed ändert (nur Wechsel zwischen zwei bekannten Werten); min_length_m = 400 m (assumption)
+- **S-NET-04** (assumption, draft): Benannte Zufahrten zusätzlich ins Netz: highway=service ohne service-Untertyp oder mit service=alley und highway=track mit Kfz-Zugang (erster bekannter Wert aus motor_access_keys in motor_access_values oder ohne Angabe); jeweils nur mit name. Fußwege, path, Parkplatzgassen und Grundstückszufahrten bleiben draußen.
 
 segment_id = Hash aus sortierten OSM-Way-IDs und den auf 1 m gerundeten Koordinaten der beiden Endknoten (EPSG:25832). Haben zwei Abschnitte dieselben Ways und Endknoten (z. B. die Bögen eines Kreisverkehrs aus einem geschlossenen Way), gehen zusätzlich alle Knotenkoordinaten in den Hash ein.
 
 ## Kennzahlen
 
-- Kanten (Knoten zu Knoten) im Ausgangsnetz: 218 356 aus 40 421 Ways
-- Abschnitte Hamburg: 34 502 (4 706.8 km)
-- Abschnitte Eimsbüttel: 3 882 (471.3 km)
-- Abschnitte im Arbeitsgebiet (Eimsbüttel + 500 m): 4 964
-- Abschnitte aus Teilung nach S-NET-03: 478 (davon Eimsbüttel: 32)
-- Abschnitte ohne Bezirk (außerhalb Hamburgs, Randstreifen des OSM-Auszugs; nur für den Netzzusammenhang): 1 118
-- Abschnitte ohne OSM-maxspeed: 5 710; mit mehreren maxspeed-Werten: 419
+- Kanten (Knoten zu Knoten) im Ausgangsnetz: 228 005 aus 42 001 Ways
+- Abschnitte Hamburg: 36 526 (4 997.7 km)
+- Abschnitte Eimsbüttel: 4 010 (480.1 km)
+- Abschnitte im Arbeitsgebiet (Eimsbüttel + 500 m): 5 127
+- Abschnitte aus Teilung nach S-NET-03: 461 (davon Eimsbüttel: 32)
+- Abschnitte ohne Bezirk (außerhalb Hamburgs, Randstreifen des OSM-Auszugs; nur für den Netzzusammenhang): 1 240
+- Abschnitte ohne OSM-maxspeed: 6 843; mit mehreren maxspeed-Werten: 426
 
 ## Prüfungen
 
 | Prüfung | Ergebnis | Detail |
 | --- | --- | --- |
-| Längensumme vs. OSM-Ausgangsnetz | ok | 4706.8 km vs. 4706.2 km, Abweichung 0.0135% (Grenze 1%) |
+| Längensumme vs. OSM-Ausgangsnetz | ok | 4997.7 km vs. 4997.0 km, Abweichung 0.0127% (Grenze 1%) |
 | Keine doppelten segment_id | ok | 0 doppelt |
 | Geometrien gültig | ok | 0 ungültig |
 | Länge > 0 | ok | 0 mit Länge 0 |
 | CRS EPSG:25832 | ok | EPSG:25832 |
-| IDs identisch mit Vorlauf | ok | 34502 gleich, 0 neu, 0 entfallen |
+| IDs identisch mit Vorlauf | **FEHLER** | 34000 gleich, 2526 neu, 502 entfallen |
 
 ## Längenverteilung je highway-Klasse – Eimsbüttel
 
@@ -45,17 +46,19 @@ segment_id = Hash aus sortierten OSM-Way-IDs und den auf 1 m gerundeten Koordina
 | motorway | 30 | 23.4 | 211 | 618 | 1 722 | 2 179 |
 | motorway_link | 72 | 8.8 | 17 | 51 | 301 | 601 |
 | trunk | 1 | 0.0 | 33 | 33 | 33 | 33 |
-| primary | 562 | 58.3 | 13 | 59 | 240 | 1 730 |
-| primary_link | 28 | 0.9 | 10 | 28 | 47 | 119 |
-| secondary | 328 | 26.2 | 10 | 42 | 183 | 726 |
+| primary | 567 | 58.3 | 13 | 59 | 238 | 1 730 |
+| primary_link | 29 | 0.9 | 9 | 27 | 47 | 119 |
+| secondary | 337 | 26.2 | 10 | 41 | 180 | 726 |
 | secondary_link | 21 | 1.0 | 22 | 45 | 71 | 86 |
-| tertiary | 525 | 51.7 | 11 | 75 | 217 | 1 384 |
+| tertiary | 537 | 51.7 | 11 | 71 | 217 | 1 384 |
 | tertiary_link | 9 | 0.4 | 12 | 38 | 67 | 77 |
-| unclassified | 90 | 12.5 | 12 | 70 | 344 | 1 345 |
-| residential | 2 013 | 274.4 | 30 | 111 | 280 | 993 |
+| unclassified | 95 | 12.5 | 12 | 71 | 332 | 1 345 |
+| residential | 2 039 | 274.3 | 30 | 110 | 275 | 993 |
 | living_street | 117 | 10.6 | 23 | 65 | 188 | 265 |
 | pedestrian | 86 | 3.1 | 7 | 25 | 77 | 169 |
-| **gesamt** | 3 882 | 471.3 | 16 | 86 | 264 | 2 179 |
+| service | 56 | 5.5 | 12 | 75 | 222 | 474 |
+| track | 14 | 3.5 | 76 | 198 | 464 | 619 |
+| **gesamt** | 4 010 | 480.1 | 16 | 85 | 259 | 2 179 |
 
 ## Längenverteilung je highway-Klasse – Hamburg
 
@@ -64,31 +67,33 @@ segment_id = Hash aus sortierten OSM-Way-IDs und den auf 1 m gerundeten Koordina
 | motorway | 183 | 180.7 | 182 | 634 | 2 085 | 4 780 |
 | motorway_link | 372 | 59.6 | 16 | 77 | 348 | 1 347 |
 | trunk | 83 | 45.2 | 54 | 396 | 1 419 | 2 638 |
-| trunk_link | 131 | 16.8 | 14 | 51 | 314 | 519 |
-| primary | 2 780 | 296.1 | 13 | 64 | 244 | 3 488 |
-| primary_link | 107 | 5.6 | 10 | 33 | 99 | 530 |
-| secondary | 4 014 | 466.4 | 12 | 64 | 266 | 2 278 |
+| trunk_link | 132 | 16.8 | 14 | 51 | 313 | 519 |
+| primary | 2 804 | 296.1 | 12 | 64 | 241 | 3 488 |
+| primary_link | 108 | 5.6 | 10 | 33 | 98 | 530 |
+| secondary | 4 072 | 466.4 | 12 | 64 | 263 | 2 054 |
 | secondary_link | 206 | 8.2 | 11 | 34 | 80 | 216 |
-| tertiary | 4 590 | 613.8 | 13 | 77 | 274 | 3 073 |
+| tertiary | 4 683 | 613.8 | 13 | 76 | 269 | 3 073 |
 | tertiary_link | 122 | 4.7 | 13 | 34 | 67 | 128 |
-| unclassified | 1 672 | 334.1 | 16 | 90 | 529 | 3 301 |
-| residential | 17 814 | 2 502.2 | 28 | 104 | 290 | 2 500 |
-| living_street | 1 724 | 142.2 | 17 | 61 | 179 | 1 155 |
-| pedestrian | 704 | 31.3 | 7 | 30 | 99 | 330 |
-| **gesamt** | 34 502 | 4 706.8 | 17 | 87 | 286 | 4 780 |
+| unclassified | 1 733 | 334.1 | 16 | 89 | 511 | 2 855 |
+| residential | 18 141 | 2 502.2 | 28 | 103 | 284 | 2 500 |
+| living_street | 1 736 | 142.2 | 16 | 60 | 178 | 1 155 |
+| pedestrian | 706 | 31.3 | 7 | 30 | 98 | 330 |
+| service | 930 | 136.6 | 20 | 80 | 284 | 6 328 |
+| track | 515 | 154.2 | 34 | 172 | 733 | 3 635 |
+| **gesamt** | 36 526 | 4 997.7 | 17 | 87 | 286 | 6 328 |
 
 ## Abschnitte je Bezirk
 
 | Bezirk | Anzahl | km |
 | --- | ---: | ---: |
-| (außerhalb Hamburgs) | 1 118 | 212.4 |
-| Altona | 4 606 | 578.0 |
-| Bergedorf | 2 817 | 506.0 |
-| Eimsbüttel | 3 882 | 471.3 |
-| Hamburg-Mitte | 6 481 | 855.6 |
-| Hamburg-Nord | 4 854 | 541.1 |
-| Harburg | 3 485 | 550.7 |
-| Wandsbek | 7 259 | 991.7 |
+| (außerhalb Hamburgs) | 1 240 | 241.8 |
+| Altona | 4 887 | 621.1 |
+| Bergedorf | 3 063 | 544.0 |
+| Eimsbüttel | 4 010 | 480.1 |
+| Hamburg-Mitte | 6 854 | 898.2 |
+| Hamburg-Nord | 5 136 | 563.3 |
+| Harburg | 3 790 | 611.2 |
+| Wandsbek | 7 546 | 1 037.9 |
 
 ## Stichprobe (30 zufällige Abschnitte in Eimsbüttel, Seed 42)
 
@@ -96,36 +101,36 @@ Links auf openstreetmap.org (Way und Kartenausschnitt am Abschnittsmittelpunkt).
 
 | segment_id | highway | Name | Länge m | maxspeed (OSM) | Ways | Karte |
 | --- | --- | --- | ---: | --- | --- | --- |
-| `seg_074cd95a035a05c4` | residential | Papendamm | 111 | 30 | [4004664](https://www.openstreetmap.org/way/4004664) | [OSM](https://www.openstreetmap.org/?mlat=53.566680&mlon=9.976908#map=18/53.566680/9.976908) |
-| `seg_0817c77e740f6f6c` | motorway_link |  | 255 | 50 / 80 / 60 | [1276595268](https://www.openstreetmap.org/way/1276595268), [1232032188](https://www.openstreetmap.org/way/1232032188), [3128005](https://www.openstreetmap.org/way/3128005) | [OSM](https://www.openstreetmap.org/?mlat=53.593640&mlon=9.922273#map=18/53.593640/9.922273) |
-| `seg_08c8ff2f0960effa` | primary | Holsteiner Chaussee | 10 | 50 | [408642295](https://www.openstreetmap.org/way/408642295) | [OSM](https://www.openstreetmap.org/?mlat=53.620392&mlon=9.908264#map=18/53.620392/9.908264) |
-| `seg_094a4278a1b7df0b` | residential | Redingskamp | 33 | 30 | [42413679](https://www.openstreetmap.org/way/42413679) | [OSM](https://www.openstreetmap.org/?mlat=53.612511&mlon=9.890739#map=18/53.612511/9.890739) |
-| `seg_1795d520ce96094f` | tertiary | Hallerstraße | 355 | 50 | [39095469](https://www.openstreetmap.org/way/39095469), [625164523](https://www.openstreetmap.org/way/625164523), [40154297](https://www.openstreetmap.org/way/40154297) (+2) | [OSM](https://www.openstreetmap.org/?mlat=53.572680&mlon=9.991315#map=18/53.572680/9.991315) |
-| `seg_191011c181a9eccc` | residential | Nordalbingerweg | 161 | 30 | [1168136673](https://www.openstreetmap.org/way/1168136673), [1168136883](https://www.openstreetmap.org/way/1168136883) | [OSM](https://www.openstreetmap.org/?mlat=53.647269&mlon=9.953846#map=18/53.647269/9.953846) |
-| `seg_1b9a3cddb28e88fc` | residential | Baarkamp | 121 | 30 | [496601616](https://www.openstreetmap.org/way/496601616) | [OSM](https://www.openstreetmap.org/?mlat=53.606061&mlon=9.940001#map=18/53.606061/9.940001) |
-| `seg_1e458da33ee07a13` | primary | Holsteiner Chaussee | 105 | 50 | [1237810184](https://www.openstreetmap.org/way/1237810184) | [OSM](https://www.openstreetmap.org/?mlat=53.613632&mlon=9.906137#map=18/53.613632/9.906137) |
-| `seg_25d1ac9c3e551005` | primary | Volksparkstraße | 29 | 50 | [791191448](https://www.openstreetmap.org/way/791191448) | [OSM](https://www.openstreetmap.org/?mlat=53.592261&mlon=9.928222#map=18/53.592261/9.928222) |
-| `seg_358951a082994ddb` | tertiary_link | Randstraße | 52 | 50 | [294341136](https://www.openstreetmap.org/way/294341136) | [OSM](https://www.openstreetmap.org/?mlat=53.590672&mlon=9.919112#map=18/53.590672/9.919112) |
-| `seg_3aa36b39784dd8ef` | tertiary | Bundesstraße | 159 | 50 | [34910042](https://www.openstreetmap.org/way/34910042), [1564787505](https://www.openstreetmap.org/way/1564787505), [1564787506](https://www.openstreetmap.org/way/1564787506) (+2) | [OSM](https://www.openstreetmap.org/?mlat=53.566505&mlon=9.978338#map=18/53.566505/9.978338) |
-| `seg_3babf4754de00a23` | tertiary | Langenfelder Damm | 27 | 50 | [362847066](https://www.openstreetmap.org/way/362847066) | [OSM](https://www.openstreetmap.org/?mlat=53.582254&mlon=9.936336#map=18/53.582254/9.936336) |
-| `seg_3e223c69dbb2f955` | residential | Sillemstraße | 57 | 30 | [33174204](https://www.openstreetmap.org/way/33174204), [1071074633](https://www.openstreetmap.org/way/1071074633) | [OSM](https://www.openstreetmap.org/?mlat=53.575755&mlon=9.947214#map=18/53.575755/9.947214) |
-| `seg_4148700f372a9ce0` | unclassified | Niewisch | 543 | – | [23789665](https://www.openstreetmap.org/way/23789665), [27005658](https://www.openstreetmap.org/way/27005658), [61389797](https://www.openstreetmap.org/way/61389797) | [OSM](https://www.openstreetmap.org/?mlat=53.603593&mlon=9.933482#map=18/53.603593/9.933482) |
-| `seg_49b79f06f43ff531` | secondary | Beim Schlump | 29 | 50 | [885624896](https://www.openstreetmap.org/way/885624896), [391821196](https://www.openstreetmap.org/way/391821196), [391821195](https://www.openstreetmap.org/way/391821195) | [OSM](https://www.openstreetmap.org/?mlat=53.572154&mlon=9.978520#map=18/53.572154/9.978520) |
-| `seg_6fea3421a8e61461` | residential | König-Heinrich-Weg | 16 | 30 | [148170151](https://www.openstreetmap.org/way/148170151) | [OSM](https://www.openstreetmap.org/?mlat=53.629453&mlon=9.958140#map=18/53.629453/9.958140) |
-| `seg_889c8d2b0829d7eb` | tertiary | Nordalbingerweg | 88 | 50 | [130423837](https://www.openstreetmap.org/way/130423837), [655188659](https://www.openstreetmap.org/way/655188659), [1018242773](https://www.openstreetmap.org/way/1018242773) (+1) | [OSM](https://www.openstreetmap.org/?mlat=53.640223&mlon=9.949710#map=18/53.640223/9.949710) |
-| `seg_941f9f9872f60c5b` | residential | Albertine-Assor-Straße | 102 | 30 | [57841666](https://www.openstreetmap.org/way/57841666) | [OSM](https://www.openstreetmap.org/?mlat=53.631831&mlon=9.899701#map=18/53.631831/9.899701) |
-| `seg_991b1ad0c5162d48` | residential | Jägerdamm | 242 | 30 | [8139313](https://www.openstreetmap.org/way/8139313), [1166226259](https://www.openstreetmap.org/way/1166226259), [1166226256](https://www.openstreetmap.org/way/1166226256) (+1) | [OSM](https://www.openstreetmap.org/?mlat=53.631254&mlon=9.936048#map=18/53.631254/9.936048) |
-| `seg_a0d1d176f25580c5` | residential | Am Ziegelteich | 66 | 30 | [871610817](https://www.openstreetmap.org/way/871610817) | [OSM](https://www.openstreetmap.org/?mlat=53.575285&mlon=9.932449#map=18/53.575285/9.932449) |
-| `seg_a37288f67fbcc839` | residential | Wischhofsweg | 45 | 30 | [7399630](https://www.openstreetmap.org/way/7399630) | [OSM](https://www.openstreetmap.org/?mlat=53.605459&mlon=9.903236#map=18/53.605459/9.903236) |
-| `seg_adb79e6d36616843` | residential | Lohbekstieg | 122 | 30 | [16322441](https://www.openstreetmap.org/way/16322441) | [OSM](https://www.openstreetmap.org/?mlat=53.594663&mlon=9.955353#map=18/53.594663/9.955353) |
-| `seg_b089ef4f24741d02` | primary | Kieler Straße | 41 | 50 | [692691299](https://www.openstreetmap.org/way/692691299) | [OSM](https://www.openstreetmap.org/?mlat=53.592685&mlon=9.927902#map=18/53.592685/9.927902) |
-| `seg_b848f5e7a207d8a3` | residential | Jungfrauenthal | 48 | 30 | [48766126](https://www.openstreetmap.org/way/48766126) | [OSM](https://www.openstreetmap.org/?mlat=53.581339&mlon=9.982308#map=18/53.581339/9.982308) |
-| `seg_bf4ee71728444fba` | primary | Kollaustraße | 42 | 50 | [650779300](https://www.openstreetmap.org/way/650779300) | [OSM](https://www.openstreetmap.org/?mlat=53.603616&mlon=9.962078#map=18/53.603616/9.962078) |
-| `seg_c2ceda44fea05517` | living_street | Albertinenstieg | 20 | – | [57841698](https://www.openstreetmap.org/way/57841698) | [OSM](https://www.openstreetmap.org/?mlat=53.633720&mlon=9.899070#map=18/53.633720/9.899070) |
-| `seg_c872845679239d81` | motorway | Deckel Stellingen | 2 086 | 80 | [1547022452](https://www.openstreetmap.org/way/1547022452), [683647786](https://www.openstreetmap.org/way/683647786), [544411422](https://www.openstreetmap.org/way/544411422) (+4) | [OSM](https://www.openstreetmap.org/?mlat=53.603810&mlon=9.920568#map=18/53.603810/9.920568) |
-| `seg_c9517409770da0de` | motorway |  | 246 | 80 | [296326689](https://www.openstreetmap.org/way/296326689) | [OSM](https://www.openstreetmap.org/?mlat=53.635722&mlon=9.924401#map=18/53.635722/9.924401) |
-| `seg_c99f612476e4c588` | tertiary | Harvestehuder Weg | 9 | 50 | [1493614351](https://www.openstreetmap.org/way/1493614351) | [OSM](https://www.openstreetmap.org/?mlat=53.578535&mlon=9.997219#map=18/53.578535/9.997219) |
-| `seg_f1069d5b1080e6b7` | motorway_link |  | 364 | 80 | [1080326852](https://www.openstreetmap.org/way/1080326852), [144146627](https://www.openstreetmap.org/way/144146627) | [OSM](https://www.openstreetmap.org/?mlat=53.613403&mlon=9.915521#map=18/53.613403/9.915521) |
+| `seg_06c51c323ecec35f` | residential | Sachsenweg | 136 | 30 | [1018232732](https://www.openstreetmap.org/way/1018232732) | [OSM](https://www.openstreetmap.org/?mlat=53.643495&mlon=9.960601#map=18/53.643495/9.960601) |
+| `seg_0796a6ac6a25cf94` | tertiary | Bogenstraße | 10 | 50 | [238921530](https://www.openstreetmap.org/way/238921530) | [OSM](https://www.openstreetmap.org/?mlat=53.571076&mlon=9.978445#map=18/53.571076/9.978445) |
+| `seg_085fcf760eb5e9c1` | tertiary | Lohkampstraße | 137 | 50 | [4919897](https://www.openstreetmap.org/way/4919897) | [OSM](https://www.openstreetmap.org/?mlat=53.615241&mlon=9.877703#map=18/53.615241/9.877703) |
+| `seg_0906305a37756fb1` | tertiary | Krähenweg | 36 | 50 | [1165983748](https://www.openstreetmap.org/way/1165983748) | [OSM](https://www.openstreetmap.org/?mlat=53.633004&mlon=9.954534#map=18/53.633004/9.954534) |
+| `seg_16df18fb7177523d` | residential | Alte Rabenstraße | 82 | 30 | [16232763](https://www.openstreetmap.org/way/16232763), [984956917](https://www.openstreetmap.org/way/984956917) | [OSM](https://www.openstreetmap.org/?mlat=53.567259&mlon=10.000605#map=18/53.567259/10.000605) |
+| `seg_1885bcb6c1f638e2` | service | Heketweg | 212 | – | [186967128](https://www.openstreetmap.org/way/186967128), [23840069](https://www.openstreetmap.org/way/23840069) | [OSM](https://www.openstreetmap.org/?mlat=53.650543&mlon=9.908991#map=18/53.650543/9.908991) |
+| `seg_1abf10d7274d8422` | residential | Rahweg | 324 | 30 | [148170157](https://www.openstreetmap.org/way/148170157), [1459903219](https://www.openstreetmap.org/way/1459903219) | [OSM](https://www.openstreetmap.org/?mlat=53.641256&mlon=9.977482#map=18/53.641256/9.977482) |
+| `seg_1d3b3fe24c77d387` | tertiary | Lappenbergsallee | 14 | 50 | [695925121](https://www.openstreetmap.org/way/695925121) | [OSM](https://www.openstreetmap.org/?mlat=53.573393&mlon=9.948760#map=18/53.573393/9.948760) |
+| `seg_2520202b82b96419` | residential | Alsterufer | 22 | 50 | [1345098540](https://www.openstreetmap.org/way/1345098540), [1073054122](https://www.openstreetmap.org/way/1073054122) | [OSM](https://www.openstreetmap.org/?mlat=53.558896&mlon=9.993841#map=18/53.558896/9.993841) |
+| `seg_33c01a47652cf1df` | tertiary | Bogenstraße | 14 | 50 | [136712391](https://www.openstreetmap.org/way/136712391) | [OSM](https://www.openstreetmap.org/?mlat=53.571012&mlon=9.978584#map=18/53.571012/9.978584) |
+| `seg_3882e28e339b36bf` | residential | Spengelweg / Rellinger Straße | 224 | 30 | [23100115](https://www.openstreetmap.org/way/23100115), [239962438](https://www.openstreetmap.org/way/239962438), [28313036](https://www.openstreetmap.org/way/28313036) (+1) | [OSM](https://www.openstreetmap.org/?mlat=53.573663&mlon=9.943104#map=18/53.573663/9.943104) |
+| `seg_3a33dc270eaaf8ed` | residential | Jungfrauenthal | 32 | – | [136965459](https://www.openstreetmap.org/way/136965459) | [OSM](https://www.openstreetmap.org/?mlat=53.581471&mlon=9.987730#map=18/53.581471/9.987730) |
+| `seg_3be5306ed98e0a7f` | residential | Frohbösestraße | 240 | 30 | [368064190](https://www.openstreetmap.org/way/368064190), [145693805](https://www.openstreetmap.org/way/145693805) | [OSM](https://www.openstreetmap.org/?mlat=53.573857&mlon=9.938727#map=18/53.573857/9.938727) |
+| `seg_3f91506d8d854af2` | primary | Schleswiger Damm | 60 | 50 | [23299739](https://www.openstreetmap.org/way/23299739) | [OSM](https://www.openstreetmap.org/?mlat=53.632824&mlon=9.925596#map=18/53.632824/9.925596) |
+| `seg_47cd5b763bcfa29e` | tertiary | Hagenbeckstraße | 22 | 50 | [1561196248](https://www.openstreetmap.org/way/1561196248) | [OSM](https://www.openstreetmap.org/?mlat=53.583284&mlon=9.947488#map=18/53.583284/9.947488) |
+| `seg_6d0e0b2329b1d570` | residential | Bismarckstraße | 79 | 30 | [137247324](https://www.openstreetmap.org/way/137247324) | [OSM](https://www.openstreetmap.org/?mlat=53.578374&mlon=9.973497#map=18/53.578374/9.973497) |
+| `seg_84b63f5668d782a0` | residential | Hollwören | 9 | 30 | [8385642](https://www.openstreetmap.org/way/8385642) | [OSM](https://www.openstreetmap.org/?mlat=53.619192&mlon=9.942506#map=18/53.619192/9.942506) |
+| `seg_8f3580d1090efd3c` | residential | Bruktererweg | 64 | 30 | [25076220](https://www.openstreetmap.org/way/25076220) | [OSM](https://www.openstreetmap.org/?mlat=53.647150&mlon=9.955036#map=18/53.647150/9.955036) |
+| `seg_9360c0070d5d8fc8` | tertiary | Grindelhof | 16 | 30 | [136915268](https://www.openstreetmap.org/way/136915268) | [OSM](https://www.openstreetmap.org/?mlat=53.567884&mlon=9.982048#map=18/53.567884/9.982048) |
+| `seg_9bb1cf3412c19733` | unclassified | Modering | 259 | 50 | [10223274](https://www.openstreetmap.org/way/10223274) | [OSM](https://www.openstreetmap.org/?mlat=53.637367&mlon=9.922109#map=18/53.637367/9.922109) |
+| `seg_9e5767e0c7ad02d8` | primary | Kieler Straße | 215 | 50 | [1352770748](https://www.openstreetmap.org/way/1352770748), [1352769095](https://www.openstreetmap.org/way/1352769095), [145693831](https://www.openstreetmap.org/way/145693831) (+1) | [OSM](https://www.openstreetmap.org/?mlat=53.575102&mlon=9.939301#map=18/53.575102/9.939301) |
+| `seg_a830200978b8de3c` | living_street | Assorweg | 17 | – | [57841656](https://www.openstreetmap.org/way/57841656) | [OSM](https://www.openstreetmap.org/?mlat=53.632276&mlon=9.898395#map=18/53.632276/9.898395) |
+| `seg_aa9749a5add7c059` | primary | Niendorfer Marktplatz | 65 | 50 | [30339585](https://www.openstreetmap.org/way/30339585), [1561698175](https://www.openstreetmap.org/way/1561698175) | [OSM](https://www.openstreetmap.org/?mlat=53.618125&mlon=9.949407#map=18/53.618125/9.949407) |
+| `seg_b112936ec884f5d8` | tertiary |  | 11 | 50 | [59557227](https://www.openstreetmap.org/way/59557227), [1511356916](https://www.openstreetmap.org/way/1511356916) | [OSM](https://www.openstreetmap.org/?mlat=53.582256&mlon=9.947678#map=18/53.582256/9.947678) |
+| `seg_b84ce5c2151c69de` | secondary | Beim Schlump | 28 | 50 | [52092679](https://www.openstreetmap.org/way/52092679), [220112336](https://www.openstreetmap.org/way/220112336) | [OSM](https://www.openstreetmap.org/?mlat=53.567576&mlon=9.970552#map=18/53.567576/9.970552) |
+| `seg_bc13ad58ca792ef8` | residential | Feldrosenweg | 211 | 30 | [4920036](https://www.openstreetmap.org/way/4920036) | [OSM](https://www.openstreetmap.org/?mlat=53.612080&mlon=9.885824#map=18/53.612080/9.885824) |
+| `seg_c1c808ce9df1c275` | residential | Böttgerstraße | 172 | 30 | [4048171](https://www.openstreetmap.org/way/4048171) | [OSM](https://www.openstreetmap.org/?mlat=53.568747&mlon=9.996735#map=18/53.568747/9.996735) |
+| `seg_c28aa1753bd31112` | primary_link |  | 88 | 50 | [692691300](https://www.openstreetmap.org/way/692691300) | [OSM](https://www.openstreetmap.org/?mlat=53.592565&mlon=9.928214#map=18/53.592565/9.928214) |
+| `seg_c2fb646f49fcf631` | residential | Teutonenweg | 301 | 30 | [329802783](https://www.openstreetmap.org/way/329802783), [4860840](https://www.openstreetmap.org/way/4860840) | [OSM](https://www.openstreetmap.org/?mlat=53.634120&mlon=9.970232#map=18/53.634120/9.970232) |
+| `seg_e932efaa0fc40339` | residential | Fuhlsbütteler Weg | 254 | 30 | [8470233](https://www.openstreetmap.org/way/8470233), [125603392](https://www.openstreetmap.org/way/125603392) | [OSM](https://www.openstreetmap.org/?mlat=53.623607&mlon=9.956940#map=18/53.623607/9.956940) |
 
 ## Lizenz
 

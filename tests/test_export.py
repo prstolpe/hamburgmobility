@@ -162,3 +162,18 @@ def test_public_and_tile_columns_include_sensitivity():
     assert {"sens_change_rate", "sens_uncertain"} <= set(ex.PUBLIC_COLUMNS)
     assert ex.TILE_COLUMNS["un"] == "sens_uncertain"
     assert all(c in TEXTS["columns"] for c in ex.PUBLIC_COLUMNS)
+
+
+# --- harmonisation (H-STR-01) ----------------------------------------------------------------
+
+
+def test_harmonisation_reason_text():
+    trace = [{"id": "H-STR-01", "passed": True, "inputs": {"from_cat": "GOW50", "to_cat": "GOW30", "run_m": 86.4,
+                                                           "neighbours": "GOW30 und GOW30", "step": 3, "pass": 1}}]
+    reasons = ex.rule_reasons(trace, RULES, TEXTS)
+    assert len(reasons) == 1 and reasons[0]["rule"] == "H-STR-01"
+    assert "86 m" in reasons[0]["text"] and "GOW30 und GOW30" in reasons[0]["text"]
+
+
+def test_cat_cascade_is_public():
+    assert "cat_cascade" in ex.PUBLIC_COLUMNS and "cat_cascade" in TEXTS["columns"]

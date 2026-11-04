@@ -20,6 +20,14 @@ def load_rules(path: str | Path = DEFAULT_RULES_PATH) -> RuleSet:
         return RuleSet.model_validate(yaml.safe_load(f))
 
 
+def network_highways(rules: RuleSet) -> list[str]:
+    """highway classes in the network: highway_classes plus the extra ways of network rules (S-NET-04)."""
+    out = list(rules.network.highway_classes.values)
+    for r in rules.network.rules:
+        out += [h for h in r.include_highway if h not in out]
+    return out
+
+
 def all_thresholds(rules: RuleSet) -> dict[str, Threshold]:
     """All thresholds of the cascade by name (names are unique across rules)."""
     return {name: t for rule in rules.classification for name, t in rule.thresholds.items()}

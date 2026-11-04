@@ -1,12 +1,12 @@
 # Conflation amtlich ↔ OSM (Stufe 3)
 
-Erzeugt: 2026-10-28T10:15:33+00:00 von `pipeline/s03_conflate.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-04T20:33:26+00:00 von `pipeline/s03_conflate.py`. Nicht amtlicher Entwurf.
 
 ## Datengrundlage
 
-- Abschnitte: `data/interim/segments.parquet` (34 502 Abschnitte Hamburg)
-- Arbeitsgebiet: Eimsbüttel + 500 m; abgeglichen werden Abschnitte, die ganz darin liegen (4 787). Außerhalb bleibt `match_quality` leer (keine amtlichen Daten abgerufen).
-- Regelwerk: config/rules.yaml 0.3.0
+- Abschnitte: `data/interim/segments.parquet` (36 526 Abschnitte Hamburg)
+- Arbeitsgebiet: Eimsbüttel + 500 m; abgeglichen werden Abschnitte, die ganz darin liegen (4 947). Außerhalb bleibt `match_quality` leer (keine amtlichen Daten abgerufen).
+- Regelwerk: config/rules.yaml 0.11.0
 
 | Schlüssel | Quelle / Ebene | Objekte | Abruf | Lizenz |
 | --- | --- | ---: | --- | --- |
@@ -32,14 +32,14 @@ Erzeugt: 2026-10-28T10:15:33+00:00 von `pipeline/s03_conflate.py`. Nicht amtlich
 - **S-CONF-03** (hamburg, draft): Zeitlich begrenzte Regelungen (sonderregelung) getrennt speichern, nie als Regeltempo
 - **S-CONF-04** (hamburg, draft): in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist
 
-## Trefferquote (Arbeitsgebiet, 4 787 Abschnitte)
+## Trefferquote (Arbeitsgebiet, 4 947 Abschnitte)
 
 | Quelle | exact | partial | none | exact km-Anteil |
 | --- | ---: | ---: | ---: | ---: |
-| zulaessige_hoechstgeschwindigkeiten | 3 958 | 83 | 746 | 90.3 % |
-| de.hh.up:widmung_linie | 4 013 | 89 | 685 | 91.0 % |
-| verkehrsmengen_dtv_hvs_2019 | 888 | 64 | 3 835 | 16.1 % |
-| verkehrsmengen_dtv_bab_2019 | 30 | 2 | 4 755 | 3.2 % |
+| zulaessige_hoechstgeschwindigkeiten | 4 075 | 82 | 790 | 90.0 % |
+| de.hh.up:widmung_linie | 4 136 | 89 | 722 | 90.7 % |
+| verkehrsmengen_dtv_hvs_2019 | 924 | 63 | 3 960 | 16.1 % |
+| verkehrsmengen_dtv_bab_2019 | 30 | 2 | 4 915 | 3.1 % |
 
 ## match_quality (Tempo-Ebene) je highway-Klasse – Eimsbüttel
 
@@ -48,37 +48,40 @@ Erzeugt: 2026-10-28T10:15:33+00:00 von `pipeline/s03_conflate.py`. Nicht amtlich
 | motorway | 26 | 88.5 % | 11.5 % | 0.0 % | 0.0 % |
 | motorway_link | 72 | 72.2 % | 4.2 % | 23.6 % | 0.0 % |
 | trunk | 1 | 100.0 % | 0.0 % | 0.0 % | 100.0 % |
-| primary | 561 | 90.2 % | 2.1 % | 7.7 % | 93.1 % |
-| primary_link | 28 | 64.3 % | 3.6 % | 32.1 % | 26.3 % |
-| secondary | 328 | 87.2 % | 2.1 % | 10.7 % | 92.2 % |
+| primary | 566 | 90.6 % | 1.9 % | 7.4 % | 92.9 % |
+| primary_link | 29 | 62.1 % | 3.4 % | 34.5 % | 26.3 % |
+| secondary | 337 | 86.1 % | 2.1 % | 11.9 % | 91.9 % |
 | secondary_link | 21 | 57.1 % | 14.3 % | 28.6 % | 46.7 % |
-| tertiary | 525 | 87.6 % | 1.1 % | 11.2 % | 95.9 % |
+| tertiary | 537 | 87.7 % | 0.9 % | 11.4 % | 96.0 % |
 | tertiary_link | 9 | 33.3 % | 22.2 % | 44.4 % | 60.0 % |
-| unclassified | 89 | 68.5 % | 2.2 % | 29.2 % | 92.1 % |
-| residential | 2 013 | 89.4 % | 1.2 % | 9.4 % | 95.5 % |
+| unclassified | 94 | 69.1 % | 2.1 % | 28.7 % | 92.5 % |
+| residential | 2 039 | 89.7 % | 1.2 % | 9.1 % | 95.6 % |
 | living_street | 117 | 75.2 % | 1.7 % | 23.1 % | 98.9 % |
 | pedestrian | 86 | 12.8 % | 1.2 % | 86.0 % | 25.0 % |
-| **gesamt** | 3 876 | 85.7 % | 1.7 % | 12.6 % | 91.7 % |
+| service | 56 | 62.5 % | 0.0 % | 37.5 % | 91.4 % |
+| track | 14 | 71.4 % | 0.0 % | 28.6 % | 100.0 % |
+| **gesamt** | 4 004 | 85.4 % | 1.6 % | 13.0 % | 91.8 % |
 
 ¹ Anteil der zugeordneten Abschnitte, deren OSM-Name gleich dem amtlichen Straßennamen ist (automatische Plausibilitätsprüfung, ersetzt nicht die manuelle Stichprobe).
 
 ## Ist-Tempo – Eimsbüttel
 
-- Abschnitte mit amtlichem Regeltempo: 3 261 von 3 876
-- Übereinstimmung mit OSM-maxspeed (wo beide eine Zahl haben): 96.3 % (2 897 von 3 009)
-- Abschnitte mit zeitlich begrenzter Regelung (S-CONF-03, getrennt in `speed_conditional`): 150
+- Abschnitte mit amtlichem Regeltempo: 3 357 von 4 004
+- Übereinstimmung mit OSM-maxspeed (wo beide eine Zahl haben): 96.4 % (2 958 von 3 070)
+- Abschnitte mit zeitlich begrenzter Regelung (S-CONF-03, getrennt in `speed_conditional`): 151
 - Regeltempo mehrdeutig (`speed_official_ambiguous`): 21
-- Mehrere amtliche Tempi auf einem Abschnitt (`speed_official_conflict`): 42
+- Mehrere amtliche Tempi auf einem Abschnitt (`speed_official_conflict`): 43
 
 | Regeltempo amtlich | Abschnitte | km |
 | --- | ---: | ---: |
+| 10 km/h | 1 | 0.1 |
 | 20 km/h | 11 | 0.9 |
-| 30 km/h | 1 712 | 250.2 |
-| 50 km/h | 1 500 | 155.9 |
+| 30 km/h | 1 761 | 253.7 |
+| 50 km/h | 1 546 | 159.3 |
 | 60 km/h | 12 | 2.0 |
 | 70 km/h | 14 | 5.3 |
 | 100 km/h | 12 | 2.9 |
-| ohne Zahl (z. B. 5-7 km/h, variabel) / keine Zuordnung | 615 | 44.4 |
+| ohne Zahl (z. B. 5-7 km/h, variabel) / keine Zuordnung | 647 | 46.3 |
 
 ## HVS (S-CONF-04) und Zonen (S-CONF-02) – Eimsbüttel
 
@@ -87,27 +90,29 @@ Erzeugt: 2026-10-28T10:15:33+00:00 von `pipeline/s03_conflate.py`. Nicht amtlich
 | motorway | 26 | 0 | 0 | 0 | 0 |
 | motorway_link | 72 | 2 | 0 | 0 | 0 |
 | trunk | 1 | 1 | 0 | 0 | 0 |
-| primary | 561 | 479 | 1 | 0 | 0 |
-| primary_link | 28 | 5 | 0 | 0 | 0 |
-| secondary | 328 | 235 | 0 | 0 | 0 |
+| primary | 566 | 484 | 1 | 0 | 0 |
+| primary_link | 29 | 5 | 0 | 0 | 0 |
+| secondary | 337 | 242 | 0 | 0 | 0 |
 | secondary_link | 21 | 4 | 0 | 0 | 0 |
-| tertiary | 525 | 4 | 15 | 0 | 0 |
+| tertiary | 537 | 6 | 15 | 0 | 0 |
 | tertiary_link | 9 | 0 | 0 | 0 | 0 |
-| unclassified | 89 | 0 | 15 | 0 | 0 |
-| residential | 2 013 | 1 | 1 566 | 11 | 3 |
+| unclassified | 94 | 0 | 18 | 0 | 0 |
+| residential | 2 039 | 1 | 1 590 | 11 | 3 |
 | living_street | 117 | 0 | 22 | 0 | 59 |
 | pedestrian | 86 | 0 | 8 | 0 | 0 |
+| service | 56 | 17 | 12 | 0 | 0 |
+| track | 14 | 0 | 7 | 0 | 0 |
 
-- in_hvs gesamt: 731 Abschnitte, 75.9 km
+- in_hvs gesamt: 762 Abschnitte, 77.8 km
 - in_hvs, aber OSM-highway residential/living_street/unclassified (prüfen): 1
 
 ## Prüfungen
 
 | Prüfung | Ergebnis | Detail |
 | --- | --- | --- |
-| segment_id unverändert und eindeutig | ok | 34502 Abschnitte |
-| match_quality im Arbeitsgebiet gesetzt, außerhalb leer | ok | 4787 im Arbeitsgebiet, 29715 außerhalb |
-| Ist-Tempo nur aus Werten der Quelle | ok | Werte [20, 30, 50, 60, 70, 80, 100] |
+| segment_id unverändert und eindeutig | ok | 36526 Abschnitte |
+| match_quality im Arbeitsgebiet gesetzt, außerhalb leer | ok | 4947 im Arbeitsgebiet, 31579 außerhalb |
+| Ist-Tempo nur aus Werten der Quelle | ok | Werte [10, 20, 30, 50, 60, 70, 80, 100] |
 | Zeitlich begrenztes Tempo nie als Regeltempo (S-CONF-03) | ok | 0 Verstöße |
 
 ## Manuelle Stichprobe

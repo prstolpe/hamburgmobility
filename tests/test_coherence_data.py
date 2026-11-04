@@ -13,7 +13,7 @@ from pipeline.lib.manifest import REPO_ROOT
 from pipeline.lib.overrides import OVERRIDES_PATH, read_overrides, validate
 from pipeline.lib.rules import load_rules
 
-IN = REPO_ROOT / "data" / "interim" / "classified.parquet"
+IN = REPO_ROOT / "data" / "interim" / "harmonised.parquet"
 COH = REPO_ROOT / "data" / "interim" / "coherence.parquet"
 FINAL = REPO_ROOT / "data" / "interim" / "final.parquet"
 

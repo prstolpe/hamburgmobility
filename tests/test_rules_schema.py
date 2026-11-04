@@ -196,7 +196,10 @@ def test_conflation_rule_needs_source_unless_assumption(raw):
 
 def test_network_rules():
     network = load_rules().network
-    assert [r.id for r in network.rules] == ["S-NET-01", "S-NET-02", "S-NET-03"]
+    assert [r.id for r in network.rules] == ["S-NET-01", "S-NET-02", "S-NET-03", "S-NET-04"]
+    extra = network.rule("S-NET-04")
+    assert set(extra.include_highway) == {"service", "track"} and extra.require_name
+    assert "alley" in extra.service_values and "parking_aisle" not in extra.service_values
     assert "service" not in network.highway_classes.values
     assert {"living_street", "pedestrian"} <= set(network.highway_classes.values)
     assert network.rule("S-NET-03").thresholds["min_length_m"].unit == "m"

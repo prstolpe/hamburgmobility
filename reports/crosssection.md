@@ -1,15 +1,15 @@
 # Querschnittsbericht – Stufe 7
 
-Erzeugt: 2026-10-28T11:38:31+00:00 von `pipeline/s07_crosssection.py`, rules.yaml 0.7.0. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-04T20:36:13+00:00 von `pipeline/s07_crosssection.py`, rules.yaml 0.12.0. Nicht amtlicher Entwurf.
 
 ## Kennzahlen
 
-- Abschnitte im Arbeitsgebiet: 4 787 (562.0 km); im Bezirk Eimsbüttel: 3 876
-- Transekte: 28 039 (alle 20 m, ± 40 m, Tangente ± 10 m, Mittellinie vereinfacht 2 m)
-- Verworfen: nahe Knoten (≤ 20 m) 30.8 %, Brücke/Tunnel 1.1 %
-- Verkehrsfläche: gültig 61.0 %; Mittelpunkt außerhalb der ALKIS-Verkehrsfläche 2.8 %; offen/Platz (keine Grenze in 40 m) 4.4 %
-- Fassade: gültig 27.6 %; offen 40.6 %; Mittelpunkt in Gebäude 0.0 %
-- Abschnitte mit width_p10_m: 61.0 % (Länge: 86.0 %); mit Fassadenbreite 46.4 %
+- Abschnitte im Arbeitsgebiet: 4 947 (573.4 km); im Bezirk Eimsbüttel: 4 004
+- Transekte: 28 618 (alle 20 m, ± 40 m, Tangente ± 10 m, Mittellinie vereinfacht 2 m)
+- Verworfen: nahe Knoten (≤ 20 m) 31.1 %, Brücke/Tunnel 1.1 %
+- Verkehrsfläche: gültig 60.4 %; Mittelpunkt außerhalb der ALKIS-Verkehrsfläche 3.1 %; offen/Platz (keine Grenze in 40 m) 4.4 %
+- Fassade: gültig 27.4 %; offen 40.6 %; Mittelpunkt in Gebäude 0.0 %
+- Abschnitte mit width_p10_m: 60.3 % (Länge: 85.4 %); mit Fassadenbreite 45.8 %
 - Engstellen (≥ 3 Transekte unter p10): 31 in 31 Abschnitten
 - ALKIS: 5 193 Verkehrsflächen (Platz, Strassenverkehr, Weg), 52 528 oberirdische Gebäude
 
@@ -17,10 +17,10 @@ Erzeugt: 2026-10-28T11:38:31+00:00 von `pipeline/s07_crosssection.py`, rules.yam
 
 | Prüfung | Ergebnis | Detail |
 | --- | --- | --- |
-| segment_id unverändert | ok | 34502 Abschnitte |
-| Breiten positiv | ok | 17102 gültige Transekte Verkehrsfläche |
-| min ≤ p10 ≤ Median | ok | 2918 Abschnitte mit Breite |
-| transect_id eindeutig | ok | 28039 Transekte |
+| segment_id unverändert | ok | 36526 Abschnitte |
+| Breiten positiv | ok | 17291 gültige Transekte Verkehrsfläche |
+| min ≤ p10 ≤ Median | ok | 2982 Abschnitte mit Breite |
+| transect_id eindeutig | ok | 28618 Transekte |
 
 ## Validierung im Orthophoto (Prüfschritt)
 
@@ -45,9 +45,9 @@ Erzeugt: 2026-10-28T11:38:31+00:00 von `pipeline/s07_crosssection.py`, rules.yam
 
 | Ziel | erforderlich | fits | tight | does_not_fit | ohne Breite |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| GOW50 | 16.50 m | 34.9 % | 10.2 % | 40.9 % | 14.0 % |
-| GOW30_narrow | 10.80 m | 63.4 % | 9.6 % | 13.0 % | 14.0 % |
-| ETW30 | 10.80 m | 63.4 % | 9.6 % | 13.0 % | 14.0 % |
+| GOW50 | 16.50 m | 34.4 % | 10.1 % | 40.8 % | 14.6 % |
+| GOW30_narrow | 10.80 m | 62.4 % | 9.5 % | 13.5 % | 14.6 % |
+| ETW30 | 10.80 m | 62.4 % | 9.5 % | 13.5 % | 14.6 % |
 
 ## width_p10_m nach highway-Klasse (Median über Abschnitte)
 
@@ -57,15 +57,17 @@ Erzeugt: 2026-10-28T11:38:31+00:00 von `pipeline/s07_crosssection.py`, rules.yam
 | motorway | 29 | 44.8 % | 51.1 | 49.7 | 44.8 % |
 | motorway_link | 90 | 25.6 % | 35.8 | 44.2 | 22.2 % |
 | pedestrian | 97 | 23.7 % | 14.3 | 19.7 | 9.3 % |
-| primary | 641 | 47.6 % | 32.0 | 40.9 | 47.0 % |
-| primary_link | 30 | 3.3 % | 33.1 | 37.9 | 3.3 % |
-| residential | 2487 | 74.7 % | 12.4 | 27.9 | 20.5 % |
-| secondary | 424 | 40.1 % | 24.3 | 36.9 | 34.2 % |
-| secondary_link | 24 | 20.8 % | 45.0 | 63.2 | 20.8 % |
-| tertiary | 672 | 56.1 % | 19.1 | 34.1 | 38.8 % |
+| primary | 646 | 47.4 % | 32.0 | 40.9 | 46.7 % |
+| primary_link | 31 | 3.2 % | 33.1 | 37.9 | 3.2 % |
+| residential | 2524 | 74.5 % | 12.3 | 28.0 | 20.3 % |
+| secondary | 434 | 39.2 % | 24.1 | 37.2 | 33.2 % |
+| secondary_link | 24 | 16.7 % | 43.1 | 63.2 | 16.7 % |
+| service | 66 | 39.4 % | 8.4 | 29.5 | 13.6 % |
+| tertiary | 685 | 55.5 % | 19.1 | 34.0 | 38.5 % |
 | tertiary_link | 17 | 5.9 % | 69.1 | nan | 5.9 % |
+| track | 21 | 47.6 % | 7.0 | 33.1 | 0.0 % |
 | trunk | 3 | 66.7 % | 44.4 | nan | 66.7 % |
-| unclassified | 114 | 55.3 % | 11.5 | 23.4 | 13.2 % |
+| unclassified | 121 | 54.5 % | 11.3 | 23.7 | 11.6 % |
 
 ## Verteilungen
 
@@ -73,14 +75,14 @@ Erzeugt: 2026-10-28T11:38:31+00:00 von `pipeline/s07_crosssection.py`, rules.yam
 
 | von | bis | Anzahl | |
 | ---: | ---: | ---: | --- |
-| 2.49 | 10.2 | 3592 | ██████████████ |
-| 10.2 | 17.9 | 7930 | ██████████████████████████████ |
-| 17.9 | 25.5 | 2686 | ██████████ |
-| 25.5 | 33.2 | 1406 | █████ |
-| 33.2 | 40.9 | 931 | ████ |
-| 40.9 | 48.6 | 233 | █ |
-| 48.6 | 56.2 | 226 | █ |
-| 56.2 | 63.9 | 66 |  |
+| 2.45 | 10.1 | 3704 | ██████████████ |
+| 10.1 | 17.8 | 7969 | ██████████████████████████████ |
+| 17.8 | 25.5 | 2690 | ██████████ |
+| 25.5 | 33.2 | 1408 | █████ |
+| 33.2 | 40.9 | 966 | ████ |
+| 40.9 | 48.5 | 227 | █ |
+| 48.5 | 56.2 | 228 | █ |
+| 56.2 | 63.9 | 67 |  |
 | 63.9 | 71.6 | 21 |  |
 | 71.6 | 79.3 | 11 |  |
 
@@ -88,29 +90,29 @@ Erzeugt: 2026-10-28T11:38:31+00:00 von `pipeline/s07_crosssection.py`, rules.yam
 
 | von | bis | Anzahl | |
 | ---: | ---: | ---: | --- |
-| 5.69 | 13 | 87 | █ |
-| 13 | 20.3 | 912 | ██████████████ |
-| 20.3 | 27.6 | 1524 | ████████████████████████ |
-| 27.6 | 34.9 | 1888 | ██████████████████████████████ |
-| 34.9 | 42.2 | 1499 | ████████████████████████ |
-| 42.2 | 49.5 | 969 | ███████████████ |
-| 49.5 | 56.8 | 552 | █████████ |
-| 56.8 | 64.1 | 213 | ███ |
-| 64.1 | 71.4 | 82 | █ |
+| 5.69 | 13 | 94 | █ |
+| 13 | 20.3 | 922 | ██████████████ |
+| 20.3 | 27.6 | 1536 | ████████████████████████ |
+| 27.6 | 34.9 | 1917 | ██████████████████████████████ |
+| 34.9 | 42.2 | 1513 | ████████████████████████ |
+| 42.2 | 49.5 | 982 | ███████████████ |
+| 49.5 | 56.8 | 553 | █████████ |
+| 56.8 | 64.1 | 216 | ███ |
+| 64.1 | 71.4 | 85 | █ |
 | 71.4 | 78.8 | 13 |  |
 
 ### width_p10_m je Abschnitt (m)
 
 | von | bis | Anzahl | |
 | ---: | ---: | ---: | --- |
-| 2.49 | 9.95 | 451 | ██████████ |
-| 9.95 | 17.4 | 1417 | ██████████████████████████████ |
-| 17.4 | 24.9 | 458 | ██████████ |
-| 24.9 | 32.3 | 290 | ██████ |
-| 32.3 | 39.8 | 190 | ████ |
-| 39.8 | 47.2 | 65 | █ |
-| 47.2 | 54.7 | 31 | █ |
-| 54.7 | 62.1 | 9 |  |
+| 2.49 | 9.95 | 482 | ██████████ |
+| 9.95 | 17.4 | 1439 | ██████████████████████████████ |
+| 17.4 | 24.9 | 467 | ██████████ |
+| 24.9 | 32.3 | 291 | ██████ |
+| 32.3 | 39.8 | 191 | ████ |
+| 39.8 | 47.2 | 64 | █ |
+| 47.2 | 54.7 | 30 | █ |
+| 54.7 | 62.1 | 11 |  |
 | 62.1 | 69.6 | 5 |  |
 | 69.6 | 77 | 2 |  |
 
@@ -122,36 +124,36 @@ Links auf OSM-Karte und OSM-Way; Orthophoto-/Panoramax-Links folgen, sobald das 
 
 | segment_id | Name | highway | Länge m | Transekte | gültig | p10 Verkehrsfl. | Median | p10 Fassade | GOW50 | GOW30 | Karte | Way |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- |
-| `seg_074cd95a035a05c4` | Papendamm | residential | 111 | 6.0 | 4.0 | 17.2 | 17.2 | 33.1 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.566680&mlon=9.976908#map=18/53.566680/9.976908) | [Way](https://www.openstreetmap.org/way/4004664) |
-| `seg_0817c77e740f6f6c` | – | motorway_link | 255 | 13.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.593640&mlon=9.922273#map=18/53.593640/9.922273) | [Way](https://www.openstreetmap.org/way/1276595268) |
-| `seg_08c8ff2f0960effa` | Holsteiner Chaussee | primary | 10 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.620392&mlon=9.908264#map=18/53.620392/9.908264) | [Way](https://www.openstreetmap.org/way/408642295) |
-| `seg_094a4278a1b7df0b` | Redingskamp | residential | 33 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.612511&mlon=9.890739#map=18/53.612511/9.890739) | [Way](https://www.openstreetmap.org/way/42413679) |
-| `seg_1795d520ce96094f` | Hallerstraße | tertiary | 355 | 18.0 | 15.0 | 24.3 | 31.4 | 39.4 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.572680&mlon=9.991315#map=18/53.572680/9.991315) | [Way](https://www.openstreetmap.org/way/39095469) |
-| `seg_191011c181a9eccc` | Nordalbingerweg | residential | 161 | 8.0 | 6.0 | 13.0 | 13.0 | 40.1 | does_not_fit | fits | [Karte](https://www.openstreetmap.org/?mlat=53.647269&mlon=9.953846#map=18/53.647269/9.953846) | [Way](https://www.openstreetmap.org/way/1168136673) |
-| `seg_1b9a3cddb28e88fc` | Baarkamp | residential | 121 | 6.0 | 4.0 | 12.0 | 12.0 | 31.2 | does_not_fit | fits | [Karte](https://www.openstreetmap.org/?mlat=53.606061&mlon=9.940001#map=18/53.606061/9.940001) | [Way](https://www.openstreetmap.org/way/496601616) |
-| `seg_1e51b72f49183c5f` | Rütersbarg | residential | 51 | 3.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.601577&mlon=9.955145#map=18/53.601577/9.955145) | [Way](https://www.openstreetmap.org/way/26628741) |
-| `seg_25fff5cebc7b74d3` | – | primary_link | 42 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.599118&mlon=9.964975#map=18/53.599118/9.964975) | [Way](https://www.openstreetmap.org/way/30091973) |
-| `seg_358f1bb94bb81ef1` | Halstenbeker Straße | residential | 80 | 4.0 | 2.0 | 11.0 | 11.0 | – | does_not_fit | fits | [Karte](https://www.openstreetmap.org/?mlat=53.625667&mlon=9.903495#map=18/53.625667/9.903495) | [Way](https://www.openstreetmap.org/way/23711969) |
-| `seg_3ac1a8795499671f` | Oldesloer Straße | secondary | 47 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.638312&mlon=9.923200#map=18/53.638312/9.923200) | [Way](https://www.openstreetmap.org/way/1150429542) |
-| `seg_3bb44606e4a813d2` | Siemersplatz | primary | 60 | 3.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.599520&mlon=9.964413#map=18/53.599520/9.964413) | [Way](https://www.openstreetmap.org/way/308317374) |
-| `seg_3e4ed57d7c923cd1` | Paul-Sorge-Straße | tertiary | 225 | 11.0 | 9.0 | 14.4 | 14.4 | 29.7 | tight | fits | [Karte](https://www.openstreetmap.org/?mlat=53.638593&mlon=9.951169#map=18/53.638593/9.951169) | [Way](https://www.openstreetmap.org/way/605866503) |
-| `seg_414f382c4d6e32b5` | Kleiner Kielort | residential | 135 | 7.0 | 5.0 | 17.2 | 17.3 | 17.2 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.571620&mlon=9.975728#map=18/53.571620/9.975728) | [Way](https://www.openstreetmap.org/way/3930845) |
-| `seg_49ff6b4f33e0a2d0` | Spanische Furt | residential | 124 | 6.0 | 4.0 | 15.0 | 15.0 | 42.1 | tight | fits | [Karte](https://www.openstreetmap.org/?mlat=53.623372&mlon=9.911985#map=18/53.623372/9.911985) | [Way](https://www.openstreetmap.org/way/1311146889) |
-| `seg_703176e854c5b77e` | Randstraße | tertiary | 53 | 3.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.590651&mlon=9.919021#map=18/53.590651/9.919021) | [Way](https://www.openstreetmap.org/way/38613476) |
-| `seg_88daa65dfa11532b` | Alsterchaussee | residential | 138 | 7.0 | 5.0 | 20.5 | 20.5 | 27.2 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.573195&mlon=9.998363#map=18/53.573195/9.998363) | [Way](https://www.openstreetmap.org/way/3927749) |
-| `seg_9484862e440e4b51` | Doormannsweg | primary | 42 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.570567&mlon=9.956429#map=18/53.570567/9.956429) | [Way](https://www.openstreetmap.org/way/80992110) |
-| `seg_99a68ad44edd39cc` | Goldnesselweg | residential | 149 | 7.0 | 5.0 | 8.0 | 8.0 | 37.1 | does_not_fit | does_not_fit | [Karte](https://www.openstreetmap.org/?mlat=53.610652&mlon=9.885212#map=18/53.610652/9.885212) | [Way](https://www.openstreetmap.org/way/7565287) |
-| `seg_a0de84542f4d9127` | Lokstedter Steindamm | primary | 99 | 5.0 | 3.0 | 30.0 | 30.0 | – | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.591450&mlon=9.967251#map=18/53.591450/9.967251) | [Way](https://www.openstreetmap.org/way/1567673937) |
-| `seg_a3e092073b821941` | Bei der Lutherbuche | residential | 162 | 8.0 | 6.0 | 14.0 | 14.0 | 35.0 | does_not_fit | fits | [Karte](https://www.openstreetmap.org/?mlat=53.597134&mlon=9.959851#map=18/53.597134/9.959851) | [Way](https://www.openstreetmap.org/way/16322436) |
-| `seg_ae2e7d12bd43b1cc` | Eidelstedter Weg | tertiary | 27 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.582355&mlon=9.948107#map=18/53.582355/9.948107) | [Way](https://www.openstreetmap.org/way/55955783) |
-| `seg_b0b2030ddcdc431f` | Hagendeel | residential | 23 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.607190&mlon=9.942861#map=18/53.607190/9.942861) | [Way](https://www.openstreetmap.org/way/411157231) |
+| `seg_06c51c323ecec35f` | Sachsenweg | residential | 136 | 7.0 | 5.0 | 20.7 | 20.7 | – | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.643495&mlon=9.960601#map=18/53.643495/9.960601) | [Way](https://www.openstreetmap.org/way/1018232732) |
+| `seg_0796a6ac6a25cf94` | Bogenstraße | tertiary | 10 | 0.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.571076&mlon=9.978445#map=18/53.571076/9.978445) | [Way](https://www.openstreetmap.org/way/238921530) |
+| `seg_085fcf760eb5e9c1` | Lohkampstraße | tertiary | 137 | 7.0 | 5.0 | 18.0 | 18.0 | 28.5 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.615241&mlon=9.877703#map=18/53.615241/9.877703) | [Way](https://www.openstreetmap.org/way/4919897) |
+| `seg_0906305a37756fb1` | Krähenweg | tertiary | 36 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.633004&mlon=9.954534#map=18/53.633004/9.954534) | [Way](https://www.openstreetmap.org/way/1165983748) |
+| `seg_16df18fb7177523d` | Alte Rabenstraße | residential | 82 | 4.0 | 2.0 | 21.0 | 22.0 | 34.7 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.567259&mlon=10.000605#map=18/53.567259/10.000605) | [Way](https://www.openstreetmap.org/way/16232763) |
+| `seg_1885bcb6c1f638e2` | Heketweg | service | 212 | 11.0 | 9.0 | 6.0 | 6.8 | 66.0 | does_not_fit | does_not_fit | [Karte](https://www.openstreetmap.org/?mlat=53.650543&mlon=9.908991#map=18/53.650543/9.908991) | [Way](https://www.openstreetmap.org/way/186967128) |
+| `seg_1abf10d7274d8422` | Rahweg | residential | 324 | 16.0 | 14.0 | 12.0 | 12.0 | 32.7 | does_not_fit | fits | [Karte](https://www.openstreetmap.org/?mlat=53.641256&mlon=9.977482#map=18/53.641256/9.977482) | [Way](https://www.openstreetmap.org/way/148170157) |
+| `seg_1d42b16a862590fe` | Bei der Lutherbuche | residential | 94 | 5.0 | 3.0 | 9.6 | 10.5 | 25.8 | does_not_fit | tight | [Karte](https://www.openstreetmap.org/?mlat=53.597870&mlon=9.962414#map=18/53.597870/9.962414) | [Way](https://www.openstreetmap.org/way/465938393) |
+| `seg_25316f77fd2a2a9c` | Heußweg | tertiary | 34 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.577094&mlon=9.951971#map=18/53.577094/9.951971) | [Way](https://www.openstreetmap.org/way/367080898) |
+| `seg_33cb6ed3e7ffbd56` | Doormannsweg | primary | 17 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.570394&mlon=9.955995#map=18/53.570394/9.955995) | [Way](https://www.openstreetmap.org/way/143710276) |
+| `seg_38926833099b9b94` | Schlüterstraße | pedestrian | 77 | 4.0 | 4.0 | 20.0 | 20.0 | 45.9 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.567025&mlon=9.986511#map=18/53.567025/9.986511) | [Way](https://www.openstreetmap.org/way/738633624) |
+| `seg_3a464de2b19a6893` | Vielohweg | tertiary | 28 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.638404&mlon=9.923778#map=18/53.638404/9.923778) | [Way](https://www.openstreetmap.org/way/1018245714) |
+| `seg_3c7f89d9293122a6` | Gandersheimer Weg | residential | 308 | 15.0 | 13.0 | 7.5 | 7.5 | 26.2 | does_not_fit | does_not_fit | [Karte](https://www.openstreetmap.org/?mlat=53.630804&mlon=9.942861#map=18/53.630804/9.942861) | [Way](https://www.openstreetmap.org/way/1182341953) |
+| `seg_3fadede7b82f43f3` | Lauterberger Weg | residential | 284 | 14.0 | 12.0 | 10.0 | 11.7 | 20.1 | does_not_fit | tight | [Karte](https://www.openstreetmap.org/?mlat=53.625898&mlon=9.942608#map=18/53.625898/9.942608) | [Way](https://www.openstreetmap.org/way/4302356) |
+| `seg_4837b087ed325fa2` | Vogt-Kölln-Straße | tertiary | 299 | 15.0 | 12.0 | 15.9 | 16.0 | 35.9 | tight | fits | [Karte](https://www.openstreetmap.org/?mlat=53.607743&mlon=9.927913#map=18/53.607743/9.927913) | [Way](https://www.openstreetmap.org/way/167262195) |
+| `seg_6d5977fd43d3ba6c` | Burgwedeltwiete | residential | 168 | 8.0 | 6.0 | 10.0 | 10.0 | 28.2 | does_not_fit | tight | [Karte](https://www.openstreetmap.org/?mlat=53.642727&mlon=9.911655#map=18/53.642727/9.911655) | [Way](https://www.openstreetmap.org/way/23780951) |
+| `seg_84ea9801ae9fdb64` | Kollaustraße | primary | 152 | 8.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.604111&mlon=9.961662#map=18/53.604111/9.961662) | [Way](https://www.openstreetmap.org/way/650779284) |
+| `seg_8f5c71cc17760317` | Levkojenweg | service | 14 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.614969&mlon=9.878638#map=18/53.614969/9.878638) | [Way](https://www.openstreetmap.org/way/1346846914) |
+| `seg_9393b66447f464b6` | Bei der Apostelkirche | residential | 34 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.575495&mlon=9.943669#map=18/53.575495/9.943669) | [Way](https://www.openstreetmap.org/way/1071074636) |
+| `seg_9bd1744203202163` | Wunderbrunnen | unclassified | 108 | 5.0 | 2.0 | 21.0 | 21.3 | – | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.643433&mlon=9.927441#map=18/53.643433/9.927441) | [Way](https://www.openstreetmap.org/way/22651253) |
+| `seg_9eb122117042b96b` | Garstedter Weg | secondary | 9 | 0.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.622682&mlon=9.954858#map=18/53.622682/9.954858) | [Way](https://www.openstreetmap.org/way/159656516) |
+| `seg_a869cf09b6234160` | Vogt-Wells-Straße | primary | 11 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.599762&mlon=9.963777#map=18/53.599762/9.963777) | [Way](https://www.openstreetmap.org/way/230609914) |
+| `seg_aac2b2469aadbb68` | Harvestehuder Weg | residential | 31 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.578321&mlon=9.997483#map=18/53.578321/9.997483) | [Way](https://www.openstreetmap.org/way/710544692) |
+| `seg_b14dd9d1cd005339` | Herulerweg | unclassified | 19 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.650258&mlon=9.949240#map=18/53.650258/9.949240) | [Way](https://www.openstreetmap.org/way/25739516) |
 | `seg_b88b298d46679b5e` | Vereinsstraße | residential | 88 | 4.0 | 2.0 | 14.3 | 14.3 | 14.3 | tight | fits | [Karte](https://www.openstreetmap.org/?mlat=53.565824&mlon=9.962228#map=18/53.565824/9.962228) | [Way](https://www.openstreetmap.org/way/736612811) |
-| `seg_bfbed037447cf248` | Oldesloer Straße | secondary | 121 | 6.0 | 4.0 | 13.5 | 13.6 | 35.7 | does_not_fit | fits | [Karte](https://www.openstreetmap.org/?mlat=53.635950&mlon=9.917132#map=18/53.635950/9.917132) | [Way](https://www.openstreetmap.org/way/844555843) |
-| `seg_c341ebfaec60354c` | Lokstedter Steindamm | primary | 35 | 2.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.586365&mlon=9.968433#map=18/53.586365/9.968433) | [Way](https://www.openstreetmap.org/way/682409935) |
-| `seg_c8d453129f45f45c` | Wullwisch | residential | 250 | 13.0 | 10.0 | 4.1 | 8.0 | 25.7 | does_not_fit | does_not_fit | [Karte](https://www.openstreetmap.org/?mlat=53.606371&mlon=9.950303#map=18/53.606371/9.950303) | [Way](https://www.openstreetmap.org/way/23417329) |
-| `seg_c9a61940cb1ab15c` | Stellinger Weg | residential | 21 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.580453&mlon=9.947393#map=18/53.580453/9.947393) | [Way](https://www.openstreetmap.org/way/1188162855) |
-| `seg_c9e7fa8f21ab0779` | Wördemanns Weg | tertiary | 146 | 7.0 | 5.0 | 16.9 | 17.3 | 26.7 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.597422&mlon=9.932331#map=18/53.597422/9.932331) | [Way](https://www.openstreetmap.org/way/1417927680) |
-| `seg_f14ff48e916757c4` | Goslarer Weg | residential | 115 | 6.0 | 4.0 | 10.1 | 10.3 | 37.1 | does_not_fit | tight | [Karte](https://www.openstreetmap.org/?mlat=53.636626&mlon=9.945053#map=18/53.636626/9.945053) | [Way](https://www.openstreetmap.org/way/10060140) |
+| `seg_bc75c394f223eb26` | Vielohwisch | unclassified | 348 | 17.0 | 15.0 | 7.9 | 8.5 | – | does_not_fit | does_not_fit | [Karte](https://www.openstreetmap.org/?mlat=53.638235&mlon=9.933887#map=18/53.638235/9.933887) | [Way](https://www.openstreetmap.org/way/8379199) |
+| `seg_c232d0e509b97fa5` | Burgwedelkamp | residential | 62 | 3.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.641930&mlon=9.911588#map=18/53.641930/9.911588) | [Way](https://www.openstreetmap.org/way/4089419) |
+| `seg_c330d48355534e10` | Hohe Weide | residential | 266 | 13.0 | 11.0 | 23.0 | 23.0 | 23.3 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.576150&mlon=9.973005#map=18/53.576150/9.973005) | [Way](https://www.openstreetmap.org/way/137037866) |
+| `seg_c36cd78befbd0aa8` | Lüttenredder | residential | 84 | 4.0 | 2.0 | 18.0 | 18.0 | 29.5 | fits | fits | [Karte](https://www.openstreetmap.org/?mlat=53.645107&mlon=9.914883#map=18/53.645107/9.914883) | [Way](https://www.openstreetmap.org/way/23780954) |
+| `seg_e9677794317ea023` | Niendorfer Straße | secondary | 29 | 1.0 | 0.0 | – | – | – | nan | nan | [Karte](https://www.openstreetmap.org/?mlat=53.610757&mlon=9.957467#map=18/53.610757/9.957467) | [Way](https://www.openstreetmap.org/way/586238234) |
 
 ## Lizenz
 

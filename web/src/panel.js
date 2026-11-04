@@ -50,6 +50,7 @@ export function profileHtml(p, meta, pageUrl) {
     <h3 id="h-soll">Soll-Kategorie</h3>
     <p class="cat cat-${esc(c.code)}"><strong>${esc(c.label)}</strong> (${esc(c.code)})</p>
     <p>${esc(c.text)}</p>
+    ${c.cascade ? `<p class="muted">An den Straßenzug angeglichen (Vorschlag der Regeln: ${esc(c.cascade)}).</p>` : ""}
     ${c.corrected ? `<p class="note">Fachlich korrigiert (Vorschlag der Automatik: ${esc(c.proposed)}): ${esc(c.override?.reason)}</p>` : ""}
   </section>
   <section aria-labelledby="h-why">

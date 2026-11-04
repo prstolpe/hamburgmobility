@@ -147,23 +147,30 @@ def conn_score(df: pd.DataFrame, rules: RuleSet) -> tuple[pd.Series, pd.Series]:
     return score, available / sum(weights.values())
 
 
-def categories(df: pd.DataFrame, rules: RuleSet) -> pd.Series:
-    """cat_proposed for each row with conn_score recomputed from the normalised features."""
+Post = Callable[[pd.Series, RuleSet], pd.Series]
+
+
+def categories(df: pd.DataFrame, rules: RuleSet, post: Post | None = None) -> pd.Series:
+    """cat_proposed for each row with conn_score recomputed from the normalised features.
+
+    post: optional step after the cascade (harmonisation H-STR-01), gets and returns the categories."""
     score, share = conn_score(df, rules)
     data = df.assign(conn_score=score, conn_weight_available=share)
     cols = cl.classification_inputs(rules)
     data = data.reindex(columns=cols)
     cats = [cl.classify_segment(rec, rules)["cat_proposed"] for rec in data.to_dict("records")]
     cl.clear_cache()
-    return pd.Series(cats, index=df.index, dtype="object")
+    out = pd.Series(cats, index=df.index, dtype="object")
+    return post(out, rules) if post else out
 
 
-def one_at_a_time(df: pd.DataFrame, rules: RuleSet, params: list[Param], delta: float) -> pd.DataFrame:
+def one_at_a_time(df: pd.DataFrame, rules: RuleSet, params: list[Param], delta: float,
+                  post: Post | None = None) -> pd.DataFrame:
     """V-SENS-01: categories with each parameter at base*(1-delta) ('<key>:-') and base*(1+delta) ('<key>:+')."""
     out = {}
     for p in params:
         for sign, f in (("-", 1 - delta), ("+", 1 + delta)):
-            out[f"{p.key}:{sign}"] = categories(df, with_values(rules, {p.key: p.base * f}))
+            out[f"{p.key}:{sign}"] = categories(df, with_values(rules, {p.key: p.base * f}), post)
     return pd.DataFrame(out, index=df.index)
 
 
@@ -187,11 +194,11 @@ def run_values(params: list[Param], factors: np.ndarray) -> dict[str, float]:
 
 
 def monte_carlo(df: pd.DataFrame, rules: RuleSet, params: list[Param], factors: np.ndarray,
-                progress: Callable[[int], None] | None = None) -> pd.DataFrame:
+                progress: Callable[[int], None] | None = None, post: Post | None = None) -> pd.DataFrame:
     """V-SENS-02: one column of categories per run (columns 0..runs-1)."""
     out = {}
     for i, row in enumerate(factors):
-        out[i] = categories(df, with_values(rules, run_values(params, row)))
+        out[i] = categories(df, with_values(rules, run_values(params, row)), post)
         if progress:
             progress(i)
     return pd.DataFrame(out, index=df.index)

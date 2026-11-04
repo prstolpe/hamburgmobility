@@ -1,21 +1,21 @@
 # Kohärenzbericht – Stufe 6
 
-Erzeugt: 2026-10-28T13:48:35+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0.9.0. Nicht amtlicher Entwurf: Die Regeln markieren nur; nichts wird umklassifiziert. Entscheidungen über overrides/overrides.csv.
+Erzeugt: 2026-11-04T20:38:02+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0.12.0. Nicht amtlicher Entwurf: Die Regeln markieren nur; nichts wird umklassifiziert. Entscheidungen über overrides/overrides.csv.
 
 ## Kennzahlen
 
-- Geprüft: 4 787 Abschnitte im Arbeitsgebiet (562.0 km), 3 372 Knoten. Knoten = OSM-Knoten; getrennte Richtungsfahrbahnen sind nicht zusammengefasst (mehrere Knoten je Kreuzung).
-- Abschnitte mit mindestens einem Flag: 2 394.
+- Geprüft: 4 947 Abschnitte im Arbeitsgebiet (573.4 km), 3 503 Knoten. Knoten = OSM-Knoten; getrennte Richtungsfahrbahnen sind nicht zusammengefasst (mehrere Knoten je Kreuzung).
+- Abschnitte mit mindestens einem Flag: 2 577.
 
 | Regel | Bedeutung | Abschnitte (Arbeitsgebiet) | km | Abschnitte Eimsbüttel | km Eimsbüttel |
 | --- | --- | ---: | ---: | ---: | ---: |
-| N1 | Durchgängigkeit (GOW-Zug endet ohne Anschluss) | 88 | 8.2 | 59 | 5.5 |
-| N2 | Kurze Kategorie-Insel | 132 | 6.5 | 106 | 5.2 |
-| N3 | Kleiner Aufenthaltsbereich | 106 | 4.2 | 88 | 3.5 |
-| N4 | Schleichverkehr über ETW | 1 082 | 112.2 | 967 | 100.5 |
+| N1 | Durchgängigkeit (GOW-Zug endet ohne Anschluss) | 31 | 2.4 | 20 | 1.2 |
+| N2 | Kurze Kategorie-Insel | 5 | 0.4 | 4 | 0.3 |
+| N3 | Kleiner Aufenthaltsbereich | 185 | 6.0 | 145 | 4.5 |
+| N4 | Schleichverkehr über ETW | 1 280 | 135.6 | 1 117 | 119.0 |
 | N5 | Direkter Übergang ≥ 70 → 30 | 0 | 0.0 | 0 | 0.0 |
-| N6 | Knotentyp Soll ≠ Ist | 1 774 | 171.4 | 1 441 | 141.4 |
-| N7 | Glättungsvorschlag | 132 | 6.5 | 106 | 5.2 |
+| N6 | Knotentyp Soll ≠ Ist | 1 870 | 172.3 | 1 524 | 142.2 |
+| N7 | Glättungsvorschlag | 5 | 0.4 | 4 | 0.3 |
 
 Karte: `reports/coherence_flags.geojson` (EPSG:4326; Ebenen segment, node, area; Eigenschaft `rule`), z. B. in QGIS oder geojson.io öffnen.
 
@@ -23,7 +23,7 @@ Karte: `reports/coherence_flags.geojson` (EPSG:4326; Ebenen segment, node, area;
 
 | Prüfung | Ergebnis | Detail |
 | --- | --- | --- |
-| segment_id unverändert | ok | 34502 Abschnitte |
+| segment_id unverändert | ok | 36526 Abschnitte |
 | cat_proposed unverändert (keine Umklassifizierung) | ok | Vergleich mit Eingabe |
 | flags nur im Arbeitsgebiet, gültiges JSON mit bekannten Regel-IDs | ok | N1, N2, N3, N4, N5, N6, N7 |
 
@@ -33,128 +33,142 @@ Enden von GOW-Zügen (GOW80, GOW50, GOW30): Knoten mit genau einem GOW-Abschnitt
 
 | Status | Enden |
 | --- | ---: |
-| ok_sw | 13 |
-| ok_city_boundary | 4 |
-| unknown_area_edge | 27 |
-| dead_end | 91 |
+| ok_sw | 1 |
+| ok_city_boundary | 2 |
+| unknown_area_edge | 19 |
+| dead_end | 32 |
 
 Häufigste Straßen mit offenem GOW-Ende:
 
 | Name | Kategorie | Enden |
 | --- | --- | ---: |
-| Garstedter Weg | GOW50 | 5 |
-| Stresemannstraße | GOW30 | 4 |
 | St. Benedictstraße | GOW30 | 4 |
 | Langenfelder Damm | GOW30 | 4 |
-| Wördemanns Weg | GOW30 | 3 |
-| Kennedybrücke | GOW50 | 3 |
-| Max-Brauer-Allee | GOW30 | 3 |
-| Lokstedter Steindamm | GOW30 | 3 |
-| Kieler Straße | GOW30 | 3 |
-| Pinneberger Straße | GOW50 | 2 |
-| Oldesloer Straße | GOW50 | 2 |
-| Oldesloer Straße | GOW30 | 2 |
+| Wördemanns Weg | GOW30 | 2 |
 | Neuer Jungfernstieg | GOW50 | 2 |
-| Kollaustraße | GOW50 | 2 |
-| Klosterstern | GOW50 | 2 |
+| Martinistraße | GOW30 | 1 |
+| Stresemannstraße | GOW30 | 1 |
+| Stresemannallee | GOW30 | 1 |
+| Pinneberger Straße | GOW50 | 1 |
+| Oldesloer Straße | GOW30 | 1 |
+| Nedderfeld | GOW50 | 1 |
+| Max-Brauer-Allee | GOW30 | 1 |
+| Martinistraße | GOW50 | 1 |
+| Eidelstedter Weg | GOW30 | 1 |
+| Friedrich-Ebert-Straße | GOW30 | 1 |
+| Lokstedter Steindamm | GOW30 | 1 |
 
 ## N2 Kategorie-Inseln und N7 Glättungsvorschläge
 
-Straßenzug: an Knoten mit Grad 2 immer weiter, an Kreuzungen zum gegenseitig besten Abschnitt mit höchstens 30° Richtungsänderung. Insel = Lauf einer Kategorie unter 200 m zwischen zwei Läufen gleicher anderer Kategorie. 132 Abschnitte (6.5 km).
+Straßenzug: an Knoten mit Grad 2 immer weiter, an Kreuzungen zum gegenseitig besten Abschnitt mit höchstens 30° Richtungsänderung. Insel = Lauf einer Kategorie unter 200 m zwischen zwei Läufen gleicher anderer Kategorie. 5 Abschnitte (0.4 km).
 
 | Vorschlag (N7) neu ← bisher | Abschnitte |
 | --- | ---: |
-| GOW30 ← GOW50 | 41 |
-| GOW30 ← ETW30 | 34 |
-| GOW50 ← ETW30 | 16 |
-| GOW50 ← GOW30 | 15 |
-| ETW30 ← GOW50 | 13 |
-| ETW30 ← GOW30 | 8 |
 | ETW30 ← ETW_ERF | 4 |
 | ETW_ERF ← ETW30 | 1 |
 
 ## N3 Aufenthaltsbereiche
 
-Flächen aus GOW/SW-Linien und Stadtgrenze innerhalb des Arbeitsgebiets: 159. Davon enthalten 46 mindestens einen ETW-Abschnitt (Aufenthaltsbereiche); die übrigen 113 sind Verkehrsinseln zwischen Richtungsfahrbahnen oder Grünflächen ohne Erschließung und werden nicht bewertet. Vollständig (berühren den Rand des Arbeitsgebiets nicht): 45; davon unter 25 ha: 37 mit 106 ETW-Abschnitten. Kompaktheit = 4π·Fläche/Umfang² (1 = Kreis); dafür gibt es noch keine Schwelle (docs/open_questions.md).
+Flächen aus GOW/SW-Linien und Stadtgrenze innerhalb des Arbeitsgebiets: 223. Davon enthalten 66 mindestens einen ETW-Abschnitt (Aufenthaltsbereiche); die übrigen 157 sind Verkehrsinseln zwischen Richtungsfahrbahnen oder Grünflächen ohne Erschließung und werden nicht bewertet. Vollständig (berühren den Rand des Arbeitsgebiets nicht): 65; davon unter 25 ha: 54 mit 185 ETW-Abschnitten. Kompaktheit = 4π·Fläche/Umfang² (1 = Kreis); dafür gibt es noch keine Schwelle (docs/open_questions.md).
 
 | Fläche | ha | Umfang m | Kompaktheit | ETW-Abschnitte | vollständig | unter Schwelle |
 | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| 101 | 0.0 | 69 | 0.58 | 1 | ja | ja |
-| 46 | 0.0 | 99 | 0.52 | 1 | ja | ja |
-| 93 | 0.1 | 133 | 0.40 | 2 | ja | ja |
-| 119 | 0.1 | 217 | 0.15 | 1 | ja | ja |
-| 57 | 0.1 | 200 | 0.21 | 1 | ja | ja |
-| 28 | 0.1 | 219 | 0.21 | 2 | ja | ja |
-| 108 | 0.1 | 275 | 0.14 | 2 | ja | ja |
-| 40 | 0.1 | 172 | 0.39 | 2 | ja | ja |
-| 73 | 0.1 | 468 | 0.06 | 1 | ja | ja |
-| 36 | 0.1 | 252 | 0.20 | 2 | ja | ja |
-| 75 | 0.1 | 250 | 0.22 | 1 | ja | ja |
-| 38 | 0.1 | 241 | 0.24 | 1 | ja | ja |
-| 34 | 0.1 | 281 | 0.19 | 1 | ja | ja |
-| 104 | 0.1 | 260 | 0.24 | 1 | ja | ja |
-| 85 | 0.2 | 306 | 0.21 | 1 | ja | ja |
-| 87 | 0.2 | 278 | 0.27 | 1 | ja | ja |
-| 42 | 0.2 | 324 | 0.20 | 1 | ja | ja |
-| 8 | 0.2 | 356 | 0.17 | 1 | ja | ja |
-| 96 | 0.2 | 341 | 0.19 | 1 | ja | ja |
-| 45 | 0.2 | 325 | 0.23 | 3 | ja | ja |
-| 123 | 0.3 | 459 | 0.15 | 2 | ja | ja |
-| 70 | 0.3 | 742 | 0.07 | 2 | ja | ja |
-| 110 | 0.3 | 448 | 0.20 | 2 | ja | ja |
-| 18 | 0.3 | 706 | 0.09 | 4 | ja | ja |
-| 77 | 0.4 | 694 | 0.10 | 1 | ja | ja |
-| 9 | 0.6 | 902 | 0.09 | 1 | ja | ja |
-| 43 | 1.1 | 2005 | 0.03 | 4 | ja | ja |
-| 30 | 1.4 | 2616 | 0.03 | 9 | ja | ja |
-| 39 | 1.6 | 2341 | 0.04 | 6 | ja | ja |
-| 25 | 1.7 | 2762 | 0.03 | 6 | ja | ja |
-| 121 | 3.8 | 4189 | 0.03 | 2 | ja | ja |
-| 97 | 3.9 | 3061 | 0.05 | 1 | ja | ja |
-| 54 | 5.1 | 1162 | 0.48 | 11 | ja | ja |
-| 13 | 5.2 | 4641 | 0.03 | 1 | ja | ja |
-| 56 | 7.9 | 1241 | 0.65 | 9 | ja | ja |
-| 10 | 12.8 | 1729 | 0.54 | 12 | ja | ja |
-| 37 | 15.4 | 2827 | 0.24 | 6 | ja | ja |
-| 32 | 27.2 | 2291 | 0.65 | 28 | ja | nein |
-| 29 | 54.4 | 3380 | 0.60 | 41 | ja | nein |
-| 64 | 55.8 | 3152 | 0.71 | 7 | ja | nein |
-| 17 | 126.9 | 5629 | 0.50 | 65 | ja | nein |
-| 51 | 155.9 | 5089 | 0.76 | 174 | ja | nein |
-| 6 | 179.5 | 7164 | 0.44 | 98 | ja | nein |
-| 5 | 540.8 | 10376 | 0.63 | 461 | ja | nein |
-| 7 | 866.4 | 12654 | 0.68 | 361 | ja | nein |
-| 159 | 4262.4 | 77481 | 0.09 | 2208 | nein | nein |
+| 188 | 0.0 | 51 | 0.64 | 1 | ja | ja |
+| 40 | 0.0 | 67 | 0.47 | 1 | ja | ja |
+| 43 | 0.0 | 62 | 0.63 | 1 | ja | ja |
+| 147 | 0.0 | 69 | 0.58 | 1 | ja | ja |
+| 70 | 0.0 | 62 | 0.72 | 1 | ja | ja |
+| 63 | 0.0 | 99 | 0.52 | 1 | ja | ja |
+| 170 | 0.1 | 217 | 0.15 | 1 | ja | ja |
+| 87 | 0.1 | 200 | 0.21 | 1 | ja | ja |
+| 100 | 0.1 | 224 | 0.21 | 2 | ja | ja |
+| 157 | 0.1 | 275 | 0.14 | 2 | ja | ja |
+| 50 | 0.1 | 252 | 0.20 | 2 | ja | ja |
+| 130 | 0.1 | 280 | 0.17 | 1 | ja | ja |
+| 165 | 0.1 | 250 | 0.22 | 2 | ja | ja |
+| 110 | 0.1 | 250 | 0.22 | 1 | ja | ja |
+| 48 | 0.1 | 281 | 0.19 | 1 | ja | ja |
+| 111 | 0.1 | 297 | 0.18 | 2 | ja | ja |
+| 153 | 0.1 | 260 | 0.24 | 1 | ja | ja |
+| 128 | 0.1 | 234 | 0.33 | 1 | ja | ja |
+| 136 | 0.2 | 279 | 0.25 | 1 | ja | ja |
+| 124 | 0.2 | 306 | 0.21 | 1 | ja | ja |
+| 137 | 0.2 | 284 | 0.27 | 1 | ja | ja |
+| 14 | 0.2 | 356 | 0.17 | 1 | ja | ja |
+| 72 | 0.2 | 359 | 0.17 | 3 | ja | ja |
+| 62 | 0.2 | 325 | 0.23 | 3 | ja | ja |
+| 176 | 0.3 | 459 | 0.15 | 2 | ja | ja |
+| 146 | 0.3 | 603 | 0.09 | 2 | ja | ja |
+| 103 | 0.3 | 742 | 0.07 | 2 | ja | ja |
+| 159 | 0.3 | 448 | 0.20 | 2 | ja | ja |
+| 29 | 0.3 | 706 | 0.09 | 4 | ja | ja |
+| 113 | 0.4 | 694 | 0.10 | 1 | ja | ja |
+| 15 | 0.4 | 686 | 0.10 | 7 | ja | ja |
+| 77 | 0.4 | 723 | 0.10 | 2 | ja | ja |
+| 61 | 0.4 | 961 | 0.06 | 1 | ja | ja |
+| 53 | 0.4 | 1204 | 0.04 | 1 | ja | ja |
+| 57 | 0.5 | 679 | 0.13 | 5 | ja | ja |
+| 86 | 0.5 | 807 | 0.10 | 2 | ja | ja |
+| 16 | 0.6 | 902 | 0.09 | 1 | ja | ja |
+| 10 | 0.7 | 1209 | 0.06 | 2 | ja | ja |
+| 8 | 0.7 | 2112 | 0.02 | 2 | ja | ja |
+| 95 | 0.9 | 1366 | 0.06 | 6 | ja | ja |
+| 151 | 1.0 | 834 | 0.18 | 1 | ja | ja |
+| 58 | 1.1 | 2005 | 0.03 | 4 | ja | ja |
+| 69 | 1.3 | 2034 | 0.04 | 7 | ja | ja |
+| 44 | 1.4 | 2616 | 0.03 | 9 | ja | ja |
+| 37 | 1.7 | 2762 | 0.03 | 6 | ja | ja |
+| 27 | 2.1 | 3020 | 0.03 | 5 | ja | ja |
+| 59 | 2.6 | 1652 | 0.12 | 12 | ja | ja |
+| 148 | 3.4 | 6112 | 0.01 | 7 | ja | ja |
+| 174 | 3.8 | 4152 | 0.03 | 2 | ja | ja |
+| 20 | 5.2 | 4641 | 0.03 | 1 | ja | ja |
+| 85 | 7.9 | 1241 | 0.65 | 9 | ja | ja |
+| 26 | 12.6 | 2498 | 0.25 | 29 | ja | ja |
+| 17 | 12.8 | 1729 | 0.54 | 12 | ja | ja |
+| 51 | 15.3 | 2769 | 0.25 | 6 | ja | ja |
+| 46 | 27.2 | 2291 | 0.65 | 28 | ja | nein |
+| 41 | 54.4 | 3380 | 0.60 | 43 | ja | nein |
+| 96 | 55.8 | 3152 | 0.71 | 7 | ja | nein |
+| 7 | 56.8 | 3553 | 0.56 | 44 | ja | nein |
+| 11 | 122.8 | 5076 | 0.60 | 56 | ja | nein |
+| 28 | 126.9 | 5629 | 0.50 | 67 | ja | nein |
+| 98 | 154.2 | 5070 | 0.75 | 164 | ja | nein |
+| 31 | 294.8 | 9094 | 0.45 | 182 | ja | nein |
+| 6 | 537.4 | 9671 | 0.72 | 461 | ja | nein |
+| 13 | 679.8 | 10603 | 0.76 | 418 | ja | nein |
+| 12 | 865.9 | 12586 | 0.69 | 377 | ja | nein |
+| 5 | 3270.1 | 79976 | 0.06 | 1579 | nein | nein |
 
 ## N4 Schleichverkehr
 
-OD-Knoten: alle 984 Knoten des GOW/SW-Netzes (SW, GOW80, GOW50, GOW30) im Arbeitsgebiet; OD-Paare (ungerichtet, verbunden): 481 672. Reisezeit mit Soll-Tempo je Kategorie, SW mit travel_speed_kmh; pedestrian gesperrt; ohne Einbahnstraßen (Abschnitte tragen keine Richtung). Wege nur innerhalb des Arbeitsgebiets.
+OD-Knoten: alle 998 Knoten des GOW/SW-Netzes (SW, GOW80, GOW50, GOW30) im Arbeitsgebiet; OD-Paare (ungerichtet, verbunden): 495 511. Reisezeit mit Soll-Tempo je Kategorie, SW mit travel_speed_kmh; pedestrian gesperrt; ohne Einbahnstraßen (Abschnitte tragen keine Richtung). Wege nur innerhalb des Arbeitsgebiets.
 
-- OD-Paare, deren kürzester Weg mehr als 300 m ETW nutzt: 141 275 (29.3 %), obwohl ein Weg nur auf GOW/SW besteht.
-- Weitere 72 996 OD-Paare sind nur über ETW verbunden (Lücke im GOW/SW-Netz, siehe N1); sie werden gezählt, aber nicht als Schleichverkehr markiert.
-- Median Umwegfaktor (Zeit GOW/SW-Weg ÷ kürzester Weg) dieser Paare: 1.18.
-- Markierte ETW-Abschnitte: 1 082 (112.2 km). Verteilung der OD-Paare je Abschnitt: 1–99: 224, 100–999: 366, 1 000–9 999: 404, ≥ 10 000: 88.
+- OD-Paare, deren kürzester Weg mehr als 300 m ETW nutzt: 200 593 (40.5 %), obwohl ein Weg nur auf GOW/SW besteht.
+- Weitere 26 538 OD-Paare sind nur über ETW verbunden (Lücke im GOW/SW-Netz, siehe N1); sie werden gezählt, aber nicht als Schleichverkehr markiert.
+- Median Umwegfaktor (Zeit GOW/SW-Weg ÷ kürzester Weg) dieser Paare: 1.13.
+- Markierte ETW-Abschnitte: 1 280 (135.6 km). Verteilung der OD-Paare je Abschnitt: 1–99: 243, 100–999: 439, 1 000–9 999: 501, ≥ 10 000: 97.
 - GOW30 und ETW30 haben dasselbe Soll-Tempo; jeder kürzere Weg durch ETW gewinnt dann. Die Zahl ist deshalb ein Maß für die Durchlässigkeit der Quartiere, kein Verkehrsmodell.
 
 Meistgenutzte ETW-Abschnitte:
 
 | segment_id | Name | Kategorie | OD-Paare |
 | --- | --- | --- | ---: |
-| `seg_1606c90ff4547561` | – | ETW30 | 24 007 |
-| `seg_61f70b135937ae03` | Quickbornstraße | ETW30 | 22 878 |
-| `seg_d2273291da58242a` | Eidelstedter Weg | ETW30 | 22 327 |
-| `seg_1d3b3fe24c77d387` | Lappenbergsallee | ETW30 | 21 735 |
-| `seg_fe3f68204c6167a5` | Eidelstedter Weg | ETW30 | 20 770 |
-| `seg_2d543ae331a97ff8` | Steenwisch | ETW30 | 20 757 |
-| `seg_c75da928ca3da5c9` | Eidelstedter Weg | ETW30 | 20 719 |
-| `seg_d2909ef54dd5521f` | Quickbornstraße | ETW30 | 20 464 |
-| `seg_ccfe03a785277910` | Mansteinstraße | ETW30 | 19 836 |
-| `seg_95c6864081297434` | Eidelstedter Weg | ETW30 | 19 753 |
-| `seg_3f83e48c8f2ecc41` | Eidelstedter Weg | ETW30 | 19 424 |
-| `seg_adcc7eaf45ce240c` | – | ETW30 | 18 757 |
-| `seg_a4ae8748a2b153be` | Eidelstedter Weg | ETW30 | 18 757 |
-| `seg_86c1ae410c6822d8` | – | ETW30 | 18 722 |
-| `seg_090ec8e9150f0ae2` | Weidenallee | ETW30 | 18 456 |
+| `seg_ea815fcfa6e7037e` | Rondenbarg | ETW30 | 33 569 |
+| `seg_e6f1f82c33617125` | Rondenbarg | ETW30 | 33 569 |
+| `seg_65865a9f0b189fdb` | Rondenbarg | ETW30 | 33 569 |
+| `seg_61f70b135937ae03` | Quickbornstraße | ETW30 | 30 679 |
+| `seg_a2dd83e6c7222900` | Sportplatzring | ETW30 | 29 585 |
+| `seg_d2273291da58242a` | Eidelstedter Weg | ETW30 | 28 982 |
+| `seg_d2909ef54dd5521f` | Quickbornstraße | ETW30 | 27 506 |
+| `seg_ccfe03a785277910` | Mansteinstraße | ETW30 | 27 368 |
+| `seg_fe3f68204c6167a5` | Eidelstedter Weg | ETW30 | 27 290 |
+| `seg_c75da928ca3da5c9` | Eidelstedter Weg | ETW30 | 27 238 |
+| `seg_ba2f4a7ff187c614` | Julius-Vosseler-Straße | ETW30 | 26 707 |
+| `seg_5a20e531cbd69184` | Julius-Vosseler-Straße | ETW30 | 26 707 |
+| `seg_52078bb4cc4688f7` | Julius-Vosseler-Straße | ETW30 | 26 707 |
+| `seg_984bbd7d72cabcb1` | Julius-Vosseler-Straße | ETW30 | 26 456 |
+| `seg_86c1ae410c6822d8` | – | ETW30 | 25 763 |
 
 ## N5 Übergänge
 
@@ -162,46 +176,46 @@ Meistgenutzte ETW-Abschnitte:
 
 | von → nach | Knoten |
 | --- | ---: |
-| GOW30 → ETW30 | 512 |
-| GOW50 → ETW30 | 321 |
-| GOW50 → GOW30 | 162 |
-| GOW50 → ETW_ERF | 4 |
+| GOW30 → ETW30 | 542 |
+| GOW50 → ETW30 | 180 |
+| GOW50 → GOW30 | 92 |
 | GOW30 → ETW_ERF | 4 |
+| GOW50 → ETW_ERF | 2 |
 
 Direkter Übergang ≥ 70 km/h → 30-km/h-Kategorie (Flag auf der 30-Seite): 0 Knoten, 0 Abschnitte.
 
 ## N6 Knotentypen
 
-Knoten mit Grad ≥ 3: 2 742. Ergebnis: not_checkable 1 814, mismatch 758, not_defined 140, match 30. Ist aus OSM (1 425 Ampelknoten, 43 Plateaus, 76 Kreisverkehrs-Ways im Umkreis 30 m); none_mapped = nichts davon erfasst. Gehwegüberfahrten sind in OSM nicht erfasst → not_checkable. Eine Ampel im Umkreis kann zur Nachbarkreuzung gehören (v. a. bei ETW-Knoten nahe einer Hauptstraße); Kreisverkehre haben mehrere Knoten.
+Knoten mit Grad ≥ 3: 2 819. Ergebnis: not_checkable 1 821, mismatch 828, not_defined 140, match 30. Ist aus OSM (1 425 Ampelknoten, 43 Plateaus, 76 Kreisverkehrs-Ways im Umkreis 30 m); none_mapped = nichts davon erfasst. Gehwegüberfahrten sind in OSM nicht erfasst → not_checkable. Eine Ampel im Umkreis kann zur Nachbarkreuzung gehören (v. a. bei ETW-Knoten nahe einer Hauptstraße); Kreisverkehre haben mehrere Knoten.
 
 | Soll \ Ist | none_mapped | plateau | roundabout | signal | signal_plateau |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| equal_right_before_left | 1 449 | 20 | 64 | 160 | 0 |
+| equal_right_before_left | 1 504 | 21 | 64 | 164 | 0 |
 | not_defined | 78 | 3 | 0 | 59 | 0 |
-| priority_gow_sidewalk_crossover | 48 | 0 | 3 | 122 | 0 |
-| roundabout | 36 | 0 | 2 | 69 | 0 |
-| roundabout_or_signal_plateau | 77 | 0 | 4 | 114 | 0 |
-| sidewalk_crossover | 70 | 4 | 1 | 1 | 0 |
-| sidewalk_crossover_or_priority_plateau | 129 | 4 | 10 | 214 | 1 |
+| priority_gow_sidewalk_crossover | 37 | 0 | 0 | 81 | 0 |
+| roundabout | 53 | 1 | 4 | 111 | 0 |
+| roundabout_or_signal_plateau | 48 | 0 | 2 | 53 | 0 |
+| sidewalk_crossover | 71 | 4 | 1 | 1 | 0 |
+| sidewalk_crossover_or_priority_plateau | 152 | 3 | 13 | 290 | 1 |
 
 Abweichungen Soll ≠ Ist:
 
 | Soll | Ist | Knoten |
 | --- | --- | ---: |
-| sidewalk_crossover_or_priority_plateau | signal | 214 |
-| equal_right_before_left | signal | 160 |
-| priority_gow_sidewalk_crossover | signal | 122 |
-| roundabout_or_signal_plateau | none_mapped | 77 |
-| roundabout | signal | 69 |
+| sidewalk_crossover_or_priority_plateau | signal | 290 |
+| equal_right_before_left | signal | 164 |
+| roundabout | signal | 111 |
+| priority_gow_sidewalk_crossover | signal | 81 |
 | equal_right_before_left | roundabout | 64 |
-| roundabout | none_mapped | 36 |
-| sidewalk_crossover_or_priority_plateau | roundabout | 10 |
-| priority_gow_sidewalk_crossover | roundabout | 3 |
+| roundabout | none_mapped | 53 |
+| roundabout_or_signal_plateau | none_mapped | 48 |
+| sidewalk_crossover_or_priority_plateau | roundabout | 13 |
+| roundabout | plateau | 1 |
 | sidewalk_crossover | roundabout | 1 |
 | sidewalk_crossover | signal | 1 |
 | sidewalk_crossover_or_priority_plateau | signal_plateau | 1 |
 
-Kategoriepaare ohne Soll-Knotentyp (Tabelle 1.4 deckt sie nicht ab): SW, GOW50 (50), SW, SW (49), ETW_ERF, ETW_ERF (40), SW, ETW30 (1).
+Kategoriepaare ohne Soll-Knotentyp (Tabelle 1.4 deckt sie nicht ab): SW, SW (49), ETW_ERF, ETW_ERF (40), SW, GOW50 (38), SW, GOW30 (13).
 
 ## Stichprobe: 30 zufällige markierte Abschnitte im Bezirk Eimsbüttel (Seed 42)
 
@@ -209,36 +223,36 @@ Fachlich durchsehen: Ist das Flag berechtigt? **Durchsicht: offen.**
 
 | segment_id | Name | Kategorie | m | Flags | Orthophoto | Panoramax | OSM |
 | --- | --- | --- | ---: | --- | --- | --- | --- |
-| `seg_066ca5ae57e63d8e` | Schröderstiftstraße | GOW50 | 46 | N2_island, N7_smooth:GOW30, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564282,5935829]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.567391/9.970636) | [Way](https://www.openstreetmap.org/way/521056825) |
-| `seg_07e455276155aef6` | An der Verbindungsbahn | GOW30 | 48 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564756,5935480]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.564194/9.977726) | [Way](https://www.openstreetmap.org/way/521045479) |
-| `seg_08b35bcbc85ff8a0` | Grindelallee | GOW50 | 107 | N2_island, N7_smooth:GOW30 | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564788,5936302]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.571579/9.978375) | [Way](https://www.openstreetmap.org/way/391801520) |
-| `seg_094a4278a1b7df0b` | Redingskamp | ETW30 | 33 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[558928,5940780]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.612511/9.890739) | [Way](https://www.openstreetmap.org/way/42413679) |
-| `seg_17dbbbb23baf1331` | Klosterallee | ETW30 | 9 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564869,5937299]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.580524/9.979801) | [Way](https://www.openstreetmap.org/way/963174501) |
-| `seg_19a68824da60d5c7` | Edmund-Siemers-Allee | GOW30 | 455 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565397,5935312]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.562609/9.987367) | [Way](https://www.openstreetmap.org/way/1373419495) |
-| `seg_1c08f680501af279` | Wendlohstraße | ETW30 | 303 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562712,5942177]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.624632/9.948219) | [Way](https://www.openstreetmap.org/way/1415502489) |
-| `seg_1eecc3971dd25d6c` | Oldesloer Straße | ETW30 | 12 | N2_island, N7_smooth:GOW30, N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560233,5943063]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.632880/9.910904) | [Way](https://www.openstreetmap.org/way/945786829) |
-| `seg_2665db9aff3caf38` | Alte Volksparkstraße | ETW30 | 181 | N3_small_area | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561241,5938561]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.592310/9.925264) | [Way](https://www.openstreetmap.org/way/904851773) |
-| `seg_352e1a7eb20c61ac` | Siemersplatz | GOW30 | 56 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563800,5939401]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.599551/9.964095) | [Way](https://www.openstreetmap.org/way/128280053) |
-| `seg_3a4adc68e516ae25` | Jütländer Allee | ETW30 | 143 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561465,5939443]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.600203/9.928818) | [Way](https://www.openstreetmap.org/way/144964687) |
-| `seg_3aecaf2567797fde` | Höxterstraße | ETW30 | 327 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564025,5939192]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.597645/9.967458) | [Way](https://www.openstreetmap.org/way/143961980) |
-| `seg_3cf7358b56f26acd` | Vogt-Kölln-Straße | ETW30 | 398 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561561,5939787]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.603288/9.930342) | [Way](https://www.openstreetmap.org/way/1417924345) |
-| `seg_40b3b1a8df5a4df7` | Fruchtallee | ETW30 | 18 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563811,5936060]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.569525/9.963577) | [Way](https://www.openstreetmap.org/way/427238245) |
-| `seg_491c6b925034f47e` | Klosterallee | ETW30 | 106 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564866,5937356]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.581038/9.979775) | [Way](https://www.openstreetmap.org/way/3986682) |
-| `seg_6c8517f1d3ca26a5` | An der Lohe | ETW30 | 11 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563124,5942077]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.623683/9.954426) | [Way](https://www.openstreetmap.org/way/1160842651) |
-| `seg_84ea9801ae9fdb64` | Kollaustraße | GOW30 | 152 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563632,5939906]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.604111/9.961662) | [Way](https://www.openstreetmap.org/way/650779284) |
-| `seg_8e8347988f3e7564` | Warburgstraße | ETW30 | 15 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565844,5934901]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.558851/9.994032) | [Way](https://www.openstreetmap.org/way/27064186) |
-| `seg_932e987a5540d234` | Högenstraße | ETW30 | 6 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562125,5937310]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.580956/9.938368) | [Way](https://www.openstreetmap.org/way/806872057) |
-| `seg_9c00922c31525307` | Arminiusstraße | ETW30 | 107 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562025,5937342]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.581257/9.936869) | [Way](https://www.openstreetmap.org/way/763480040) |
-| `seg_9f9f90637978a3ca` | Swebenweg | GOW50 | 969 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563811,5944599]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.646267/9.965329) | [Way](https://www.openstreetmap.org/way/220656006) |
-| `seg_a8fedde93dfec4fa` | Hainholz | ETW30 | 77 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563192,5941957]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.622597/9.955430) | [Way](https://www.openstreetmap.org/way/159656524) |
-| `seg_aae50bec21e57d5c` | Gärtnerstraße | GOW30 | 41 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564019,5937539]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.582794/9.967015) | [Way](https://www.openstreetmap.org/way/142762606) |
-| `seg_b12d4c35b6d029e7` | Rentzelstraße | GOW30 | 68 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564824,5935658]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.565781/9.978793) | [Way](https://www.openstreetmap.org/way/914335526) |
-| `seg_b9003657d305da30` | Bismarckstraße | ETW30 | 79 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564169,5936821]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.576322/9.969141) | [Way](https://www.openstreetmap.org/way/605881859) |
-| `seg_be638afe94e5d439` | Wischhofsweg | ETW30 | 79 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559785,5939947]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.604931/9.903533) | [Way](https://www.openstreetmap.org/way/7399630) |
-| `seg_c330d48355534e10` | Hohe Weide | ETW30 | 266 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564425,5936806]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.576150/9.973005) | [Way](https://www.openstreetmap.org/way/137037866) |
-| `seg_c428210ed9ace2bc` | – | ETW30 | 55 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562301,5936413]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.572874/9.940844) | [Way](https://www.openstreetmap.org/way/996116296) |
-| `seg_c44ee5bd4f23a4b4` | Baumacker | ETW30 | 31 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559459,5940739]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.612082/9.898759) | [Way](https://www.openstreetmap.org/way/1344848985) |
-| `seg_ec154048f73c1c11` | Sandweg | ETW30 | 25 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562905,5936397]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.572659/9.949973) | [Way](https://www.openstreetmap.org/way/22757942) |
+| `seg_03041f6cf99b8e0a` | Emilienstraße | ETW30 | 39 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563102,5936282]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.571602/9.952924) | [Way](https://www.openstreetmap.org/way/1114937846) |
+| `seg_0da4a9ea092c0362` | Troplowitzstraße | ETW30 | 49 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564040,5937871]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.585767/9.967412) | [Way](https://www.openstreetmap.org/way/682409953) |
+| `seg_0e4cbf86fab8a5f1` | Altonaer Straße | GOW30 | 93 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563687,5935460]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.564145/9.961583) | [Way](https://www.openstreetmap.org/way/702923200) |
+| `seg_1043561df8d1bb0c` | Kieler Straße | GOW30 | 284 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561331,5938724]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.593763/9.926664) | [Way](https://www.openstreetmap.org/way/395002918) |
+| `seg_1149ace6a8d325d7` | – | ETW30 | 43 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563758,5939455]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.600044/9.963466) | [Way](https://www.openstreetmap.org/way/144246657) |
+| `seg_2ac0e22cb6848f18` | Halstenbeker Straße / Schnelsener Weg | ETW30 | 290 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[558906,5942035]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.623795/9.890644) | [Way](https://www.openstreetmap.org/way/10714530) |
+| `seg_2d79472d6e07d869` | Wendlohstraße | ETW30 | 103 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562061,5942760]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.629944/9.938485) | [Way](https://www.openstreetmap.org/way/28176321) |
+| `seg_31586e0ccf94c0cc` | Garstedter Weg | GOW30 | 168 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563622,5942713]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.629339/9.962079) | [Way](https://www.openstreetmap.org/way/148170148) |
+| `seg_316bf3ec250dbe56` | Grindelallee | GOW30 | 20 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565211,5935459]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.563948/9.984586) | [Way](https://www.openstreetmap.org/way/391787287) |
+| `seg_361476383b25ee7e` | Stellinger Weg | ETW30 | 11 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562824,5937163]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.579550/9.948900) | [Way](https://www.openstreetmap.org/way/1186526052) |
+| `seg_444b2ba59aef7437` | Langenfelder Damm | ETW30 | 13 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562155,5937251]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.580424/9.938806) | [Way](https://www.openstreetmap.org/way/745522722) |
+| `seg_4a7fb4bca7199827` | Reichsbahnstraße | ETW30 | 106 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559978,5939259]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.598725/9.906316) | [Way](https://www.openstreetmap.org/way/28175306) |
+| `seg_4c5be0d5bbe9c00d` | Osterfeldstraße | GOW30 | 41 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564258,5939311]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.598687/9.970990) | [Way](https://www.openstreetmap.org/way/975434251) |
+| `seg_5efa89ba554e8c48` | Osterfeldstraße | GOW30 | 121 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564360,5939290]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.598487/9.972529) | [Way](https://www.openstreetmap.org/way/39965326) |
+| `seg_6600444efd3d9aa4` | Swebenweg | GOW30 | 45 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564435,5944538]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.645639/9.974750) | [Way](https://www.openstreetmap.org/way/149852883) |
+| `seg_67a4a8afe4cc2fc6` | Oberstraße | ETW30 | 185 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565385,5936985]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.577640/9.987529) | [Way](https://www.openstreetmap.org/way/69421321) |
+| `seg_68a9851f7fc8ff88` | St. Benedictstraße | GOW30 | 26 | N1_dead_end, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565815,5937621]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.583306/9.994158) | [Way](https://www.openstreetmap.org/way/30412060) |
+| `seg_69d0075bb2b3f754` | Grandweg | ETW30 | 11 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563443,5939354]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.599170/9.958692) | [Way](https://www.openstreetmap.org/way/912126033) |
+| `seg_6e6e66151260eedf` | Osterfeldstraße | GOW30 | 66 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563877,5939396]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.599498/9.965255) | [Way](https://www.openstreetmap.org/way/490926532) |
+| `seg_7530d0d752b242fc` | Kieler Straße | GOW30 | 30 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561530,5938511]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.591823/9.929627) | [Way](https://www.openstreetmap.org/way/395002920) |
+| `seg_85271f68c2aae9f8` | Anna-Susanna-Stieg | ETW30 | 46 | N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560568,5944164]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.642745/9.916185) | [Way](https://www.openstreetmap.org/way/763381505) |
+| `seg_86c1ae410c6822d8` | – | ETW30 | 13 | N3_small_area, N4_shortcut, N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563793,5937144]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.579267/9.963523) | [Way](https://www.openstreetmap.org/way/952072729) |
+| `seg_86d228ee644d0a7f` | Osterfeldstraße | ETW30 | 94 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564266,5939261]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.598239/9.971113) | [Way](https://www.openstreetmap.org/way/48538356) |
+| `seg_a35d62b337055cb0` | Peter-Timm-Straße | ETW30 | 179 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560471,5943834]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.639785/9.914653) | [Way](https://www.openstreetmap.org/way/4974352) |
+| `seg_a52d0e033bd95814` | Harvestehuder Weg | ETW30 | 12 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566027,5937084]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.578448/9.997254) | [Way](https://www.openstreetmap.org/way/1493614351) |
+| `seg_ce1587b332b13e84` | Nedderfeld | GOW30 | 22 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563742,5939851]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.603598/9.963303) | [Way](https://www.openstreetmap.org/way/650779328) |
+| `seg_cf0e0ce11178d1f3` | Wilzenweg | ETW30 | 17 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563349,5944747]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.647649/9.958375) | [Way](https://www.openstreetmap.org/way/1211705525) |
+| `seg_cf3992f4bf1f96ba` | Furtweg | ETW30 | 117 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559859,5939714]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.602828/9.904605) | [Way](https://www.openstreetmap.org/way/28175311) |
+| `seg_dba8f1535513a4ff` | Müggenkampstraße | ETW30 | 224 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562510,5937179]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.579738/9.944159) | [Way](https://www.openstreetmap.org/way/28174447) |
+| `seg_f854da0277bcb65c` | Lappenbergsallee | GOW30 | 138 | N6_node_mismatch | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562605,5936677]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.575212/9.945485) | [Way](https://www.openstreetmap.org/way/145693853) |
 
 ## Grenzen
 
@@ -249,7 +263,7 @@ Fachlich durchsehen: Ist das Flag berechtigt? **Durchsicht: offen.**
 
 ## Korrekturebene (Stufe 6b)
 
-Erzeugt: 2026-10-28T13:48:36+00:00 von `pipeline/s06b_overrides.py`, rules.yaml 0.9.0. Quelle: `overrides/overrides.csv`; übernommen wird nur review_status = approved. cat_proposed bleibt unverändert, cat_final steht daneben.
+Erzeugt: 2026-11-04T20:38:04+00:00 von `pipeline/s06b_overrides.py`, rules.yaml 0.12.0. Quelle: `overrides/overrides.csv`; übernommen wird nur review_status = approved. cat_proposed bleibt unverändert, cat_final steht daneben.
 
 | review_status | Einträge |
 | --- | ---: |

@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.11.0
+  version: 0.12.0
   date: 2026-11-04
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -236,6 +236,23 @@ network:
       source_type: assumption
       status: draft
       note: "guide.md 3.2 Stufe 2 nennt auch Querschnittswechsel; Querschnittsdaten liegen erst nach Prompt 07 vor."
+    - id: S-NET-04
+      description: >-
+        Benannte Zufahrten zusätzlich ins Netz: highway=service ohne service-Untertyp oder mit service=alley und
+        highway=track mit Kfz-Zugang (erster bekannter Wert aus motor_access_keys in motor_access_values oder ohne Angabe);
+        jeweils nur mit name. Fußwege, path, Parkplatzgassen und Grundstückszufahrten bleiben draußen.
+      include_highway: [service, track]
+      require_name: true
+      service_values: [alley]
+      motor_access_keys: [motor_vehicle, motorcar, vehicle, access]
+      motor_access_values: ["yes", destination, designated]
+      motor_access_applies_to: [track]
+      source_type: assumption
+      status: draft
+      note: >-
+        Entscheidung Projektteam 2026-11-04 (z. B. Amselweg in Eimsbüttel: track, vehicle=destination). Neue Einmündungen
+        teilen bestehende Abschnitte; deren segment_id ändert sich einmalig (overrides.csv war leer). Nicht in der
+        Betweenness (S-FEAT-02 exclude_highway), weil es kein Standardtempo für diese Klassen gibt.
 
 # ---------------------------------------------------------------
 # Conflation amtlich <-> OSM (pipeline/s03_conflate.py, guide.md 3.2 Stufe 3, prompts/05)
@@ -306,7 +323,7 @@ features:
     - id: S-FEAT-02
       description: "Edge betweenness, zeitgewichtet: Reisezeit = Länge / Tempo; Tempo amtlich vor OSM maxspeed vor Standardwert je highway-Klasse"
       method: igraph_edge_betweenness_undirected
-      exclude_highway: [pedestrian]
+      exclude_highway: [pedestrian, service, track]
       thresholds:
         default_speed_motorway:       {value: 100, unit: km/h, source_type: assumption}
         default_speed_motorway_link:  {value: 60,  unit: km/h, source_type: assumption}
@@ -715,6 +732,29 @@ priority:
     source_type: assumption
     status: draft
     note: "Unfälle an Knoten gehen an genau einen der anliegenden Abschnitte (den nächsten); vorerst so belassen, mit der Webkarte erneut prüfen (Entscheidung Projektteam 2026-10-28). Nur aggregiert je Abschnitt gespeichert."
+
+# ---------------------------------------------------------------
+# Harmonisierung je Straßenzug (pipeline/s05b_harmonise.py, nach der Kaskade, vor der Netzkohärenz)
+# ---------------------------------------------------------------
+harmonisation:
+  rules:
+    - id: H-STR-01
+      description: >-
+        Kurze Läufe (unter min_run_m aus N2) auf einem Straßenzug angleichen, wiederholt bis nichts mehr wechselt:
+        (1) ETW30 zwischen zwei GOW-Läufen -> GOW (niedrigeres Soll-Tempo der Nachbarn); (2) GOW zwischen zwei
+        ETW30-Läufen -> ETW30; (3) GOW50 zwischen zwei GOW30-Läufen oder am Zugende neben GOW30 -> GOW30;
+        (4) GOW30 zwischen GOW50 (oder am Zugende neben GOW50) bleibt und wird in die angrenzenden GOW50-Abschnitte
+        verlängert (kürzerer Nachbar zuerst), bis min_run_m erreicht ist.
+      min_run_from: N2
+      max_passes: 20
+      locked_categories: [SW, ETW_ERF, GOW80, ETW60]
+      source: SWOV_FS_2023
+      source_type: assumption
+      status: draft
+      note: >-
+        Homogenität des Straßenzugs (SWOV); bei 50 gegen 30 gewinnt das niedrigere Tempo. Entscheidung Projektteam
+        2026-11-04. Straßenzug wie N2. Abschnitte mit approved override werden nicht verändert. max_passes ist nur eine
+        technische Grenze. Das Ergebnis der Kaskade bleibt als cat_cascade erhalten.
 
 # ---------------------------------------------------------------
 # Validierung und Sensitivität (pipeline/validate.py, guide.md Teil 7, prompts/12_validation.md)

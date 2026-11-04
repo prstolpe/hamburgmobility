@@ -2,7 +2,7 @@
 
 Usage: uv run python -m pipeline.s06_coherence
 
-Reads data/interim/classified.parquet, config/rules.yaml (coherence) and the OSM extract (city boundary,
+Reads data/interim/harmonised.parquet, config/rules.yaml (coherence) and the OSM extract (city boundary,
 traffic signals, traffic_calming=table, roundabouts). Writes data/interim/coherence.parquet (input columns plus
 flags and coherence_trace as JSON), data/interim/coherence_nodes.parquet (N5/N6 per node),
 data/interim/coherence_areas.parquet (N3), reports/coherence.md, reports/coherence_flags.geojson.
@@ -29,7 +29,7 @@ from pipeline.s02_network import _pbf_from_manifest
 from pipeline.s04_features import OSM_BBOX_MARGIN_DEG, _fmt, _now, _pct
 
 PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
-IN_PATH = REPO_ROOT / "data" / "interim" / "classified.parquet"
+IN_PATH = REPO_ROOT / "data" / "interim" / "harmonised.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "coherence.parquet"
 NODES_PATH = REPO_ROOT / "data" / "interim" / "coherence_nodes.parquet"
 AREAS_PATH = REPO_ROOT / "data" / "interim" / "coherence_areas.parquet"
@@ -359,7 +359,7 @@ def main() -> int:
     with open(PROJECT_PATH, encoding="utf-8") as f:
         project = yaml.safe_load(f)["pilot_district"]
     if not IN_PATH.exists():
-        print("coherence: data/interim/classified.parquet missing; run `make classify` first", file=sys.stderr)
+        print("coherence: data/interim/harmonised.parquet missing; run `make classify` first", file=sys.stderr)
         return 1
     try:
         pbf = _pbf_from_manifest(load_manifest())

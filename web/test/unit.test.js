@@ -95,6 +95,12 @@ describe("robustness", () => {
     expect(profileHtml({ ...base }, meta, "https://example.org/")).not.toContain("Robustheit");
   });
 
+  it("notes harmonised categories", () => {
+    const p = { ...base, category: { ...base.category, cascade: "GOW50" } };
+    expect(profileHtml(p, meta, "https://example.org/")).toContain("Vorschlag der Regeln: GOW50");
+    expect(profileHtml(base, meta, "https://example.org/")).not.toContain("angeglichen");
+  });
+
   it("labels the table column", () => {
     expect([true, false, null, undefined].map(robust)).toEqual(["unsicher", "robust", "–", "–"]);
   });

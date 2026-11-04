@@ -108,6 +108,14 @@ Format: `- [ ] Frage – Wer klärt – Status/Antwort`. Claude Code trägt hier
 - [ ] Cloudflare R2 für die PMTiles erst nötig, wenn mehrere Bezirke dazukommen (jetzt 1,6 MB + 13 MB Hintergrundkarte, Seite gesamt ca. 66 MB). Entscheidung später – Team
 - [ ] Querschnittsskizze im Steckbrief zeigt nur „vorhanden vs. nötig“; Soll-Aufteilung (Gehweg/Radweg/Fahrbahn) als Skizze fehlt noch (guide.md 5.3) – Methodik
 
+## Netz und Harmonisierung (rules.yaml 0.12.0, 2026-11-04)
+- [ ] Parallele Nebenfahrbahnen (highway=service, z. B. Grindelallee) werden über den Puffer der HVS-Linien als in_hvs zugeordnet und dadurch GOW30/GOW50 (22 Abschnitte, 2,0 km). Nach Duurzaam Veilig ist ein „ventweg“ Erschließung (ETW). in_hvs für S-NET-04-Wege nicht zuordnen? – Methodik
+- [ ] Tracks mit maxspeed=walk (z. B. Amselweg, Hamburg-Nord) werden ETW30; eigene Regel für ETW_ERF? – Verkehrsplaner*in
+- [ ] service/track sind nicht in der Betweenness (kein Standardtempo); ihr conn_score stützt sich nur auf die übrigen Merkmale (confidence mittel) – Methodik
+- [ ] Amselweg/Meisenweg in Eimsbüttel sind Wege und Parkplatzgassen in Kleingartenvereinen (Klgv. 329, 331) und bleiben bewusst ohne Kategorie – erledigt, nur zur Info
+- [ ] H-STR-01 lässt ETW_ERF/ETW30-Inseln stehen (5 Abschnitte, N2) – bei Bedarf ergänzen – Verkehrsplaner*in
+- [ ] H-STR-01 verlängert kurze GOW30-Stücke (z. B. vor Schulen) auf 200 m; ob 200 m (N2 min_run_m) als Mindestlänge für Tempo-30-Abschnitte passt, fachlich prüfen – Verkehrsplaner*in
+
 ## Validierung und Sensitivität (Prompt 12, rules.yaml 0.11.0)
 - [ ] Monte-Carlo variiert Gewichte **und** Annahme-Schwellen gemeinsam (guide.md 7.1 „über alle Annahmen“); prompts/12 nennt nur Gewichte. So belassen? Nur Gewichte ergäben deutlich weniger „unsichere“ Abschnitte – Methodik
 - [ ] „unsicher“ ab Wechselquote 0,3 (prompts/12) oder erst über 0,3 (guide.md P11)? Umgesetzt: ab 0,3 (V-UNC-01) – Methodik

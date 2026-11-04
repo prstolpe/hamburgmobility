@@ -2,7 +2,7 @@
 #
 # Intended run order (crosssection runs before classify, because rule C-G30-02 needs the
 # street space width):
-#   fetch -> network -> conflate -> features -> crosssection -> classify -> coherence
+#   fetch -> network -> conflate -> features -> crosssection -> classify (+harmonise) -> coherence
 #   -> discrepancy -> validate -> export -> web
 # validate runs before export because the website shows its robustness mark ("unsicher").
 #
@@ -49,8 +49,9 @@ features: dirs ## Compute features per segment
 crosssection: dirs ## Cross sections and feasibility
 	$(call run_step,crosssection,s07_crosssection)
 
-classify: dirs ## Rule-based target category
+classify: dirs ## Rule-based target category, then harmonisation along streets (H-STR-01)
 	$(call run_step,classify,s05_classify)
+	$(call run_step,classify,s05b_harmonise)
 
 coherence: dirs ## Network coherence flags and overrides
 	$(call run_step,coherence,s06_coherence)

@@ -177,3 +177,44 @@ def test_input_in_other_crs_is_rejected():
     edges = _edges(GRID_ROWS, GRID).set_crs("EPSG:3857", allow_override=True)
     with pytest.raises(ValueError, match="EPSG:25832"):
         _segments(edges)
+
+
+# --- S-NET-04 named access ways --------------------------------------------------------------
+
+import pandas as pd  # noqa: E402
+
+from pipeline.lib.network import select_ways  # noqa: E402
+from pipeline.lib.rules import load_rules, network_highways  # noqa: E402
+
+
+def _ways(*rows) -> pd.DataFrame:
+    base = {"highway": "residential", "name": "A-Weg", "service": None, "access": None, "motor_vehicle": None,
+            "motorcar": None, "tags": None}
+    return pd.DataFrame([{**base, **r} for r in rows])
+
+
+def test_network_highways_include_access_ways():
+    rules = load_rules()
+    assert set(network_highways(rules)) == set(rules.network.highway_classes.values) | {"service", "track"}
+
+
+@pytest.mark.parametrize("row, keep", [
+    ({}, True),
+    ({"highway": "residential", "name": None}, True),         # main classes do not need a name
+    ({"highway": "service"}, True),                           # named, no service subtype
+    ({"highway": "service", "service": "alley"}, True),
+    ({"highway": "service", "service": "parking_aisle"}, False),
+    ({"highway": "service", "service": "driveway"}, False),
+    ({"highway": "service", "name": None}, False),            # unnamed
+    ({"highway": "track"}, True),                             # no access restriction
+    ({"highway": "track", "tags": '{"vehicle": "destination"}'}, True),
+    ({"highway": "track", "tags": {"vehicle": "destination"}}, True),
+    ({"highway": "track", "motor_vehicle": "no"}, False),
+    ({"highway": "track", "access": "agricultural"}, False),
+    ({"highway": "track", "motor_vehicle": "destination", "access": "no"}, True),  # most specific key wins
+    ({"highway": "service", "motor_vehicle": "no"}, True),    # access check applies to track only
+    ({"highway": "footway"}, False),
+    ({"highway": "path"}, False),
+])
+def test_select_ways(row, keep):
+    assert select_ways(_ways(row), load_rules()).tolist() == [keep]

@@ -194,3 +194,22 @@
 ## config/plain_language.yaml 0.2.0 – 2026-11-04
 - Neu: Abschnitt `sensitivity` (Texte zur Robustheit im Steckbrief, Namen der variierten Annahmen) und
   Spaltenbeschreibungen `sens_change_rate`, `sens_uncertain`.
+
+## rules.yaml 0.12.0 – 2026-11-04
+- Neu: S-NET-04 (assumption): benannte Zufahrten ins Netz – highway=service ohne Untertyp oder alley, highway=track
+  mit Kfz-Zugang (motor_vehicle/motorcar/vehicle/access ∈ yes, destination, designated oder ohne Angabe). Fußwege,
+  path, Parkplatzgassen und Grundstückszufahrten bleiben draußen. Hamburg: 930 service- und 515 track-Abschnitte
+  (290,8 km); Eimsbüttel: 70 Abschnitte (9,0 km). segment_id: 2 526 neu, 502 entfallen (Eimsbüttel: 45 von 3 882),
+  weil neue Einmündungen Abschnitte teilen; overrides.csv war leer.
+- S-FEAT-02: exclude_highway um service und track ergänzt (kein Standardtempo für diese Klassen).
+- Neu: Abschnitt `harmonisation`, Regel H-STR-01 (assumption, SWOV_FS_2023): kurze Läufe unter min_run_m (N2, 200 m)
+  je Straßenzug angleichen – ETW30-Insel in GOW → GOW, GOW-Insel in ETW30 → ETW30, GOW50-Insel in GOW30 → GOW30,
+  kurzes GOW30 in GOW50 bleibt und wird auf 200 m verlängert. Neue Stufe pipeline/s05b_harmonise.py (make classify);
+  das Ergebnis der Kaskade bleibt als `cat_cascade`. Entscheidung Projektteam 2026-11-04.
+- Wirkung (Arbeitsgebiet, 4 947 Abschnitte): 223 Abschnitte (11,5 km) angeglichen, davon GOW50 → GOW30 152 (9,0 km),
+  ETW30 → GOW 65 (2,2 km); N2-Inseln 132 → 5 (nur ETW_ERF/ETW30); unsicher 258 Abschnitte (26,6 km).
+- Schema: Felder für S-NET-04, Modelle `Harmonisation`/`HarmonisationRule`; validate wendet H-STR-01 in jedem
+  Sensitivitätslauf an.
+
+## config/plain_language.yaml 0.3.0 – 2026-11-04
+- Text für H-STR-01 im Steckbrief, Spaltenbeschreibung `cat_cascade`.

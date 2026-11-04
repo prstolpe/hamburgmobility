@@ -21,7 +21,7 @@ from pipeline.lib.manifest import REPO_ROOT
 from pipeline.lib.overrides import OverrideError, template_csv
 
 SEGMENTS_PATHS = [REPO_ROOT / "data" / "interim" / name for name in ("final.parquet", "coherence.parquet",
-                                                                       "classified.parquet")]
+                                                                       "harmonised.parquet", "classified.parquet")]
 
 
 def main(argv: list[str] | None = None) -> int:

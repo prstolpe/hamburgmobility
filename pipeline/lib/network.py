@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 import geopandas as gpd
 import networkx as nx
+import pandas as pd
 from pyproj import CRS
 from shapely.geometry import LineString
 
@@ -224,3 +225,57 @@ def _assign_ids(seg: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         raise DuplicateSegmentIdError(f"{len(duplicates)} duplicate segment ids, e.g. {duplicates[:5]}")
     seg["segment_id"] = ids
     return seg.drop(columns="_path")
+
+
+# --- S-NET-04 way selection ------------------------------------------------------------------
+
+
+def _tags(v) -> dict:
+    if isinstance(v, dict):
+        return v
+    if isinstance(v, str) and v:
+        import json
+        try:
+            out = json.loads(v)
+            return out if isinstance(out, dict) else {}
+        except ValueError:
+            return {}
+    return {}
+
+
+def _value(row: dict, key: str):
+    v = row.get(key)
+    if _is_known(v) and v != "":
+        return v
+    v = _tags(row.get("tags")).get(key)
+    return v if _is_known(v) and v != "" else None
+
+
+def select_ways(df: pd.DataFrame, rules) -> pd.Series:
+    """True for ways in the network: highway_classes, plus the extra ways of S-NET-04 (named, filtered by tags)."""
+    main = set(rules.network.highway_classes.values)
+    extra = [r for r in rules.network.rules if r.include_highway]
+    keep = []
+    for row in df.to_dict("records"):
+        hw = row.get("highway")
+        if hw in main:
+            keep.append(True)
+            continue
+        ok = False
+        for r in extra:
+            if hw not in r.include_highway:
+                continue
+            if r.require_name and not _value(row, "name"):
+                break
+            if hw == "service" and r.service_values is not None:
+                svc = _value(row, "service")
+                if svc is not None and svc not in r.service_values:
+                    break
+            if hw in r.motor_access_applies_to:
+                access = next((v for v in (_value(row, k) for k in r.motor_access_keys) if v is not None), None)
+                if access is not None and access not in r.motor_access_values:
+                    break
+            ok = True
+            break
+        keep.append(ok)
+    return pd.Series(keep, index=df.index, dtype=bool)

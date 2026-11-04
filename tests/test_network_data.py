@@ -4,7 +4,7 @@ import geopandas as gpd
 import pytest
 
 from pipeline.lib.manifest import REPO_ROOT
-from pipeline.lib.rules import load_rules
+from pipeline.lib.rules import load_rules, network_highways
 
 SEGMENTS = REPO_ROOT / "data" / "interim" / "segments.parquet"
 
@@ -35,4 +35,4 @@ def test_columns(seg):
 
 
 def test_highway_classes_from_rules(seg):
-    assert set(seg["highway"]) <= set(load_rules().network.highway_classes.values)
+    assert set(seg["highway"]) <= set(network_highways(load_rules()))

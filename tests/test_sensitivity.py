@@ -186,3 +186,19 @@ def test_priorities_and_top_stability():
     assert stab["base_top"] == ["b"]
     assert stab["stay_share"] == {"b": pytest.approx(2 / 3)}
     assert stab["mean_overlap"] == pytest.approx(2 / 3)
+
+
+def test_post_step_applied_after_cascade():
+    df = frame({}, {})
+    seen = []
+
+    def post(cats, rules):
+        seen.append(rules)
+        return cats.where(cats.index != 1, "GOW30")
+
+    assert sens.categories(df, RULES, post=post).tolist() == ["ETW30", "GOW30"]
+    params = [p for p in sens.varied_parameters(RULES) if p.key == "thresholds.conn_gow"]
+    oat = sens.one_at_a_time(df, RULES, params, delta=0.2, post=post)
+    assert oat["thresholds.conn_gow:+"].tolist() == ["ETW30", "GOW30"]
+    runs = sens.monte_carlo(df, RULES, params, sens.sample_factors(3, 1, 0.2, 1), post=post)
+    assert (runs.loc[1] == "GOW30").all()

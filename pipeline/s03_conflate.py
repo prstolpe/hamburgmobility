@@ -23,7 +23,7 @@ from pipeline.lib.conflate import QUALITIES, MatchParams, match_lines, parse_spe
 from pipeline.lib.crs import WORK_CRS, to_work_crs
 from pipeline.lib.links import osm_map_link, osm_way_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest, sha256_file
-from pipeline.lib.rules import load_rules
+from pipeline.lib.rules import load_rules, network_highways
 
 PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 SEGMENTS_PATH = REPO_ROOT / "data" / "interim" / "segments.parquet"
@@ -344,7 +344,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
 
     lines += ["", f"## match_quality (Tempo-Ebene) je highway-Klasse – {pilot}", "",
               "| highway | Anzahl | exact | partial | none | Name gleich¹ |", "| --- | ---: | ---: | ---: | ---: | ---: |"]
-    for hw in rules.network.highway_classes.values:
+    for hw in network_highways(rules):
         g = in_pilot[in_pilot["highway"] == hw]
         if g.empty:
             continue
@@ -383,7 +383,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
     lines += ["", f"## HVS (S-CONF-04) und Zonen (S-CONF-02) – {pilot}", "",
               "| highway | Anzahl | in_hvs | Tempo-30-Zone | Tempo-20-Zone | verkehrsberuhigt |",
               "| --- | ---: | ---: | ---: | ---: | ---: |"]
-    for hw in rules.network.highway_classes.values:
+    for hw in network_highways(rules):
         g = in_pilot[in_pilot["highway"] == hw]
         if g.empty:
             continue

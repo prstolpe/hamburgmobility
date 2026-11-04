@@ -165,6 +165,7 @@ def profile(r: pd.Series, ctx: dict) -> dict:
         "osm_way_ids": [int(x) for x in r["osm_way_ids"]],
         "category": {"code": cat, "label": rules.categories[cat].label_de, "text": texts["categories"][cat],
                      "proposed": r["cat_proposed"], "corrected": override,
+                     "cascade": r["cat_cascade"] if r["cat_cascade"] != r["cat_proposed"] else None,
                      "override": {"reason": r.get("override_reason"), "author": r.get("override_author"),
                                   "date": _val(r.get("override_date"))} if override else None},
         "reasons": ex.rule_reasons(trace, rules, texts), "rule_path": r["rule_path"],

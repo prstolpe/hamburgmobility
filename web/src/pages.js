@@ -33,6 +33,11 @@ export function methodHtml(meta, changelog) {
       </ul></li>
     <li>Alle anderen Straßen erschließen das Quartier: <em>Quartiersstraße</em> mit Tempo 30.</li>
   </ol>
+  <p>Danach wird jeder Straßenzug geglättet: Kurze Stücke unter 200 m, die anders eingestuft sind als die Straße davor
+  und dahinter, werden angeglichen. Treffen Tempo 50 und Tempo 30 aufeinander, gewinnt Tempo 30. So wechselt die
+  Kategorie nicht alle paar Meter.</p>
+  <p>Eingestuft werden Straßen für den Kfz-Verkehr und benannte Zufahrten. Fußwege, Wege in Parks und
+  Kleingärten sowie Parkplatzgassen haben keine Kategorie, auch wenn die Hintergrundkarte ihren Namen zeigt.</p>
   <p>Jeder Steckbrief zeigt, welche Regeln gegriffen haben und mit welchen Werten. Die Regeln und alle Schwellenwerte
   stehen im <a href="#downloads">Regelwerk (rules.yaml)</a>.</p>
 

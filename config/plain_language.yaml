@@ -5,7 +5,7 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.2.0
+  version: 0.3.0
   date: 2026-11-04
 
 categories:
@@ -20,6 +20,9 @@ categories:
 # Klartext je Regel der Kaskade: passed = Regel hat gegriffen, failed = Regel wurde geprüft und hat nicht gegriffen
 # (nur wo das für die Begründung hilft). Fragmente werden mit „; “ verbunden.
 rules:
+  H-STR-01:
+    passed:
+      - {text: "an den Straßenzug angeglichen: kurzes Stück ({run_m|.0f} m) zwischen {neighbours}; Vorschlag der Regeln war {from_cat}, jetzt {to_cat}"}
   C-SW-01:
     passed:
       - {text: "Autobahn oder Kraftfahrstraße nur für Kraftfahrzeuge (OSM highway={highway})"}
@@ -117,7 +120,8 @@ columns:
   length_m: "Länge in Metern"
   osm_way_ids: "OSM-Way-IDs des Abschnitts, durch ; getrennt"
   cat_final: "Soll-Kategorie nach fachlicher Korrektur (SW, GOW50, GOW30, ETW30, ETW_ERF)"
-  cat_proposed: "Soll-Kategorie der Automatik"
+  cat_proposed: "Soll-Kategorie der Automatik (Kaskade und Angleichung je Straßenzug)"
+  cat_cascade: "Soll-Kategorie der Kaskade vor der Angleichung je Straßenzug (H-STR-01)"
   cat_final_source: "proposed = Automatik, override = fachlich korrigiert (overrides.csv)"
   override_reason: "Begründung der Korrektur"
   confidence: "Datenunsicherheit der Einstufung: hoch, mittel, niedrig"

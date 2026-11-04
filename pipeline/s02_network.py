@@ -22,8 +22,8 @@ from pipeline.lib.boundary import boundaries_from_pbf
 from pipeline.lib.crs import WORK_CRS, to_work_crs
 from pipeline.lib.links import osm_map_link, osm_way_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest, sha256_file
-from pipeline.lib.network import segments_from_edges
-from pipeline.lib.rules import load_rules
+from pipeline.lib.network import segments_from_edges, select_ways
+from pipeline.lib.rules import load_rules, network_highways
 
 PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "segments.parquet"
@@ -47,23 +47,33 @@ def _pbf_from_manifest(manifest: dict) -> dict:
     return {**pbf, "retrieved_at": osm.get("retrieved_at"), "url": osm.get("url")}
 
 
-def read_edges(pbf: Path, highway_classes: list[str]) -> gpd.GeoDataFrame:
-    """Node-to-node edges of all ways with highway in highway_classes, EPSG:25832."""
+def _with_tag_columns(df: pd.DataFrame) -> pd.DataFrame:
+    for c in ("service", "access", "motor_vehicle", "motorcar", "tags", "name"):
+        if c not in df.columns:
+            df[c] = None
+    return df
+
+
+def read_edges(pbf: Path, rules) -> gpd.GeoDataFrame:
+    """Node-to-node edges of all ways in the network (highway_classes and S-NET-04), EPSG:25832."""
     from pyrosm import OSM
 
     _, edges = OSM(str(pbf)).get_network(network_type="all", nodes=True)
-    edges = edges[edges["highway"].isin(highway_classes)]
+    edges = _with_tag_columns(edges)
+    edges = edges[select_ways(edges, rules)]
     edges = edges.rename(columns={"id": "way_id"})[["u", "v", "way_id", "highway", "name", "maxspeed", "geometry"]]
     return to_work_crs(edges.reset_index(drop=True))
 
 
-def reference_length_m(pbf: Path, highway_classes: list[str]) -> float:
+def reference_length_m(pbf: Path, rules) -> float:
     """Length of the OSM source network read independently as whole ways (Prüfschritt)."""
     from pyrosm import OSM
 
     ways = OSM(str(pbf)).get_data_by_custom_criteria(
-        custom_filter={"highway": highway_classes}, filter_type="keep", osm_keys_to_keep="highway",
+        custom_filter={"highway": network_highways(rules)}, filter_type="keep", osm_keys_to_keep="highway",
         keep_nodes=False, keep_relations=False)
+    ways = _with_tag_columns(ways)
+    ways = ways[select_ways(ways, rules)]
     ways = to_work_crs(ways[ways.geometry.geom_type.isin(["LineString", "MultiLineString"])])
     return float(ways.geometry.length.sum())
 
@@ -131,7 +141,7 @@ def _length_table(seg: pd.DataFrame, order: list[str]) -> list[str]:
 
 def write_report(seg: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
     rules, pilot = ctx["rules"], ctx["pilot"]
-    order = rules.network.highway_classes.values
+    order = network_highways(rules)
     in_pilot = seg[seg["bezirk"] == pilot]
     status = {True: "ok", False: "**FEHLER**", None: "–"}
     lines = [
@@ -200,7 +210,6 @@ def write_report(seg: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
 def main() -> int:
     rules = load_rules()
     network = rules.network
-    highway_classes = network.highway_classes.values
     differ_rule, split_rule = network.rule("S-NET-02"), network.rule("S-NET-03")
     with open(PROJECT_PATH, encoding="utf-8") as f:
         project = yaml.safe_load(f)["pilot_district"]
@@ -213,7 +222,7 @@ def main() -> int:
         return 1
 
     print(f"network: reading {pbf['path']}")
-    edges = read_edges(pbf_path, highway_classes)
+    edges = read_edges(pbf_path, rules)
     seg = segments_from_edges(edges, differ=[differ_rule.attribute], split_attribute=split_rule.attribute,
                               min_length_m=split_rule.thresholds["min_length_m"].value,
                               split_rule_id=split_rule.id)
@@ -224,7 +233,7 @@ def main() -> int:
     district = gpd.read_parquet(REPO_ROOT / "data" / "raw" / "district_boundary.parquet")
     work_area = to_work_crs(district).geometry.union_all().buffer(project["buffer_m"])
     previous_ids = set(pd.read_parquet(OUT_PATH, columns=["segment_id"])["segment_id"]) if OUT_PATH.exists() else None
-    checks = run_checks(seg, reference_length_m(pbf_path, highway_classes), previous_ids)
+    checks = run_checks(seg, reference_length_m(pbf_path, rules), previous_ids)
 
     ctx = {"rules": rules, "pilot": project["name"], "buffer_m": project["buffer_m"], "pbf": pbf,
            "pbf_sha": pbf_sha, "n_edges": len(edges), "n_ways": int(edges["way_id"].nunique()),

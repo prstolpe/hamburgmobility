@@ -276,6 +276,13 @@ class NetworkRule(_Strict):
     source: str | list[str] | None = None
     attribute: str | None = None  # OSM tag whose change ends a segment
     thresholds: dict[str, Threshold] = {}
+    # extra ways besides highway_classes (S-NET-04)
+    include_highway: list[str] = []
+    require_name: bool = False
+    service_values: list[str] = []           # allowed service=* values besides untagged
+    motor_access_keys: list[str] = []        # most specific first; first known value decides
+    motor_access_values: list[str] = []      # allowed values besides untagged
+    motor_access_applies_to: list[str] = []  # highway classes the access check applies to
     note: str | None = None
 
 
@@ -479,6 +486,26 @@ class Validation(_Strict):
         return next(r for r in self.rules if r.id == rule_id)
 
 
+class HarmonisationRule(_Strict):
+    id: str = Field(pattern=r"^H-[A-Z]+-\d{2}$")
+    description: str
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    min_run_from: str                   # coherence rule whose min_run_m is used (N2)
+    max_passes: int = Field(gt=0)       # technical limit of the repeated passes
+    locked_categories: list[str] = []   # never changed
+    thresholds: dict[str, Threshold] = {}
+    note: str | None = None
+
+
+class Harmonisation(_Strict):
+    rules: list[HarmonisationRule] = Field(min_length=1)
+
+    def rule(self, rule_id: str) -> HarmonisationRule:
+        return next(r for r in self.rules if r.id == rule_id)
+
+
 class Priority(_Strict):
     formula: str
     risk_weights: dict[str, float]
@@ -502,6 +529,7 @@ class RuleSet(_Strict):
     coherence: list[CoherenceRule]
     discrepancy: Discrepancy
     priority: Priority
+    harmonisation: Harmonisation
     validation: Validation
 
     def coherence_rule(self, rule_id: str) -> CoherenceRule:
@@ -525,6 +553,7 @@ class RuleSet(_Strict):
                + [r.id for r in self.features.rules] + [r.id for r in self.crosssection.rules]
                + [self.discrepancy.speed.id, self.discrepancy.design.id, self.discrepancy.use.id,
                   self.discrepancy.type_rule.id, self.priority.risk.id]
+               + [r.id for r in self.harmonisation.rules]
                + [r.id for r in self.validation.rules])
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
@@ -569,6 +598,7 @@ class RuleSet(_Strict):
                        + [(f"conflation.rules[{r.id}]", r) for r in self.conflation.rules]
                        + [(f"features.rules[{r.id}]", r) for r in self.features.rules]
                        + [(f"crosssection.rules[{r.id}]", r) for r in self.crosssection.rules]
+                       + [(f"harmonisation.rules[{r.id}]", r) for r in self.harmonisation.rules]
                        + [(f"validation.rules[{r.id}]", r) for r in self.validation.rules])
         for path, rule in stage_rules:
             _check_provenance(rule.model_dump(include={"source", "source_type"}), path, source_ids)
@@ -609,6 +639,12 @@ class RuleSet(_Strict):
             _check_provenance(cls.model_dump(include={"source", "source_type"}),
                               f"feasibility_classes.{key}", source_ids)
 
+        for r in self.harmonisation.rules:
+            if r.min_run_from not in {c.id for c in self.coherence}:
+                raise ValueError(f"harmonisation.rules[{r.id}].min_run_from: unknown coherence rule {r.min_run_from}")
+            unknown = sorted(set(r.locked_categories) - cats)
+            if unknown:
+                raise ValueError(f"harmonisation.rules[{r.id}].locked_categories: unknown {unknown}")
         self._check_discrepancy(source_ids, cats)
         for rule in self.crosssection.rules:
             unknown_targets = [t for t in rule.targets if t not in self.required_width]

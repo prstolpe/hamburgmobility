@@ -25,7 +25,7 @@ EXPORT_CRS = "EPSG:4326"
 # Columns of the download files (GeoParquet, GeoJSON, CSV), in this order. Crashes only as counts per segment.
 PUBLIC_COLUMNS = [
     "segment_id", "name", "bezirk", "highway", "length_m", "osm_way_ids",
-    "cat_final", "cat_proposed", "cat_final_source", "override_reason", "confidence",
+    "cat_final", "cat_proposed", "cat_cascade", "cat_final_source", "override_reason", "confidence",
     "sens_change_rate", "sens_uncertain", "rule_path",
     "speed_ist_kmh", "speed_ist_source", "in_hvs", "dtv_official", "bus_trips_weekday", "in_cycle_network",
     "separated_cycle_track_present", "cycle_lane_present", "centre_line", "parking_along_carriageway",

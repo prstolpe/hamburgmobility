@@ -25,10 +25,12 @@ import yaml
 from pipeline.lib import sensitivity as sens
 from pipeline.lib import validation as val
 from pipeline.lib.crs import WORK_CRS
+from pipeline.lib.harmonise import harmonise
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT
 from pipeline.lib.rules import load_rules
 from pipeline.s04_features import _fmt, _now, _pct
+from pipeline.s05b_harmonise import approved_override_ids, street_strokes
 
 PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "discrepancy.parquet"
@@ -68,7 +70,19 @@ def _name(v) -> str:
 # --- sensitivity -----------------------------------------------------------------------------
 
 
-def run_sensitivity(area: pd.DataFrame, rules) -> dict:
+def harmonise_step(area_g: gpd.GeoDataFrame, rules):
+    """Post step for the sensitivity runs: H-STR-01 on the strokes of the work area (computed once)."""
+    strokes = street_strokes(area_g, rules, cat_col="cat_cascade")
+    ids, lengths = area_g["segment_id"].tolist(), dict(zip(area_g["segment_id"], area_g["length_m"]))
+    locked = approved_override_ids()
+
+    def post(cats: pd.Series, r) -> pd.Series:
+        new, _ = harmonise(strokes, dict(zip(ids, cats)), lengths, r, locked=locked)
+        return pd.Series([new[i] for i in ids], index=cats.index, dtype="object")
+    return post
+
+
+def run_sensitivity(area: pd.DataFrame, rules, post=None) -> dict:
     v = rules.validation
     delta1 = v.rule("V-SENS-01").thresholds["delta"].value
     mc = v.rule("V-SENS-02")
@@ -79,7 +93,7 @@ def run_sensitivity(area: pd.DataFrame, rules) -> dict:
 
     t0 = time.time()
     oat_params = [p for p in params if p.effect == "category"]
-    oat = sens.one_at_a_time(area, rules, oat_params, delta1)
+    oat = sens.one_at_a_time(area, rules, oat_params, delta1, post)
     print(f"validate: one-at-a-time {len(oat.columns)} runs in {time.time() - t0:.0f} s")
 
     groups = set()
@@ -95,7 +109,7 @@ def run_sensitivity(area: pd.DataFrame, rules) -> dict:
         if (i + 1) % 50 == 0:
             print(f"validate: Monte Carlo {i + 1}/{mc.runs} ({time.time() - t0:.0f} s)")
 
-    runs = sens.monte_carlo(area, rules, mc_params, factors, progress)
+    runs = sens.monte_carlo(area, rules, mc_params, factors, progress, post)
     summary = sens.change_summary(base, runs, min_rate)
     prio = sens.priority_runs(area, rules, mc_params, factors)
     return {"params": params, "oat_params": oat_params, "oat": oat, "mc_params": mc_params, "factors": factors,
@@ -254,7 +268,8 @@ def section_sensitivity(area: pd.DataFrame, rules, res: dict, pilot_name: str, v
     total_km = length.sum() / 1000
     unc = summ["uncertain"]
     lines = ["## 3. Sensitivitätsanalyse", "",
-             f"Geprüft wird die Automatik (`cat_proposed`); fachliche Korrekturen bleiben außen vor. "
+             f"Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01 je Lauf); fachliche "
+             f"Korrekturen bleiben außen vor. "
              f"Basis: rules.yaml {rules.meta.version}, {_fmt(len(area))} Abschnitte, {_km(total_km)} km.", "",
              f"### 3.1 Einzelvariation (V-SENS-01): jede Annahme ±{res['delta1'] * 100:.0f} %", "",
              "km mit anderer Kategorie als im Basislauf. Varianten: Annahme-Schwellen der Kaskade und `required_width` in "
@@ -537,9 +552,10 @@ def main() -> int:
     area = pd.DataFrame(area_g.drop(columns="geometry"))
     print(f"validate: {len(area)} segments in the work area")
 
-    base_cats = sens.categories(area, rules)
+    post = harmonise_step(area_g, rules)
+    base_cats = sens.categories(area, rules, post)
     base_prio = sens.priorities(area, rules)
-    res = run_sensitivity(area, rules)
+    res = run_sensitivity(area, rules, post)
     checks = run_checks(area, rules, res, base_cats, base_prio)
     area["_oat"] = sens.oat_changes(area["cat_proposed"], res["oat"])
 
