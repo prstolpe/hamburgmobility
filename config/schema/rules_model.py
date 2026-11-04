@@ -459,6 +459,26 @@ class RiskRule(_Strict):
     note: str | None = None
 
 
+class ValidationRule(_Strict):
+    id: str = Field(pattern=r"^V-[A-Z]+-\d{2}$")
+    description: str
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    thresholds: dict[str, Threshold] = {}
+    runs: int | None = Field(default=None, gt=0)       # Monte-Carlo runs
+    seed: int | None = None                            # random seed (reproducible runs)
+    vary: list[Literal["weights", "thresholds"]] = []  # what the Monte-Carlo runs vary
+    note: str | None = None
+
+
+class Validation(_Strict):
+    rules: list[ValidationRule] = Field(min_length=1)
+
+    def rule(self, rule_id: str) -> ValidationRule:
+        return next(r for r in self.rules if r.id == rule_id)
+
+
 class Priority(_Strict):
     formula: str
     risk_weights: dict[str, float]
@@ -482,6 +502,7 @@ class RuleSet(_Strict):
     coherence: list[CoherenceRule]
     discrepancy: Discrepancy
     priority: Priority
+    validation: Validation
 
     def coherence_rule(self, rule_id: str) -> CoherenceRule:
         for rule in self.coherence:
@@ -503,7 +524,8 @@ class RuleSet(_Strict):
                + [r.id for r in self.network.rules] + [r.id for r in self.conflation.rules]
                + [r.id for r in self.features.rules] + [r.id for r in self.crosssection.rules]
                + [self.discrepancy.speed.id, self.discrepancy.design.id, self.discrepancy.use.id,
-                  self.discrepancy.type_rule.id, self.priority.risk.id])
+                  self.discrepancy.type_rule.id, self.priority.risk.id]
+               + [r.id for r in self.validation.rules])
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
             raise ValueError(f"duplicate rule ids: {duplicates}")
@@ -546,7 +568,8 @@ class RuleSet(_Strict):
                        + [(f"network.rules[{r.id}]", r) for r in self.network.rules]
                        + [(f"conflation.rules[{r.id}]", r) for r in self.conflation.rules]
                        + [(f"features.rules[{r.id}]", r) for r in self.features.rules]
-                       + [(f"crosssection.rules[{r.id}]", r) for r in self.crosssection.rules])
+                       + [(f"crosssection.rules[{r.id}]", r) for r in self.crosssection.rules]
+                       + [(f"validation.rules[{r.id}]", r) for r in self.validation.rules])
         for path, rule in stage_rules:
             _check_provenance(rule.model_dump(include={"source", "source_type"}), path, source_ids)
             for name, threshold in rule.thresholds.items():

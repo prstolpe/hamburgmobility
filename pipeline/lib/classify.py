@@ -84,6 +84,22 @@ def _ref_resolver(rules: RuleSet):
 _CACHE: dict[int, tuple] = {}
 
 
+def clear_cache() -> None:
+    """Forget compiled rule sets (many short-lived variants in the sensitivity analysis)."""
+    _CACHE.clear()
+
+
+def classification_inputs(rules: RuleSet) -> list[str]:
+    """Columns the cascade and the confidence policy read."""
+    from pipeline.lib.rules import referenced_features
+
+    cols = set(referenced_features(rules))
+    for p in rules.classification_policy:
+        cols |= set(p.defaults) | set(p.fallback_inputs)
+        cols |= {f for fi in p.fallback_inputs.values() if fi.when for f in expr.features_in(expr.parse(fi.when))}
+    return sorted(cols)
+
+
 def _compiled(rules: RuleSet):
     cached = _CACHE.get(id(rules))
     if cached is None or cached[0] is not rules:

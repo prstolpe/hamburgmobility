@@ -72,6 +72,7 @@ Freien und Hansestadt Hamburg.
 Statische Karte mit MapLibre GL JS und PMTiles in `web/` (Vite, Vanilla JS). Daten aus `data/out/` (nicht in Git).
 
 ```bash
+make validate    # Validierung und Sensitivität (Prompt 12) -> reports/validation.md; vor make export, ca. 1–2 min
 make export      # Downloads, Steckbriefe, search.json, table.json, tiles/segments.pmtiles (tippecanoe)
 make basemap     # Hintergrundkarte: Protomaps-Ausschnitt, Schriften, Sprites (pmtiles CLI)
 make web         # npm ci + vite build -> web/dist
@@ -86,9 +87,16 @@ Einstellungen in `config/project.yaml` unter `web:` (Repository für Rückmeldun
 
 1. Repository auf GitHub anlegen, `web.github_repo` in `config/project.yaml` eintragen, unter Settings → Pages als
    Quelle „GitHub Actions“ wählen.
-2. Lokal `make export basemap site-data` und `data/site-data.tar.gz` als Asset an das Release `data-latest` hängen
+2. Lokal `make validate export basemap site-data` und `data/site-data.tar.gz` als Asset an das Release `data-latest` hängen
    (Web-Oberfläche oder `gh release upload data-latest data/site-data.tar.gz --clobber`).
 3. Push auf `main` startet `.github/workflows/pages.yml`: Tests → Daten aus dem Release → Build → Deployment.
 4. Danach `web/scripts/check-range.sh https://<owner>.github.io/<repo>/` (PMTiles brauchen HTTP-Range, Antwort 206).
 
 Später Kacheln auf Cloudflare R2: `web.tiles_base_url` setzen (R2 mit Range und CORS für die Pages-Domain).
+
+## Validierung (Prompt 12)
+
+`make validate` (pipeline/validate.py) schreibt `reports/validation.md` nach guide.md Teil 7: HVS-Abgleich,
+Soll-ETW30 gegen Ist-Tempo, Sensitivitätsanalyse (Einzelvariation ±20 % und 500 Monte-Carlo-Läufe mit festem Seed,
+Abschnitt `validation` in rules.yaml), Datenqualität je Bezirk, Stand der Stichproben, Grenzen und offene Fragen.
+Die Markierung „unsicher“ landet in `data/interim/validation.parquet` und von dort über `make export` auf der Webseite.

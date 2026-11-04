@@ -125,3 +125,40 @@ def test_search_index_groups_named_streets():
     assert west < east and south < north
     assert s["ids"] == ["seg_a", "seg_b"]
     json.dumps(idx)
+
+
+# --- sensitivity (prompts/12_validation.md) --------------------------------------------------
+
+
+def test_sensitivity_info_uncertain():
+    info = ex.sensitivity_info({"sens_change_rate": 0.42, "sens_uncertain": True, "sens_alt_category": "GOW30",
+                                "sens_oat_changes": '["thresholds.conn_gow:-", "conn_score.in_hvs:-"]'},
+                               RULES, TEXTS, runs=500, delta=0.2)
+    assert info["uncertain"] is True and info["change_rate"] == pytest.approx(0.42)
+    assert info["alternative"] == "GOW30"
+    assert "42 %" in info["text"] and "500" in info["text"] and RULES.categories["GOW30"].label_de in info["text"]
+    assert info["uncertain_text"]
+    assert info["oat_intro"].endswith(":") and "20 %" in info["oat_intro"]
+    assert info["triggers"] == ["Schwelle für den Verbindungswert niedriger", "Gewicht Hauptverkehrsstraße niedriger"]
+
+
+def test_sensitivity_info_stable_and_missing():
+    stable = ex.sensitivity_info({"sens_change_rate": 0.0, "sens_uncertain": False, "sens_alt_category": None,
+                                  "sens_oat_changes": "[]"}, RULES, TEXTS, runs=500, delta=0.2)
+    assert stable["uncertain"] is False and "allen 500" in stable["text"] and stable["triggers"] == []
+    assert stable["uncertain_text"] is None
+    missing = ex.sensitivity_info({}, RULES, TEXTS, runs=500, delta=0.2)
+    assert missing["change_rate"] is None and missing["uncertain"] is None
+    assert missing["text"] == TEXTS["sensitivity"]["not_assessed"]
+
+
+def test_every_varied_category_parameter_has_a_label():
+    from pipeline.lib import sensitivity as sens
+    keys = {p.key for p in sens.varied_parameters(RULES) if p.effect == "category"}
+    assert keys <= set(TEXTS["sensitivity"]["params"])
+
+
+def test_public_and_tile_columns_include_sensitivity():
+    assert {"sens_change_rate", "sens_uncertain"} <= set(ex.PUBLIC_COLUMNS)
+    assert ex.TILE_COLUMNS["un"] == "sens_uncertain"
+    assert all(c in TEXTS["columns"] for c in ex.PUBLIC_COLUMNS)

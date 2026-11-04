@@ -36,6 +36,15 @@ export function methodHtml(meta, changelog) {
   <p>Jeder Steckbrief zeigt, welche Regeln gegriffen haben und mit welchen Werten. Die Regeln und alle Schwellenwerte
   stehen im <a href="#downloads">Regelwerk (rules.yaml)</a>.</p>
 
+  <h2>Wie sicher ist die Einstufung?</h2>
+  <p>Zwei Hinweise im Steckbrief helfen beim Einordnen. Die <strong>Datenunsicherheit</strong> (Ampel) zeigt, ob
+  entscheidende Werte fehlen, aus einer Ersatzquelle stammen oder nahe an einer Schwelle liegen. Die
+  <strong>Robustheit</strong> zeigt, wie stark die Kategorie an gesetzten Annahmen hängt: Wir rechnen den Entwurf
+  ${meta.sensitivity ? esc(String(meta.sensitivity.runs)) : "viele"}-mal mit zufällig veränderten Schwellen und Gewichten
+  (jeweils bis zu ${meta.sensitivity ? num(meta.sensitivity.delta * 100) : "20"} % mehr oder weniger). Wechselt die
+  Kategorie in mindestens ${meta.sensitivity ? num(meta.sensitivity.min_change_rate * 100) : "30"} % der Läufe, ist der
+  Abschnitt als <em>unsicher</em> markiert und sollte fachlich geprüft werden.</p>
+
   <h2>Diskrepanz: wo Soll und Ist nicht zusammenpassen</h2>
   <p>Wir vergleichen die Soll-Kategorie mit dem heutigen Zustand: dem Tempolimit, der Gestaltung (zum Beispiel
   Radweg, Mittelstreifen, Parken) und der Verkehrsmenge. Passt etwas nicht, ist die Straße eine „graue Straße“.

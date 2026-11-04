@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { issueUrl, mailtoUrl } from "../src/feedback.js";
 import { allColors, CASING, CATEGORY_STYLE, contrast } from "../src/palette.js";
+import { profileHtml } from "../src/panel.js";
 import { DEFAULTS, parseHash, rowMatches, toHash } from "../src/state.js";
+import { robust } from "../src/table.js";
 
 describe("URL state", () => {
   it("round-trips all fields", () => {
@@ -65,5 +67,35 @@ describe("palette", () => {
   it("categories differ in width or dash pattern, not only in colour", () => {
     const keys = Object.values(CATEGORY_STYLE).map((s) => `${s.width}|${JSON.stringify(s.dash)}`);
     expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+describe("robustness", () => {
+  const base = {
+    id: "seg_1", name: "Lohkampstraße", bezirk: "Eimsbüttel", length_m: 120, version: "0.11.0+2026-10-28",
+    category: { code: "ETW30", label: "Quartiersstraße", text: "x", proposed: "ETW30", corrected: false },
+    reasons: [], confidence: { level: "hoch", summary: "", reasons: [] },
+    ist: {}, crosssection: { width_p10_m: null }, coherence: [], sources: [],
+    discrepancy: { type: null, max: 0, speed: 0, design: 0, use: null, priority: 0, text: "keine", unknown_checks: [],
+      crashes: { ped_cyc: 0, severe_fatal: 0, years: "2021–2025" } },
+  };
+  const meta = { github_repo: null, feedback_email: null };
+
+  it("marks uncertain segments in the profile", () => {
+    const p = { ...base, sensitivity: { uncertain: true, text: "In 42 % von 500 Rechenläufen …", uncertain_text: "Unsicher: …",
+      oat_intro: "Die Kategorie wechselt schon …:", triggers: ["Schwelle für den Verbindungswert niedriger"] } };
+    const html = profileHtml(p, meta, "https://example.org/");
+    expect(html).toContain('class="tag-uncertain">unsicher');
+    expect(html).toContain("Schwelle für den Verbindungswert niedriger");
+  });
+
+  it("shows no mark for robust segments or without data", () => {
+    const stable = { ...base, sensitivity: { uncertain: false, text: "In allen 500 …", uncertain_text: null, oat_intro: null, triggers: [] } };
+    expect(profileHtml(stable, meta, "https://example.org/")).not.toContain("tag-uncertain");
+    expect(profileHtml({ ...base }, meta, "https://example.org/")).not.toContain("Robustheit");
+  });
+
+  it("labels the table column", () => {
+    expect([true, false, null, undefined].map(robust)).toEqual(["unsicher", "robust", "–", "–"]);
   });
 });

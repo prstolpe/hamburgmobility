@@ -19,6 +19,16 @@ function sketch(cs) {
     </svg></figure>`;
 }
 
+function robustness(s) {
+  // Result of the sensitivity analysis (make validate): how often the category changes with other assumptions.
+  if (!s) return "";
+  const tag = s.uncertain ? '<strong class="tag-uncertain">unsicher</strong> ' : "";
+  return `<h4>Robustheit der Einstufung</h4>
+    <p>${tag}${esc(s.text)}</p>
+    ${s.uncertain_text ? `<p class="note">${esc(s.uncertain_text)}</p>` : ""}
+    ${s.triggers?.length ? `<p>${esc(s.oat_intro)}</p><ul>${s.triggers.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}`;
+}
+
 function dl(rows) {
   return `<dl>${rows.filter(([, v]) => v !== null && v !== undefined && v !== "")
     .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl>`;
@@ -51,6 +61,7 @@ export function profileHtml(p, meta, pageUrl) {
     <p><span class="light light-${esc(p.confidence.level)}" aria-hidden="true"></span> ${esc(LIGHT[p.confidence.level] ?? p.confidence.level)}.
       ${esc(p.confidence.summary)}</p>
     ${p.confidence.reasons.length ? `<ul>${p.confidence.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
+    ${robustness(p.sensitivity)}
   </section>
   <section aria-labelledby="h-ist">
     <h3 id="h-ist">Ist-Zustand</h3>

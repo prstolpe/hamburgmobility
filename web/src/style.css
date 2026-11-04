@@ -73,6 +73,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .cat-SW { border-color: #332288; } .cat-GOW50 { border-color: #CC3311; } .cat-GOW30 { border-color: #AA4499; }
 .cat-ETW30 { border-color: #0077BB; } .cat-ETW_ERF { border-color: #117733; }
 .light { display: inline-block; width: .9rem; height: .9rem; border-radius: 50%; border: 1px solid #333; vertical-align: -2px; }
+.tag-uncertain { background: #CC3311; color: #fff; padding: 0 .35rem; border-radius: 3px; }
 .light-hoch { background: #117733; } .light-mittel { background: #f0c000; } .light-niedrig { background: #CC3311; }
 .sketch svg { width: 100%; max-width: 300px; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; }

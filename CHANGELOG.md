@@ -174,3 +174,23 @@
   rules.yaml), Kategorien, Datenunsicherheit, Machbarkeit und die Datenbeschreibung der Downloads. Keine Schwellenwerte.
 - Export (pipeline/s09_export.py) und Webseite (web/) für den Bezirk Eimsbüttel; Version der Seite = Regelversion +
   Datenstand (0.10.1+2026-10-28).
+
+## rules.yaml 0.11.0 – 2026-11-04
+- Neu: Abschnitt `validation` (pipeline/validate.py, guide.md Teil 7, prompts/12_validation.md). Alle Werte assumption.
+  - V-SENS-01: Einzelvariation ±20 % jeder Annahme-Schwelle, die die Kaskade liest (conn_gow, sensitive_radius,
+    frontage, required_width.GOW50); near_threshold wirkt nur auf die confidence.
+  - V-SENS-02: 500 Monte-Carlo-Läufe, Seed 20261104; Gewichte (conn_score, risk_weights) und die Schwellen aus
+    V-SENS-01 gemeinsam, je Faktor gleichverteilt in [0,8; 1,2].
+  - V-UNC-01: „unsicher“ ab Wechselquote 0,3 (prompts/12: „ab 0,3“; guide.md P11 nennt „> 0,3“).
+  - V-SAMP-01 (unter 15 % strittig je Kategorie) und V-DQ-01 (unter 5 % ohne Ist-Tempo) aus guide.md 7.1 bzw. 3.4 übernommen.
+- Keine bestehenden Werte geändert; Kategorien unverändert.
+- Schema: Modelle `Validation`/`ValidationRule` (runs, seed, vary), IDs V-* in der Prüfung auf doppelte IDs.
+- Ergebnis (Arbeitsgebiet, 4 787 Abschnitte, 562,0 km): 293 Abschnitte (28,7 km, 5,1 % der Länge) unsicher;
+  größte Einzelwirkung conn_gow −20 % (39,8 km wechseln, meist ETW30 → GOW30); Top 30 der Priorität im Mittel zu
+  91,8 % stabil. 99,6 % der HVS-km sind GOW50/GOW30; 74,5 % der Soll-ETW30-km haben heute höchstens 30 km/h.
+- Export: Spalten `sens_change_rate` und `sens_uncertain` in den Downloads, Robustheit im Steckbrief, Spalte
+  „Robustheit“ in der Tabelle, Attribut `un` in den Kacheln; `make validate` läuft vor `make export`.
+
+## config/plain_language.yaml 0.2.0 – 2026-11-04
+- Neu: Abschnitt `sensitivity` (Texte zur Robustheit im Steckbrief, Namen der variierten Annahmen) und
+  Spaltenbeschreibungen `sens_change_rate`, `sens_uncertain`.

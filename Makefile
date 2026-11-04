@@ -3,7 +3,8 @@
 # Intended run order (crosssection runs before classify, because rule C-G30-02 needs the
 # street space width):
 #   fetch -> network -> conflate -> features -> crosssection -> classify -> coherence
-#   -> discrepancy -> export -> web
+#   -> discrepancy -> validate -> export -> web
+# validate runs before export because the website shows its robustness mark ("unsicher").
 #
 # For now all targets are independent and phony. Later prompts replace them with file-based
 # dependencies on data/interim/*.parquet so that only outdated stages are rebuilt.
@@ -81,7 +82,7 @@ site-data: ## Pack data/out for the GitHub release "data-latest" (deployment wor
 	tar -czf data/site-data.tar.gz -C data/out .
 	@echo "data/site-data.tar.gz: als Asset an das Release data-latest hängen (README, Abschnitt Veröffentlichen)"
 
-validate: dirs ## Validation report
+validate: dirs ## Validation and sensitivity (before export) -> reports/validation.md
 	$(call run_step,validate,validate)
 
 test: ## Run tests (Python and website unit tests)

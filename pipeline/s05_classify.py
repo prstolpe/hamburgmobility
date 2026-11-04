@@ -19,14 +19,14 @@ import geopandas as gpd
 import pandas as pd
 import yaml
 
-from pipeline.lib.classify import classify_segment
+from pipeline.lib.classify import classification_inputs, classify_segment
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_map_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT
 from pipeline.lib.rules import all_thresholds, load_rules, referenced_features
 from pipeline.s04_features import _fmt, _now, _pct
 
-__all__ = ["classify_segment", "classify_frame", "main"]
+__all__ = ["classification_inputs", "classify_segment", "classify_frame", "main"]
 
 PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "crosssection.parquet"
@@ -39,17 +39,6 @@ SAMPLE_SEED = 42
 CONF_ORDER = ["hoch", "mittel", "niedrig"]
 # Autobahnen are federal roads, not Bezirksstraßen (report list "Bezirksstraßen, die GOW50 werden").
 FEDERAL_HIGHWAY = {"motorway", "motorway_link"}
-
-
-def classification_inputs(rules) -> list[str]:
-    """Columns the cascade and the confidence policy read."""
-    from pipeline.lib import expr
-
-    cols = set(referenced_features(rules))
-    for p in rules.classification_policy:
-        cols |= set(p.defaults) | set(p.fallback_inputs)
-        cols |= {f for fi in p.fallback_inputs.values() if fi.when for f in expr.features_in(expr.parse(fi.when))}
-    return sorted(cols)
 
 
 def classify_frame(df: pd.DataFrame, rules) -> pd.DataFrame:

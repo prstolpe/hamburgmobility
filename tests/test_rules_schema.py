@@ -200,3 +200,35 @@ def test_network_rules():
     assert "service" not in network.highway_classes.values
     assert {"living_street", "pedestrian"} <= set(network.highway_classes.values)
     assert network.rule("S-NET-03").thresholds["min_length_m"].unit == "m"
+
+
+# --- validation (prompts/12_validation.md) ---------------------------------------------------
+
+
+def _val(data: dict, rule_id: str) -> dict:
+    return next(r for r in data["validation"]["rules"] if r["id"] == rule_id)
+
+
+def test_validation_rules():
+    rules = load_rules()
+    sens = rules.validation.rule("V-SENS-01")
+    assert sens.thresholds["delta"].value == pytest.approx(0.2)
+    mc = rules.validation.rule("V-SENS-02")
+    assert mc.runs == 500 and isinstance(mc.seed, int)
+    assert set(mc.vary) == {"weights", "thresholds"}
+    unc = rules.validation.rule("V-UNC-01")
+    assert unc.thresholds["min_change_rate"].value == pytest.approx(0.3)
+    for r in rules.validation.rules:
+        assert r.source_type == "assumption"
+        assert all(t.source_type == "assumption" for t in r.thresholds.values())
+
+
+@pytest.mark.parametrize("description, mutate", [
+    ("runs must be positive", lambda d: _val(d, "V-SENS-02").update(runs=0)),
+    ("unknown vary entry", lambda d: _val(d, "V-SENS-02").update(vary=["weights", "colours"])),
+    ("threshold without unit", lambda d: _val(d, "V-UNC-01")["thresholds"]["min_change_rate"].pop("unit")),
+    ("duplicate id with another stage", lambda d: _val(d, "V-UNC-01").update(id="S-NET-01")),
+])
+def test_validation_schema_rejects(raw, description, mutate):
+    with pytest.raises(ValidationError):
+        RuleSet.model_validate(_mutated(raw, mutate))

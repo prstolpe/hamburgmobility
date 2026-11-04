@@ -2,8 +2,8 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.10.1
-  date: 2026-10-28
+  version: 0.11.0
+  date: 2026-11-04
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
   note: "Schwellen mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen."
@@ -715,3 +715,57 @@ priority:
     source_type: assumption
     status: draft
     note: "Unfälle an Knoten gehen an genau einen der anliegenden Abschnitte (den nächsten); vorerst so belassen, mit der Webkarte erneut prüfen (Entscheidung Projektteam 2026-10-28). Nur aggregiert je Abschnitt gespeichert."
+
+# ---------------------------------------------------------------
+# Validierung und Sensitivität (pipeline/validate.py, guide.md Teil 7, prompts/12_validation.md)
+# Die Läufe prüfen nur die Kaskade (cat_proposed) und die Priorität; Korrekturen aus overrides.csv bleiben außen vor.
+# ---------------------------------------------------------------
+validation:
+  rules:
+    - id: V-SENS-01
+      description: >-
+        Einzelvariation: jede Schwelle mit source_type assumption, die die Kaskade oder die confidence liest
+        (thresholds.* der Kaskade und von classification_policy, required_width.* in Bedingungen der Kaskade),
+        einzeln um -delta und +delta; Wirkung = km mit anderer Kategorie als cat_proposed
+      thresholds:
+        delta: {value: 0.2, unit: "Anteil der Schwelle (±)", source_type: assumption, check: "guide.md 7.1 und prompts/12: ±20 %"}
+      source_type: assumption
+      status: draft
+      note: >-
+        Annahme-Schwellen früherer Stufen (Netz, Conflation, Merkmale, Querschnitt) wirken nur über einen neuen Lauf
+        dieser Stufen; Diskrepanz-, Kohärenz- und Machbarkeitsschwellen ändern die Kategorie nicht. Sie werden im
+        Bericht aufgelistet, aber nicht variiert.
+    - id: V-SENS-02
+      description: >-
+        Monte-Carlo: runs Läufe; je Lauf wird jedes Gewicht (scores.conn_score.weights, priority.risk_weights) und
+        jede Schwelle aus V-SENS-01 unabhängig mit einem Faktor multipliziert, gleichverteilt in [1-delta, 1+delta]
+      runs: 500
+      seed: 20261104
+      vary: [weights, thresholds]
+      thresholds:
+        delta: {value: 0.2, unit: "Anteil (±)", source_type: assumption, check: "prompts/12: Gewichte ±20 %"}
+      source_type: assumption
+      status: draft
+      note: >-
+        prompts/12 nennt zufällig variierte Gewichte; guide.md 7.1 eine Monte-Carlo-Analyse über alle Annahmen. Deshalb
+        werden Gewichte und Annahme-Schwellen gemeinsam variiert (Vorschlag, docs/open_questions.md). conn_score wird je
+        Lauf neu berechnet (Gewichte fehlender Merkmale umgelegt wie scores.conn_score.missing_value_policy). Die
+        Priorität wird mit den Diskrepanzen des Basislaufs neu berechnet (nur risk ändert sich).
+    - id: V-UNC-01
+      description: "Abschnitt „unsicher“, wenn die Kategorie in mindestens min_change_rate der Läufe aus V-SENS-02 von cat_proposed abweicht"
+      thresholds:
+        min_change_rate: {value: 0.3, unit: "Anteil der Läufe 0-1", source_type: assumption, check: "prompts/12: ab 0,3; guide.md P11 nennt > 0,3"}
+      source_type: assumption
+      status: draft
+    - id: V-SAMP-01
+      description: "Stichproben vor Ort bzw. am Bildschirm: Anteil fachlich strittiger Abschnitte je Kategorie unter max_disputed_share"
+      thresholds:
+        max_disputed_share: {value: 0.15, unit: "Anteil 0-1", source_type: assumption, check: "guide.md 7.1"}
+      source_type: assumption
+      status: draft
+    - id: V-DQ-01
+      description: "Datenqualität: Anteil der Abschnitte ohne Ist-Tempo unter max_missing_speed_share"
+      thresholds:
+        max_missing_speed_share: {value: 0.05, unit: "Anteil 0-1", source_type: assumption, check: "guide.md 3.4"}
+      source_type: assumption
+      status: draft

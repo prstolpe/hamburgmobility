@@ -4,6 +4,7 @@ Texts come from config/plain_language.yaml, thresholds from config/rules.yaml. T
 geometries are transformed to EPSG:4326 (CLAUDE.md).
 """
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -24,7 +25,8 @@ EXPORT_CRS = "EPSG:4326"
 # Columns of the download files (GeoParquet, GeoJSON, CSV), in this order. Crashes only as counts per segment.
 PUBLIC_COLUMNS = [
     "segment_id", "name", "bezirk", "highway", "length_m", "osm_way_ids",
-    "cat_final", "cat_proposed", "cat_final_source", "override_reason", "confidence", "rule_path",
+    "cat_final", "cat_proposed", "cat_final_source", "override_reason", "confidence",
+    "sens_change_rate", "sens_uncertain", "rule_path",
     "speed_ist_kmh", "speed_ist_source", "in_hvs", "dtv_official", "bus_trips_weekday", "in_cycle_network",
     "separated_cycle_track_present", "cycle_lane_present", "centre_line", "parking_along_carriageway",
     "conn_score", "place_score", "schools_or_kitas_within_m", "population_100m", "shop_frontage_share",
@@ -40,6 +42,7 @@ TILE_COLUMNS = {
     "id": "segment_id", "name": "name", "bz": "bezirk", "cat": "cat_final", "spd": "speed_ist_kmh", "hvs": "in_hvs",
     "dt": "disc_type", "dm": "disc_max", "pr": "priority", "w": "width_p10_m", "fe": "feasibility",
     "bus": "bus_trips_weekday", "cyc": "in_cycle_network", "acc": "crashes_ped_cyc", "conf": "confidence",
+    "un": "sens_uncertain",
 }
 
 # Feasibility column that belongs to each Soll category (crosssection targets).
@@ -125,6 +128,34 @@ def confidence_info(level: str, reasons: list[str], texts: dict) -> dict:
     return {"level": level, "summary": c.get(level, ""), "reasons": lines}
 
 
+def sensitivity_info(values: dict, rules: RuleSet, texts: dict, runs: int, delta: float) -> dict:
+    """Robustness of the category from pipeline/validate.py (V-SENS-01/02, V-UNC-01) in plain text."""
+    t = texts["sensitivity"]
+    rate = values.get("sens_change_rate")
+    if expr.is_missing(rate):
+        return {"change_rate": None, "uncertain": None, "alternative": None, "text": t["not_assessed"],
+                "uncertain_text": None, "oat_intro": None, "triggers": []}
+    rate = float(rate)
+    uncertain = bool(values.get("sens_uncertain"))
+    alt = values.get("sens_alt_category")
+    alt = None if expr.is_missing(alt) else str(alt)
+    if rate == 0 or alt is None:
+        text = t["stable"].format(runs=runs)
+    else:
+        text = t["changes"].format(rate=f"{fmt_number(rate * 100, 0)} %", runs=runs,
+                                   alt=f"{rules.categories[alt].label_de} ({alt})")
+    raw = values.get("sens_oat_changes")
+    keys = json.loads(raw) if isinstance(raw, str) and raw else []
+    triggers = []
+    for k in keys:
+        key, _, sign = k.rpartition(":")
+        triggers.append(f"{t['params'].get(key, key)} {t['direction'][sign]}")
+    return {"change_rate": round(rate, 3), "uncertain": uncertain, "alternative": alt, "text": text,
+            "uncertain_text": t["uncertain"] if uncertain else None,
+            "oat_intro": t["oat_intro"].format(delta=f"{fmt_number(delta * 100, 0)} %") if triggers else None,
+            "triggers": triggers}
+
+
 # --- frames ----------------------------------------------------------------------------------
 
 
@@ -160,7 +191,7 @@ def tile_frame(seg_wgs84: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     df = seg_wgs84.copy()
     df["feasibility"] = [r.get(FEASIBILITY_BY_CATEGORY.get(r["cat_final"], ""), None) for _, r in df.iterrows()]
     out = pd.DataFrame({short: df[col] if col in df.columns else None for short, col in TILE_COLUMNS.items()})
-    for c in ("hvs", "cyc"):
+    for c in ("hvs", "cyc", "un"):
         out[c] = out[c].map(lambda v: None if expr.is_missing(v) else int(bool(v)))
     for c in ("w", "pr", "bus"):
         out[c] = pd.to_numeric(out[c], errors="coerce").round(2)

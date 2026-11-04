@@ -2,7 +2,8 @@
 
 Usage: uv run python -m pipeline.s09_export
 
-Reads data/interim/discrepancy.parquet (pilot district only) and writes data/out/:
+Reads data/interim/discrepancy.parquet (pilot district only) and data/interim/validation.parquet (robustness
+from make validate) and writes data/out/:
   downloads/  segments.parquet (GeoParquet), segments.geojson, segments.csv, rules.yaml, overrides.csv,
               datenbeschreibung.md
   segments/{segment_id}.json  profile per segment (plain-text reasons from rule_trace)
@@ -36,6 +37,7 @@ from pipeline.s08_discrepancy import reason_text
 PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 SOURCES_PATH = REPO_ROOT / "config" / "sources.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "discrepancy.parquet"
+VALIDATION_PATH = REPO_ROOT / "data" / "interim" / "validation.parquet"
 OUT_DIR = REPO_ROOT / "data" / "out"
 TILES_TMP = REPO_ROOT / "data" / "interim" / "tiles"
 REPORT_PATH = REPO_ROOT / "reports" / "export.md"
@@ -109,6 +111,27 @@ def required_width_for(cat: str, rules) -> float | None:
     return entry.value if entry.value is not None else entry.range[0]
 
 
+def join_validation(seg: gpd.GeoDataFrame, rules) -> tuple[gpd.GeoDataFrame, dict]:
+    """Add the robustness columns from make validate (left join on segment_id); missing file -> empty columns."""
+    v = rules.validation
+    ctx = {"runs": v.rule("V-SENS-02").runs, "seed": v.rule("V-SENS-02").seed,
+           "delta": v.rule("V-SENS-02").thresholds["delta"].value,
+           "min_change_rate": v.rule("V-UNC-01").thresholds["min_change_rate"].value, "rules_version": None}
+    cols = ["sens_change_rate", "sens_uncertain", "sens_alt_category", "sens_alt_share", "sens_oat_changes"]
+    if VALIDATION_PATH.exists():
+        val = pd.read_parquet(VALIDATION_PATH)
+        versions = set(val["sens_rules_version"].dropna())
+        ctx["rules_version"] = ", ".join(sorted(versions)) or None
+        out = seg.merge(val[["segment_id", *cols]], on="segment_id", how="left", validate="one_to_one")
+    else:
+        print("export: data/interim/validation.parquet missing; run `make validate` first", file=sys.stderr)
+        out = seg.assign(**{c: None for c in cols})
+    ctx["version_ok"] = ctx["rules_version"] == rules.meta.version
+    ctx["n_missing"] = int(out["sens_change_rate"].isna().sum())
+    out["sens_uncertain"] = out["sens_uncertain"].astype("boolean")
+    return gpd.GeoDataFrame(out, geometry="geometry", crs=seg.crs), ctx
+
+
 # --- profile ---------------------------------------------------------------------------------
 
 
@@ -146,6 +169,7 @@ def profile(r: pd.Series, ctx: dict) -> dict:
                                   "date": _val(r.get("override_date"))} if override else None},
         "reasons": ex.rule_reasons(trace, rules, texts), "rule_path": r["rule_path"],
         "confidence": ex.confidence_info(r["confidence"], json.loads(r["confidence_reasons"]), texts),
+        "sensitivity": ex.sensitivity_info(r.to_dict(), rules, texts, ctx["sens"]["runs"], ctx["sens"]["delta"]),
         "ist": {"speed_kmh": _val(r["speed_ist_kmh"]),
                 "speed_source": texts["speed_source"].get(r["speed_ist_source"]) if isinstance(r["speed_ist_source"], str) else None,
                 "speed_sources_conflict": _val(r.get("speed_sources_conflict")), "cycling": _cycling(r),
@@ -230,6 +254,10 @@ def run_checks(seg: gpd.GeoDataFrame, pub: gpd.GeoDataFrame, ctx: dict) -> list[
     n_profiles = len(list((OUT_DIR / "segments").glob("*.json")))
     add("Steckbrief je Abschnitt", n_profiles == len(pub), f"{n_profiles} Dateien")
     add("Begründung je Abschnitt", ctx["n_without_reason"] == 0, f"{ctx['n_without_reason']} ohne Klartext")
+    sv = ctx["sens"]
+    add("Robustheit aus make validate übernommen", sv["n_missing"] == 0 and sv["version_ok"],
+        f"{len(pub) - sv['n_missing']}/{len(pub)} Abschnitte, rules.yaml {sv['rules_version'] or '–'}"
+        + ("" if sv["version_ok"] else " (veraltet: make validate ausführen)"))
     return checks
 
 
@@ -251,7 +279,9 @@ def write_report(pub, profiles_sample, checks, ctx) -> None:
              "## Kennzahlen", "",
              f"- Abschnitte: {_fmt(len(pub))} im Bezirk {ctx['pilot']} ({pub['length_m'].sum() / 1000:.1f} km)",
              f"- Suchindex: {_fmt(ctx['n_search'])} Straßennamen; Schulen/Kitas in den Kacheln: {_fmt(ctx['n_facilities'])}",
-             f"- Steckbriefe: {_fmt(len(pub))} Dateien, zusammen {profile_bytes / 1e6:.1f} MB", "",
+             f"- Steckbriefe: {_fmt(len(pub))} Dateien, zusammen {profile_bytes / 1e6:.1f} MB",
+             f"- Robustheit (make validate, {ctx['sens']['runs']} Läufe): {_fmt(int(pub['sens_uncertain'].fillna(False).sum()))} "
+             f"Abschnitte „unsicher“ ({pub.loc[pub['sens_uncertain'].fillna(False).astype(bool), 'length_m'].sum() / 1000:.1f} km)", "",
              "| Datei | Größe |", "| --- | ---: |",
              *[f"| `data/out/{n}` | {s / 1e6:.2f} MB |" for n, s in sizes], "",
              f"## Stichprobe ({SAMPLE_SIZE} zufällige Steckbriefe, Seed {SAMPLE_SEED})", "",
@@ -262,6 +292,8 @@ def write_report(pub, profiles_sample, checks, ctx) -> None:
         wgs = gpd.GeoSeries([mid], crs=WORK_CRS).to_crs(4326).iloc[0]
         reasons = "; ".join(x["text"] for x in p["reasons"]) or "–"
         conf = p["confidence"]["level"] + (": " + ", ".join(p["confidence"]["reasons"]) if p["confidence"]["reasons"] else "")
+        if p["sensitivity"]["uncertain"]:
+            conf += "; unsicher (Sensitivität)"
         lines.append(f"| `{p['id']}` | {p['name'] or '–'} | {p['category']['code']} | {reasons} | {conf} | "
                      f"[Orthophoto]({orthophoto_link(mid, viewers)}) · [Panoramax]({panoramax_link(wgs, viewers)}) · "
                      f"[OSM]({osm_way_link(p['osm_way_ids'][0])}) |")
@@ -285,10 +317,11 @@ def main() -> int:
     manifest = load_manifest()
     seg = gpd.read_parquet(IN_PATH)
     seg = seg[seg["conflated"].astype(bool) & seg["cat_final"].notna() & (seg["bezirk"] == pilot)].reset_index(drop=True)
+    seg, sens_ctx = join_validation(seg, rules)
     date = data_date(manifest)
     version = f"{rules.meta.version}+{date}"
     ctx = {"rules": rules, "texts": texts, "pilot": pilot, "version": version, "n": len(seg),
-           "sources": source_list(manifest, sources_yaml["sources"]), "viewers": load_viewers()}
+           "sources": source_list(manifest, sources_yaml["sources"]), "viewers": load_viewers(), "sens": sens_ctx}
 
     if OUT_DIR.exists():
         for sub in ("segments", "downloads", "tiles"):
@@ -319,7 +352,8 @@ def main() -> int:
     write_json(OUT_DIR / "search.json", search)
     table = [{"id": r.segment_id, "name": r.name if isinstance(r.name, str) else None, "bz": r.bezirk, "cat": r.cat_final,
               "spd": _val(r.speed_ist_kmh), "dt": _val(r.disc_type), "dm": _val(r.disc_max), "pr": _val(r.priority),
-              "conf": r.confidence, "len": round(float(r.length_m)), "acc": int(r.crashes_ped_cyc)}
+              "conf": r.confidence, "un": None if pd.isna(r.sens_uncertain) else bool(r.sens_uncertain),
+              "len": round(float(r.length_m)), "acc": int(r.crashes_ped_cyc)}
              for r in seg.itertuples()]
     write_json(OUT_DIR / "table.json", table)
 
@@ -336,6 +370,7 @@ def main() -> int:
                            for c in rules.categories if not rules.categories[c].rural},
             "discrepancy_types": dict(rules.discrepancy.types),
             "feasibility": texts["feasibility"],
+            "sensitivity": {k: sens_ctx[k] for k in ("runs", "seed", "delta", "min_change_rate", "rules_version")},
             "width_classes_m": {"ETW30": required_width_for("ETW30", rules), "GOW50": required_width_for("GOW50", rules)},
             "disclaimer": texts["disclaimer"], "site_title": web["site_title"],
             "github_repo": web.get("github_repo"), "feedback_email": web.get("feedback_email"),

@@ -5,8 +5,8 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.1.0
-  date: 2026-10-28
+  version: 0.2.0
+  date: 2026-11-04
 
 categories:
   SW: "Schnellverkehrsstraße – anbaufrei, nur für Kraftfahrzeuge; Fuß- und Radverkehr getrennt geführt"
@@ -78,6 +78,25 @@ confidence:
     fehlt: "{feature}: fehlt"
     nahe_schwelle: "{feature}: nahe an der Schwelle"
 
+# Robustheit der Einstufung aus der Sensitivitätsanalyse (pipeline/validate.py, V-SENS-01/02, V-UNC-01).
+# Platzhalter: {runs} Läufe, {rate} Anteil als Prozent, {alt} andere Kategorie, {delta} Variation in Prozent.
+sensitivity:
+  stable: "In allen {runs} Rechenläufen mit veränderten Annahmen bleibt die Kategorie gleich."
+  changes: "In {rate} von {runs} Rechenläufen mit veränderten Annahmen ergibt sich eine andere Kategorie, meist {alt}."
+  uncertain: "Unsicher: Die Einstufung hängt stark an gesetzten Annahmen und sollte fachlich geprüft werden."
+  not_assessed: "Die Robustheit wurde für diesen Stand nicht berechnet."
+  oat_intro: "Die Kategorie wechselt schon, wenn eine einzelne Annahme um {delta} anders gesetzt wird:"
+  direction: {"-": "niedriger", "+": "höher"}
+  params:
+    thresholds.conn_gow: "Schwelle für den Verbindungswert"
+    thresholds.sensitive_radius: "Abstand zu Schule oder Kita"
+    thresholds.frontage: "Anteil Gebäude mit Publikumsverkehr"
+    required_width.GOW50: "nötige Straßenraumbreite für eine Stadtmagistrale"
+    conn_score.betweenness_norm: "Gewicht der Netzbedeutung"
+    conn_score.in_hvs: "Gewicht Hauptverkehrsstraße"
+    conn_score.bus_trips_weekday_norm: "Gewicht der Busfahrten"
+    conn_score.dtv_norm: "Gewicht der Verkehrsmenge"
+
 feasibility:
   fits: "passt"
   tight: "knapp"
@@ -102,6 +121,8 @@ columns:
   cat_final_source: "proposed = Automatik, override = fachlich korrigiert (overrides.csv)"
   override_reason: "Begründung der Korrektur"
   confidence: "Datenunsicherheit der Einstufung: hoch, mittel, niedrig"
+  sens_change_rate: "Robustheit: Anteil der Sensitivitätsläufe mit anderer Kategorie (0–1, pipeline/validate.py)"
+  sens_uncertain: "unsicher laut Sensitivitätsanalyse: Wechselquote ab der Schwelle V-UNC-01 in rules.yaml (true/false)"
   rule_path: "Gegriffene Regeln der Kaskade (IDs aus rules.yaml)"
   speed_ist_kmh: "Heute zulässige Höchstgeschwindigkeit in km/h"
   speed_ist_source: "Quelle des Ist-Tempos: official (amtlich) oder osm"

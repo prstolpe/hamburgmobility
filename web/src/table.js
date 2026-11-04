@@ -3,6 +3,8 @@ import { rowMatches } from "./state.js";
 import { esc, num } from "./util.js";
 
 const PAGE_SIZE = 100;
+// Robustness from the sensitivity analysis: true = unsicher, false = robust, null = not computed.
+export const robust = (un) => (un === true ? "unsicher" : un === false ? "robust" : "–");
 const COLUMNS = [
   { key: "name", label: "Straße", type: "text" },
   { key: "cat", label: "Soll", type: "text" },
@@ -12,6 +14,7 @@ const COLUMNS = [
   { key: "acc", label: "Unfälle Fuß/Rad", type: "num" },
   { key: "pr", label: "Priorität", type: "num" },
   { key: "conf", label: "Datenunsicherheit", type: "text" },
+  { key: "un", label: "Robustheit", type: "text" },
   { key: "len", label: "Länge m", type: "num" },
 ];
 
@@ -46,7 +49,7 @@ export function renderTable(root, rows, getState, { onOpen }) {
           <button type="button" data-sort="${c.key}">${esc(c.label)}</button></th>`).join("")}<th scope="col">Steckbrief</th></tr></thead>
         <tbody>${slice.map((r) => `<tr>
           <td>${esc(r.name ?? "–")}</td><td>${esc(r.cat)}</td><td>${num(r.spd)}</td><td>${esc(r.dt ?? (r.dm === null ? "nicht prüfbar" : "keine"))}</td>
-          <td>${num(r.dm)}</td><td>${num(r.acc)}</td><td>${num(r.pr, 2)}</td><td>${esc(r.conf)}</td><td>${num(r.len)}</td>
+          <td>${num(r.dm)}</td><td>${num(r.acc)}</td><td>${num(r.pr, 2)}</td><td>${esc(r.conf)}</td><td>${robust(r.un)}</td><td>${num(r.len)}</td>
           <td><button type="button" class="link" data-open="${esc(r.id)}">öffnen<span class="visually-hidden"> ${esc(r.name ?? r.id)}</span></button></td></tr>`).join("")}
         </tbody></table></div>
       <nav class="pager" aria-label="Seiten der Tabelle">
