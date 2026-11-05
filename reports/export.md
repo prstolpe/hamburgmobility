@@ -1,6 +1,6 @@
 # Export – Stufe 9
 
-Erzeugt: 2026-11-05T05:32:22+00:00 von `pipeline/s09_export.py`, Version 0.13.0+2026-10-28. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-05T09:25:31+00:00 von `pipeline/s09_export.py`, Version 0.13.0+2026-10-28. Nicht amtlicher Entwurf.
 
 ## Prüfungen
 
