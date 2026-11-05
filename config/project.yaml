@@ -25,7 +25,7 @@ area:
 # Webseite (prompts/11_web.md, pipeline/s09_export.py). Keine fachlichen Inhalte.
 web:
   site_title: "Straßenfunktionsplan Hamburg – Entwurf"
-  github_repo: null       # TODO: "owner/repo" für den Rückmelde-Link (GitHub-Issue); ohne Wert kein Issue-Link
+  github_repo: prstolpe/hamburgmobility   # Rückmelde-Link (GitHub-Issue)
   feedback_email: null    # TODO: Adresse für mailto-Rückmeldungen; ohne Wert kein mailto-Link
   tiles_base_url: null    # null = relativ zur Seite (GitHub Pages); später z. B. Cloudflare R2 mit Range und CORS
   basemap:
