@@ -29,7 +29,7 @@ web:
   imprint:                # Impressum (§ 5 DDG), Seite „Impressum“
     name: Raphael Stolpe
     address: [Fruchtallee 9, 20259 Hamburg]
-    email: null           # TODO: § 5 DDG verlangt eine schnelle elektronische Kontaktmöglichkeit
+    email: contact@hamburgmobility.de
   feedback_email: null    # TODO: Adresse für mailto-Rückmeldungen; ohne Wert kein mailto-Link
   tiles_base_url: null    # null = relativ zur Seite (GitHub Pages); später z. B. Cloudflare R2 mit Range und CORS
   basemap:
