@@ -17,6 +17,19 @@ def features_to_gdf(features: list[dict], crs: str = WORK_CRS) -> gpd.GeoDataFra
     return gpd.GeoDataFrame.from_features(features, crs=crs)
 
 
+def tile_bboxes(area, size_m: float) -> list[Bbox]:
+    """Square tiles of size_m (grid anchored at multiples of size_m) that intersect the area."""
+    import math
+    x0, y0, x1, y1 = area.bounds
+    tiles = []
+    for i in range(math.floor(x0 / size_m), math.ceil(x1 / size_m)):
+        for j in range(math.floor(y0 / size_m), math.ceil(y1 / size_m)):
+            t = (float(i * size_m), float(j * size_m), float((i + 1) * size_m), float((j + 1) * size_m))
+            if box(*t).intersects(area):
+                tiles.append(t)
+    return tiles
+
+
 def check_in_bbox(gdf: gpd.GeoDataFrame, bbox: Bbox, label: str) -> None:
     """Every feature must touch the requested bbox; catches swapped axes and wrong CRS."""
     if gdf.empty:

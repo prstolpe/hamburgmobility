@@ -275,3 +275,26 @@ def open_questions(text: str) -> list[tuple[str, list[str]]]:
     if section and items:
         out.append((section, items))
     return out
+
+
+def compare_baseline(base: pd.DataFrame, cur: pd.DataFrame, top_n: int) -> dict:
+    """Pilot run vs. current run on the same segment_ids: category changes and overlap of the top_n priorities."""
+    b = base.set_index("segment_id")
+    c = cur.set_index("segment_id")
+    common = b.index.intersection(c.index)
+    j = pd.DataFrame({"from": b.loc[common, "cat_final"], "to": c.loc[common, "cat_final"],
+                      "km": c.loc[common, "length_m"] / 1000})
+    ch = j[j["from"] != j["to"]]
+    changes = (ch.groupby(["from", "to"]).agg(n=("km", "size"), km=("km", "sum")).reset_index()
+               .sort_values(["km", "from", "to"], ascending=[False, True, True]).reset_index(drop=True))
+    changes["km"] = changes["km"].round(3)
+
+    def top(df):
+        p = pd.to_numeric(df.loc[common, "priority"], errors="coerce")
+        return set(p[p > 0].sort_values(ascending=False, kind="stable").head(top_n).index)
+
+    tb, tc = top(b), top(c)
+    return {"n_common": len(common), "n_only_base": len(b.index.difference(c.index)),
+            "n_only_new": len(c.index.difference(b.index)), "n_changed": len(ch),
+            "km_changed": round(float(ch["km"].sum()), 3), "km_common": float(j["km"].sum()),
+            "changes": changes, "top_overlap": len(tb & tc) / len(tb) if tb else float("nan")}

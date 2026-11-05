@@ -17,15 +17,15 @@ import sys
 
 import geopandas as gpd
 import pandas as pd
-import yaml
 
+from pipeline.lib.area import area_label, district_names, load_area_config, read_rural, read_work_area
 from pipeline.lib.conflate import QUALITIES, MatchParams, match_lines, parse_speed_kmh, resolve_speed, zone_share
 from pipeline.lib.crs import WORK_CRS, to_work_crs
 from pipeline.lib.links import osm_map_link, osm_way_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest, sha256_file
+from pipeline.lib.report import district_breakdown
 from pipeline.lib.rules import load_rules, network_highways
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 SEGMENTS_PATH = REPO_ROOT / "data" / "interim" / "segments.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "segments_conflated.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "conflation.md"
@@ -284,7 +284,7 @@ def write_sample(sample: pd.DataFrame) -> None:
     for i, row in sample.iterrows():
         ways = list(row["osm_way_ids"])
         rows.append({
-            "segment_id": row["segment_id"], "name_osm": row["name"], "strassenname_official": row.get("strassenname_official"),
+            "segment_id": row["segment_id"], "bezirk": row["bezirk"], "name_osm": row["name"], "strassenname_official": row.get("strassenname_official"),
             "highway": row["highway"], "length_m": round(float(row["length_m"]), 1),
             "match_quality": row["match_quality"], "hvs_match_quality": row.get("hvs_match_quality"),
             "in_hvs": row.get("in_hvs"), "dtv_official": row.get("dtv_official"),
@@ -301,17 +301,20 @@ def write_sample(sample: pd.DataFrame) -> None:
 
 
 def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
-    rules, pilot = ctx["rules"], ctx["pilot"]
+    rules, pilot = ctx["rules"], ctx["label"]
     work = out[out["conflated"]]
-    in_pilot = out[(out["bezirk"] == pilot) & out["conflated"]]
+    in_pilot = out[out["bezirk"].isin(ctx["districts"]) & out["conflated"]]
     status = {True: "ok", False: "**FEHLER**"}
     lines = [
         "# Conflation amtlich ↔ OSM (Stufe 3)", "",
         f"Erzeugt: {_now()} von `pipeline/s03_conflate.py`. Nicht amtlicher Entwurf.", "",
         "## Datengrundlage", "",
         f"- Abschnitte: `data/interim/segments.parquet` ({_fmt(len(out))} Abschnitte Hamburg)",
-        f"- Arbeitsgebiet: {pilot} + {ctx['buffer_m']} m; abgeglichen werden Abschnitte, die ganz darin liegen "
-        f"({_fmt(len(work))}). Außerhalb bleibt `match_quality` leer (keine amtlichen Daten abgerufen).",
+        f"- Arbeitsgebiet: {pilot} + {ctx['buffer_m']:.0f} m; abgeglichen werden Abschnitte, die ganz darin liegen "
+        f"({_fmt(len(work))}). Außerhalb bleibt `match_quality` leer.",
+        f"- Nicht bewertet (ländliche Stadtteile, config/project.yaml rural_exclude): {_fmt(len(ctx['rural_seg']))} "
+        f"Abschnitte, {_fmt(ctx['rural_seg']['length_m'].sum() / 1000, 1)} km – "
+        + (", ".join(f"{b} {_fmt(g['length_m'].sum() / 1000, 1)} km" for b, g in ctx["rural_seg"].groupby("bezirk")) or "–"),
         f"- Regelwerk: config/rules.yaml {rules.meta.version}", "",
         "| Schlüssel | Quelle / Ebene | Objekte | Abruf | Lizenz |", "| --- | --- | ---: | --- | --- |",
     ]
@@ -342,6 +345,8 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         lines.append(f"| {LAYERS[src][1]} | {_fmt((q == 'exact').sum())} | {_fmt((q == 'partial').sum())} | "
                      f"{_fmt((q == 'none').sum())} | {_pct(km, work['length_m'].sum())} |")
 
+    lines += ["", "## match_quality (Tempo-Ebene) je Bezirk (km-Anteile)", "",
+              *district_breakdown(in_pilot, "match_quality", list(QUALITIES))]
     lines += ["", f"## match_quality (Tempo-Ebene) je highway-Klasse – {pilot}", "",
               "| highway | Anzahl | exact | partial | none | Name gleich¹ |", "| --- | ---: | ---: | ---: | ---: | ---: |"]
     for hw in network_highways(rules):
@@ -396,7 +401,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
               "", "## Prüfungen", "", "| Prüfung | Ergebnis | Detail |", "| --- | --- | --- |"]
     lines += [f"| {c['name']} | {status[bool(c['ok'])]} | {c['detail']} |" for c in checks]
     lines += ["", "## Manuelle Stichprobe", "",
-              f"`reports/conflation_sample.csv`: {ctx['n_sample']} Zufallsabschnitte in {pilot} (Seed {SAMPLE_SEED}, "
+              f"`reports/conflation_sample.csv`: {ctx['n_sample']} Zufallsabschnitte in {pilot} (Seed {SAMPLE_SEED}, Spalte `bezirk`, "
               "etwa gleich viele je match_quality), mit Links auf OSM-Karte und OSM-Way. Spalte `geoportal` ist leer, "
               "bis das Linkformat geklärt ist (docs/open_questions.md). Prüfende tragen `check_ok` (ja/nein) und "
               "`comment` ein.", "",
@@ -416,8 +421,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
 
 def main() -> int:
     rules = load_rules()
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        project = yaml.safe_load(f)["pilot_district"]
+    cfg = load_area_config()
     if not SEGMENTS_PATH.exists():
         print("conflate: data/interim/segments.parquet missing; run `make network` first", file=sys.stderr)
         return 1
@@ -428,16 +432,20 @@ def main() -> int:
         return 1
 
     seg = gpd.read_parquet(SEGMENTS_PATH)
-    district = gpd.read_parquet(REPO_ROOT / "data" / "raw" / "district_boundary.parquet")
-    work_area = to_work_crs(district).geometry.union_all().buffer(project["buffer_m"])
+    work_area = read_work_area(cfg)
+    names = district_names()
+    rural = read_rural()
+    mid = seg.geometry.interpolate(0.5, normalized=True)
+    rural_seg = seg[mid.within(rural.geometry.union_all())] if len(rural) else seg.iloc[0:0]
     in_area = seg.geometry.within(work_area)
     print(f"conflate: {int(in_area.sum())} of {len(seg)} segments in the work area")
 
     out = conflate(seg, in_area, layers, rules)
     checks = run_checks(seg, out, layers)
-    pilot = out[(out["bezirk"] == project["name"]) & out["conflated"]]
+    pilot = out[out["bezirk"].isin(names) & out["conflated"]]
     sample = pick_sample(pilot)
-    ctx = {"rules": rules, "pilot": project["name"], "buffer_m": project["buffer_m"], "records": records,
+    ctx = {"rules": rules, "label": area_label(names), "districts": names, "buffer_m": cfg.buffer_m, "records": records,
+           "rural_seg": rural_seg,
            "n_objects": {k: len(v) for k, v in layers.items()}, "n_sample": len(sample)}
     write_report(out, ctx, checks)
     for c in checks:

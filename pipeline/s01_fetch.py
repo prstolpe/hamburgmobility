@@ -1,9 +1,10 @@
-"""Stage 1: fetch all sources from config/sources.yaml for the pilot district.
+"""Stage 1: fetch all sources from config/sources.yaml for the work area (config/project.yaml, area).
 
 Usage: uv run python -m pipeline.s01_fetch [--only id,id] [--refresh]
 
 Only URLs from sources.yaml are used. A failing source is recorded and reported, never
-replaced by another source; the run then exits with code 1.
+replaced by another source; the run then exits with code 1. WFS and OGC API sources are requested in square tiles
+(area.fetch_tile_m) and merged; features returned by two tiles are identical and dropped by clean().
 """
 
 import argparse
@@ -18,19 +19,20 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import geopandas as gpd
+import pandas as pd
 import yaml
 
 from pipeline.lib import ogcapi, wfs
-from pipeline.lib.boundary import BoundaryError, boundaries_from_pbf, buffered_area, select_district
+from pipeline.lib.area import RURAL_PATH, WORK_AREA_PATH, build_work_area, load_area_config, select_districts, select_rural
+from pipeline.lib.boundary import BoundaryError, boundaries_from_pbf
 from pipeline.lib.crs import WORK_CRS
-from pipeline.lib.geo import clean, features_to_gdf, keep_intersecting, parquet_safe
+from pipeline.lib.geo import clean, features_to_gdf, keep_intersecting, parquet_safe, tile_bboxes
 from pipeline.lib.grid import read_grid_zip
 from pipeline.lib.http import FetchError, get, get_json, make_session
 from pipeline.lib.links import osm_map_link
 from pipeline.lib.manifest import REPO_ROOT, file_record, load_manifest, save_manifest, sha256_file
 
 SOURCES_PATH = REPO_ROOT / "config" / "sources.yaml"
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 RAW_DIR = REPO_ROOT / "data" / "raw"
 REPORT_PATH = REPO_ROOT / "reports" / "data_report.md"
 SAMPLE_SIZE = 30
@@ -237,7 +239,14 @@ def fetch_download(session, source_id: str, src: dict, area, manifest: dict, ref
 # --- WFS / OGC API / SensorThings ------------------------------------------------------------
 
 
-def fetch_wfs(session, source_id: str, src: dict, area) -> Result:
+def _concat(parts: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
+    parts = [p for p in parts if not p.empty]
+    if not parts:
+        return gpd.GeoDataFrame(geometry=[], crs=WORK_CRS)
+    return gpd.GeoDataFrame(pd.concat(parts, ignore_index=True), crs=parts[0].crs)
+
+
+def fetch_wfs(session, source_id: str, src: dict, area, tiles) -> Result:
     result = Result(source_id, src["title"], "ok", url=src["url"], license=src.get("license"))
     caps = wfs.capabilities(session, src["url"])
     result.listing = caps.titles
@@ -251,12 +260,14 @@ def fetch_wfs(session, source_id: str, src: dict, area) -> Result:
         raise FetchError(f"feature types not offered by the service: {missing}")
     if wfs.GEOJSON not in caps.output_formats:
         raise FetchError(f"service does not offer {wfs.GEOJSON}")
-    bbox = tuple(area.bounds)
     for typename in typenames:
-        expected = wfs.hits(session, src["url"], typename, bbox)
-        gdf = wfs.get_features(session, src["url"], typename, bbox, expected=expected,
-                               paging=caps.paging, count_default=caps.count_default)
-        gdf = keep_intersecting(clean(gdf), area)
+        parts = []
+        for bbox in tiles:
+            expected = wfs.hits(session, src["url"], typename, bbox)
+            if expected:
+                parts.append(wfs.get_features(session, src["url"], typename, bbox, expected=expected,
+                                              paging=caps.paging, count_default=caps.count_default))
+        gdf = keep_intersecting(clean(_concat(parts)), area)
         result.files.append(_write_layer(gdf, source_id, typename))
         if gdf.empty:  # make an empty layer checkable: how many exist city-wide?
             total = wfs.hits(session, src["url"], typename, None)
@@ -265,7 +276,8 @@ def fetch_wfs(session, source_id: str, src: dict, area) -> Result:
     return result
 
 
-def fetch_ogcapi(session, source_id: str, src: dict, area) -> Result:
+def fetch_ogcapi(session, source_id: str, src: dict, area, tiles) -> Result:
+    """Per collection in tiles; with fetch.bbox: false the whole collection in one request series."""
     result = Result(source_id, src["title"], "ok", url=src["url"], license=src.get("license"))
     available = ogcapi.collections(session, src["url"])
     result.listing = {c["id"]: c["title"] or "" for c in available}
@@ -273,8 +285,12 @@ def fetch_ogcapi(session, source_id: str, src: dict, area) -> Result:
     missing = sorted(set(wanted) - set(result.listing))
     if missing:
         raise FetchError(f"collections not offered by the API: {missing}")
+    use_bbox = src["fetch"].get("bbox", True)
     for collection in wanted:
-        gdf = ogcapi.get_items(session, src["url"], collection, tuple(area.bounds))
+        if use_bbox:
+            gdf = _concat([ogcapi.get_items(session, src["url"], collection, bbox) for bbox in tiles])
+        else:
+            gdf = ogcapi.get_items(session, src["url"], collection, None)
         result.files.append(_write_layer(keep_intersecting(clean(gdf), area), source_id, collection))
     result.retrieved_at = _now()
     return result
@@ -334,7 +350,7 @@ def _samples(results: list[Result]) -> list[dict]:
 
 def write_report(results: list[Result], work_area: dict, url_comments: dict, sources: dict) -> None:
     lines = [
-        "# Datenbericht – Abruf Pilotbezirk",
+        "# Datenbericht – Abruf Arbeitsgebiet",
         "",
         f"Erzeugt: {_now()} von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.",
         "",
@@ -344,12 +360,23 @@ def write_report(results: list[Result], work_area: dict, url_comments: dict, sou
     if work_area.get("error"):
         lines += [f"**Fehler:** {work_area['error']}", ""]
     else:
+        excluded = ", ".join(f"{e['name']} (admin_level {e['admin_level']})" for e in work_area["exclude"]) or "–"
+        lines += [f"Bezirke von {work_area['city']} (admin_level {work_area['district_admin_level']}, Grenzen aus OSM, "
+                  "weil die ALKIS-URL in config/sources.yaml fehlt):", "",
+                  "| Bezirk | OSM-Relation | Fläche km² |", "| --- | ---: | ---: |"]
+        lines += [f"| {d['name']} | {d['osm_id']} | {d['area_km2']:.1f} |" for d in work_area["districts"]]
         lines += [
-            f"- Bezirk: {work_area['district']} (OSM-Relation {work_area['osm_id']}, admin_level "
-            f"{work_area['admin_level']}), Fläche {work_area['area_km2']:.1f} km²",
-            f"- Puffer: {work_area['buffer_m']} m, Arbeitsgebiet {work_area['area_buffered_km2']:.1f} km²",
+            f"| **gesamt** | | **{work_area['area_km2']:.1f}** |",
+            "",
+            f"- Ausgeschlossen: {excluded} samt dem abgetrennten Polygonteil, in dem es liegt (Neuwerk: Insel, "
+            "Scharhörn, Wattenmeer; Entscheidung 2026-11-04)",
+            f"- Puffer: {work_area['buffer_m']:.0f} m, Arbeitsgebiet {work_area['area_buffered_km2']:.1f} km²",
+            f"- Abgerufen wird das ganze Arbeitsgebiet. Nicht klassifiziert werden {len(work_area.get('rural', []))} ländliche "
+            f"Stadtteile ({sum(r['area_km2'] for r in work_area.get('rural', [])):.1f} km²; config/project.yaml, "
+            f"rural_exclude): {', '.join(r['name'] for r in work_area.get('rural', [])) or '–'}",
             f"- Bounding Box (EPSG:25832): {work_area['bbox']}",
-            "- Grenze aus OSM, weil die ALKIS-URL in config/sources.yaml fehlt.",
+            f"- Abruf von WFS und OGC API in {work_area['n_tiles']} Kacheln zu {work_area['tile_m'] / 1000:.0f} km; "
+            "doppelt gelieferte Objekte an Kachelgrenzen werden entfernt.",
             "- Objekte, die das Arbeitsgebiet schneiden, werden vollständig übernommen (kein Zuschnitt).",
             "",
         ]
@@ -401,6 +428,14 @@ def write_report(results: list[Result], work_area: dict, url_comments: dict, sou
 # --- main ------------------------------------------------------------------------------------
 
 
+def _from_manifest(source_id: str, src: dict, entry: dict) -> Result:
+    """Result of an earlier run (source skipped with --only), so the report stays complete."""
+    return Result(source_id, entry.get("title") or src["title"], entry.get("status") or "fehlt", url=entry.get("url"),
+                  license=entry.get("license"), retrieved_at=entry.get("retrieved_at"), files=entry.get("files") or [],
+                  attribution=entry.get("attribution"), error=entry.get("error"),
+                  note="aus früherem Abruf (nicht neu geladen)")
+
+
 def _manifest_entry(r: Result, src: dict, previous: dict) -> dict:
     entry = {k: v for k, v in previous.items() if k == "last_modified"}
     entry.update({"title": r.title, "url": r.url, "access": src.get("access"), "status": r.status,
@@ -416,7 +451,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     sources = _load_yaml(SOURCES_PATH)["sources"]
-    project = _load_yaml(PROJECT_PATH)["pilot_district"]
+    cfg = load_area_config()
+    tile_m = float(_load_yaml(REPO_ROOT / "config" / "project.yaml")["area"]["fetch_tile_m"])
     only = set(args.only.split(",")) if args.only else None
     manifest = load_manifest()
     session = make_session()
@@ -428,21 +464,33 @@ def main(argv: list[str] | None = None) -> int:
 
     work_area: dict = {}
     area = area_wgs84 = None
+    tiles: list = []
     if pbf is None:
-        work_area["error"] = "OSM-Auszug fehlt, daher keine Bezirksgrenze"
+        work_area["error"] = "OSM-Auszug fehlt, daher keine Bezirksgrenzen"
     else:
         try:
-            district = select_district(boundaries_from_pbf(pbf), project["name"], project["osm_admin_level"])
-            area = buffered_area(district, project["buffer_m"])
+            boundaries = boundaries_from_pbf(pbf)
+            districts = select_districts(boundaries, cfg)
+            rural = select_rural(boundaries, cfg)
+            rural.to_parquet(RURAL_PATH)
+            area = build_work_area(districts, cfg.buffer_m)
             area_wgs84 = gpd.GeoSeries([area], crs=WORK_CRS).to_crs("EPSG:4326").iloc[0]
-            boundary_path = RAW_DIR / "district_boundary.parquet"
-            district.to_parquet(boundary_path)
-            osm_result.files = [f for f in osm_result.files if f["layer"] != "district_boundary"]
-            osm_result.files.append({"layer": "district_boundary", **file_record(boundary_path, district)})
-            work_area = {"district": project["name"], "admin_level": project["osm_admin_level"],
-                         "osm_id": int(district["id"].iloc[0]), "buffer_m": project["buffer_m"],
-                         "area_km2": district.area.iloc[0] / 1e6, "area_buffered_km2": area.area / 1e6,
-                         "bbox": [round(v, 1) for v in area.bounds], "boundary_source": "osm"}
+            tiles = tile_bboxes(area, tile_m)
+            districts.to_parquet(WORK_AREA_PATH)
+            old_boundary = RAW_DIR / "district_boundary.parquet"  # pilot era (until 2026-11-04)
+            old_boundary.unlink(missing_ok=True)
+            osm_result.files = [f for f in osm_result.files
+                                if f["layer"] not in ("district_boundary", "work_area", "rural_excluded")]
+            osm_result.files.append({"layer": "work_area", **file_record(WORK_AREA_PATH, districts)})
+            osm_result.files.append({"layer": "rural_excluded", **file_record(RURAL_PATH, rural)})
+            work_area = {"districts": [{"name": r["name"], "osm_id": int(r["id"]), "area_km2": r.geometry.area / 1e6}
+                                       for _, r in districts.iterrows()],
+                         "city": cfg.city_name, "district_admin_level": cfg.district_admin_level,
+                         "exclude": cfg.exclude, "buffer_m": cfg.buffer_m,
+                         "area_km2": float(districts.area.sum() / 1e6), "area_buffered_km2": area.area / 1e6,
+                         "bbox": [round(v, 1) for v in area.bounds], "tile_m": tile_m, "n_tiles": len(tiles),
+                         "rural": [{"name": r["name"], "area_km2": r.geometry.area / 1e6} for _, r in rural.iterrows()],
+                         "boundary_source": "osm"}
         except BoundaryError as exc:
             work_area["error"] = str(exc)
     if work_area.get("error"):
@@ -454,6 +502,9 @@ def main(argv: list[str] | None = None) -> int:
             results.append(osm_result)
             continue
         if only and source_id not in only:
+            previous = manifest["sources"].get(source_id)
+            if previous:  # keep the last result in manifest and report
+                results.append(_from_manifest(source_id, src, previous))
             continue
         fetch, url = src.get("fetch"), src.get("url")
         if url is None and "fallback_osm" not in src:
@@ -466,11 +517,11 @@ def main(argv: list[str] | None = None) -> int:
                             note="kein maschinenlesbarer Direktzugriff in sources.yaml (Webseite/PDF)")
         elif area is None:
             result = Result(source_id, src["title"], "fehler", url=url, license=src.get("license"),
-                            error="kein Arbeitsgebiet (Bezirksgrenze fehlt)")
+                            error="kein Arbeitsgebiet (Bezirksgrenzen fehlen)")
         else:
             handlers = {"download": lambda: fetch_download(session, source_id, src, area, manifest, args.refresh),
-                        "wfs": lambda: fetch_wfs(session, source_id, src, area),
-                        "ogc_api_features": lambda: fetch_ogcapi(session, source_id, src, area),
+                        "wfs": lambda: fetch_wfs(session, source_id, src, area, tiles),
+                        "ogc_api_features": lambda: fetch_ogcapi(session, source_id, src, area, tiles),
                         "sensorthings": lambda: fetch_sensorthings(session, source_id, src, area, area_wgs84)}
             try:
                 result = handlers[src["access"]]()
@@ -489,7 +540,7 @@ def main(argv: list[str] | None = None) -> int:
     write_report(results, work_area, url_comments, sources)
     print(f"Bericht: {REPORT_PATH.relative_to(REPO_ROOT)}")
 
-    failed = [r.source_id for r in results if r.status == "fehler"] + (["work_area"] if work_area.get("error") else [])
+    failed = [r.source_id for r in results if r.status == "fehler" and r.note != "aus früherem Abruf (nicht neu geladen)"] + (["work_area"] if work_area.get("error") else [])
     if failed:
         print(f"FEHLER bei: {', '.join(failed)}", file=sys.stderr)
         return 1

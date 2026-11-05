@@ -1,13 +1,14 @@
 # Netzbericht – Abschnitte (Stufe 2)
 
-Erzeugt: 2026-11-04T20:32:13+00:00 von `pipeline/s02_network.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-04T21:29:22+00:00 von `pipeline/s02_network.py`. Nicht amtlicher Entwurf.
 
 ## Eingabe
 
 - OSM-Auszug: `data/raw/osm/hamburg_2026-10-28.osm.pbf` (Abruf 2026-10-28, SHA-256 `700d2e2603a7ffb5…`)
-- Regelwerk: config/rules.yaml 0.11.0
+- Regelwerk: config/rules.yaml 0.13.0
 - highway-Klassen: motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link, unclassified, residential, living_street, pedestrian, service, track
-- Netz für ganz Hamburg berechnet, damit IDs am Rand des Pilotbezirks nicht vom Zuschnitt abhängen.
+- Netz für ganz Hamburg berechnet, damit IDs nicht vom Zuschnitt des Arbeitsgebiets abhängen.
+- Bezirk je Abschnitt: Bezirk mit dem größten Längenanteil; Neuwerk/Scharhörn und Flächen außerhalb Hamburgs bleiben ohne Bezirk (config/project.yaml, area).
 
 ## Segmentierungsregeln
 
@@ -22,10 +23,10 @@ segment_id = Hash aus sortierten OSM-Way-IDs und den auf 1 m gerundeten Koordina
 
 - Kanten (Knoten zu Knoten) im Ausgangsnetz: 228 005 aus 42 001 Ways
 - Abschnitte Hamburg: 36 526 (4 997.7 km)
-- Abschnitte Eimsbüttel: 4 010 (480.1 km)
-- Abschnitte im Arbeitsgebiet (Eimsbüttel + 500 m): 5 127
-- Abschnitte aus Teilung nach S-NET-03: 461 (davon Eimsbüttel: 32)
-- Abschnitte ohne Bezirk (außerhalb Hamburgs, Randstreifen des OSM-Auszugs; nur für den Netzzusammenhang): 1 240
+- Abschnitte in Hamburg (7 Bezirke): 35 280 (4 750.7 km)
+- Abschnitte im Arbeitsgebiet (Hamburg (7 Bezirke) + 500 m): 34 999
+- Abschnitte aus Teilung nach S-NET-03: 461 (davon Hamburg (7 Bezirke): 420)
+- Abschnitte ohne Bezirk (außerhalb Hamburgs, Randstreifen des OSM-Auszugs, Neuwerk; nur für den Netzzusammenhang): 1 246
 - Abschnitte ohne OSM-maxspeed: 6 843; mit mehreren maxspeed-Werten: 426
 
 ## Prüfungen
@@ -37,30 +38,31 @@ segment_id = Hash aus sortierten OSM-Way-IDs und den auf 1 m gerundeten Koordina
 | Geometrien gültig | ok | 0 ungültig |
 | Länge > 0 | ok | 0 mit Länge 0 |
 | CRS EPSG:25832 | ok | EPSG:25832 |
-| IDs identisch mit Vorlauf | **FEHLER** | 34000 gleich, 2526 neu, 502 entfallen |
+| IDs identisch mit Vorlauf | ok | 36526 gleich, 0 neu, 0 entfallen |
 
-## Längenverteilung je highway-Klasse – Eimsbüttel
+## Längenverteilung je highway-Klasse – Hamburg (7 Bezirke)
 
 | highway | Anzahl | Summe km | P10 m | Median m | P90 m | Max m |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| motorway | 30 | 23.4 | 211 | 618 | 1 722 | 2 179 |
-| motorway_link | 72 | 8.8 | 17 | 51 | 301 | 601 |
-| trunk | 1 | 0.0 | 33 | 33 | 33 | 33 |
-| primary | 567 | 58.3 | 13 | 59 | 238 | 1 730 |
-| primary_link | 29 | 0.9 | 9 | 27 | 47 | 119 |
-| secondary | 337 | 26.2 | 10 | 41 | 180 | 726 |
-| secondary_link | 21 | 1.0 | 22 | 45 | 71 | 86 |
-| tertiary | 537 | 51.7 | 11 | 71 | 217 | 1 384 |
-| tertiary_link | 9 | 0.4 | 12 | 38 | 67 | 77 |
-| unclassified | 95 | 12.5 | 12 | 71 | 332 | 1 345 |
-| residential | 2 039 | 274.3 | 30 | 110 | 275 | 993 |
-| living_street | 117 | 10.6 | 23 | 65 | 188 | 265 |
-| pedestrian | 86 | 3.1 | 7 | 25 | 77 | 169 |
-| service | 56 | 5.5 | 12 | 75 | 222 | 474 |
-| track | 14 | 3.5 | 76 | 198 | 464 | 619 |
-| **gesamt** | 4 010 | 480.1 | 16 | 85 | 259 | 2 179 |
+| motorway | 177 | 177.1 | 184 | 618 | 2 093 | 4 780 |
+| motorway_link | 368 | 58.0 | 16 | 74 | 347 | 1 347 |
+| trunk | 81 | 44.7 | 54 | 433 | 1 421 | 2 638 |
+| trunk_link | 128 | 16.3 | 16 | 51 | 306 | 519 |
+| primary | 2 767 | 291.7 | 12 | 64 | 241 | 3 488 |
+| primary_link | 105 | 5.5 | 10 | 33 | 99 | 530 |
+| secondary | 3 985 | 452.2 | 12 | 64 | 260 | 2 054 |
+| secondary_link | 201 | 8.0 | 11 | 34 | 81 | 216 |
+| tertiary | 4 491 | 574.4 | 13 | 75 | 261 | 3 073 |
+| tertiary_link | 121 | 4.6 | 13 | 34 | 67 | 128 |
+| unclassified | 1 638 | 295.1 | 15 | 83 | 462 | 2 855 |
+| residential | 17 493 | 2 394.5 | 27 | 102 | 280 | 2 500 |
+| living_street | 1 658 | 134.6 | 16 | 60 | 175 | 1 155 |
+| pedestrian | 703 | 31.1 | 7 | 30 | 98 | 330 |
+| service | 886 | 131.1 | 20 | 80 | 283 | 6 328 |
+| track | 478 | 131.7 | 33 | 168 | 631 | 2 954 |
+| **gesamt** | 35 280 | 4 750.7 | 17 | 86 | 281 | 6 328 |
 
-## Längenverteilung je highway-Klasse – Hamburg
+## Längenverteilung je highway-Klasse – gesamter OSM-Auszug
 
 | highway | Anzahl | Summe km | P10 m | Median m | P90 m | Max m |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -86,51 +88,51 @@ segment_id = Hash aus sortierten OSM-Way-IDs und den auf 1 m gerundeten Koordina
 
 | Bezirk | Anzahl | km |
 | --- | ---: | ---: |
-| (außerhalb Hamburgs) | 1 240 | 241.8 |
 | Altona | 4 887 | 621.1 |
 | Bergedorf | 3 063 | 544.0 |
 | Eimsbüttel | 4 010 | 480.1 |
-| Hamburg-Mitte | 6 854 | 898.2 |
+| Hamburg-Mitte | 6 848 | 893.0 |
 | Hamburg-Nord | 5 136 | 563.3 |
 | Harburg | 3 790 | 611.2 |
 | Wandsbek | 7 546 | 1 037.9 |
+| ohne Bezirk (außerhalb Hamburgs, Neuwerk) | 1 246 | 247.0 |
 
-## Stichprobe (30 zufällige Abschnitte in Eimsbüttel, Seed 42)
+## Stichprobe (30 zufällige Abschnitte in Hamburg (7 Bezirke), nach Bezirk geschichtet, Seed 42)
 
 Links auf openstreetmap.org (Way und Kartenausschnitt am Abschnittsmittelpunkt). Orthophoto- und Panoramax-Links folgen, sobald das Linkformat geklärt ist (docs/open_questions.md).
 
-| segment_id | highway | Name | Länge m | maxspeed (OSM) | Ways | Karte |
-| --- | --- | --- | ---: | --- | --- | --- |
-| `seg_06c51c323ecec35f` | residential | Sachsenweg | 136 | 30 | [1018232732](https://www.openstreetmap.org/way/1018232732) | [OSM](https://www.openstreetmap.org/?mlat=53.643495&mlon=9.960601#map=18/53.643495/9.960601) |
-| `seg_0796a6ac6a25cf94` | tertiary | Bogenstraße | 10 | 50 | [238921530](https://www.openstreetmap.org/way/238921530) | [OSM](https://www.openstreetmap.org/?mlat=53.571076&mlon=9.978445#map=18/53.571076/9.978445) |
-| `seg_085fcf760eb5e9c1` | tertiary | Lohkampstraße | 137 | 50 | [4919897](https://www.openstreetmap.org/way/4919897) | [OSM](https://www.openstreetmap.org/?mlat=53.615241&mlon=9.877703#map=18/53.615241/9.877703) |
-| `seg_0906305a37756fb1` | tertiary | Krähenweg | 36 | 50 | [1165983748](https://www.openstreetmap.org/way/1165983748) | [OSM](https://www.openstreetmap.org/?mlat=53.633004&mlon=9.954534#map=18/53.633004/9.954534) |
-| `seg_16df18fb7177523d` | residential | Alte Rabenstraße | 82 | 30 | [16232763](https://www.openstreetmap.org/way/16232763), [984956917](https://www.openstreetmap.org/way/984956917) | [OSM](https://www.openstreetmap.org/?mlat=53.567259&mlon=10.000605#map=18/53.567259/10.000605) |
-| `seg_1885bcb6c1f638e2` | service | Heketweg | 212 | – | [186967128](https://www.openstreetmap.org/way/186967128), [23840069](https://www.openstreetmap.org/way/23840069) | [OSM](https://www.openstreetmap.org/?mlat=53.650543&mlon=9.908991#map=18/53.650543/9.908991) |
-| `seg_1abf10d7274d8422` | residential | Rahweg | 324 | 30 | [148170157](https://www.openstreetmap.org/way/148170157), [1459903219](https://www.openstreetmap.org/way/1459903219) | [OSM](https://www.openstreetmap.org/?mlat=53.641256&mlon=9.977482#map=18/53.641256/9.977482) |
-| `seg_1d3b3fe24c77d387` | tertiary | Lappenbergsallee | 14 | 50 | [695925121](https://www.openstreetmap.org/way/695925121) | [OSM](https://www.openstreetmap.org/?mlat=53.573393&mlon=9.948760#map=18/53.573393/9.948760) |
-| `seg_2520202b82b96419` | residential | Alsterufer | 22 | 50 | [1345098540](https://www.openstreetmap.org/way/1345098540), [1073054122](https://www.openstreetmap.org/way/1073054122) | [OSM](https://www.openstreetmap.org/?mlat=53.558896&mlon=9.993841#map=18/53.558896/9.993841) |
-| `seg_33c01a47652cf1df` | tertiary | Bogenstraße | 14 | 50 | [136712391](https://www.openstreetmap.org/way/136712391) | [OSM](https://www.openstreetmap.org/?mlat=53.571012&mlon=9.978584#map=18/53.571012/9.978584) |
-| `seg_3882e28e339b36bf` | residential | Spengelweg / Rellinger Straße | 224 | 30 | [23100115](https://www.openstreetmap.org/way/23100115), [239962438](https://www.openstreetmap.org/way/239962438), [28313036](https://www.openstreetmap.org/way/28313036) (+1) | [OSM](https://www.openstreetmap.org/?mlat=53.573663&mlon=9.943104#map=18/53.573663/9.943104) |
-| `seg_3a33dc270eaaf8ed` | residential | Jungfrauenthal | 32 | – | [136965459](https://www.openstreetmap.org/way/136965459) | [OSM](https://www.openstreetmap.org/?mlat=53.581471&mlon=9.987730#map=18/53.581471/9.987730) |
-| `seg_3be5306ed98e0a7f` | residential | Frohbösestraße | 240 | 30 | [368064190](https://www.openstreetmap.org/way/368064190), [145693805](https://www.openstreetmap.org/way/145693805) | [OSM](https://www.openstreetmap.org/?mlat=53.573857&mlon=9.938727#map=18/53.573857/9.938727) |
-| `seg_3f91506d8d854af2` | primary | Schleswiger Damm | 60 | 50 | [23299739](https://www.openstreetmap.org/way/23299739) | [OSM](https://www.openstreetmap.org/?mlat=53.632824&mlon=9.925596#map=18/53.632824/9.925596) |
-| `seg_47cd5b763bcfa29e` | tertiary | Hagenbeckstraße | 22 | 50 | [1561196248](https://www.openstreetmap.org/way/1561196248) | [OSM](https://www.openstreetmap.org/?mlat=53.583284&mlon=9.947488#map=18/53.583284/9.947488) |
-| `seg_6d0e0b2329b1d570` | residential | Bismarckstraße | 79 | 30 | [137247324](https://www.openstreetmap.org/way/137247324) | [OSM](https://www.openstreetmap.org/?mlat=53.578374&mlon=9.973497#map=18/53.578374/9.973497) |
-| `seg_84b63f5668d782a0` | residential | Hollwören | 9 | 30 | [8385642](https://www.openstreetmap.org/way/8385642) | [OSM](https://www.openstreetmap.org/?mlat=53.619192&mlon=9.942506#map=18/53.619192/9.942506) |
-| `seg_8f3580d1090efd3c` | residential | Bruktererweg | 64 | 30 | [25076220](https://www.openstreetmap.org/way/25076220) | [OSM](https://www.openstreetmap.org/?mlat=53.647150&mlon=9.955036#map=18/53.647150/9.955036) |
-| `seg_9360c0070d5d8fc8` | tertiary | Grindelhof | 16 | 30 | [136915268](https://www.openstreetmap.org/way/136915268) | [OSM](https://www.openstreetmap.org/?mlat=53.567884&mlon=9.982048#map=18/53.567884/9.982048) |
-| `seg_9bb1cf3412c19733` | unclassified | Modering | 259 | 50 | [10223274](https://www.openstreetmap.org/way/10223274) | [OSM](https://www.openstreetmap.org/?mlat=53.637367&mlon=9.922109#map=18/53.637367/9.922109) |
-| `seg_9e5767e0c7ad02d8` | primary | Kieler Straße | 215 | 50 | [1352770748](https://www.openstreetmap.org/way/1352770748), [1352769095](https://www.openstreetmap.org/way/1352769095), [145693831](https://www.openstreetmap.org/way/145693831) (+1) | [OSM](https://www.openstreetmap.org/?mlat=53.575102&mlon=9.939301#map=18/53.575102/9.939301) |
-| `seg_a830200978b8de3c` | living_street | Assorweg | 17 | – | [57841656](https://www.openstreetmap.org/way/57841656) | [OSM](https://www.openstreetmap.org/?mlat=53.632276&mlon=9.898395#map=18/53.632276/9.898395) |
-| `seg_aa9749a5add7c059` | primary | Niendorfer Marktplatz | 65 | 50 | [30339585](https://www.openstreetmap.org/way/30339585), [1561698175](https://www.openstreetmap.org/way/1561698175) | [OSM](https://www.openstreetmap.org/?mlat=53.618125&mlon=9.949407#map=18/53.618125/9.949407) |
-| `seg_b112936ec884f5d8` | tertiary |  | 11 | 50 | [59557227](https://www.openstreetmap.org/way/59557227), [1511356916](https://www.openstreetmap.org/way/1511356916) | [OSM](https://www.openstreetmap.org/?mlat=53.582256&mlon=9.947678#map=18/53.582256/9.947678) |
-| `seg_b84ce5c2151c69de` | secondary | Beim Schlump | 28 | 50 | [52092679](https://www.openstreetmap.org/way/52092679), [220112336](https://www.openstreetmap.org/way/220112336) | [OSM](https://www.openstreetmap.org/?mlat=53.567576&mlon=9.970552#map=18/53.567576/9.970552) |
-| `seg_bc13ad58ca792ef8` | residential | Feldrosenweg | 211 | 30 | [4920036](https://www.openstreetmap.org/way/4920036) | [OSM](https://www.openstreetmap.org/?mlat=53.612080&mlon=9.885824#map=18/53.612080/9.885824) |
-| `seg_c1c808ce9df1c275` | residential | Böttgerstraße | 172 | 30 | [4048171](https://www.openstreetmap.org/way/4048171) | [OSM](https://www.openstreetmap.org/?mlat=53.568747&mlon=9.996735#map=18/53.568747/9.996735) |
-| `seg_c28aa1753bd31112` | primary_link |  | 88 | 50 | [692691300](https://www.openstreetmap.org/way/692691300) | [OSM](https://www.openstreetmap.org/?mlat=53.592565&mlon=9.928214#map=18/53.592565/9.928214) |
-| `seg_c2fb646f49fcf631` | residential | Teutonenweg | 301 | 30 | [329802783](https://www.openstreetmap.org/way/329802783), [4860840](https://www.openstreetmap.org/way/4860840) | [OSM](https://www.openstreetmap.org/?mlat=53.634120&mlon=9.970232#map=18/53.634120/9.970232) |
-| `seg_e932efaa0fc40339` | residential | Fuhlsbütteler Weg | 254 | 30 | [8470233](https://www.openstreetmap.org/way/8470233), [125603392](https://www.openstreetmap.org/way/125603392) | [OSM](https://www.openstreetmap.org/?mlat=53.623607&mlon=9.956940#map=18/53.623607/9.956940) |
+| segment_id | Bezirk | highway | Name | Länge m | maxspeed (OSM) | Ways | Karte |
+| --- | --- | --- | --- | ---: | --- | --- | --- |
+| `seg_0b429570fa26ebba` | Altona | secondary | Blankeneser Landstraße | 171 | 50 | [4347380](https://www.openstreetmap.org/way/4347380), [1085324056](https://www.openstreetmap.org/way/1085324056) | [OSM](https://www.openstreetmap.org/?mlat=53.565854&mlon=9.799288#map=18/53.565854/9.799288) |
+| `seg_30696dcbf7bc7a04` | Altona | primary | Stresemannstraße | 55 | 50 | [936598996](https://www.openstreetmap.org/way/936598996), [936599010](https://www.openstreetmap.org/way/936599010), [1071071905](https://www.openstreetmap.org/way/1071071905) | [OSM](https://www.openstreetmap.org/?mlat=53.563539&mlon=9.941936#map=18/53.563539/9.941936) |
+| `seg_69ef3a0b69aab218` | Altona | residential | Augustenpassage | 187 | 30 | [618750343](https://www.openstreetmap.org/way/618750343), [139172720](https://www.openstreetmap.org/way/139172720), [618750342](https://www.openstreetmap.org/way/618750342) (+2) | [OSM](https://www.openstreetmap.org/?mlat=53.559088&mlon=9.965603#map=18/53.559088/9.965603) |
+| `seg_76cb381fe708c1fa` | Altona | unclassified | Babenwischenweg | 215 | – | [139864005](https://www.openstreetmap.org/way/139864005) | [OSM](https://www.openstreetmap.org/?mlat=53.609687&mlon=9.763284#map=18/53.609687/9.763284) |
+| `seg_3055a1151f286ebc` | Bergedorf | service | Marie-Henning-Weg | 38 | – | [374350909](https://www.openstreetmap.org/way/374350909) | [OSM](https://www.openstreetmap.org/?mlat=53.482009&mlon=10.155254#map=18/53.482009/10.155254) |
+| `seg_4b548c3d7e1cb258` | Bergedorf | primary | Bergedorfer Straße | 14 | 70 | [40158675](https://www.openstreetmap.org/way/40158675) | [OSM](https://www.openstreetmap.org/?mlat=53.520161&mlon=10.151516#map=18/53.520161/10.151516) |
+| `seg_fad06e039233b2f9` | Bergedorf | living_street | Bockhorster Höhe | 59 | – | [25753638](https://www.openstreetmap.org/way/25753638) | [OSM](https://www.openstreetmap.org/?mlat=53.515690&mlon=10.172691#map=18/53.515690/10.172691) |
+| `seg_1abf10d7274d8422` | Eimsbüttel | residential | Rahweg | 324 | 30 | [148170157](https://www.openstreetmap.org/way/148170157), [1459903219](https://www.openstreetmap.org/way/1459903219) | [OSM](https://www.openstreetmap.org/?mlat=53.641256&mlon=9.977482#map=18/53.641256/9.977482) |
+| `seg_b112936ec884f5d8` | Eimsbüttel | tertiary |  | 11 | 50 | [59557227](https://www.openstreetmap.org/way/59557227), [1511356916](https://www.openstreetmap.org/way/1511356916) | [OSM](https://www.openstreetmap.org/?mlat=53.582256&mlon=9.947678#map=18/53.582256/9.947678) |
+| `seg_c28aa1753bd31112` | Eimsbüttel | primary_link |  | 88 | 50 | [692691300](https://www.openstreetmap.org/way/692691300) | [OSM](https://www.openstreetmap.org/?mlat=53.592565&mlon=9.928214#map=18/53.592565/9.928214) |
+| `seg_e932efaa0fc40339` | Eimsbüttel | residential | Fuhlsbütteler Weg | 254 | 30 | [8470233](https://www.openstreetmap.org/way/8470233), [125603392](https://www.openstreetmap.org/way/125603392) | [OSM](https://www.openstreetmap.org/?mlat=53.623607&mlon=9.956940#map=18/53.623607/9.956940) |
+| `seg_09aed50abf56bb66` | Hamburg-Mitte | living_street | Billstieg | 157 | – | [25581052](https://www.openstreetmap.org/way/25581052) | [OSM](https://www.openstreetmap.org/?mlat=53.534394&mlon=10.110004#map=18/53.534394/10.110004) |
+| `seg_196a081a2cbb22e9` | Hamburg-Mitte | unclassified | Eversween | 12 | 50 | [408046751](https://www.openstreetmap.org/way/408046751) | [OSM](https://www.openstreetmap.org/?mlat=53.480681&mlon=9.980563#map=18/53.480681/9.980563) |
+| `seg_7fc697e24a3a259c` | Hamburg-Mitte | residential | Schiffbeker Weg | 15 | 30 | [151362244](https://www.openstreetmap.org/way/151362244) | [OSM](https://www.openstreetmap.org/?mlat=53.555131&mlon=10.113725#map=18/53.555131/10.113725) |
+| `seg_a606d8a75b4ad901` | Hamburg-Mitte | living_street |  | 78 | walk | [965138690](https://www.openstreetmap.org/way/965138690) | [OSM](https://www.openstreetmap.org/?mlat=53.542381&mlon=9.844991#map=18/53.542381/9.844991) |
+| `seg_b3783719c59d5712` | Hamburg-Mitte | residential | Kentzlerdamm / Rumpffsweg | 307 | 30 | [25592021](https://www.openstreetmap.org/way/25592021), [40246686](https://www.openstreetmap.org/way/40246686), [25592019](https://www.openstreetmap.org/way/25592019) (+1) | [OSM](https://www.openstreetmap.org/?mlat=53.554402&mlon=10.054247#map=18/53.554402/10.054247) |
+| `seg_0be0b44008702754` | Hamburg-Nord | primary | Sechslingspforte | 31 | 50 | [1266104813](https://www.openstreetmap.org/way/1266104813) | [OSM](https://www.openstreetmap.org/?mlat=53.562812&mlon=10.015436#map=18/53.562812/10.015436) |
+| `seg_25faecf475c757b5` | Hamburg-Nord | residential | Wakendorfer Weg | 66 | 30 | [4339201](https://www.openstreetmap.org/way/4339201) | [OSM](https://www.openstreetmap.org/?mlat=53.677874&mlon=10.035990#map=18/53.677874/10.035990) |
+| `seg_5a4f9205e401376b` | Hamburg-Nord | tertiary | Am Schulwald | 16 | 50 | [27217205](https://www.openstreetmap.org/way/27217205) | [OSM](https://www.openstreetmap.org/?mlat=53.649806&mlon=10.025809#map=18/53.649806/10.025809) |
+| `seg_6037ec807e38fc1e` | Hamburg-Nord | residential | Husumer Straße | 86 | 30 | [5229056](https://www.openstreetmap.org/way/5229056) | [OSM](https://www.openstreetmap.org/?mlat=53.586805&mlon=9.978740#map=18/53.586805/9.978740) |
+| `seg_09a6be0f29a3e434` | Harburg | track | Hellkuhle | 660 | – | [4231690](https://www.openstreetmap.org/way/4231690) | [OSM](https://www.openstreetmap.org/?mlat=53.457406&mlon=9.925473#map=18/53.457406/9.925473) |
+| `seg_8ddf141592f67370` | Harburg | tertiary_link | Finkenwerder Straße | 36 | 50 | [210978344](https://www.openstreetmap.org/way/210978344) | [OSM](https://www.openstreetmap.org/?mlat=53.517972&mlon=9.885548#map=18/53.517972/9.885548) |
+| `seg_9da4d1abecc497a1` | Harburg | residential | Baererstraße | 7 | 30 | [1276575946](https://www.openstreetmap.org/way/1276575946) | [OSM](https://www.openstreetmap.org/?mlat=53.453609&mlon=9.986445#map=18/53.453609/9.986445) |
+| `seg_a9654d6711ba142e` | Harburg | residential | Neuländer Kamp | 94 | 50 | [1319225471](https://www.openstreetmap.org/way/1319225471) | [OSM](https://www.openstreetmap.org/?mlat=53.460083&mlon=10.001861#map=18/53.460083/10.001861) |
+| `seg_36c54a4a192e62a2` | Wandsbek | residential | Raamfeld | 77 | 30 | [1416043367](https://www.openstreetmap.org/way/1416043367) | [OSM](https://www.openstreetmap.org/?mlat=53.690418&mlon=10.090378#map=18/53.690418/10.090378) |
+| `seg_75edd7ff12990b89` | Wandsbek | residential | Hinsbleek | 284 | 30 | [536409894](https://www.openstreetmap.org/way/536409894), [536409888](https://www.openstreetmap.org/way/536409888), [150741147](https://www.openstreetmap.org/way/150741147) | [OSM](https://www.openstreetmap.org/?mlat=53.652279&mlon=10.079342#map=18/53.652279/10.079342) |
+| `seg_995f22efab2f65a7` | Wandsbek | residential | Otto-Burrmeister-Ring | 12 | 30 | [3374402](https://www.openstreetmap.org/way/3374402) | [OSM](https://www.openstreetmap.org/?mlat=53.617542&mlon=10.069078#map=18/53.617542/10.069078) |
+| `seg_b4d2497aceaa106e` | Wandsbek | residential | Zuschlagkoppel | 262 | 30 | [7996499](https://www.openstreetmap.org/way/7996499) | [OSM](https://www.openstreetmap.org/?mlat=53.640807&mlon=10.177401#map=18/53.640807/10.177401) |
+| `seg_c330e5f079de24f9` | Wandsbek | secondary | Halenreie | 176 | 50 | [31061305](https://www.openstreetmap.org/way/31061305), [550871427](https://www.openstreetmap.org/way/550871427) | [OSM](https://www.openstreetmap.org/?mlat=53.651382&mlon=10.161517#map=18/53.651382/10.161517) |
+| `seg_c742220b5e1602bd` | Wandsbek | residential | Gropiusring | 493 | 30 | [817199725](https://www.openstreetmap.org/way/817199725), [539241969](https://www.openstreetmap.org/way/539241969), [1162634972](https://www.openstreetmap.org/way/1162634972) | [OSM](https://www.openstreetmap.org/?mlat=53.611934&mlon=10.055166#map=18/53.611934/10.055166) |
 
 ## Lizenz
 

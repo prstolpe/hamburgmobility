@@ -1,4 +1,4 @@
-"""Pilot district boundary from OSM and the buffered working area."""
+"""District boundaries from OSM (selection of several Bezirke: pipeline/lib/area.py)."""
 
 from pathlib import Path
 

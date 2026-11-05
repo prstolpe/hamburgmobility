@@ -331,3 +331,12 @@ def test_merge_flags_keeps_order_and_ids():
                               "b": [{"id": "N4", "flag": "N4_shortcut", "inputs": {}}]})
     assert [f["flag"] for f in merged["a"]] == ["N2_island", "N4_shortcut"]
     assert list(merged) == ["a", "b"]
+
+
+def test_polygonal_drops_line_slivers_from_intersections():
+    """work_area ∩ city can be a GeometryCollection (polygons plus shared edges); its boundary would be None."""
+    from shapely.geometry import GeometryCollection, LineString, box
+    from pipeline.lib.coherence import _polygonal
+    g = GeometryCollection([box(0, 0, 10, 10), LineString([(10, 0), (20, 0)]), box(30, 0, 40, 10)])
+    p = _polygonal(g)
+    assert p.geom_type == "MultiPolygon" and p.area == 200 and p.boundary is not None

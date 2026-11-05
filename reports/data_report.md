@@ -1,69 +1,83 @@
-# Datenbericht – Abruf Pilotbezirk
+# Datenbericht – Abruf Arbeitsgebiet
 
-Erzeugt: 2026-10-28T14:14:26+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-04T21:28:38+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.
 
 ## Arbeitsgebiet
 
-- Bezirk: Eimsbüttel (OSM-Relation 30243, admin_level 9), Fläche 49.8 km²
-- Puffer: 500 m, Arbeitsgebiet 69.7 km²
-- Bounding Box (EPSG:25832): [557002.1, 5934196.7, 567274.8, 5946089.7]
-- Grenze aus OSM, weil die ALKIS-URL in config/sources.yaml fehlt.
+Bezirke von Hamburg (admin_level 9, Grenzen aus OSM, weil die ALKIS-URL in config/sources.yaml fehlt):
+
+| Bezirk | OSM-Relation | Fläche km² |
+| --- | ---: | ---: |
+| Altona | 30223 | 77.8 |
+| Bergedorf | 28936 | 154.6 |
+| Eimsbüttel | 30243 | 49.8 |
+| Hamburg-Mitte | 28971 | 134.6 |
+| Hamburg-Nord | 30352 | 57.7 |
+| Harburg | 28964 | 125.0 |
+| Wandsbek | 30353 | 147.4 |
+| **gesamt** | | **746.9** |
+
+- Ausgeschlossen: Neuwerk (admin_level 10) samt dem abgetrennten Polygonteil, in dem es liegt (Neuwerk: Insel, Scharhörn, Wattenmeer; Entscheidung 2026-11-04)
+- Puffer: 500 m, Arbeitsgebiet 842.6 km²
+- Abgerufen wird das ganze Arbeitsgebiet. Nicht klassifiziert werden 17 ländliche Stadtteile (172.8 km²; config/project.yaml, rural_exclude): Allermöhe, Altengamme, Billwerder, Cranz, Curslack, Francop, Gut Moor, Kirchwerder, Moorburg, Moorfleet, Neuenfelde, Neuengamme, Neuland, Ochsenwerder, Reitbrook, Spadenland, Tatenberg
+- Bounding Box (EPSG:25832): [547864.4, 5916431.7, 588510.4, 5955661.7]
+- Abruf von WFS und OGC API in 20 Kacheln zu 10 km; doppelt gelieferte Objekte an Kachelgrenzen werden entfernt.
 - Objekte, die das Arbeitsgebiet schneiden, werden vollständig übernommen (kein Zuschnitt).
 
 ## Übersicht je Quelle
 
 | Quelle | Status | Objekte | Lizenz | Abruf | Hinweis |
 | --- | --- | --- | --- | --- | --- |
-| hvs_network_map | manuell | – | unknown | – | kein maschinenlesbarer Direktzugriff in sources.yaml (Webseite/PDF) |
+| hvs_network_map | manuell | – | unknown | – | aus früherem Abruf (nicht neu geladen) |
 | strategic_road_network | fehler | – | dl-de/by-2.0 | – | https://geodienste.hamburg.de/HH_WFS_Strategisches_Strassennetz: HTTP 404 |
-| dedications | ok | 6259 | dl-de/by-2.0 | 2026-10-28 |  |
-| speed_limits | ok | 8010 | unknown | 2026-10-28 |  |
-| traffic_volumes | ok | 690 | unknown | 2026-10-28 |  |
-| traffic_counters | ok | 3139 | unknown | 2026-10-28 | nur Bestand (Locations + Things), keine Messwerte |
-| bike_volumes_dbradplus | fehler | – | ODbL-1.0 | – | https://api.hamburg.de/datasets/v1/dbradplus/collections/jahr2025/items?f=json&bbox=557002.1468911578%2C5934196.7297488125%2C567274.8341519193%2C5946089.7089329&bbox-crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&limit=1000&offset=10000: invalid JSON after 63156 bytes (Expecting ',' delimiter: line 1 column 63157 (char 63156)) |
-| cycle_network | fallback | 11 | ODbL-1.0 | 2026-10-28 | Fallback OSM: {"relations": {"cycle_network": ["DE:HH:Radnetz_Hamburg"]}} |
-| alkis | ok | 72433 | dl-de/by-2.0 | 2026-10-28 |  |
+| dedications | ok | 47391 | dl-de/by-2.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| speed_limits | ok | 57511 | unknown | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| traffic_volumes | ok | 4303 | unknown | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| traffic_counters | ok | 11673 | unknown | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| bike_volumes_dbradplus | fehler | – | ODbL-1.0 | – | https://api.hamburg.de/datasets/v1/dbradplus/collections/jahr2025/items?f=json&crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&limit=1000&offset=1000: invalid JSON after 150646 bytes (Expecting ',' delimiter: line 1 column 150647 (char 150646)) |
+| cycle_network | fallback | 24 | ODbL-1.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| alkis | ok | 527311 | dl-de/by-2.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
 | buildings_3d | fehlt | – | dl-de/by-2.0 | – | TODO: Transparenzportal |
 | orthophotos | fehlt | – | dl-de/by-2.0 | – | TODO: Transparenzportal / WMS |
 | laserscan | fehlt | – | unknown | – | TODO |
 | street_trees | fehlt | – | unknown | – | TODO: Transparenzportal |
-| road_condition_zeb | ok | 111174 | dl-de/by-2.0 | 2026-10-28 |  |
-| road_surface | ok | 5096 | dl-de/by-2.0 | 2026-10-28 |  |
-| quiet_areas | ok | 0 | unknown | 2026-10-28 | de.hh.up:ruhige_gebiete_hamburg: 0 Objekte im Arbeitsgebiet, 15 im gesamten Dienst |
+| road_condition_zeb | ok | 808932 | dl-de/by-2.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| road_surface | ok | 37835 | dl-de/by-2.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| quiet_areas | ok | 15 | unknown | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
 | noise_maps | fehlt | – | unbekannt | – | TODO |
-| schools | fallback | 93 | ODbL-1.0 | 2026-10-28 | Fallback OSM: {"tags": {"amenity": ["school"]}} |
-| kitas | fallback | 220 | ODbL-1.0 | 2026-10-28 | Fallback OSM: {"tags": {"amenity": ["kindergarten"]}} |
-| population_grid | ok | 4274 | dl-de/by-2.0 | 2026-10-28 | lokale Datei wiederverwendet |
-| gtfs_hvv | ok | 0 | dl-de/by-2.0 | 2026-10-28 | lokale Datei wiederverwendet |
-| accidents | ok | 0 | dl-de/by-2.0 | 2026-10-28 |  |
-| osm | ok | 1 | ODbL-1.0 | 2026-10-28 | lokale Datei wiederverwendet (Stand Wed, 28 Oct 2026 03:56:24 GMT) |
+| schools | fallback | 558 | ODbL-1.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| kitas | fallback | 987 | ODbL-1.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
+| population_grid | ok | 31152 | dl-de/by-2.0 | 2026-10-28 | aus früherem Abruf (nicht neu geladen) |
+| gtfs_hvv | ok | 0 | dl-de/by-2.0 | 2026-10-28 | aus früherem Abruf (nicht neu geladen) |
+| accidents | ok | 0 | dl-de/by-2.0 | 2026-10-28 | aus früherem Abruf (nicht neu geladen) |
+| osm | ok | 24 | ODbL-1.0 | 2026-10-28 | lokale Datei wiederverwendet (Stand Wed, 28 Oct 2026 03:56:24 GMT) |
 
 ## Ebenen
 
 | Quelle | Ebene | Objekte | CRS | Bounding Box | Datei |
 | --- | --- | --- | --- | --- | --- |
-| dedications | de.hh.up:widmung_flaeche | 455 | EPSG:25832 | [557593.7, 5934101.2, 566761.0, 5945009.9] | `data/raw/dedications__widmung_flaeche.parquet` |
-| dedications | de.hh.up:widmung_linie | 5804 | EPSG:25832 | [557358.8, 5933728.4, 567231.7, 5946516.1] | `data/raw/dedications__widmung_linie.parquet` |
-| speed_limits | tempo20zonen | 22 | EPSG:25832 | [559611.5, 5934263.5, 565782.0, 5940417.7] | `data/raw/speed_limits__tempo20zonen.parquet` |
-| speed_limits | tempo30zonen | 2810 | EPSG:25832 | [557363.9, 5934611.5, 567151.6, 5945503.8] | `data/raw/speed_limits__tempo30zonen.parquet` |
-| speed_limits | verkehrsberuhigte_bereiche | 100 | EPSG:25832 | [557471.0, 5935031.0, 566018.2, 5945272.7] | `data/raw/speed_limits__verkehrsberuhigte_bereiche.parquet` |
-| speed_limits | zulaessige_hoechstgeschwindigkeiten | 4916 | EPSG:25832 | [557363.9, 5933728.4, 567231.7, 5945503.8] | `data/raw/speed_limits__zulaessige_hoechstgeschwindigkeiten.parquet` |
-| speed_limits | zulaessige_hoechstgeschwindigkeiten_sonderregelung | 162 | EPSG:25832 | [558472.0, 5934911.0, 565856.8, 5944500.3] | `data/raw/speed_limits__zulaessige_hoechstgeschwindigkeiten_sonderregelung.parquet` |
-| traffic_volumes | verkehrsmengen_dtv_hvs_2019 | 598 | EPSG:25832 | [557979.4, 5934259.0, 567018.7, 5945253.2] | `data/raw/traffic_volumes__verkehrsmengen_dtv_hvs_2019.parquet` |
-| traffic_volumes | verkehrsmengen_dtv_bab_2019 | 92 | EPSG:25832 | [557583.4, 5936922.6, 561516.1, 5945291.2] | `data/raw/traffic_volumes__verkehrsmengen_dtv_bab_2019.parquet` |
-| traffic_counters | locations_things | 3139 | EPSG:25832 | [557869.1, 5933864.0, 566909.7, 5945067.0] | `data/raw/traffic_counters__locations_things.parquet` |
-| cycle_network | osm | 11 | EPSG:25832 | [559477.1, 5934127.3, 567331.8, 5943928.0] | `data/raw/cycle_network__osm.parquet` |
-| alkis | ave:Nutzung | 12381 | EPSG:25832 | [556939.5, 5934001.7, 567665.8, 5945590.9] | `data/raw/alkis__Nutzung.parquet` |
-| alkis | ave:GebaeudeBauwerk | 60052 | EPSG:25832 | [557310.5, 5934160.9, 567192.1, 5945353.4] | `data/raw/alkis__GebaeudeBauwerk.parquet` |
-| road_condition_zeb | de.hh.up:zeb2025_geb | 18529 | EPSG:25832 | [557375.7, 5934189.9, 567196.9, 5945503.7] | `data/raw/road_condition_zeb__zeb2025_geb.parquet` |
-| road_condition_zeb | de.hh.up:zeb2025_gw | 55587 | EPSG:25832 | [557375.7, 5934189.9, 567196.9, 5945503.7] | `data/raw/road_condition_zeb__zeb2025_gw.parquet` |
-| road_condition_zeb | de.hh.up:zeb2025_sub | 37058 | EPSG:25832 | [557375.7, 5934189.9, 567196.9, 5945503.7] | `data/raw/road_condition_zeb__zeb2025_sub.parquet` |
-| road_surface | de.hh.up:strassendeckschicht | 5096 | EPSG:25832 | [557363.9, 5934161.6, 567231.7, 5945503.8] | `data/raw/road_surface__strassendeckschicht.parquet` |
-| quiet_areas | de.hh.up:ruhige_gebiete_hamburg | 0 | EPSG:25832 | None | `data/raw/quiet_areas__ruhige_gebiete_hamburg.parquet` |
-| schools | osm | 93 | EPSG:25832 | [557647.5, 5934652.4, 566606.5, 5944650.8] | `data/raw/schools__osm.parquet` |
-| kitas | osm | 220 | EPSG:25832 | [558525.5, 5935025.8, 566075.0, 5944951.6] | `data/raw/kitas__osm.parquet` |
+| dedications | de.hh.up:widmung_flaeche | 3844 | EPSG:25832 | [548818.0, 5917261.3, 585676.8, 5953530.7] | `data/raw/dedications__widmung_flaeche.parquet` |
+| dedications | de.hh.up:widmung_linie | 43547 | EPSG:25832 | [548676.3, 5917191.3, 588004.0, 5953544.0] | `data/raw/dedications__widmung_linie.parquet` |
+| speed_limits | tempo20zonen | 192 | EPSG:25832 | [549993.5, 5923858.3, 580666.5, 5945532.0] | `data/raw/speed_limits__tempo20zonen.parquet` |
+| speed_limits | tempo30zonen | 19472 | EPSG:25832 | [548986.1, 5917239.8, 585760.5, 5952432.3] | `data/raw/speed_limits__tempo30zonen.parquet` |
+| speed_limits | verkehrsberuhigte_bereiche | 1477 | EPSG:25832 | [549289.7, 5919032.8, 586448.3, 5952406.4] | `data/raw/speed_limits__verkehrsberuhigte_bereiche.parquet` |
+| speed_limits | zulaessige_hoechstgeschwindigkeiten | 35538 | EPSG:25832 | [548683.1, 5917191.3, 588004.0, 5953544.0] | `data/raw/speed_limits__zulaessige_hoechstgeschwindigkeiten.parquet` |
+| speed_limits | zulaessige_hoechstgeschwindigkeiten_sonderregelung | 832 | EPSG:25832 | [550159.7, 5917459.7, 581284.7, 5951293.6] | `data/raw/speed_limits__zulaessige_hoechstgeschwindigkeiten_sonderregelung.parquet` |
+| traffic_volumes | verkehrsmengen_dtv_hvs_2019 | 3728 | EPSG:25832 | [548832.4, 5918844.7, 584029.9, 5952916.3] | `data/raw/traffic_volumes__verkehrsmengen_dtv_hvs_2019.parquet` |
+| traffic_volumes | verkehrsmengen_dtv_bab_2019 | 575 | EPSG:25832 | [557583.4, 5918776.3, 584409.3, 5945291.2] | `data/raw/traffic_volumes__verkehrsmengen_dtv_bab_2019.parquet` |
+| traffic_counters | locations_things | 11673 | EPSG:25832 | [548710.0, 5917280.5, 584015.0, 5952303.0] | `data/raw/traffic_counters__locations_things.parquet` |
+| cycle_network | osm | 24 | EPSG:25832 | [557955.9, 5923659.4, 580081.2, 5943928.0] | `data/raw/cycle_network__osm.parquet` |
+| alkis | ave:Nutzung | 102339 | EPSG:25832 | [548365.3, 5916918.1, 588010.4, 5955161.7] | `data/raw/alkis__Nutzung.parquet` |
+| alkis | ave:GebaeudeBauwerk | 424972 | EPSG:25832 | [548681.9, 5917227.9, 587611.8, 5953580.7] | `data/raw/alkis__GebaeudeBauwerk.parquet` |
+| road_condition_zeb | de.hh.up:zeb2025_geb | 134822 | EPSG:25832 | [548946.7, 5917198.8, 587470.7, 5952682.1] | `data/raw/road_condition_zeb__zeb2025_geb.parquet` |
+| road_condition_zeb | de.hh.up:zeb2025_gw | 404466 | EPSG:25832 | [548946.7, 5917198.8, 587470.7, 5952682.1] | `data/raw/road_condition_zeb__zeb2025_gw.parquet` |
+| road_condition_zeb | de.hh.up:zeb2025_sub | 269644 | EPSG:25832 | [548946.7, 5917198.8, 587470.7, 5952682.1] | `data/raw/road_condition_zeb__zeb2025_sub.parquet` |
+| road_surface | de.hh.up:strassendeckschicht | 37835 | EPSG:25832 | [548683.1, 5917191.3, 587561.5, 5953544.0] | `data/raw/road_surface__strassendeckschicht.parquet` |
+| quiet_areas | de.hh.up:ruhige_gebiete_hamburg | 15 | EPSG:25832 | [550110.0, 5918718.2, 580556.3, 5955120.2] | `data/raw/quiet_areas__ruhige_gebiete_hamburg.parquet` |
+| schools | osm | 558 | EPSG:25832 | [549701.6, 5917466.0, 584459.3, 5951180.9] | `data/raw/schools__osm.parquet` |
+| kitas | osm | 987 | EPSG:25832 | [548705.5, 5917380.7, 584544.2, 5951373.9] | `data/raw/kitas__osm.parquet` |
 | population_grid | zip | – | – | – | `data/raw/population_grid/Zensus2022_Bevoelkerungszahl.zip` |
-| population_grid | 100m | 4274 | EPSG:25832 | [556956.0, 5934137.8, 567325.9, 5946066.6] | `data/raw/population_grid__100m.parquet` |
+| population_grid | 100m | 31152 | EPSG:25832 | [548111.8, 5916358.5, 587228.7, 5955482.0] | `data/raw/population_grid__100m.parquet` |
 | gtfs_hvv | zip | – | – | – | `data/raw/gtfs_hvv/Upload__hvv_Rohdaten_GTFS_Fpl_20260408.ZIP` |
 | accidents | zip_2021 | – | – | – | `data/raw/accidents/Unfallorte2021_EPSG25832_CSV.zip` |
 | accidents | zip_2022 | – | – | – | `data/raw/accidents/Unfallorte2022_EPSG25832_CSV.zip` |
@@ -71,20 +85,11 @@ Erzeugt: 2026-10-28T14:14:26+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher 
 | accidents | zip_2024 | – | – | – | `data/raw/accidents/Unfallorte2024_EPSG25832_CSV.zip` |
 | accidents | zip_2025 | – | – | – | `data/raw/accidents/Unfallorte2025_EPSG25832_CSV.zip` |
 | osm | pbf | – | – | – | `data/raw/osm/hamburg_2026-10-28.osm.pbf` |
-| osm | district_boundary | 1 | EPSG:25832 | [557501.6, 5934696.6, 566774.9, 5945590.0] | `data/raw/district_boundary.parquet` |
+| osm | work_area | 7 | EPSG:25832 | [548364.3, 5916931.6, 588010.6, 5955161.7] | `data/raw/work_area.parquet` |
+| osm | rural_excluded | 17 | EPSG:25832 | [550639.8, 5916931.6, 588010.6, 5933013.2] | `data/raw/rural_excluded.parquet` |
 
 ## Angebotene Feature-Typen und Collections
 
-- **dedications**: de.hh.up:widmung_flaeche ✔, de.hh.up:widmung_linie ✔
-- **speed_limits**: tempo20zonen ✔, tempo30zonen ✔, verkehrsberuhigte_bereiche ✔, zulaessige_hoechstgeschwindigkeiten ✔, zulaessige_hoechstgeschwindigkeiten_sonderregelung ✔
-- **traffic_volumes**: verkehrsmengen_dtv_bab_2019 ✔, verkehrsmengen_dtv_hvs_2019 ✔, verkehrsmengen_dtvw_bab_2013, verkehrsmengen_dtvw_hvs_2014
-- **alkis**: ave:KatasterBezirk, ave:Flurstueck, ave:GebaeudeBauwerk ✔, ave:Nutzung ✔, ave:NutzungFlurstueck, ave:VerwaltungsEinheit
-- **road_condition_zeb**: de.hh.up:zeb2014_geb, de.hh.up:zeb2014_gw, de.hh.up:zeb2014_sub, de.hh.up:zeb2016_geb, de.hh.up:zeb2016_gw, de.hh.up:zeb2016_sub, de.hh.up:zeb2018_geb, de.hh.up:zeb2018_gw, de.hh.up:zeb2018_sub, de.hh.up:zeb2020_geb, de.hh.up:zeb2020_gw, de.hh.up:zeb2020_sub, de.hh.up:zeb2021_geb, de.hh.up:zeb2021_gw, de.hh.up:zeb2021_sub, de.hh.up:zeb2024_geb, de.hh.up:zeb2024_gw, de.hh.up:zeb2024_sub, de.hh.up:zeb2025_geb ✔, de.hh.up:zeb2025_gw ✔, de.hh.up:zeb2025_sub ✔
-- **road_surface**: de.hh.up:strassendeckschicht ✔
-- **quiet_areas**: de.hh.up:ruhige_gebiete_hamburg ✔
-- **accidents**: 2021, 2022, 2023, 2024, 2025
-
-Neuester Jahrgang Verkehrsmengen Hauptverkehrsstraßen: **2019**.
 
 ## Quellenvermerke
 
@@ -94,8 +99,8 @@ Neuester Jahrgang Verkehrsmengen Hauptverkehrsstraßen: **2019**.
 - traffic_counters: Quellenvermerk unbekannt – klären (unknown)
 - cycle_network: © OpenStreetMap-Beitragende (ODbL-1.0)
 - alkis: Freie und Hansestadt Hamburg, Landesbetrieb Geoinformation und Vermessung (LGV) (dl-de/by-2.0)
-- road_condition_zeb: Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende, (BVM) (dl-de/by-2.0)
-- road_surface: Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (dl-de/by-2.0)
+- road_condition_zeb: Quellenvermerk unbekannt – klären (dl-de/by-2.0)
+- road_surface: Quellenvermerk unbekannt – klären (dl-de/by-2.0)
 - quiet_areas: Quellenvermerk unbekannt – klären (unknown)
 - schools: © OpenStreetMap-Beitragende (ODbL-1.0)
 - kitas: © OpenStreetMap-Beitragende (ODbL-1.0)
@@ -110,33 +115,33 @@ Links auf OpenStreetMap. Orthophoto- und Panoramax-Links folgen, sobald das Link
 
 | Quelle | Ebene | Bezeichnung | Karte |
 | --- | --- | --- | --- |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.601088&mlon=9.973745#map=18/53.601088/9.973745) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.634533&mlon=9.940800#map=18/53.634533/9.940800) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.570511&mlon=9.986601#map=18/53.570511/9.986601) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.605160&mlon=9.896512#map=18/53.605160/9.896512) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.632304&mlon=9.942138#map=18/53.632304/9.942138) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.585456&mlon=9.928895#map=18/53.585456/9.928895) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.615638&mlon=9.882284#map=18/53.615638/9.882284) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.632891&mlon=9.911688#map=18/53.632891/9.911688) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.573033&mlon=9.945775#map=18/53.573033/9.945775) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.584974&mlon=9.969315#map=18/53.584974/9.969315) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.635527&mlon=9.970052#map=18/53.635527/9.970052) |
-| road_condition_zeb | zeb2025_gw | Bekstück | [OSM](https://www.openstreetmap.org/?mlat=53.610750&mlon=9.964687#map=18/53.610750/9.964687) |
-| road_condition_zeb | zeb2025_gw | Friedrich-Ebert-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.626159&mlon=9.936836#map=18/53.626159/9.936836) |
-| road_condition_zeb | zeb2025_gw | Stellinger Steindamm | [OSM](https://www.openstreetmap.org/?mlat=53.594170&mlon=9.928102#map=18/53.594170/9.928102) |
-| road_condition_zeb | zeb2025_gw | Stresemannstraße | [OSM](https://www.openstreetmap.org/?mlat=53.559445&mlon=9.960944#map=18/53.559445/9.960944) |
-| road_condition_zeb | zeb2025_gw | Alte Volksparkstraße | [OSM](https://www.openstreetmap.org/?mlat=53.592373&mlon=9.925526#map=18/53.592373/9.925526) |
-| road_condition_zeb | zeb2025_gw | Jugendstraße | [OSM](https://www.openstreetmap.org/?mlat=53.591567&mlon=9.930715#map=18/53.591567/9.930715) |
-| road_condition_zeb | zeb2025_gw | Nienkamp | [OSM](https://www.openstreetmap.org/?mlat=53.624912&mlon=9.964192#map=18/53.624912/9.964192) |
-| road_condition_zeb | zeb2025_sub | Dachsberg | [OSM](https://www.openstreetmap.org/?mlat=53.626260&mlon=9.926675#map=18/53.626260/9.926675) |
-| road_condition_zeb | zeb2025_sub | Gottschalkweg | [OSM](https://www.openstreetmap.org/?mlat=53.634757&mlon=9.948519#map=18/53.634757/9.948519) |
-| road_condition_zeb | zeb2025_sub | Pöseldorfer Weg | [OSM](https://www.openstreetmap.org/?mlat=53.571744&mlon=9.998214#map=18/53.571744/9.998214) |
-| road_condition_zeb | zeb2025_sub | Ameisenkamp | [OSM](https://www.openstreetmap.org/?mlat=53.618391&mlon=9.884243#map=18/53.618391/9.884243) |
-| road_condition_zeb | zeb2025_sub | Fettstraße | [OSM](https://www.openstreetmap.org/?mlat=53.567065&mlon=9.963021#map=18/53.567065/9.963021) |
-| road_condition_zeb | zeb2025_sub | Langenfelder Straße | [OSM](https://www.openstreetmap.org/?mlat=53.568570&mlon=9.946080#map=18/53.568570/9.946080) |
-| road_condition_zeb | zeb2025_sub | Mergenthalerweg | [OSM](https://www.openstreetmap.org/?mlat=53.611146&mlon=9.896288#map=18/53.611146/9.896288) |
-| road_condition_zeb | zeb2025_sub | Moltkestraße | [OSM](https://www.openstreetmap.org/?mlat=53.579355&mlon=9.973068#map=18/53.579355/9.973068) |
-| speed_limits | tempo30zonen | Geschwister-Witonski-Straße | [OSM](https://www.openstreetmap.org/?mlat=53.648291&mlon=9.911816#map=18/53.648291/9.911816) |
-| speed_limits | tempo30zonen | Puckholm | [OSM](https://www.openstreetmap.org/?mlat=53.624451&mlon=9.892527#map=18/53.624451/9.892527) |
-| speed_limits | tempo30zonen | Eduardstraße | [OSM](https://www.openstreetmap.org/?mlat=53.572723&mlon=9.945544#map=18/53.572723/9.945544) |
-| speed_limits | tempo30zonen | Mölenwisch | [OSM](https://www.openstreetmap.org/?mlat=53.608315&mlon=9.964006#map=18/53.608315/9.964006) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.461949&mlon=9.877281#map=18/53.461949/9.877281) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.592363&mlon=9.758968#map=18/53.592363/9.758968) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.607515&mlon=9.977125#map=18/53.607515/9.977125) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.627727&mlon=10.021138#map=18/53.627727/10.021138) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.610467&mlon=10.022657#map=18/53.610467/10.022657) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.668644&mlon=10.058925#map=18/53.668644/10.058925) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.444998&mlon=10.161437#map=18/53.444998/10.161437) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.594691&mlon=10.125402#map=18/53.594691/10.125402) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.682084&mlon=10.135850#map=18/53.682084/10.135850) |
+| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.400919&mlon=10.174860#map=18/53.400919/10.174860) |
+| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.596969&mlon=10.061026#map=18/53.596969/10.061026) |
+| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.691809&mlon=10.126987#map=18/53.691809/10.126987) |
+| population_grid | 100m |  | [OSM](https://www.openstreetmap.org/?mlat=53.477752&mlon=9.847141#map=18/53.477752/9.847141) |
+| road_condition_zeb | zeb2025_gw | Krieterstraße | [OSM](https://www.openstreetmap.org/?mlat=53.496962&mlon=10.010517#map=18/53.496962/10.010517) |
+| road_condition_zeb | zeb2025_gw | Albert-Schäfer-Weg | [OSM](https://www.openstreetmap.org/?mlat=53.443663&mlon=9.946211#map=18/53.443663/9.946211) |
+| road_condition_zeb | zeb2025_gw | Platanenallee | [OSM](https://www.openstreetmap.org/?mlat=53.591878&mlon=9.965514#map=18/53.591878/9.965514) |
+| road_condition_zeb | zeb2025_gw | Stegerwaldring | [OSM](https://www.openstreetmap.org/?mlat=53.550932&mlon=10.101095#map=18/53.550932/10.101095) |
+| road_condition_zeb | zeb2025_gw | Swebenbrunnen | [OSM](https://www.openstreetmap.org/?mlat=53.607145&mlon=10.104637#map=18/53.607145/10.104637) |
+| road_condition_zeb | zeb2025_gw | Vinetastraße | [OSM](https://www.openstreetmap.org/?mlat=53.636177&mlon=10.194272#map=18/53.636177/10.194272) |
+| road_condition_zeb | zeb2025_gw | Am Hohen Stege | [OSM](https://www.openstreetmap.org/?mlat=53.485234&mlon=10.208705#map=18/53.485234/10.208705) |
+| road_condition_zeb | zeb2025_sub | Wogenmannsburg | [OSM](https://www.openstreetmap.org/?mlat=53.626466&mlon=9.903354#map=18/53.626466/9.903354) |
+| road_condition_zeb | zeb2025_sub | Vogelhüttendeich | [OSM](https://www.openstreetmap.org/?mlat=53.513179&mlon=10.009029#map=18/53.513179/10.009029) |
+| road_condition_zeb | zeb2025_sub | Niendorfer Kirchenweg | [OSM](https://www.openstreetmap.org/?mlat=53.621570&mlon=9.949191#map=18/53.621570/9.949191) |
+| road_condition_zeb | zeb2025_sub | Am Hegen | [OSM](https://www.openstreetmap.org/?mlat=53.591306&mlon=10.176202#map=18/53.591306/10.176202) |
+| road_condition_zeb | zeb2025_sub | Vörstekoppel | [OSM](https://www.openstreetmap.org/?mlat=53.662687&mlon=10.081571#map=18/53.662687/10.081571) |
+| road_surface | strassendeckschicht | Von-Melle-Park | [OSM](https://www.openstreetmap.org/?mlat=53.565693&mlon=9.984495#map=18/53.565693/9.984495) |
+| speed_limits | tempo30zonen | Am Großen Dahlen | [OSM](https://www.openstreetmap.org/?mlat=53.445547&mlon=9.960285#map=18/53.445547/9.960285) |
+| speed_limits | tempo30zonen | Innocentiastraße | [OSM](https://www.openstreetmap.org/?mlat=53.579121&mlon=9.981825#map=18/53.579121/9.981825) |
+| speed_limits | tempo30zonen | Meriandamm | [OSM](https://www.openstreetmap.org/?mlat=53.549722&mlon=10.115492#map=18/53.549722/10.115492) |
+| speed_limits | tempo30zonen | Chrysanderstraße | [OSM](https://www.openstreetmap.org/?mlat=53.496070&mlon=10.214557#map=18/53.496070/10.214557) |

@@ -11,16 +11,15 @@ The run stops with exit code 1 if a check fails; outputs are then not written.
 """
 
 import json
-import random
 import sys
 import warnings
 from collections import Counter
 
 import geopandas as gpd
 import pandas as pd
-import yaml
 
 from pipeline.lib import coherence as coh
+from pipeline.lib.area import NO_DISTRICT, area_label, district_names, load_area_config, read_work_area, sample_by_district
 from pipeline.lib.crs import WORK_CRS, to_work_crs
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest
@@ -28,14 +27,12 @@ from pipeline.lib.rules import load_rules
 from pipeline.s02_network import _pbf_from_manifest
 from pipeline.s04_features import OSM_BBOX_MARGIN_DEG, _fmt, _now, _pct
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "harmonised.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "coherence.parquet"
 NODES_PATH = REPO_ROOT / "data" / "interim" / "coherence_nodes.parquet"
 AREAS_PATH = REPO_ROOT / "data" / "interim" / "coherence_areas.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "coherence.md"
 GEOJSON_PATH = REPO_ROOT / "reports" / "coherence_flags.geojson"
-DISTRICT_PATH = REPO_ROOT / "data" / "raw" / "district_boundary.parquet"
 CITY_NAME = "Hamburg"
 CITY_ADMIN_LEVEL = "4"
 SAMPLE_SIZE = 30
@@ -156,22 +153,22 @@ def _name(v) -> str:
     return v if isinstance(v, str) and v else "–"
 
 
-def flag_table(out: pd.DataFrame, pilot_name: str) -> pd.DataFrame:
-    """One row per (segment, rule) with length and district."""
+def flag_table(out: pd.DataFrame, districts: list[str]) -> pd.DataFrame:
+    """One row per (segment, rule) with length and Bezirk."""
     area = out[out["conflated"].astype(bool)]
     rows = []
     for r in area.itertuples(index=False):
         for rid in dict.fromkeys(f["id"] for f in json.loads(r.coherence_trace)):
             rows.append({"segment_id": r.segment_id, "rule": rid, "length_m": r.length_m,
-                         "pilot": r.bezirk == pilot_name})
-    return pd.DataFrame(rows, columns=["segment_id", "rule", "length_m", "pilot"])
+                         "bezirk": r.bezirk if isinstance(r.bezirk, str) else NO_DISTRICT,
+                         "pilot": r.bezirk in districts})
+    return pd.DataFrame(rows, columns=["segment_id", "rule", "length_m", "bezirk", "pilot"])
 
 
-def pick_sample(out: gpd.GeoDataFrame, pilot_name: str) -> gpd.GeoDataFrame:
-    pilot = out[out["conflated"].astype(bool) & (out["bezirk"] == pilot_name)]
-    flagged = list(pilot.index[pilot["flags"].map(lambda f: f not in (None, "[]"))])
-    rnd = random.Random(SAMPLE_SEED)
-    return pilot.loc[sorted(rnd.sample(flagged, min(SAMPLE_SIZE, len(flagged))))]
+def pick_sample(out: gpd.GeoDataFrame, districts: list[str]) -> gpd.GeoDataFrame:
+    pilot = out[out["conflated"].astype(bool) & out["bezirk"].isin(districts)]
+    flagged = pilot[pilot["flags"].map(lambda f: f not in (None, "[]"))]
+    return sample_by_district(flagged, SAMPLE_SIZE, SAMPLE_SEED)
 
 
 def _points(geom):
@@ -203,7 +200,7 @@ def write_geojson(res: dict) -> None:
 def write_report(res: dict, ctx: dict, checks: list[dict]) -> None:
     rules, pilot_name, out = ctx["rules"], ctx["pilot"], res["out"]
     area = out[out["conflated"].astype(bool)]
-    ft = flag_table(out, pilot_name)
+    ft = flag_table(out, ctx["districts"])
     cats = list(rules.categories)
     p = {r.id: r for r in rules.coherence}
     lines = [
@@ -223,6 +220,15 @@ def write_report(res: dict, ctx: dict, checks: list[dict]) -> None:
         fp = f[f["pilot"]]
         lines.append(f"| {rid} | {label} | {_fmt(len(f))} | {_km(f['length_m'].sum())} | {_fmt(len(fp))} | "
                      f"{_km(fp['length_m'].sum())} |")
+    rule_ids = list(RULE_LABELS)
+    lines += ["", "km mit Flag je Bezirk und Regel:", "", "| Bezirk | km geprüft | " + " | ".join(rule_ids) + " |",
+              "| --- | ---: |" + " ---: |" * len(rule_ids)]
+    bez_all = area["bezirk"].fillna(NO_DISTRICT)
+    for bz in sorted(bez_all.unique(), key=lambda b: (b == NO_DISTRICT, b)):
+        f = ft[ft["bezirk"] == bz]
+        km = f.groupby("rule")["length_m"].sum()
+        lines.append(f"| {bz} | {_km(area.loc[bez_all == bz, 'length_m'].sum())} | "
+                     + " | ".join(_km(km.get(r, 0.0)) for r in rule_ids) + " |")
     lines += ["", "Karte: `reports/coherence_flags.geojson` (EPSG:4326; Ebenen segment, node, area; Eigenschaft `rule`), "
               "z. B. in QGIS oder geojson.io öffnen.", "",
               "## Prüfungen", "", "| Prüfung | Ergebnis | Detail |", "| --- | --- | --- |",
@@ -329,18 +335,18 @@ def write_report(res: dict, ctx: dict, checks: list[dict]) -> None:
               (", ".join(f"{', '.join(json.loads(k))} ({v})" for k, v in nd.items()) or "keine") + "."]
 
     sample, viewers = ctx["sample"], ctx["viewers"]
-    lines += ["", f"## Stichprobe: {len(sample)} zufällige markierte Abschnitte im Bezirk {pilot_name} (Seed {SAMPLE_SEED})", "",
+    lines += ["", f"## Stichprobe: {len(sample)} zufällige markierte Abschnitte in {pilot_name}, nach Bezirk geschichtet (Seed {SAMPLE_SEED})", "",
               "Fachlich durchsehen: Ist das Flag berechtigt? **Durchsicht: offen.**", "",
-              "| segment_id | Name | Kategorie | m | Flags | Orthophoto | Panoramax | OSM |",
-              "| --- | --- | --- | ---: | --- | --- | --- | --- |"]
+              "| segment_id | Bezirk | Name | Kategorie | m | Flags | Orthophoto | Panoramax | OSM |",
+              "| --- | --- | --- | --- | ---: | --- | --- | --- | --- |"]
     for _, r in sample.iterrows():
         work, wgs = _points(r.geometry)
-        lines.append(f"| `{r['segment_id']}` | {_name(r['name'])} | {r['cat_proposed']} | {r['length_m']:.0f} | "
+        lines.append(f"| `{r['segment_id']}` | {r['bezirk']} | {_name(r['name'])} | {r['cat_proposed']} | {r['length_m']:.0f} | "
                      f"{', '.join(json.loads(r['flags']))} | [DOP]({orthophoto_link(work, viewers)}) | "
                      f"[Bilder]({panoramax_link(wgs, viewers)}) | [Way]({osm_way_link(r['osm_way_ids'][0])}) |")
     lines += ["", "## Grenzen", "",
               "- Alle Parameter mit source_type assumption (rules.yaml coherence, thresholds) sind fachlich freizugeben.",
-              "- Wege, Flächen und Knoten nur im Arbeitsgebiet (Eimsbüttel + Puffer); Randeffekte sind ausgewiesen.",
+              f"- Wege, Flächen und Knoten nur im Arbeitsgebiet ({pilot_name} + Puffer, ohne Neuwerk); Randeffekte sind ausgewiesen.",
               "- Ungerichteter Graph; Abbiegeverbote, Einbahnstraßen und Zufahrtsbeschränkungen fehlen (N4).",
               "- N3 berücksichtigt keine Barrieren wie Bahn, Gewässer oder Parks.", "",
               "## Lizenz", "",
@@ -356,8 +362,8 @@ def write_report(res: dict, ctx: dict, checks: list[dict]) -> None:
 
 def main() -> int:
     rules = load_rules()
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        project = yaml.safe_load(f)["pilot_district"]
+    cfg = load_area_config()
+    names = district_names()
     if not IN_PATH.exists():
         print("coherence: data/interim/harmonised.parquet missing; run `make classify` first", file=sys.stderr)
         return 1
@@ -367,15 +373,15 @@ def main() -> int:
         print(f"coherence: {e}", file=sys.stderr)
         return 1
     inp = gpd.read_parquet(IN_PATH)
-    work_area = to_work_crs(gpd.read_parquet(DISTRICT_PATH)).geometry.union_all().buffer(project["buffer_m"])
+    work_area = read_work_area(cfg)
     print("coherence: reading OSM extract")
     osm = read_osm_inputs(REPO_ROOT / pbf["path"], work_area)
     print(f"coherence: {len(osm['signals'])} signals, {len(osm['tables'])} tables, "
           f"{len(osm['roundabout_ways'])} roundabout ways")
     res = compute(inp, rules, osm, work_area)
     checks = run_checks(inp, res["out"], rules)
-    ctx = {"rules": rules, "pilot": project["name"], "viewers": load_viewers(),
-           "sample": pick_sample(res["out"], project["name"]), "n_signals": len(osm["signals"]),
+    ctx = {"rules": rules, "pilot": area_label(names), "districts": names, "viewers": load_viewers(),
+           "sample": pick_sample(res["out"], names), "n_signals": len(osm["signals"]),
            "n_tables": len(osm["tables"]), "n_roundabouts": len(osm["roundabout_ways"])}
     write_report(res, ctx, checks)
     for c in checks:

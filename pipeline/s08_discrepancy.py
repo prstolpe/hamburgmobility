@@ -11,7 +11,6 @@ The run stops with exit code 1 if a check fails; outputs are then not written.
 """
 
 import json
-import random
 import sys
 
 import geopandas as gpd
@@ -20,15 +19,16 @@ import pandas as pd
 import yaml
 
 from pipeline.lib import accidents as acc
+from pipeline.lib.area import area_label, district_names, sample_by_district
 from pipeline.lib import discrepancy as disc
 from pipeline.lib import expr
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest
+from pipeline.lib.report import district_breakdown
 from pipeline.lib.rules import load_rules
 from pipeline.s04_features import _fmt, _now, _pct
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 SOURCES_PATH = REPO_ROOT / "config" / "sources.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "final.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "discrepancy.parquet"
@@ -254,64 +254,88 @@ def _type_table(df: pd.DataFrame, cats: list[str]) -> list[str]:
 def street_summary(df: pd.DataFrame, top_ids: set[str]) -> pd.DataFrame:
     """Named streets with priority > 0, grouped by street name and sorted by their highest priority.
 
-    Groups by name only (pieces of one name need not be connected). best_segment_id = segment with the highest priority.
+    Groups by name only (pieces of one name need not be connected; street names are unique city-wide in Hamburg).
+    best_segment_id = segment with the highest priority; bezirke = Bezirke the street runs through.
     """
     d = df[(df["priority"] > 0) & df["name"].map(lambda v: isinstance(v, str) and v != "")]
     d = d.sort_values(["priority", "segment_id"], ascending=[False, True])
     rows = []
     for name, g in d.groupby("name", sort=False):
-        rows.append({"name": name, "cats": ", ".join(dict.fromkeys(g["cat_final"])), "n_segments": len(g),
+        bez = sorted({b for b in g.get("bezirk", pd.Series(dtype=object)) if isinstance(b, str)})
+        rows.append({"name": name, "bezirke": ", ".join(bez), "cats": ", ".join(dict.fromkeys(g["cat_final"])), "n_segments": len(g),
                      "length_m": float(g["length_m"].sum()), "max_priority": float(g["priority"].iloc[0]),
                      "crashes_ped_cyc": int(g["crashes_ped_cyc"].sum()),
                      "crashes_severe_fatal": int(g["crashes_severe_fatal"].sum()),
                      "n_in_top": int(g["segment_id"].isin(top_ids).sum()), "best_segment_id": g["segment_id"].iloc[0]})
-    return pd.DataFrame(rows, columns=["name", "cats", "n_segments", "length_m", "max_priority", "crashes_ped_cyc",
+    return pd.DataFrame(rows, columns=["name", "bezirke", "cats", "n_segments", "length_m", "max_priority", "crashes_ped_cyc",
                                        "crashes_severe_fatal", "n_in_top", "best_segment_id"])
+
+
+TOP_N_DISTRICT = 10  # report length only
+
+
+def _top(df: pd.DataFrame, n: int) -> pd.DataFrame:
+    return df[df["priority"] > 0].sort_values(["priority", "segment_id"], ascending=[False, True]).head(n)
+
+
+def _top_tables(df: pd.DataFrame, n: int, n_streets: int, viewers: dict, rules, with_bezirk: bool) -> list[str]:
+    """Street list and segment list of the n highest priorities in df."""
+    top = _top(df, n)
+    bz_h, bz_s = ("Bezirk | ", "--- | ") if with_bezirk else ("", "")
+    lines = [f"### Top {n_streets} Straßen", "",
+             f"| # | Straße | {bz_h}Soll | Abschnitte (km) | davon in Top {n} | Unfälle Fuß/Rad (schwer) | höchste Priorität | "
+             "Links | Prüfung |",
+             f"| ---: | --- | {bz_s}--- | ---: | ---: | ---: | ---: | --- | --- |"]
+    streets = street_summary(df, set(top["segment_id"])).head(n_streets)
+    by_id = df.set_index("segment_id")
+    for i, s in enumerate(streets.itertuples(index=False), start=1):
+        best = by_id.loc[s.best_segment_id]
+        bz = f"{s.bezirke} | " if with_bezirk else ""
+        lines.append(f"| {i} | {s.name} | {bz}{s.cats} | {s.n_segments} ({_km(s.length_m)}) | {s.n_in_top} | "
+                     f"{s.crashes_ped_cyc} ({s.crashes_severe_fatal}) | {s.max_priority:.2f} | {_links(best, viewers)} | ☐ |")
+    lines += ["", f"### Top {n} Abschnitte", "",
+              f"| # | Name | {bz_h}Soll | Typ | Stärke T/G/N | Unfälle Fuß/Rad | Risiko | Priorität | Begründung | Links | Prüfung |",
+              f"| ---: | --- | {bz_s}--- | --- | --- | ---: | ---: | ---: | --- | --- | --- |"]
+    for i, (_, r) in enumerate(top.iterrows(), start=1):
+        sev = "/".join("–" if pd.isna(r[c]) else str(int(r[c])) for c in DIMENSIONS)
+        bz = f"{r['bezirk']} | " if with_bezirk else ""
+        lines.append(f"| {i} | {_name(r['name'])} | {bz}{r['cat_final']} | {r['disc_type']} | {sev} | "
+                     f"{int(r['crashes_ped_cyc'])} | {r['risk']:.2f} | {r['priority']:.2f} | {reason_text(r, rules)} | "
+                     f"{_links(r, viewers)} | ☐ |")
+    lines += ["", "Abschnitt-IDs der Liste (für overrides/overrides.csv): " + ", ".join(f"`{s}`" for s in top["segment_id"]), ""]
+    return lines
 
 
 def write_top30(pilot: gpd.GeoDataFrame, ctx: dict) -> None:
     rules, viewers, stats = ctx["rules"], ctx["viewers"], ctx["stats"]
     cats = [c for c in rules.categories if c in set(pilot["cat_final"])]
-    top = pilot[pilot["priority"] > 0].sort_values(["priority", "segment_id"], ascending=[False, True]).head(TOP_N)
     cov = stats["coverage"]
+    districts = sorted(pilot["bezirk"].dropna().unique())
     lines = [
-        f"# Prioritätenliste – Top {TOP_N} im Bezirk {ctx['pilot']}", "",
+        f"# Prioritätenliste – Top {TOP_N} in {ctx['pilot']}", "",
         f"Erzeugt: {_now()} von `pipeline/s08_discrepancy.py`, rules.yaml {rules.meta.version}. Nicht amtlicher Entwurf: "
         "Diskrepanz und Priorität sind Vorschläge zur Diskussion, keine Bewertung einzelner Straßen. "
         "**Prüfschritt:** Listen von Ortskundigen gegenlesen (Spalte „Prüfung“), zuerst die Straßenliste.", "",
         f"Priorität = {rules.priority.formula} (0–3). risk = gewichtete Summe aus Unfällen mit Fuß-/Radbeteiligung je km "
-        f"(Perzentilrang, Schwere gewichtet), Radnetz, Einwohner und Schule/Kita im Umkreis "
+        f"(Perzentilrang über ganz Hamburg, Schwere gewichtet), Radnetz, Einwohner und Schule/Kita im Umkreis "
         f"{rules.priority.risk.thresholds['school_kita_radius_m'].value:.0f} m (P-RISK-01). Alle Gewichte sind Annahmen.",
         "", f"Unfalljahre: {', '.join(f'{y} ({_fmt(n)} Unfälle in Hamburg)' for y, n in cov.items())}. "
         + ("Alle Jahre mit Daten für Hamburg." if all(cov.values()) else
            f"**Ohne Hamburg-Daten:** {', '.join(str(y) for y, n in cov.items() if not n)}."), "",
-        f"## Top {TOP_STREETS} Straßen", "",
-        "Abschnitte mit Priorität > 0, zusammengefasst nach Straßenname (Teile mit gleichem Namen müssen nicht "
-        "zusammenhängen; Abschnitte ohne Namen nur in der Abschnittsliste). Links auf den Abschnitt mit der höchsten "
-        "Priorität. Prüfung je Straße.", "",
-        "| # | Straße | Soll | Abschnitte (km) | davon in Top 30 | Unfälle Fuß/Rad (schwer) | höchste Priorität | "
-        "Links | Prüfung |",
-        "| ---: | --- | --- | ---: | ---: | ---: | ---: | --- | --- |",
+        "Straßenlisten: Abschnitte mit Priorität > 0, zusammengefasst nach Straßenname (Teile mit gleichem Namen müssen "
+        "nicht zusammenhängen; Abschnitte ohne Namen nur in der Abschnittsliste). Links auf den Abschnitt mit der "
+        "höchsten Priorität.", "",
+        f"## {ctx['pilot']}", "",
+        *_top_tables(pilot, TOP_N, TOP_STREETS, viewers, rules, with_bezirk=len(districts) > 1),
     ]
-    streets = street_summary(pilot, set(top["segment_id"])).head(TOP_STREETS)
-    by_id = pilot.set_index("segment_id")
-    for i, s in enumerate(streets.itertuples(index=False), start=1):
-        best = by_id.loc[s.best_segment_id]
-        lines.append(f"| {i} | {s.name} | {s.cats} | {s.n_segments} ({_km(s.length_m)}) | {s.n_in_top} | "
-                     f"{s.crashes_ped_cyc} ({s.crashes_severe_fatal}) | {s.max_priority:.2f} | {_links(best, viewers)} | ☐ |")
-    lines += [
-        "", f"## Top {TOP_N} Abschnitte", "",
-        "| # | Name | Soll | Typ | Stärke T/G/N | Unfälle Fuß/Rad | Risiko | Priorität | Begründung | Links | Prüfung |",
-        "| ---: | --- | --- | --- | --- | ---: | ---: | ---: | --- | --- | --- |",
-    ]
-    for i, (_, r) in enumerate(top.iterrows(), start=1):
-        sev = "/".join("–" if pd.isna(r[c]) else str(int(r[c])) for c in DIMENSIONS)
-        lines.append(f"| {i} | {_name(r['name'])} | {r['cat_final']} | {r['disc_type']} | {sev} | "
-                     f"{int(r['crashes_ped_cyc'])} | {r['risk']:.2f} | {r['priority']:.2f} | {reason_text(r, rules)} | "
-                     f"{_links(r, viewers)} | ☐ |")
-    lines += ["", f"Abschnitt-IDs der Liste (für overrides/overrides.csv): "
-              + ", ".join(f"`{s}`" for s in top["segment_id"]), "",
-              f"## Verteilung der Diskrepanztypen je Kategorie ({ctx['pilot']})", "",
+    if len(districts) > 1:
+        lines += [f"## Je Bezirk (Top {TOP_N_DISTRICT})", "",
+                  "Dieselbe Priorität wie oben (über ganz Hamburg normiert), nur je Bezirk gefiltert.", ""]
+        for bz in districts:
+            lines += [f"### {bz}", "", *[ln.replace("### ", "#### ") for ln in
+                                       _top_tables(pilot[pilot["bezirk"] == bz], TOP_N_DISTRICT, TOP_N_DISTRICT,
+                                                   viewers, rules, with_bezirk=False)]]
+    lines += [f"## Verteilung der Diskrepanztypen je Kategorie ({ctx['pilot']})", "",
               "Anzahl Abschnitte (km). D1 Erschließungsfunktion mit Durchfluss-Gestaltung, D2 Verbindungsfunktion mit "
               "sparsamer Gestaltung, D3 Mischform (D-TYPE-01). „nicht prüfbar“: keine Dimension entscheidbar.", "",
               *_type_table(pilot, cats), "", *_licence()]
@@ -330,7 +354,7 @@ def write_report(area: gpd.GeoDataFrame, pilot: gpd.GeoDataFrame, checks: list[d
         *[f"| {c['name']} | {'ok' if c['ok'] else 'FEHLER'} | {c['detail']} |" for c in checks], "",
         "## Kennzahlen", "",
         f"- Bewertet: {_fmt(len(area))} Abschnitte im Arbeitsgebiet ({_km(area['length_m'].sum())} km), davon "
-        f"{_fmt(len(pilot))} im Bezirk {ctx['pilot']} ({_km(pilot['length_m'].sum())} km); Grundlage cat_final.",
+        f"{_fmt(len(pilot))} in {ctx['pilot']} ({_km(pilot['length_m'].sum())} km); Grundlage cat_final.",
         f"- Mit Diskrepanz (Stärke > 0): {_fmt((area['disc_max'] > 0).sum())} Abschnitte, "
         f"{_km(area.loc[area['disc_max'] > 0, 'length_m'].sum())} km "
         f"({_pct(area.loc[area['disc_max'] > 0, 'length_m'].sum() / area['length_m'].sum())} der Länge).",
@@ -359,6 +383,8 @@ def write_report(area: gpd.GeoDataFrame, pilot: gpd.GeoDataFrame, checks: list[d
     lines += ["", f"Nutzung (D-USE-01): DTV bekannt für {_fmt(dtv_known.sum())} von {_fmt(len(area))} Abschnitten "
               f"(nur Hauptverkehrsstraßen, Stand 2019); geprüft nur für Kategorien mit max_dtv (GOW30).", "",
               "### Verteilung der Diskrepanztypen je Kategorie (Arbeitsgebiet)", "", *_type_table(area, cats), "",
+              "### Diskrepanztypen je Bezirk (km-Anteile; – = keine Diskrepanz oder nicht prüfbar)", "",
+              *district_breakdown(pilot, "disc_type", ["D1", "D2", "D3"]), "",
               "## Unfälle (Unfallatlas)", "",
               "| Jahr | Unfälle mit Personenschaden in Hamburg |", "| --- | ---: |",
               *[f"| {y} | {_fmt(n) if n else 'keine Daten'} |" for y, n in stats["coverage"].items()], "",
@@ -372,16 +398,14 @@ def write_report(area: gpd.GeoDataFrame, pilot: gpd.GeoDataFrame, checks: list[d
               "crashes_severe_fatal, crash_weighted). Unfälle an Knoten zählen bei genau einem anliegenden Abschnitt.",
               "- Unfallatlas enthält nur polizeilich erfasste Unfälle mit Personenschaden; Alleinunfälle von "
               "Radfahrenden sind untererfasst.", "",
-              f"## Stichprobe ({SAMPLE_SIZE} zufällige Abschnitte mit Bewertung in {ctx['pilot']}, Seed {SAMPLE_SEED})", "",
-              "| segment_id | Name | Soll | Typ | Stärke T/G/N | Priorität | Begründung | Links |",
-              "| --- | --- | --- | --- | --- | ---: | --- | --- |"]
+              f"## Stichprobe ({SAMPLE_SIZE} zufällige Abschnitte mit Bewertung in {ctx['pilot']}, nach Bezirk geschichtet, Seed {SAMPLE_SEED})", "",
+              "| segment_id | Bezirk | Name | Soll | Typ | Stärke T/G/N | Priorität | Begründung | Links |",
+              "| --- | --- | --- | --- | --- | --- | ---: | --- | --- |"]
     checked = pilot[pilot["disc_max"].notna()]
-    rnd = random.Random(SAMPLE_SEED)
-    idx = sorted(rnd.sample(list(checked.index), min(SAMPLE_SIZE, len(checked))))
-    for _, r in checked.loc[idx].iterrows():
+    for _, r in sample_by_district(checked, SAMPLE_SIZE, SAMPLE_SEED).iterrows():
         sev = "/".join("–" if pd.isna(r[c]) else str(int(r[c])) for c in DIMENSIONS)
         prio = "–" if pd.isna(r["priority"]) else f"{r['priority']:.2f}"
-        lines.append(f"| `{r['segment_id']}` | {_name(r['name'])} | {r['cat_final']} | {r['disc_type'] if isinstance(r['disc_type'], str) else '–'} | {sev} | "
+        lines.append(f"| `{r['segment_id']}` | {r['bezirk']} | {_name(r['name'])} | {r['cat_final']} | {r['disc_type'] if isinstance(r['disc_type'], str) else '–'} | {sev} | "
                      f"{prio} | {reason_text(r, rules)} | {_links(r, viewers)} |")
     lines += ["", *_licence()]
     REPORT_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -392,8 +416,7 @@ def write_report(area: gpd.GeoDataFrame, pilot: gpd.GeoDataFrame, checks: list[d
 
 def main() -> int:
     rules = load_rules()
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        pilot_name = yaml.safe_load(f)["pilot_district"]["name"]
+    names = district_names()
     with open(SOURCES_PATH, encoding="utf-8") as f:
         src = yaml.safe_load(f)["sources"][ACCIDENT_SOURCE]
     if not IN_PATH.exists():
@@ -412,8 +435,8 @@ def main() -> int:
     out = seg.join(res)
     checks = run_checks(seg, out, res, stats)
     area = out.loc[res.index]
-    pilot = area[area["bezirk"] == pilot_name]
-    ctx = {"rules": rules, "pilot": pilot_name, "viewers": load_viewers(), "stats": stats}
+    pilot = area[area["bezirk"].isin(names)]
+    ctx = {"rules": rules, "pilot": area_label(names), "viewers": load_viewers(), "stats": stats}
     write_report(area, pilot, checks, ctx)
     for c in checks:
         print(f"discrepancy: {c['name']}: {c['ok']} ({c['detail']})")

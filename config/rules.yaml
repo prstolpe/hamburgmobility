@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.12.0
+  version: 0.13.0
   date: 2026-11-04
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -113,7 +113,7 @@ classification_policy:
       sobald ein Teil wahr ist, „und“ ist falsch, sobald ein Teil falsch ist. Eine Regel greift nur, wenn ihre Bedingung
       sicher wahr ist. Hängt das Ergebnis an einem unbekannten Wert, ist confidence niedrig (C-CONF-01).
     defaults:
-      outside_builtup_area: {value: false, note: "Keine Datenquelle (Ortsgrenze/Ortstafeln); Eimsbüttel vermutlich vollständig innerorts"}
+      outside_builtup_area: {value: false, note: "Keine Datenquelle: Die Ortstafeln in OSM schließen kein ländliches Gebiet ab (Prüfung 2026-11-04). Ländliche Stadtteile werden darum nicht klassifiziert (config/project.yaml, rural_exclude); im übrigen Arbeitsgebiet gilt innerorts"}
       override_school_street: {value: false, note: "Leer heißt: keine Schulstraße in overrides/overrides.csv eingetragen"}
       crossing_demand: {value: not_assessed, note: "Querungsbedarf ist nicht definiert; not_assessed zählt als nicht high"}
     source_type: assumption
@@ -319,6 +319,10 @@ features:
         Wert auf 0 fällt: ohne Bus (rund 70 % der Abschnitte) bus_trips_weekday_norm 0 statt 0,35, Sackgassen mit
         Betweenness 0 ebenso. Ohne Streuung (ein Wert oder alle gleich) ist der Normwert 0. in_hvs geht als 0/1 ein, shop_frontage_share ist schon ein Anteil
         0-1 und wird nicht umgerechnet. Folge: conn_gow 0,6 bedeutet bei einem einzelnen Merkmal 'oberste 40 %'.
+        Seit 0.13.0 ist das Arbeitsgebiet ganz Hamburg (ohne Neuwerk und ohne die ländlichen Stadtteile aus
+        config/project.yaml): Der Rang gilt stadtweit, damit derselbe Abschnitt in jedem Bezirk gleich bewertet wird
+        (Entscheidung Projektteam 2026-11-04). Schwellen wie conn_gow sind unverändert, wirken aber auf die stadtweite
+        Verteilung.
         Entscheidung Projektteam 2026-10-28.
     - id: S-FEAT-02
       description: "Edge betweenness, zeitgewichtet: Reisezeit = Länge / Tempo; Tempo amtlich vor OSM maxspeed vor Standardwert je highway-Klasse"

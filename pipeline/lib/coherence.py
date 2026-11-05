@@ -216,6 +216,12 @@ def n2_islands(g: nx.MultiGraph, rules) -> Flags:
 # --- N3 Aufenthaltsbereiche ------------------------------------------------------------------
 
 
+def _polygonal(geom):
+    """Only the polygon parts of a geometry (intersections can add lines and points)."""
+    parts = [g for g in getattr(geom, "geoms", [geom]) if g.geom_type in ("Polygon", "MultiPolygon")]
+    return shapely.union_all(parts) if parts else shapely.Polygon()
+
+
 def n3_areas(seg: gpd.GeoDataFrame, rules, work_area, city_area) -> tuple[gpd.GeoDataFrame, Flags]:
     """Areas enclosed by GOW/SW lines (and the city boundary) inside the work area.
 
@@ -226,7 +232,7 @@ def n3_areas(seg: gpd.GeoDataFrame, rules, work_area, city_area) -> tuple[gpd.Ge
     min_ha = rule.param("min_area_ha")
     etw = set(rules.coherence_rule("N4").etw_categories)
     network = set(rules.coherence_rule("N4").restricted_categories)
-    region = work_area if city_area is None else work_area.intersection(city_area)
+    region = _polygonal(work_area if city_area is None else work_area.intersection(city_area))
     open_edge = region.boundary if city_area is None else region.boundary.difference(
         city_area.boundary.buffer(_SNAP_M * 10))
     lines = list(seg.loc[seg["cat"].isin(network), "geometry"].intersection(region)) + [region.boundary]

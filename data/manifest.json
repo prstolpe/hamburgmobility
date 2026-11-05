@@ -51,35 +51,35 @@
       "files": [
         {
           "bbox": [
-            556939.5,
-            5934001.7,
-            567665.8,
-            5945590.9
+            548365.3,
+            5916918.1,
+            588010.4,
+            5955161.7
           ],
-          "bytes": 7367963,
+          "bytes": 64691529,
           "crs": "EPSG:25832",
           "layer": "ave:Nutzung",
-          "n_features": 12381,
+          "n_features": 102339,
           "path": "data/raw/alkis__Nutzung.parquet",
-          "sha256": "9ca4d2c24ee7280a71c97111bf7da460a337e35163c59245bd2ffc27bf3f2ac1"
+          "sha256": "d8c45a84a8a43c9da4f5ab085d0b1d922a5be8d33f7b53430d6ce89151712286"
         },
         {
           "bbox": [
-            557310.5,
-            5934160.9,
-            567192.1,
-            5945353.4
+            548681.9,
+            5917227.9,
+            587611.8,
+            5953580.7
           ],
-          "bytes": 8825389,
+          "bytes": 58125141,
           "crs": "EPSG:25832",
           "layer": "ave:GebaeudeBauwerk",
-          "n_features": 60052,
+          "n_features": 424972,
           "path": "data/raw/alkis__GebaeudeBauwerk.parquet",
-          "sha256": "4c3652e3dd7a61b534e8aae3a78c76ae8a8ebdaeba0708f84b3373918485e63a"
+          "sha256": "f664aae1459446495da88806c4a347f4a2d10fdfd307d6b96ba8df55dbbef51c"
         }
       ],
       "license": "dl-de/by-2.0",
-      "retrieved_at": "2026-10-28T14:13:09+00:00",
+      "retrieved_at": "2026-11-04T21:28:00+00:00",
       "status": "ok",
       "title": "ALKIS Flurstücke, Gebäude, tatsächliche Nutzung",
       "url": "https://geodienste.hamburg.de/WFS_HH_ALKIS_vereinfacht"
@@ -87,7 +87,7 @@
     "bike_volumes_dbradplus": {
       "access": "ogc_api_features",
       "attribution": null,
-      "error": "https://api.hamburg.de/datasets/v1/dbradplus/collections/jahr2025/items?f=json&bbox=557002.1468911578%2C5934196.7297488125%2C567274.8341519193%2C5946089.7089329&bbox-crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&limit=1000&offset=10000: invalid JSON after 63156 bytes (Expecting ',' delimiter: line 1 column 63157 (char 63156))",
+      "error": "https://api.hamburg.de/datasets/v1/dbradplus/collections/jahr2025/items?f=json&crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&limit=1000&offset=1000: invalid JSON after 150646 bytes (Expecting ',' delimiter: line 1 column 150647 (char 150646))",
       "fallback": false,
       "files": [],
       "license": "ODbL-1.0",
@@ -116,21 +116,21 @@
       "files": [
         {
           "bbox": [
-            559477.1,
-            5934127.3,
-            567331.8,
+            557955.9,
+            5923659.4,
+            580081.2,
             5943928.0
           ],
-          "bytes": 74283,
+          "bytes": 134283,
           "crs": "EPSG:25832",
           "layer": "osm",
-          "n_features": 11,
+          "n_features": 24,
           "path": "data/raw/cycle_network__osm.parquet",
-          "sha256": "a219b8dd3b6bccd927881dbd508ba7660fffdd4432c4c9042b9a4964c07cd0b6"
+          "sha256": "3f4b89afa13d6ba844b7177b043d05ebd1f2d206e3367674dc7ceed471b7dc68"
         }
       ],
       "license": "ODbL-1.0",
-      "retrieved_at": "2026-10-28T14:12:02+00:00",
+      "retrieved_at": "2026-11-04T21:12:07+00:00",
       "status": "fallback",
       "title": "Radnetz Hamburg (Radrouten, Radrouten+), ersetzt seit 2025 die Velorouten",
       "url": null
@@ -143,35 +143,35 @@
       "files": [
         {
           "bbox": [
-            557593.7,
-            5934101.2,
-            566761.0,
-            5945009.9
+            548818.0,
+            5917261.3,
+            585676.8,
+            5953530.7
           ],
-          "bytes": 162366,
+          "bytes": 1177640,
           "crs": "EPSG:25832",
           "layer": "de.hh.up:widmung_flaeche",
-          "n_features": 455,
+          "n_features": 3844,
           "path": "data/raw/dedications__widmung_flaeche.parquet",
-          "sha256": "c228b6e41fd8cbb9185080da6ae376c6bfba1370f40bb08bd9ec830680b9a388"
+          "sha256": "61b4e8fccd43378434a0aa8bdfbda86301b15bf2b543e19d1f389eadd2a93fce"
         },
         {
           "bbox": [
-            557358.8,
-            5933728.4,
-            567231.7,
-            5946516.1
+            548676.3,
+            5917191.3,
+            588004.0,
+            5953544.0
           ],
-          "bytes": 660423,
+          "bytes": 4778986,
           "crs": "EPSG:25832",
           "layer": "de.hh.up:widmung_linie",
-          "n_features": 5804,
+          "n_features": 43547,
           "path": "data/raw/dedications__widmung_linie.parquet",
-          "sha256": "d297b7086aab3179200e035281df4664f969981753fcfc4610bcca34bf0ed3f3"
+          "sha256": "d4dd12d8c0da220eeee323fdb649352cf714d9aa4cbad578444d02a74d74e595"
         }
       ],
       "license": "dl-de/by-2.0",
-      "retrieved_at": "2026-10-28T14:11:50+00:00",
+      "retrieved_at": "2026-11-04T21:11:21+00:00",
       "status": "ok",
       "title": "WFS Widmungen (HWG)",
       "url": "https://geodienste.hamburg.de/HH_WFS_Widmungen"
@@ -215,21 +215,21 @@
       "files": [
         {
           "bbox": [
-            558525.5,
-            5935025.8,
-            566075.0,
-            5944951.6
+            548705.5,
+            5917380.7,
+            584544.2,
+            5951373.9
           ],
-          "bytes": 46957,
+          "bytes": 148984,
           "crs": "EPSG:25832",
           "layer": "osm",
-          "n_features": 220,
+          "n_features": 987,
           "path": "data/raw/kitas__osm.parquet",
-          "sha256": "b25a24c91b2b7313d6f57e1fea1baa6c2ccc4a20858e7ec0740314be5deb7bc1"
+          "sha256": "2471d6cbdde07dcfeaa2c3c981e876fa5a2b68969ccc29f19cca5a6b7484fbb6"
         }
       ],
       "license": "ODbL-1.0",
-      "retrieved_at": "2026-10-28T14:14:18+00:00",
+      "retrieved_at": "2026-11-04T21:19:47+00:00",
       "status": "fallback",
       "title": "Kitas",
       "url": null
@@ -284,17 +284,31 @@
         },
         {
           "bbox": [
-            557501.6,
-            5934696.6,
-            566774.9,
-            5945590.0
+            548364.3,
+            5916931.6,
+            588010.6,
+            5955161.7
           ],
-          "bytes": 27161,
+          "bytes": 125582,
           "crs": "EPSG:25832",
-          "layer": "district_boundary",
-          "n_features": 1,
-          "path": "data/raw/district_boundary.parquet",
-          "sha256": "1ccef5388912791ccf27d796d6ece96cdbd1b924676a925b40089c5382511e5c"
+          "layer": "work_area",
+          "n_features": 7,
+          "path": "data/raw/work_area.parquet",
+          "sha256": "a6a39ea847f21369969c7b6b19926d150541d9019a5e3518ba9536d40042b8f8"
+        },
+        {
+          "bbox": [
+            550639.8,
+            5916931.6,
+            588010.6,
+            5933013.2
+          ],
+          "bytes": 97842,
+          "crs": "EPSG:25832",
+          "layer": "rural_excluded",
+          "n_features": 17,
+          "path": "data/raw/rural_excluded.parquet",
+          "sha256": "bd89dc143863b37a57e2725071390918062be2930f790250fe82728a5420e5e7"
         }
       ],
       "last_modified": "Wed, 28 Oct 2026 03:56:24 GMT",
@@ -318,17 +332,17 @@
         },
         {
           "bbox": [
-            556956.0,
-            5934137.8,
-            567325.9,
-            5946066.6
+            548111.8,
+            5916358.5,
+            587228.7,
+            5955482.0
           ],
-          "bytes": 177255,
+          "bytes": 1238730,
           "crs": "EPSG:25832",
           "layer": "100m",
-          "n_features": 4274,
+          "n_features": 31152,
           "path": "data/raw/population_grid__100m.parquet",
-          "sha256": "dbbe96f971f91e3baa0bd085c948bebb5169147a73b8fd92c47ba746269a55b0"
+          "sha256": "08d999fa0903f3bced04d143419418c88f2d48eba08227d32141a8415b54e85e"
         }
       ],
       "license": "dl-de/by-2.0",
@@ -344,17 +358,22 @@
       "fallback": false,
       "files": [
         {
-          "bbox": null,
-          "bytes": 14680,
+          "bbox": [
+            550110.0,
+            5918718.2,
+            580556.3,
+            5955120.2
+          ],
+          "bytes": 46478,
           "crs": "EPSG:25832",
           "layer": "de.hh.up:ruhige_gebiete_hamburg",
-          "n_features": 0,
+          "n_features": 15,
           "path": "data/raw/quiet_areas__ruhige_gebiete_hamburg.parquet",
-          "sha256": "e8cc87f497a36e05c148513aeb80bc53f2f97d37693bc303aba6c2da2a356398"
+          "sha256": "d6c08e73ff8b226647d53b82b94fbb904f0e60c62a4b42bb6878907fb3ffa175"
         }
       ],
       "license": "unknown",
-      "retrieved_at": "2026-10-28T14:14:18+00:00",
+      "retrieved_at": "2026-11-04T21:19:45+00:00",
       "status": "ok",
       "title": "WFS Ruhige Gebiete Hamburg",
       "url": "https://geodienste.hamburg.de/HH_WFS_Ruhige_Gebiete"
@@ -367,49 +386,49 @@
       "files": [
         {
           "bbox": [
-            557375.7,
-            5934189.9,
-            567196.9,
-            5945503.7
+            548946.7,
+            5917198.8,
+            587470.7,
+            5952682.1
           ],
-          "bytes": 1494203,
+          "bytes": 10430487,
           "crs": "EPSG:25832",
           "layer": "de.hh.up:zeb2025_geb",
-          "n_features": 18529,
+          "n_features": 134822,
           "path": "data/raw/road_condition_zeb__zeb2025_geb.parquet",
-          "sha256": "9417811a0a8b8fc1cb0d44105ac134daffa49c04feb495117ea94fbd4ec95fac"
+          "sha256": "bb21e25089abf5ea17b3507df6bafb337c8b8e7fe7e0a47bb96a2accc5732cbb"
         },
         {
           "bbox": [
-            557375.7,
-            5934189.9,
-            567196.9,
-            5945503.7
+            548946.7,
+            5917198.8,
+            587470.7,
+            5952682.1
           ],
-          "bytes": 4303877,
+          "bytes": 29386749,
           "crs": "EPSG:25832",
           "layer": "de.hh.up:zeb2025_gw",
-          "n_features": 55587,
+          "n_features": 404466,
           "path": "data/raw/road_condition_zeb__zeb2025_gw.parquet",
-          "sha256": "f0fe0340a5a6b1650a97616b0ec73f2022296c31fc80f6f1834b711959239baf"
+          "sha256": "6177b8fd33822ec64d0b16f7ec7df47f74b395afaf6d73e37c9bc44ed7970ac7"
         },
         {
           "bbox": [
-            557375.7,
-            5934189.9,
-            567196.9,
-            5945503.7
+            548946.7,
+            5917198.8,
+            587470.7,
+            5952682.1
           ],
-          "bytes": 2889479,
+          "bytes": 19832491,
           "crs": "EPSG:25832",
           "layer": "de.hh.up:zeb2025_sub",
-          "n_features": 37058,
+          "n_features": 269644,
           "path": "data/raw/road_condition_zeb__zeb2025_sub.parquet",
-          "sha256": "d74912cbb41b7ef06519a1f19c76d37cdc77a9045af0aced937e471648aa46d1"
+          "sha256": "a95bc361e299781b30763a4eac9a5f70147e9223eb6bb1daeee57d152d32b820"
         }
       ],
       "license": "dl-de/by-2.0",
-      "retrieved_at": "2026-10-28T14:14:13+00:00",
+      "retrieved_at": "2026-11-04T21:19:18+00:00",
       "status": "ok",
       "title": "WFS ZEB Zustandsklassen",
       "url": "https://geodienste.hamburg.de/HH_WFS_ZEB_Zustandsklassen"
@@ -422,21 +441,21 @@
       "files": [
         {
           "bbox": [
-            557363.9,
-            5934161.6,
-            567231.7,
-            5945503.8
+            548683.1,
+            5917191.3,
+            587561.5,
+            5953544.0
           ],
-          "bytes": 554703,
+          "bytes": 3796723,
           "crs": "EPSG:25832",
           "layer": "de.hh.up:strassendeckschicht",
-          "n_features": 5096,
+          "n_features": 37835,
           "path": "data/raw/road_surface__strassendeckschicht.parquet",
-          "sha256": "65483a07ed88cedede8ef398fb8a267e56ddf3202ddce6a0a27e8673ce6651c3"
+          "sha256": "db425ba7f00dacd9ff9be1b9afc909448807330f8d54680d6bb1e74dda436c56"
         }
       ],
       "license": "dl-de/by-2.0",
-      "retrieved_at": "2026-10-28T14:14:17+00:00",
+      "retrieved_at": "2026-11-04T21:19:43+00:00",
       "status": "ok",
       "title": "WFS Straßendeckschichttypen nach RLS-19",
       "url": "https://geodienste.hamburg.de/HH_WFS_Strassendecke"
@@ -449,21 +468,21 @@
       "files": [
         {
           "bbox": [
-            557647.5,
-            5934652.4,
-            566606.5,
-            5944650.8
+            549701.6,
+            5917466.0,
+            584459.3,
+            5951180.9
           ],
-          "bytes": 44493,
+          "bytes": 159672,
           "crs": "EPSG:25832",
           "layer": "osm",
-          "n_features": 93,
+          "n_features": 558,
           "path": "data/raw/schools__osm.parquet",
-          "sha256": "8ccbeff364f2887c03b821243bf4dcbe6e977c8c0ffd304c96254606da542b1b"
+          "sha256": "8016e98ca586a88b299b44cb313410706b3d786f28d8c598bc94ab7efbb0fb44"
         }
       ],
       "license": "ODbL-1.0",
-      "retrieved_at": "2026-10-28T14:14:18+00:00",
+      "retrieved_at": "2026-11-04T21:19:45+00:00",
       "status": "fallback",
       "title": "Schulen",
       "url": null
@@ -476,77 +495,77 @@
       "files": [
         {
           "bbox": [
-            559611.5,
-            5934263.5,
-            565782.0,
-            5940417.7
+            549993.5,
+            5923858.3,
+            580666.5,
+            5945532.0
           ],
-          "bytes": 31703,
+          "bytes": 50131,
           "crs": "EPSG:25832",
           "layer": "tempo20zonen",
-          "n_features": 22,
+          "n_features": 192,
           "path": "data/raw/speed_limits__tempo20zonen.parquet",
-          "sha256": "ae55f8f507af4c427be8502172e84dfac32cfba1229c9c07f7a28425406eec23"
+          "sha256": "027f22638ba2f330c04da73aa5dc997e13aefb4acb79b0aa4fe0ff3c0d43eac5"
         },
         {
           "bbox": [
-            557363.9,
-            5934611.5,
-            567151.6,
-            5945503.8
+            548986.1,
+            5917239.8,
+            585760.5,
+            5952432.3
           ],
-          "bytes": 311702,
+          "bytes": 1963665,
           "crs": "EPSG:25832",
           "layer": "tempo30zonen",
-          "n_features": 2810,
+          "n_features": 19472,
           "path": "data/raw/speed_limits__tempo30zonen.parquet",
-          "sha256": "3c19a434c79093eb988b03960f448149f317aaf24f4f1eeaea2f158760468074"
+          "sha256": "19107954d85a4ab8a5a39e86ce2614659fa11236df6c8678e32ca910bf30a77a"
         },
         {
           "bbox": [
-            557471.0,
-            5935031.0,
-            566018.2,
-            5945272.7
+            549289.7,
+            5919032.8,
+            586448.3,
+            5952406.4
           ],
-          "bytes": 42064,
+          "bytes": 211795,
           "crs": "EPSG:25832",
           "layer": "verkehrsberuhigte_bereiche",
-          "n_features": 100,
+          "n_features": 1477,
           "path": "data/raw/speed_limits__verkehrsberuhigte_bereiche.parquet",
-          "sha256": "de12d15b670cd04e2232d0423af238a0020bd633409b9db0201378983c93542a"
+          "sha256": "9f54e2e0dee0cd75b1db002a7c6f88456acd61707051c7409d7c5a3c06f57a03"
         },
         {
           "bbox": [
-            557363.9,
-            5933728.4,
-            567231.7,
-            5945503.8
+            548683.1,
+            5917191.3,
+            588004.0,
+            5953544.0
           ],
-          "bytes": 601659,
+          "bytes": 4199374,
           "crs": "EPSG:25832",
           "layer": "zulaessige_hoechstgeschwindigkeiten",
-          "n_features": 4916,
+          "n_features": 35538,
           "path": "data/raw/speed_limits__zulaessige_hoechstgeschwindigkeiten.parquet",
-          "sha256": "8629a045cc5acd256cebcbbacb06b56971a1169e15a2b241f70bc108b4c7753d"
+          "sha256": "c048e4e93e9737c0c2b70b6c7f7576c34bbf5a9fa57a71b5bbf41c44ce972ae4"
         },
         {
           "bbox": [
-            558472.0,
-            5934911.0,
-            565856.8,
-            5944500.3
+            550159.7,
+            5917459.7,
+            581284.7,
+            5951293.6
           ],
-          "bytes": 51468,
+          "bytes": 140593,
           "crs": "EPSG:25832",
           "layer": "zulaessige_hoechstgeschwindigkeiten_sonderregelung",
-          "n_features": 162,
+          "n_features": 832,
           "path": "data/raw/speed_limits__zulaessige_hoechstgeschwindigkeiten_sonderregelung.parquet",
-          "sha256": "8123afdc80cb34c53aa86daa19aaf0076e3ff03eb099d7981bdae5a8456355a4"
+          "sha256": "e56bcb45f76a6618e364931defd990ae5fc1a6047e1f7b8f2760f55b2cecb2aa"
         }
       ],
       "license": "unknown",
-      "retrieved_at": "2026-10-28T14:11:56+00:00",
+      "retrieved_at": "2026-11-04T21:11:56+00:00",
       "status": "ok",
       "title": "Zulässige Höchstgeschwindigkeiten Hamburg",
       "url": "https://api.hamburg.de/datasets/v1/zulaessige_hoechstgeschwindigkeiten"
@@ -583,21 +602,21 @@
       "files": [
         {
           "bbox": [
-            557869.1,
-            5933864.0,
-            566909.7,
-            5945067.0
+            548710.0,
+            5917280.5,
+            584015.0,
+            5952303.0
           ],
-          "bytes": 289542,
+          "bytes": 939520,
           "crs": "EPSG:25832",
           "layer": "locations_things",
-          "n_features": 3139,
+          "n_features": 11673,
           "path": "data/raw/traffic_counters__locations_things.parquet",
-          "sha256": "9cc06c5ab1b20773a7f5dadc04a39cf25441e4111acae50cab0219de3570af0e"
+          "sha256": "2ab36cd5a40204edbc691b44a9235ab86a95669d74b45a12f9fdafb1ed9aae66"
         }
       ],
       "license": "unknown",
-      "retrieved_at": "2026-10-28T14:12:00+00:00",
+      "retrieved_at": "2026-11-04T21:12:06+00:00",
       "status": "ok",
       "title": "Verkehrszählstellen Kfz/Rad (SensorThings)",
       "url": "https://iot.hamburg.de/v1.1"
@@ -610,41 +629,41 @@
       "files": [
         {
           "bbox": [
-            557979.4,
-            5934259.0,
-            567018.7,
-            5945253.2
+            548832.4,
+            5918844.7,
+            584029.9,
+            5952916.3
           ],
-          "bytes": 49481,
+          "bytes": 227743,
           "crs": "EPSG:25832",
           "layer": "verkehrsmengen_dtv_hvs_2019",
-          "n_features": 598,
+          "n_features": 3728,
           "path": "data/raw/traffic_volumes__verkehrsmengen_dtv_hvs_2019.parquet",
-          "sha256": "73c2926e58369f7d91bddc0f398984965a5a808c2036143fb7ba3d93dbe7e48a"
+          "sha256": "703a4955a64f13d53cdeb28b74f4cbffbf09779906c6728307209db90dc80fda"
         },
         {
           "bbox": [
             557583.4,
-            5936922.6,
-            561516.1,
+            5918776.3,
+            584409.3,
             5945291.2
           ],
-          "bytes": 22806,
+          "bytes": 52655,
           "crs": "EPSG:25832",
           "layer": "verkehrsmengen_dtv_bab_2019",
-          "n_features": 92,
+          "n_features": 575,
           "path": "data/raw/traffic_volumes__verkehrsmengen_dtv_bab_2019.parquet",
-          "sha256": "c3eedde452971a963edbcc9a4f69804c5a7a27a01fd1deed4cb7722a6c820d22"
+          "sha256": "ac828807eac762b8ed90a2ae80fe95f1db1193a9dbf995c6441807a5dcc94372"
         }
       ],
       "license": "unknown",
-      "retrieved_at": "2026-10-28T14:11:56+00:00",
+      "retrieved_at": "2026-11-04T21:11:59+00:00",
       "status": "ok",
       "title": "Verkehrsmengen auf Hauptverkehrsstraßen in Hamburg",
       "url": "https://api.hamburg.de/datasets/v1/verkehrsmengen"
     }
   },
-  "updated_at": "2026-10-28T14:14:26+00:00",
+  "updated_at": "2026-11-04T21:28:38+00:00",
   "web_assets": {
     "basemap": {
       "assets": {
@@ -658,38 +677,152 @@
         "url": "https://github.com/protomaps/basemaps-assets/archive/refs/heads/main.zip"
       },
       "bbox_wgs84": [
-        9.86164,
-        53.5525,
-        10.01578,
-        53.66001
+        9.72257,
+        53.39062,
+        10.3328,
+        53.74393
       ],
       "files": [
         {
-          "bytes": 13408470,
+          "bytes": 58330574,
           "layer": "basemap",
           "path": "data/out/basemap/basemap.pmtiles",
-          "sha256": "e936adea2f0c3f662d6841e54e17e2075665d37c7572c13531b9ddef2ffd286d"
+          "sha256": "9cf72b07fb20469fdcb32936b1714a748dee41698fc89b7d5318e08092f1ebd0"
         }
       ],
       "license": "ODbL-1.0",
       "maxzoom": 15,
-      "retrieved_at": "2026-10-28T14:40:48+00:00",
-      "url": "https://build.protomaps.com/20261028.pmtiles"
+      "retrieved_at": "2026-11-04T22:15:56+00:00",
+      "url": "https://build.protomaps.com/20261103.pmtiles"
     }
   },
   "work_area": {
-    "admin_level": 9,
-    "area_buffered_km2": 69.73863193813347,
-    "area_km2": 49.76249413597756,
+    "area_buffered_km2": 842.6390955872353,
+    "area_km2": 746.9157688572285,
     "bbox": [
-      557002.1,
-      5934196.7,
-      567274.8,
-      5946089.7
+      547864.4,
+      5916431.7,
+      588510.4,
+      5955661.7
     ],
     "boundary_source": "osm",
-    "buffer_m": 500,
-    "district": "Eimsbüttel",
-    "osm_id": 30243
+    "buffer_m": 500.0,
+    "city": "Hamburg",
+    "district_admin_level": 9,
+    "districts": [
+      {
+        "area_km2": 77.84593676922722,
+        "name": "Altona",
+        "osm_id": 30223
+      },
+      {
+        "area_km2": 154.5798381359188,
+        "name": "Bergedorf",
+        "osm_id": 28936
+      },
+      {
+        "area_km2": 49.762494135977605,
+        "name": "Eimsbüttel",
+        "osm_id": 30243
+      },
+      {
+        "area_km2": 134.5539324532946,
+        "name": "Hamburg-Mitte",
+        "osm_id": 28971
+      },
+      {
+        "area_km2": 57.73118190379671,
+        "name": "Hamburg-Nord",
+        "osm_id": 30352
+      },
+      {
+        "area_km2": 125.01634873868925,
+        "name": "Harburg",
+        "osm_id": 28964
+      },
+      {
+        "area_km2": 147.42603672032422,
+        "name": "Wandsbek",
+        "osm_id": 30353
+      }
+    ],
+    "exclude": [
+      {
+        "admin_level": 10,
+        "name": "Neuwerk"
+      }
+    ],
+    "n_tiles": 20,
+    "rural": [
+      {
+        "area_km2": 8.627811551062955,
+        "name": "Allermöhe"
+      },
+      {
+        "area_km2": 15.60216870491703,
+        "name": "Altengamme"
+      },
+      {
+        "area_km2": 9.451021808965127,
+        "name": "Billwerder"
+      },
+      {
+        "area_km2": 1.3320832565244516,
+        "name": "Cranz"
+      },
+      {
+        "area_km2": 10.565628374791386,
+        "name": "Curslack"
+      },
+      {
+        "area_km2": 8.80438081345601,
+        "name": "Francop"
+      },
+      {
+        "area_km2": 1.9861971597894215,
+        "name": "Gut Moor"
+      },
+      {
+        "area_km2": 32.28226963164171,
+        "name": "Kirchwerder"
+      },
+      {
+        "area_km2": 9.997326189218267,
+        "name": "Moorburg"
+      },
+      {
+        "area_km2": 4.37123851270536,
+        "name": "Moorfleet"
+      },
+      {
+        "area_km2": 15.664245356003923,
+        "name": "Neuenfelde"
+      },
+      {
+        "area_km2": 18.597610820916618,
+        "name": "Neuengamme"
+      },
+      {
+        "area_km2": 8.078094887248417,
+        "name": "Neuland"
+      },
+      {
+        "area_km2": 14.05835872030802,
+        "name": "Ochsenwerder"
+      },
+      {
+        "area_km2": 6.928391747433666,
+        "name": "Reitbrook"
+      },
+      {
+        "area_km2": 3.4352230953593863,
+        "name": "Spadenland"
+      },
+      {
+        "area_km2": 3.052603056364887,
+        "name": "Tatenberg"
+      }
+    ],
+    "tile_m": 10000.0
   }
 }

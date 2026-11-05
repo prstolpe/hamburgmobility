@@ -12,7 +12,6 @@ features.parquet is then not written.
 
 import datetime as dt
 import json
-import random
 import sys
 import time
 import warnings
@@ -20,9 +19,9 @@ import warnings
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import yaml
 
 from pipeline.lib import gtfs
+from pipeline.lib.area import area_label, district_names, load_area_config, read_work_area, sample_by_district
 from pipeline.lib.betweenness import edge_betweenness
 from pipeline.lib.conflate import MatchParams, zone_share
 from pipeline.lib.crs import WORK_CRS, to_work_crs
@@ -46,7 +45,6 @@ from pipeline.lib.manifest import REPO_ROOT, load_manifest
 from pipeline.lib.rules import load_rules
 from pipeline.s02_network import _pbf_from_manifest
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 SEGMENTS_PATH = REPO_ROOT / "data" / "interim" / "segments_conflated.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "features.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "features.md"
@@ -404,14 +402,16 @@ def _source_status(manifest: dict, source: str) -> str:
 def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
     rules, params = ctx["rules"], ctx["params"]
     area = out[out["conflated"].astype(bool)]
-    pilot = area[area["bezirk"] == ctx["pilot"]]
+    pilot = area[area["bezirk"].isin(ctx["districts"])]
     gt = ctx["info"]["gtfs"]
     lines = [
         "# Merkmalsbericht – Stufe 4", "",
         f"Erzeugt: {_now()} von `pipeline/s04_features.py`, rules.yaml {rules.meta.version}. Nicht amtlicher Entwurf.", "",
         "## Kennzahlen", "",
-        f"- Abschnitte gesamt (Hamburg): {_fmt(len(out))}; im Arbeitsgebiet ({ctx['pilot']} + {ctx['buffer_m']} m): "
-        f"{_fmt(len(area))}; davon im Bezirk {ctx['pilot']}: {_fmt(len(pilot))}",
+        f"- Abschnitte gesamt (OSM-Auszug): {_fmt(len(out))}; im Arbeitsgebiet ({ctx['pilot']} + {ctx['buffer_m']:.0f} m): "
+        f"{_fmt(len(area))}; davon mit Bezirk: {_fmt(len(pilot))}",
+        "- Normierung (S-FEAT-01): Perzentilrang über das ganze Arbeitsgebiet, also über ganz Hamburg "
+        "(Entscheidung 2026-11-04), damit derselbe Abschnitt in jedem Bezirk gleich bewertet wird.",
         f"- Betweenness: exakt (keine Stichprobe), ungerichtet, {_fmt(int(out['betweenness'].notna().sum()))} "
         f"Kfz-Abschnitte ganz Hamburgs, Laufzeit {ctx['info']['betweenness_runtime_s']:.0f} s",
         f"- Reisezeit-Tempo im Arbeitsgebiet: " + ", ".join(
@@ -456,13 +456,21 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         "motorway/motorway_link oder motorroad=yes (sonst nein, weil motorroad nur positiv erfasst wird).",
         "",
         "## Nullwertanteil je Merkmal (Arbeitsgebiet)", "",
-        "| Merkmal | Quelle | Regel | benötigt von | null Arbeitsgebiet | null Bezirk |",
+        "| Merkmal | Quelle | Regel | benötigt von | null Arbeitsgebiet | null mit Bezirk |",
         "| --- | --- | --- | --- | ---: | ---: |",
     ]
     for col, (src, rule, used) in FEATURE_DOC.items():
         reason = f" ({NULL_REASON[col]})" if col in NULL_REASON else ""
         lines.append(f"| `{col}` | {src} | {rule} | {used}{reason} | {_pct(area[col].isna().mean())} | "
                      f"{_pct(pilot[col].isna().mean())} |")
+    lines += ["", "## Kennzahlen je Bezirk", "",
+              "| Bezirk | Abschnitte | km | conn_score (Median) | place_score (Median) | Ist-Tempo null | "
+              "Gebäudedichte null | lanes (OSM) null |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    for bz, grp in sorted(pilot.groupby("bezirk")) + [("**gesamt**", pilot)]:
+        lines.append(f"| {bz} | {_fmt(len(grp))} | {_fmt(grp['length_m'].sum() / 1000, 1)} | "
+                     f"{grp['conn_score'].median():.2f} | {grp['place_score'].median():.2f} | "
+                     f"{_pct(grp['speed_ist_kmh'].isna().mean())} | {_pct(grp['building_density'].isna().mean())} | "
+                     f"{_pct(grp['lanes'].isna().mean())} |")
     lines += ["", "## Nullwertanteil je Datenquelle", "",
               "| Quelle | Status (manifest) | Merkmale | mittlerer Nullanteil |", "| --- | --- | --- | ---: |"]
     by_src: dict[str, list[str]] = {}
@@ -489,11 +497,11 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
     for hw, grp in area.groupby("highway"):
         lines.append(f"| {hw} | {len(grp)} | {grp['conn_score'].median():.2f} | {grp['place_score'].median():.2f} |")
 
-    lines += ["", f"## Stichprobe ({len(ctx['sample'])} zufällige Abschnitte im Bezirk {ctx['pilot']}, Seed {SAMPLE_SEED})", "",
+    lines += ["", f"## Stichprobe ({len(ctx['sample'])} zufällige Abschnitte in {ctx['pilot']}, nach Bezirk geschichtet, Seed {SAMPLE_SEED})", "",
               "Links auf OSM-Karte und OSM-Way. Orthophoto- und Panoramax-Links folgen, sobald das Linkformat geklärt ist "
               "(docs/open_questions.md).", "",
-              "| segment_id | Name | highway | conn | place | betw. | HVS | Tempo | Radweg | Front. | Schule/Kita m | Karte | Way |",
-              "| --- | --- | --- | ---: | ---: | ---: | --- | ---: | --- | ---: | ---: | --- | --- |"]
+              "| segment_id | Bezirk | Name | highway | conn | place | betw. | HVS | Tempo | Radweg | Front. | Schule/Kita m | Karte | Way |",
+              "| --- | --- | --- | --- | ---: | ---: | ---: | --- | ---: | --- | ---: | ---: | --- | --- |"]
     for _, r in ctx["sample"].iterrows():
         pt = gpd.GeoSeries([r.geometry.interpolate(0.5, normalized=True)], crs=WORK_CRS).to_crs(4326).iloc[0]
 
@@ -503,7 +511,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         def b(v):
             return "–" if _none(v) is None else ("ja" if v else "nein")
 
-        lines.append(f"| `{r['segment_id']}` | {_none(r['name']) or '–'} | {r['highway']} | {f(r['conn_score'])} | "
+        lines.append(f"| `{r['segment_id']}` | {r['bezirk']} | {_none(r['name']) or '–'} | {r['highway']} | {f(r['conn_score'])} | "
                      f"{f(r['place_score'])} | {f(r['betweenness_norm'])} | {b(r['in_hvs'])} | "
                      f"{f(r['speed_ist_kmh'], 0)} | {b(r['separated_cycle_track_present'])} | "
                      f"{f(r['shop_frontage_share'])} | {f(r['schools_or_kitas_within_m'], 0)} | "
@@ -525,8 +533,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
 def main() -> int:
     rules = load_rules()
     params = FeatureParams.from_rules(rules)
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        project = yaml.safe_load(f)["pilot_district"]
+    cfg = load_area_config()
     if not SEGMENTS_PATH.exists():
         print("features: data/interim/segments_conflated.parquet missing; run `make conflate` first", file=sys.stderr)
         return 1
@@ -538,8 +545,8 @@ def main() -> int:
         return 1
 
     seg = gpd.read_parquet(SEGMENTS_PATH)
-    district = gpd.read_parquet(REPO_ROOT / "data" / "raw" / "district_boundary.parquet")
-    work_area = to_work_crs(district).geometry.union_all().buffer(project["buffer_m"])
+    work_area = read_work_area(cfg)
+    names = district_names()
     work_area_wgs84 = gpd.GeoSeries([work_area], crs=WORK_CRS).to_crs(4326).iloc[0]
     layers = {k: _layer(manifest, k) for k in ("schools", "kitas", "cycle_network", "population_grid")}
     layers["alkis_buildings"] = _layer(manifest, "alkis", "ave:GebaeudeBauwerk")
@@ -557,10 +564,9 @@ def main() -> int:
     unknown = sorted((params.alkis_public_functions | params.alkis_ancillary_functions) - present)
     checks.append({"name": "Gebäudefunktionen aus rules.yaml kommen in ALKIS vor", "ok": not unknown,
                    "detail": ", ".join(unknown) or "alle"})
-    pilot = out[(out["bezirk"] == project["name"]) & out["conflated"].astype(bool)]
-    rnd = random.Random(SAMPLE_SEED)
-    sample = pilot.loc[sorted(rnd.sample(list(pilot.index), min(SAMPLE_SIZE, len(pilot))))]
-    ctx = {"rules": rules, "params": params, "pilot": project["name"], "buffer_m": project["buffer_m"],
+    pilot = out[out["bezirk"].isin(names) & out["conflated"].astype(bool)]
+    sample = sample_by_district(pilot, SAMPLE_SIZE, SAMPLE_SEED)
+    ctx = {"rules": rules, "params": params, "pilot": area_label(names), "districts": names, "buffer_m": cfg.buffer_m,
            "info": info, "manifest": manifest, "sample": sample,
            "n_grid_cells": 0 if layers["population_grid"] is None else len(layers["population_grid"])}
     write_report(out, ctx, checks)

@@ -4,12 +4,12 @@ import { profileHtml } from "./panel.js";
 import { downloadsHtml, imprintHtml, methodHtml, sourcesHtml } from "./pages.js";
 import { setupSearch } from "./search.js";
 import { parseHash, toHash } from "./state.js";
-import { renderTable } from "./table.js";
+import { renderDistrictChooser, renderTable } from "./table.js";
 import { esc } from "./util.js";
 
 const $ = (sel) => document.querySelector(sel);
 let state = parseHash(location.hash);
-let meta, search, mapView, table, lastFocus;
+let meta, search, mapView, table, tableBz, lastFocus;
 const idToStreet = new Map();
 
 async function json(url) {
@@ -36,7 +36,7 @@ function controlsHtml() {
     <input type="radio" name="layer" value="${k}" ${state.layer === k ? "checked" : ""}> ${esc(v.title)}</label>`).join("");
   const overlays = Object.entries(OVERLAY_INFO).map(([k, v]) => `<label class="opt">
     <input type="checkbox" name="ov" value="${k}" ${state.overlays.includes(k) ? "checked" : ""}> ${esc(v)}</label>`).join("");
-  const cats = Object.entries(meta.categories).map(([k, c]) => `<label class="opt">
+  const cats = Object.entries(meta.categories).filter(([k]) => !meta.categories_present || meta.categories_present.includes(k)).map(([k, c]) => `<label class="opt">
     <input type="checkbox" name="cat" value="${k}" ${state.cats.includes(k) ? "checked" : ""}> ${esc(c.label)} (${k})</label>`).join("");
   const dts = [...Object.keys(meta.discrepancy_types), "keine"].map((k) => `<label class="opt">
     <input type="checkbox" name="dt" value="${k}" ${state.dts.includes(k) ? "checked" : ""}> ${k === "keine" ? "keine Diskrepanz" : esc(k)}</label>`).join("");
@@ -47,7 +47,8 @@ function controlsHtml() {
     <fieldset><legend>Zusätzlich anzeigen</legend>${overlays}</fieldset>
     <details ${state.cats.length || state.dts.length || state.prmin || state.bz ? "open" : ""}><summary>Filter</summary>
       <label for="f-bz">Bezirk</label>
-      <select id="f-bz" name="bz"><option value="">alle</option><option value="${esc(meta.pilot)}" ${state.bz === meta.pilot ? "selected" : ""}>${esc(meta.pilot)}</option></select>
+      <select id="f-bz" name="bz"><option value="">alle</option>${meta.districts.map((b) =>
+        `<option value="${esc(b)}" ${state.bz === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>
       <fieldset><legend>Soll-Kategorie</legend>${cats}</fieldset>
       <fieldset><legend>Diskrepanztyp</legend>${dts}</fieldset>
       <label for="f-pr">Priorität mindestens: <output id="f-pr-out">${state.prmin.toLocaleString("de-DE")}</output></label>
@@ -134,9 +135,18 @@ async function render() {
     mapView.update(state);
   }
   if (state.page === "tabelle") {
-    if (!table) {
-      const rows = await json("table.json");
-      table = renderTable($("#table-root"), rows, () => state, { onOpen: (id) => setState({ seg: id }) });
+    // One table file per Bezirk (data/out/table/<slug>.json); without a Bezirk the reader picks one first.
+    const root = $("#table-root");
+    if (!state.bz || !meta.tables[state.bz]) {
+      table = tableBz = null;
+      renderDistrictChooser(root, meta.districts, (bz) => setState({ bz }));
+    } else if (state.bz !== tableBz) {
+      const rows = await json(`table/${meta.tables[state.bz]}`);
+      tableBz = state.bz;
+      table = renderTable(root, rows, () => state, {
+        onOpen: (id) => setState({ seg: id }), onOtherDistrict: () => setState({ bz: "" }),
+        caption: `Abschnitte im Bezirk ${state.bz}`,
+      });
     } else {
       table.redraw();
     }

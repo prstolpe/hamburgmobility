@@ -4,7 +4,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-USER_AGENT = "hh-strassenfunktionsplan/0.1 (nicht amtlicher Entwurf; Datenabruf fuer Pilotbezirk)"
+USER_AGENT = "hh-strassenfunktionsplan/0.1 (nicht amtlicher Entwurf; Datenabruf Hamburg)"
 TIMEOUT_S = 60
 
 

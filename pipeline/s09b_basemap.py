@@ -2,7 +2,7 @@
 
 Usage: uv run python -m pipeline.s09b_basemap [--refresh]
 
-Cuts the pilot district (plus buffer) out of the Protomaps daily build with `pmtiles extract` and takes
+Cuts the work area (config/project.yaml, area: Bezirke plus buffer) out of the Protomaps daily build with `pmtiles extract` and takes
 fonts (glyph PBFs) and sprites from protomaps/basemaps-assets. Output in data/out/basemap/ (not in git);
 files and hashes go to data/manifest.json under web_assets. Only URLs from sources.yaml are used; a network
 error stops the run (no substitute sources).
@@ -10,6 +10,7 @@ error stops the run (no substitute sources).
 
 import argparse
 import io
+import json
 import shutil
 import subprocess
 import sys
@@ -18,6 +19,8 @@ import zipfile
 import geopandas as gpd
 import yaml
 
+from pipeline.lib.area import read_work_area
+from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.http import FetchError, get, make_session
 from pipeline.lib.manifest import REPO_ROOT, file_record, load_manifest, save_manifest
 from pipeline.s04_features import _now
@@ -33,10 +36,10 @@ def _load_yaml(name: str) -> dict:
         return yaml.safe_load(f)
 
 
-def bbox_wgs84(buffer_m: float) -> list[float]:
-    district = gpd.read_parquet(REPO_ROOT / "data" / "raw" / "district_boundary.parquet")
-    area = district.geometry.buffer(buffer_m)  # EPSG:25832 (work CRS) -> 4326 only for the extract
-    return [round(float(v), 5) for v in gpd.GeoSeries(area, crs=district.crs).to_crs(4326).total_bounds]
+def bbox_wgs84() -> list[float]:
+    """Bounding box of the work area (Bezirke + buffer, without Neuwerk); EPSG:25832 -> 4326 only here."""
+    area = read_work_area(exclude_rural=False)  # the map also shows the rural Stadtteile (grey)
+    return [round(float(v), 5) for v in gpd.GeoSeries([area], crs=WORK_CRS).to_crs(4326).total_bounds]
 
 
 def extract(url: str, bbox: list[float], maxzoom: int, out) -> None:
@@ -69,10 +72,14 @@ def main(argv: list[str] | None = None) -> int:
     web = project["web"]["basemap"]
     url = sources["basemap"]["url"].replace("{build}", str(web["build"]))
     tiles = OUT / "basemap.pmtiles"
-    bbox = bbox_wgs84(project["pilot_district"]["buffer_m"])
+    stamp = OUT / "extract.json"  # bbox and build of the current extract; a new work area means a new extract
+    bbox = bbox_wgs84()
+    wanted = {"bbox": bbox, "build": str(web["build"]), "maxzoom": int(web["maxzoom"])}
+    current = json.loads(stamp.read_text()) if stamp.exists() else None
     try:
-        if args.refresh or not tiles.exists():
+        if args.refresh or not tiles.exists() or current != wanted:
             extract(url, bbox, int(web["maxzoom"]), tiles)
+            stamp.write_text(json.dumps(wanted))
         if args.refresh or not (OUT / "fonts").exists():
             assets(make_session(), sources["basemap_assets"]["url"])
     except (RuntimeError, subprocess.CalledProcessError, FetchError, OSError, zipfile.BadZipFile) as exc:

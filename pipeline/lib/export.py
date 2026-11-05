@@ -196,3 +196,13 @@ def tile_frame(seg_wgs84: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     for c in ("w", "pr", "bus"):
         out[c] = pd.to_numeric(out[c], errors="coerce").round(2)
     return gpd.GeoDataFrame(out, geometry=df.geometry.to_numpy(), crs=seg_wgs84.crs)
+
+
+def district_slug(name: str) -> str:
+    """ASCII file name part for a Bezirk (table/<slug>.json): umlauts spelled out, spaces to hyphens."""
+    import re
+
+    s = name.lower()
+    for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+        s = s.replace(a, b)
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-")

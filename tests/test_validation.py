@@ -162,3 +162,17 @@ def test_data_quality_main_roads_without_dtv():
     q = v.data_quality(df).set_index("bezirk")
     assert q.loc["gesamt", "main_n"] == 2
     assert q.loc["gesamt", "main_missing_dtv"] == pytest.approx(0.5)
+
+
+def test_compare_baseline_counts_changes_on_common_ids():
+    import pandas as pd
+    from pipeline.lib.validation import compare_baseline
+    base = pd.DataFrame({"segment_id": ["a", "b", "c", "x"], "cat_final": ["GOW50", "ETW30", "GOW30", "ETW30"],
+                         "priority": [2.0, 0.5, 1.0, 0.1], "length_m": [100.0, 200.0, 300.0, 50.0]})
+    cur = pd.DataFrame({"segment_id": ["a", "b", "c", "y"], "cat_final": ["GOW30", "ETW30", "GOW30", "ETW30"],
+                        "priority": [1.0, 0.5, 2.0, 0.2], "length_m": [100.0, 200.0, 300.0, 70.0]})
+    r = compare_baseline(base, cur, top_n=2)
+    assert (r["n_common"], r["n_only_base"], r["n_only_new"]) == (3, 1, 1)
+    assert r["n_changed"] == 1 and r["km_changed"] == 0.1
+    assert r["changes"].to_dict("records") == [{"from": "GOW50", "to": "GOW30", "n": 1, "km": 0.1}]
+    assert r["top_overlap"] == 1.0  # top 2 before {a, c}, after {c, a}

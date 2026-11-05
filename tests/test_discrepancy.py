@@ -253,3 +253,15 @@ def test_street_summary_groups_by_name():
     a = out.iloc[0]
     assert (a["n_segments"], a["length_m"], a["max_priority"], a["crashes_ped_cyc"], a["crashes_severe_fatal"],
             a["n_in_top"], a["cats"], a["best_segment_id"]) == (2, 150.0, 2.0, 4, 1, 1, "GOW30, ETW30", "s1")
+
+
+def test_street_summary_lists_bezirke():
+    """A street crossing a Bezirk border lists both Bezirke (names are unique city-wide in Hamburg)."""
+    from pipeline.s08_discrepancy import street_summary
+
+    df = pd.DataFrame({
+        "segment_id": ["s1", "s2"], "name": ["A-Straße", "A-Straße"], "bezirk": ["Altona", "Eimsbüttel"],
+        "cat_final": ["GOW30", "GOW30"], "priority": [2.0, 1.0], "length_m": [100.0, 50.0],
+        "crashes_ped_cyc": [0, 0], "crashes_severe_fatal": [0, 0],
+    })
+    assert street_summary(df, top_ids=set()).iloc[0]["bezirke"] == "Altona, Eimsbüttel"

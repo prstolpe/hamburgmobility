@@ -26,6 +26,7 @@ import pandas as pd
 import yaml
 
 from pipeline.lib import export as ex
+from pipeline.lib.area import area_label, read_districts, read_rural
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest
@@ -41,6 +42,7 @@ VALIDATION_PATH = REPO_ROOT / "data" / "interim" / "validation.parquet"
 OUT_DIR = REPO_ROOT / "data" / "out"
 TILES_TMP = REPO_ROOT / "data" / "interim" / "tiles"
 REPORT_PATH = REPO_ROOT / "reports" / "export.md"
+PAGES_LIMIT_BYTES = 1_000_000_000  # GitHub Pages: published site at most 1 GB
 MIN_ZOOM, MAX_ZOOM = 10, 16
 SAMPLE_SIZE = 30
 SAMPLE_SEED = 42
@@ -206,7 +208,7 @@ def write_json(path, data) -> None:
 
 def data_description(texts: dict, ctx: dict) -> str:
     lines = ["# Datenbeschreibung – Straßenfunktionsplan Hamburg (Entwurf, nicht amtlich)", "",
-             f"Version {ctx['version']}, Bezirk {ctx['pilot']}, {ctx['n']} Abschnitte. Dateien: segments.parquet "
+             f"Version {ctx['version']}, {ctx['pilot']}, {ctx['n']} Abschnitte. Dateien: segments.parquet "
              "(GeoParquet), segments.geojson, segments.csv (mit Mittelpunkt lon/lat), rules.yaml (Regelwerk), "
              "overrides.csv (fachliche Korrekturen). Koordinaten in WGS 84 (EPSG:4326).", "",
              "Lizenz des Abschnittsdatensatzes: ODbL 1.0 (abgeleitet aus OpenStreetMap). Quellenvermerke siehe "
@@ -246,7 +248,12 @@ def run_checks(seg: gpd.GeoDataFrame, pub: gpd.GeoDataFrame, ctx: dict) -> list[
     def add(name, ok, detail):
         checks.append({"name": name, "ok": bool(ok), "detail": detail})
 
-    add("nur Pilotbezirk", (pub["bezirk"] == ctx["pilot"]).all(), f"{len(pub)} Abschnitte")
+    add("nur Bezirke des Arbeitsgebiets", pub["bezirk"].isin(ctx["districts"]).all(),
+        f"{len(pub)} Abschnitte in {len(ctx['districts'])} Bezirken")
+    add("Tabelle je Bezirk", all((OUT_DIR / "table" / f).exists() for f in ctx["tables"].values()),
+        ", ".join(f"table/{f}" for f in ctx["tables"].values()))
+    add(f"Seite unter {PAGES_LIMIT_BYTES / 1e9:.0f} GB (GitHub Pages)", ctx["site_bytes"] < PAGES_LIMIT_BYTES,
+        f"data/out zusammen {ctx['site_bytes'] / 1e6:.0f} MB")
     add("segment_id eindeutig und unverändert", pub["segment_id"].is_unique
         and list(pub["segment_id"]) == list(seg["segment_id"]), "Reihenfolge wie discrepancy.parquet")
     add("Export in EPSG:4326", pub.crs.to_epsg() == 4326, str(pub.crs))
@@ -266,28 +273,33 @@ def write_report(pub, profiles_sample, checks, ctx) -> None:
     sizes = []
     for p in sorted(OUT_DIR.rglob("*")):
         rel = p.relative_to(OUT_DIR)
-        if p.is_file() and p.parent.name != "segments" and rel.parts[:2] != ("basemap", "fonts"):
+        if p.is_file() and p.parent.name not in ("segments", "table") and rel.parts[:2] != ("basemap", "fonts"):
             sizes.append((str(rel), p.stat().st_size))
     fonts = list((OUT_DIR / "basemap" / "fonts").rglob("*.pbf"))
     if fonts:
         sizes.append((f"basemap/fonts/ ({len(fonts)} Glyphen-Dateien)", sum(f.stat().st_size for f in fonts)))
     profile_bytes = sum(p.stat().st_size for p in (OUT_DIR / "segments").glob("*.json"))
+    tables = list((OUT_DIR / "table").glob("*.json"))
+    sizes.append((f"table/ ({len(tables)} Dateien, je Bezirk)", sum(t.stat().st_size for t in tables)))
     viewers = ctx["viewers"]
     lines = ["# Export – Stufe 9", "",
              f"Erzeugt: {_now()} von `pipeline/s09_export.py`, Version {ctx['version']}. Nicht amtlicher Entwurf.", "",
              "## Prüfungen", "", "| Prüfung | Ergebnis | Detail |", "| --- | --- | --- |",
              *[f"| {c['name']} | {'ok' if c['ok'] else 'FEHLER'} | {c['detail']} |" for c in checks], "",
              "## Kennzahlen", "",
-             f"- Abschnitte: {_fmt(len(pub))} im Bezirk {ctx['pilot']} ({pub['length_m'].sum() / 1000:.1f} km)",
+             f"- Abschnitte: {_fmt(len(pub))} in {ctx['pilot']} ({pub['length_m'].sum() / 1000:.1f} km)",
+             f"- Gesamtgröße data/out: {ctx['site_bytes'] / 1e6:.0f} MB (Grenze GitHub Pages {PAGES_LIMIT_BYTES / 1e9:.0f} GB)",
              f"- Suchindex: {_fmt(ctx['n_search'])} Straßennamen; Schulen/Kitas in den Kacheln: {_fmt(ctx['n_facilities'])}",
              f"- Steckbriefe: {_fmt(len(pub))} Dateien, zusammen {profile_bytes / 1e6:.1f} MB",
              f"- Robustheit (make validate, {ctx['sens']['runs']} Läufe): {_fmt(int(pub['sens_uncertain'].fillna(False).sum()))} "
              f"Abschnitte „unsicher“ ({pub.loc[pub['sens_uncertain'].fillna(False).astype(bool), 'length_m'].sum() / 1000:.1f} km)", "",
+             "| Bezirk | Abschnitte | km |", "| --- | ---: | ---: |",
+             *[f"| {b} | {_fmt(len(g))} | {g['length_m'].sum() / 1000:.1f} |" for b, g in pub.groupby("bezirk")], "",
              "| Datei | Größe |", "| --- | ---: |",
              *[f"| `data/out/{n}` | {s / 1e6:.2f} MB |" for n, s in sizes], "",
              f"## Stichprobe ({SAMPLE_SIZE} zufällige Steckbriefe, Seed {SAMPLE_SEED})", "",
              "Klartext-Begründung wie im Steckbrief. Bitte gegen Orthophoto/Panoramax prüfen.", "",
-             "| segment_id | Name | Soll | Begründung | Datenunsicherheit | Links |", "| --- | --- | --- | --- | --- | --- |"]
+             "| segment_id | Bezirk | Name | Soll | Begründung | Datenunsicherheit | Links |", "| --- | --- | --- | --- | --- | --- | --- |"]
     for p, geom in profiles_sample:
         mid = geom.interpolate(0.5, normalized=True)
         wgs = gpd.GeoSeries([mid], crs=WORK_CRS).to_crs(4326).iloc[0]
@@ -295,7 +307,7 @@ def write_report(pub, profiles_sample, checks, ctx) -> None:
         conf = p["confidence"]["level"] + (": " + ", ".join(p["confidence"]["reasons"]) if p["confidence"]["reasons"] else "")
         if p["sensitivity"]["uncertain"]:
             conf += "; unsicher (Sensitivität)"
-        lines.append(f"| `{p['id']}` | {p['name'] or '–'} | {p['category']['code']} | {reasons} | {conf} | "
+        lines.append(f"| `{p['id']}` | {p['bezirk'] or '–'} | {p['name'] or '–'} | {p['category']['code']} | {reasons} | {conf} | "
                      f"[Orthophoto]({orthophoto_link(mid, viewers)}) · [Panoramax]({panoramax_link(wgs, viewers)}) · "
                      f"[OSM]({osm_way_link(p['osm_way_ids'][0])}) |")
     lines += ["", "## Lizenz", "", "Abschnittsdatensatz: ODbL 1.0 (© OpenStreetMap-Beitragende); amtliche Quellen "
@@ -311,21 +323,22 @@ def main() -> int:
     rules, texts = load_rules(), ex.load_texts()
     project = _load_yaml(PROJECT_PATH)
     sources_yaml = _load_yaml(SOURCES_PATH)
-    pilot = project["pilot_district"]["name"]
+    districts = read_districts().sort_values("name")
+    names = list(districts["name"])
     if not IN_PATH.exists():
         print("export: data/interim/discrepancy.parquet missing; run `make discrepancy` first", file=sys.stderr)
         return 1
     manifest = load_manifest()
     seg = gpd.read_parquet(IN_PATH)
-    seg = seg[seg["conflated"].astype(bool) & seg["cat_final"].notna() & (seg["bezirk"] == pilot)].reset_index(drop=True)
+    seg = seg[seg["conflated"].astype(bool) & seg["cat_final"].notna() & seg["bezirk"].isin(names)].reset_index(drop=True)
     seg, sens_ctx = join_validation(seg, rules)
     date = data_date(manifest)
     version = f"{rules.meta.version}+{date}"
-    ctx = {"rules": rules, "texts": texts, "pilot": pilot, "version": version, "n": len(seg),
+    ctx = {"rules": rules, "texts": texts, "pilot": area_label(names), "districts": names, "version": version, "n": len(seg),
            "sources": source_list(manifest, sources_yaml["sources"]), "viewers": load_viewers(), "sens": sens_ctx}
 
     if OUT_DIR.exists():
-        for sub in ("segments", "downloads", "tiles"):
+        for sub in ("segments", "downloads", "tiles", "table"):
             shutil.rmtree(OUT_DIR / sub, ignore_errors=True)
     dl = OUT_DIR / "downloads"
     dl.mkdir(parents=True, exist_ok=True)
@@ -356,19 +369,28 @@ def main() -> int:
               "conf": r.confidence, "un": None if pd.isna(r.sens_uncertain) else bool(r.sens_uncertain),
               "len": round(float(r.length_m)), "acc": int(r.crashes_ped_cyc)}
              for r in seg.itertuples()]
-    write_json(OUT_DIR / "table.json", table)
+    ctx["tables"] = {b: f"{ex.district_slug(b)}.json" for b in names}
+    for b, f in ctx["tables"].items():  # one file per Bezirk; the website loads the chosen one
+        write_json(OUT_DIR / "table" / f, [row for row in table if row["bz"] == b])
+    (OUT_DIR / "table.json").unlink(missing_ok=True)  # single file of the pilot era
 
-    district = gpd.read_parquet(REPO_ROOT / "data" / "raw" / "district_boundary.parquet").to_crs(ex.EXPORT_CRS)
-    district[["geometry"]].to_file(OUT_DIR / "district.geojson", driver="GeoJSON")
+    district = districts.to_crs(ex.EXPORT_CRS)
+    district[["name", "geometry"]].to_file(OUT_DIR / "districts.geojson", driver="GeoJSON")
+    rural = read_rural().to_crs(ex.EXPORT_CRS)  # not classified: shown grey as "außerorts – nicht bewertet"
+    rural[["name", "geometry"]].to_file(OUT_DIR / "rural_excluded.geojson", driver="GeoJSON")
+    (OUT_DIR / "district.geojson").unlink(missing_ok=True)
     web = project["web"]
     assets = sources_yaml["web_assets"]
     attribution = ["© OpenStreetMap-Beitragende (ODbL)"] + sorted({s["attribution"] for s in ctx["sources"]
                                                                     if s["attribution"] and "OpenStreetMap" not in s["attribution"]})
     meta = {"version": version, "rules_version": rules.meta.version, "data_date": date,
-            "generated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "pilot": pilot,
+            "generated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+            "area_label": ctx["pilot"], "districts": names, "tables": ctx["tables"],
+            "rural_excluded": sorted(rural["name"]),
+            "categories_present": [c for c in rules.categories if c in set(pub["cat_final"])],
             "n_segments": len(pub), "bbox": [round(float(v), 6) for v in district.total_bounds],
             "categories": {c: {"label": rules.categories[c].label_de, "text": texts["categories"][c]}
-                           for c in rules.categories if not rules.categories[c].rural},
+                           for c in rules.categories},
             "discrepancy_types": dict(rules.discrepancy.types),
             "feasibility": texts["feasibility"],
             "sensitivity": {k: sens_ctx[k] for k in ("runs", "seed", "delta", "min_change_rate", "rules_version")},
@@ -392,7 +414,8 @@ def main() -> int:
         print(f"export: tiles failed: {exc}", file=sys.stderr)
         return 1
 
-    ctx.update(n_without_reason=n_without_reason, n_search=len(search), n_facilities=len(facilities))
+    ctx.update(n_without_reason=n_without_reason, n_search=len(search), n_facilities=len(facilities),
+               site_bytes=sum(p.stat().st_size for p in OUT_DIR.rglob("*") if p.is_file()))
     checks = run_checks(seg, pub, ctx)
     write_report(pub, sample_profiles, checks, ctx)
     for c in checks:

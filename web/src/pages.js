@@ -12,7 +12,7 @@ export function methodHtml(meta, changelog) {
   const cats = Object.entries(meta.categories).filter(([k]) => CATEGORY_STYLE[k]);
   return `
   <h1>So funktioniert der Entwurf</h1>
-  <p class="lead">Dieser Entwurf ordnet jeder Straße im Bezirk ${esc(meta.pilot)} eine Aufgabe zu: Soll sie Verkehr
+  <p class="lead">Dieser Entwurf ordnet jeder Straße in ${esc(meta.area_label)} eine Aufgabe zu: Soll sie Verkehr
   verbinden, oder soll sie ein Quartier erschließen? Daraus folgt, wie schnell gefahren werden soll und wie die Straße
   gestaltet sein sollte. Die Idee kommt aus den Niederlanden und heißt „Duurzaam Veilig“ (nachhaltig sicher).</p>
   <p><strong>Wichtig:</strong> Das ist ein Vorschlag zur Diskussion. Die Stadt Hamburg hat ihn nicht beschlossen.
@@ -75,7 +75,7 @@ export function downloadsHtml(meta) {
     <td>${esc(d.text)}</td><td>${num(d.bytes / 1e6, 1)} MB</td></tr>`).join("");
   return `
   <h1>Daten herunterladen</h1>
-  <p>Alle Abschnitte im Bezirk ${esc(meta.pilot)} (${num(meta.n_segments)} Abschnitte), Version ${esc(meta.version)}.
+  <p>Alle Abschnitte in ${esc(meta.area_label)} (${num(meta.n_segments)} Abschnitte), Version ${esc(meta.version)}.
   Koordinaten in WGS 84. Lizenz des Abschnittsdatensatzes: ODbL 1.0. Quellenvermerke auf der
   <a href="#quellen">Quellenseite</a>.</p>
   <table><caption>Dateien</caption><thead><tr><th scope="col">Datei</th><th scope="col">Inhalt</th><th scope="col">Größe</th></tr></thead>

@@ -2,22 +2,22 @@
 
 Usage: uv run python -m pipeline.s02_network
 
-Builds the network for all of Hamburg (so IDs at the edge of the pilot district do not depend on
-a clip) and writes data/interim/segments.parquet plus reports/network.md. Rules and thresholds
+Builds the network for all of Hamburg (so IDs do not depend on how the work area is cut) and writes data/interim/segments.parquet plus reports/network.md. Rules and thresholds
 come from config/rules.yaml (section network). The run stops with exit code 1 if a check fails;
 segments.parquet is then not written.
 """
 
 import datetime as dt
-import random
 import sys
 from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
 import shapely
-import yaml
 
+from dataclasses import replace
+
+from pipeline.lib.area import NO_DISTRICT, area_label, load_area_config, read_districts, read_work_area, sample_by_district, select_districts
 from pipeline.lib.boundary import boundaries_from_pbf
 from pipeline.lib.crs import WORK_CRS, to_work_crs
 from pipeline.lib.links import osm_map_link, osm_way_link
@@ -25,14 +25,12 @@ from pipeline.lib.manifest import REPO_ROOT, load_manifest, sha256_file
 from pipeline.lib.network import segments_from_edges, select_ways
 from pipeline.lib.rules import load_rules, network_highways
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "segments.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "network.md"
 SAMPLE_SIZE = 30
 SAMPLE_SEED = 42
 # Acceptance criterion from prompts/04_network.md (Prüfschritt), not a classification threshold.
 MAX_LENGTH_DEVIATION = 0.01
-BEZIRK_ADMIN_LEVEL = "9"  # config/project.yaml: admin_level 9 = Bezirk in Hamburg
 
 
 def _now() -> str:
@@ -140,9 +138,9 @@ def _length_table(seg: pd.DataFrame, order: list[str]) -> list[str]:
 
 
 def write_report(seg: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
-    rules, pilot = ctx["rules"], ctx["pilot"]
+    rules, label, names = ctx["rules"], ctx["label"], ctx["districts"]
     order = network_highways(rules)
-    in_pilot = seg[seg["bezirk"] == pilot]
+    in_scope = seg[seg["bezirk"].isin(names)]
     status = {True: "ok", False: "**FEHLER**", None: "–"}
     lines = [
         "# Netzbericht – Abschnitte (Stufe 2)", "",
@@ -152,7 +150,9 @@ def write_report(seg: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         f"SHA-256 `{ctx['pbf_sha'][:16]}…`)",
         f"- Regelwerk: config/rules.yaml {rules.meta.version}",
         f"- highway-Klassen: {', '.join(order)}",
-        "- Netz für ganz Hamburg berechnet, damit IDs am Rand des Pilotbezirks nicht vom Zuschnitt abhängen.",
+        "- Netz für ganz Hamburg berechnet, damit IDs nicht vom Zuschnitt des Arbeitsgebiets abhängen.",
+        "- Bezirk je Abschnitt: Bezirk mit dem größten Längenanteil; Neuwerk/Scharhörn und Flächen außerhalb "
+        "Hamburgs bleiben ohne Bezirk (config/project.yaml, area).",
         "", "## Segmentierungsregeln", "",
     ]
     for r in rules.network.rules:
@@ -165,38 +165,36 @@ def write_report(seg: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         "", "## Kennzahlen", "",
         f"- Kanten (Knoten zu Knoten) im Ausgangsnetz: {_fmt(ctx['n_edges'])} aus {_fmt(ctx['n_ways'])} Ways",
         f"- Abschnitte Hamburg: {_fmt(len(seg))} ({_fmt(seg['length_m'].sum() / 1000, 1)} km)",
-        f"- Abschnitte {pilot}: {_fmt(len(in_pilot))} ({_fmt(in_pilot['length_m'].sum() / 1000, 1)} km)",
-        f"- Abschnitte im Arbeitsgebiet ({pilot} + {ctx['buffer_m']} m): {_fmt(ctx['n_work_area'])}",
+        f"- Abschnitte in {label}: {_fmt(len(in_scope))} ({_fmt(in_scope['length_m'].sum() / 1000, 1)} km)",
+        f"- Abschnitte im Arbeitsgebiet ({label} + {ctx['buffer_m']:.0f} m): {_fmt(ctx['n_work_area'])}",
         f"- Abschnitte aus Teilung nach S-NET-03: {_fmt(int(seg['split_rule'].notna().sum()))} "
-        f"(davon {pilot}: {_fmt(int(in_pilot['split_rule'].notna().sum()))})",
-        f"- Abschnitte ohne Bezirk (außerhalb Hamburgs, Randstreifen des OSM-Auszugs; nur für den Netzzusammenhang): {_fmt(int(seg['bezirk'].isna().sum()))}",
+        f"(davon {label}: {_fmt(int(in_scope['split_rule'].notna().sum()))})",
+        f"- Abschnitte ohne Bezirk (außerhalb Hamburgs, Randstreifen des OSM-Auszugs, Neuwerk; nur für den Netzzusammenhang): {_fmt(int(seg['bezirk'].isna().sum()))}",
         f"- Abschnitte ohne OSM-maxspeed: {_fmt(int(seg['maxspeed_osm'].isna().sum()))}; mit mehreren "
         f"maxspeed-Werten: {_fmt(int(seg['maxspeed_osm'].fillna('').str.contains(' / ').sum()))}",
         "", "## Prüfungen", "", "| Prüfung | Ergebnis | Detail |", "| --- | --- | --- |",
     ]
     lines += [f"| {c['name']} | {status[c['ok']]} | {c['detail']} |" for c in checks]
-    lines += ["", f"## Längenverteilung je highway-Klasse – {pilot}", ""]
-    lines += _length_table(in_pilot, order)
-    lines += ["", "## Längenverteilung je highway-Klasse – Hamburg", ""]
+    lines += ["", f"## Längenverteilung je highway-Klasse – {label}", ""]
+    lines += _length_table(in_scope, order)
+    lines += ["", "## Längenverteilung je highway-Klasse – gesamter OSM-Auszug", ""]
     lines += _length_table(seg, order)
     lines += ["", "## Abschnitte je Bezirk", "", "| Bezirk | Anzahl | km |", "| --- | ---: | ---: |"]
-    for name, grp in seg.groupby(seg["bezirk"].fillna("(außerhalb Hamburgs)")):
+    for name, grp in seg.groupby(seg["bezirk"].fillna(NO_DISTRICT + " (außerhalb Hamburgs, Neuwerk)")):
         lines.append(f"| {name} | {_fmt(len(grp))} | {_fmt(grp['length_m'].sum() / 1000, 1)} |")
 
-    rng = random.Random(SAMPLE_SEED)
-    picked = sorted(rng.sample(sorted(in_pilot["segment_id"]), min(SAMPLE_SIZE, len(in_pilot))))
-    sample = in_pilot.set_index("segment_id").loc[picked]
+    sample = sample_by_district(in_scope, SAMPLE_SIZE, SAMPLE_SEED).set_index("segment_id")
     points = gpd.GeoSeries(sample.geometry.interpolate(0.5, normalized=True), crs=WORK_CRS).to_crs("EPSG:4326")
-    lines += ["", f"## Stichprobe ({len(sample)} zufällige Abschnitte in {pilot}, Seed {SAMPLE_SEED})", "",
+    lines += ["", f"## Stichprobe ({len(sample)} zufällige Abschnitte in {label}, nach Bezirk geschichtet, Seed {SAMPLE_SEED})", "",
               "Links auf openstreetmap.org (Way und Kartenausschnitt am Abschnittsmittelpunkt). Orthophoto- und "
               "Panoramax-Links folgen, sobald das Linkformat geklärt ist (docs/open_questions.md).", "",
-              "| segment_id | highway | Name | Länge m | maxspeed (OSM) | Ways | Karte |",
-              "| --- | --- | --- | ---: | --- | --- | --- |"]
+              "| segment_id | Bezirk | highway | Name | Länge m | maxspeed (OSM) | Ways | Karte |",
+              "| --- | --- | --- | --- | ---: | --- | --- | --- |"]
     for sid, row in sample.iterrows():
         ways = ", ".join(f"[{w}]({osm_way_link(w)})" for w in row["osm_way_ids"][:3])
         if len(row["osm_way_ids"]) > 3:
             ways += f" (+{len(row['osm_way_ids']) - 3})"
-        lines.append(f"| `{sid}` | {row['highway']} | {_txt(row['name'])} | {_fmt(row['length_m'])} | "
+        lines.append(f"| `{sid}` | {row['bezirk']} | {row['highway']} | {_txt(row['name'])} | {_fmt(row['length_m'])} | "
                      f"{_txt(row['maxspeed_osm']) or '–'} | {ways} | [OSM]({osm_map_link(points.loc[sid])}) |")
     lines += ["", "## Lizenz", "",
               "Abgeleitet aus OpenStreetMap-Daten © OpenStreetMap-Beitragende, ODbL 1.0 (docs/licenses.md).", ""]
@@ -211,8 +209,7 @@ def main() -> int:
     rules = load_rules()
     network = rules.network
     differ_rule, split_rule = network.rule("S-NET-02"), network.rule("S-NET-03")
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        project = yaml.safe_load(f)["pilot_district"]
+    cfg = load_area_config()
     manifest = load_manifest()
     pbf = _pbf_from_manifest(manifest)
     pbf_path = REPO_ROOT / pbf["path"]
@@ -226,16 +223,16 @@ def main() -> int:
     seg = segments_from_edges(edges, differ=[differ_rule.attribute], split_attribute=split_rule.attribute,
                               min_length_m=split_rule.thresholds["min_length_m"].value,
                               split_rule_id=split_rule.id)
-    bezirke = to_work_crs(boundaries_from_pbf(pbf_path))
-    bezirke = bezirke[bezirke["admin_level"].astype(str) == BEZIRK_ADMIN_LEVEL].reset_index(drop=True)
+    # Labels always for all Hamburg Bezirke (without Neuwerk), independent of the districts in scope.
+    bezirke = select_districts(boundaries_from_pbf(pbf_path), replace(cfg, districts="all"))
     seg["bezirk"] = assign_bezirk(seg, bezirke)
 
-    district = gpd.read_parquet(REPO_ROOT / "data" / "raw" / "district_boundary.parquet")
-    work_area = to_work_crs(district).geometry.union_all().buffer(project["buffer_m"])
+    names = sorted(read_districts()["name"])
+    work_area = read_work_area(cfg)
     previous_ids = set(pd.read_parquet(OUT_PATH, columns=["segment_id"])["segment_id"]) if OUT_PATH.exists() else None
     checks = run_checks(seg, reference_length_m(pbf_path, rules), previous_ids)
 
-    ctx = {"rules": rules, "pilot": project["name"], "buffer_m": project["buffer_m"], "pbf": pbf,
+    ctx = {"rules": rules, "label": area_label(names), "districts": names, "buffer_m": cfg.buffer_m, "pbf": pbf,
            "pbf_sha": pbf_sha, "n_edges": len(edges), "n_ways": int(edges["way_id"].nunique()),
            "n_work_area": int(seg.geometry.intersects(work_area).sum())}
     write_report(seg, ctx, checks)

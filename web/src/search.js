@@ -49,4 +49,6 @@ export function setupSearch(input, listbox, entries, onPick) {
     if (li) { pick(Number(li.dataset.i)); ev.preventDefault(); }
   });
   input.addEventListener("blur", () => setTimeout(close, 100));
+  // Text typed while search.json was still loading
+  if (input.value.trim().length >= 2) input.dispatchEvent(new Event("input"));
 }

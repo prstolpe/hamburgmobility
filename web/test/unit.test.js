@@ -105,3 +105,41 @@ describe("robustness", () => {
     expect([true, false, null, undefined].map(robust)).toEqual(["unsicher", "robust", "–", "–"]);
   });
 });
+
+describe("categories", () => {
+  it("has a style for every category incl. außerorts", () => {
+    expect(Object.keys(CATEGORY_STYLE).sort()).toEqual(["ETW30", "ETW60", "ETW_ERF", "GOW30", "GOW50", "GOW80", "SW"]);
+  });
+});
+
+describe("table per Bezirk", () => {
+  it("asks for a Bezirk and reports the choice", async () => {
+    const { renderDistrictChooser } = await import("../src/table.js");
+    const root = { innerHTML: "", onclick: null };
+    let picked = null;
+    renderDistrictChooser(root, ["Altona", "Eimsbüttel"], (b) => { picked = b; });
+    expect(root.innerHTML).toContain('data-bz="Eimsbüttel"');
+    root.onclick({ target: { closest: () => ({ dataset: { bz: "Altona" } }) } });
+    expect(picked).toBe("Altona");
+  });
+});
+
+describe("legend", () => {
+  it("explains the grey rural Stadtteile when there are any", async () => {
+    const { legendHtml } = await import("../src/layers.js");
+    const meta = { categories: { SW: { label: "Schnellverkehrsstraße" } }, discrepancy_types: {}, width_classes_m: {}, feasibility: {} };
+    expect(legendHtml("cat", { ...meta, rural_excluded: ["Kirchwerder"] })).toContain("außerorts – nicht bewertet");
+    expect(legendHtml("cat", meta)).not.toContain("außerorts – nicht bewertet");
+  });
+});
+
+describe("legend categories", () => {
+  it("lists only categories present in the data", async () => {
+    const { legendHtml } = await import("../src/layers.js");
+    const meta = { categories: { SW: { label: "A" }, GOW80: { label: "B" } }, categories_present: ["SW"],
+      discrepancy_types: {}, width_classes_m: {}, feasibility: {} };
+    const html = legendHtml("cat", meta);
+    expect(html).toContain("SW – A");
+    expect(html).not.toContain("GOW80");
+  });
+});

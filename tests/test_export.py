@@ -177,3 +177,11 @@ def test_harmonisation_reason_text():
 
 def test_cat_cascade_is_public():
     assert "cat_cascade" in ex.PUBLIC_COLUMNS and "cat_cascade" in TEXTS["columns"]
+
+
+def test_district_slug_is_ascii_and_stable():
+    from pipeline.lib.export import district_slug
+    assert district_slug("Eimsbüttel") == "eimsbuettel"
+    assert district_slug("Hamburg-Mitte") == "hamburg-mitte"
+    assert district_slug("Wandsbek") == "wandsbek"
+    assert district_slug("Groß Flottbek") == "gross-flottbek"
