@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "name": "tram_junction",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "tram_junction",
+        "description": "GOW50 x GOW30 mit Straßenbahn -> geschützte LSA-Kreuzung",
+        "legs": [
+          {
+            "cat": "GOW50",
+            "cycle_cat": "HAUPT",
+            "facility": null
+          },
+          {
+            "cat": "GOW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 15000,
+        "space_radius_m": 30,
+        "tram_present": true,
+        "signal_present_ist": true,
+        "expected_junction_type": "signal_protected",
+        "expected_rules": [
+          "J-11"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-02"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          567800.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

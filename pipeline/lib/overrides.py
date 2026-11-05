@@ -18,6 +18,11 @@ OVERRIDES_PATH = REPO_ROOT / "overrides" / "overrides.csv"
 COLUMNS = ["segment_id", "cat_final", "reason", "author", "date", "source", "review_status"]
 REVIEW_STATUS = ("draft", "approved", "rejected")  # Entscheidung Projektteam 2026-10-28
 APPLIED_STATUS = "approved"
+# Correction layers of the cycle network extension (prompts/14); applied in prompts 16 and 20.
+CYCLE_NETWORK_OVERRIDES_PATH = REPO_ROOT / "overrides" / "cycle_network_overrides.csv"
+CYCLE_NETWORK_COLUMNS = ["edge_id", "cycle_cat_final", "reason", "author", "date", "source", "review_status"]
+JUNCTION_OVERRIDES_PATH = REPO_ROOT / "overrides" / "junction_overrides.csv"
+JUNCTION_COLUMNS = ["node_id", "junction_type_final", "reason", "author", "date", "source", "review_status"]
 OVERRIDE_COLUMNS = ["cat_final", "cat_final_source", "override_reason", "override_author", "override_date",
                     "override_source"]
 

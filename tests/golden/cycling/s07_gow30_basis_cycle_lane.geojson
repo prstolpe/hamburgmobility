@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow30_basis_cycle_lane",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow30_basis_cycle_lane",
+        "description": "GOW30, Bezirksroute -> Radfahrstreifen",
+        "cat_final": "GOW30",
+        "cycle_cat": "BASIS",
+        "dtv": 5000,
+        "cyc_peak_h_oneway": 120,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "cycle_lane",
+        "expected_width_refs": [
+          "widths_m.project_target.cycle_lane.BASIS"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "L-01"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            566400.0,
+            5935000.0
+          ],
+          [
+            566520.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

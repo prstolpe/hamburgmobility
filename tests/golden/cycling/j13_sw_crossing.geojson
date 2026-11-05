@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "name": "sw_crossing",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "sw_crossing",
+        "description": "Radroute kreuzt Stroomweg -> planfrei",
+        "legs": [
+          {
+            "cat": "GOW50",
+            "cycle_cat": "HAUPT",
+            "facility": null
+          },
+          {
+            "cat": "SW",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 70000,
+        "space_radius_m": 40,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "grade_separated_cycle",
+        "expected_rules": [
+          "J-10"
+        ],
+        "expected_cyclist_treatment": [],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          567600.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "name": "etw60_above_mixed_limit",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "etw60_above_mixed_limit",
+        "description": "Außerorts ETW60, 4 000 Kfz/24h (> 2 500) -> Zweirichtungsradweg",
+        "cat_final": "ETW60",
+        "cycle_cat": "BASIS",
+        "dtv": 4000,
+        "cyc_peak_h_oneway": 40,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "separated_twoway",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_twoway.BASIS"
+        ],
+        "expected_lanes_per_direction": "shared",
+        "expected_bus_lane": false,
+        "expected_rules": [],
+        "refs_used": [
+          "separation_matrix.mixed_rural_max_dtv.value"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            567800.0,
+            5935000.0
+          ],
+          [
+            567920.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

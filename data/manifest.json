@@ -84,6 +84,40 @@
       "title": "ALKIS Flurstücke, Gebäude, tatsächliche Nutzung",
       "url": "https://geodienste.hamburg.de/WFS_HH_ALKIS_vereinfacht"
     },
+    "bike_counters": {
+      "access": "sensorthings_counters",
+      "attribution": "Freie und Hansestadt Hamburg",
+      "error": null,
+      "fallback": false,
+      "files": [
+        {
+          "bbox": [
+            553766.0,
+            5923498.8,
+            580122.5,
+            5945884.4
+          ],
+          "bytes": 37088,
+          "crs": "EPSG:25832",
+          "layer": "stations",
+          "n_features": 312,
+          "path": "data/raw/bike_counters__stations.parquet",
+          "sha256": "3f2fe6cfe560605a5273a0a29a7670d69c08bcb10d3ff94193a0d3beb46b74d1"
+        },
+        {
+          "bytes": 256127,
+          "layer": "daily_2025",
+          "n_rows": 108703,
+          "path": "data/raw/bike_counters__daily_2025.parquet",
+          "sha256": "acb4b1e0a41a2c291aa804ea5b3fc1aec79ebbf492160abdf0f6ecef9b08fa33"
+        }
+      ],
+      "license": "dl-de/by-2.0",
+      "retrieved_at": "2026-11-05T17:54:50+00:00",
+      "status": "ok",
+      "title": "Verkehrsdaten Rad (Infrarotdetektoren) Hamburg – Zählstellen mit Tageswerten",
+      "url": "https://iot.hamburg.de/v1.1"
+    },
     "bike_volumes_dbradplus": {
       "access": "ogc_api_features",
       "attribution": null,
@@ -106,6 +140,18 @@
       "retrieved_at": null,
       "status": "fehlt",
       "title": "3D-Gebäudemodell LoD2-DE (ab 2016), LoD3.0-HH",
+      "url": null
+    },
+    "centres": {
+      "access": "unknown",
+      "attribution": null,
+      "error": null,
+      "fallback": false,
+      "files": [],
+      "license": null,
+      "retrieved_at": null,
+      "status": "fehlt",
+      "title": "Zentren (Bezirks- und Stadtteilzentren)",
       "url": null
     },
     "cycle_network": {
@@ -134,6 +180,47 @@
       "status": "fallback",
       "title": "Radnetz Hamburg (Radrouten, Radrouten+), ersetzt seit 2025 die Velorouten",
       "url": null
+    },
+    "cycle_network_official": {
+      "access": "wfs",
+      "attribution": "Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende",
+      "error": null,
+      "fallback": false,
+      "files": [
+        {
+          "bbox": [
+            548952.1,
+            5917330.8,
+            586460.4,
+            5951545.8
+          ],
+          "bytes": 291513,
+          "crs": "EPSG:25832",
+          "layer": "de.hh.up:radnetz",
+          "n_features": 1026,
+          "path": "data/raw/cycle_network_official__radnetz.parquet",
+          "sha256": "2d4a41d60c01f8d3c6aab3ca57d9cd41e69a453d76a9b8a1c6088d6e0ae77e09"
+        },
+        {
+          "bbox": [
+            548952.1,
+            5917267.2,
+            584414.8,
+            5951545.8
+          ],
+          "bytes": 95057,
+          "crs": "EPSG:25832",
+          "layer": "de.hh.up:radrouten",
+          "n_features": 90,
+          "path": "data/raw/cycle_network_official__radrouten.parquet",
+          "sha256": "35d991a7ec7a0170eb380e59fee1ac542f4e5d9404261da68ea1fa5f69509651"
+        }
+      ],
+      "license": "dl-de/by-2.0",
+      "retrieved_at": "2026-11-05T17:54:29+00:00",
+      "status": "ok",
+      "title": "Radnetz Hamburg – amtlicher WFS (Radnetz-Abschnitte und Radrouten)",
+      "url": "https://geodienste.hamburg.de/wfs_radnetz"
     },
     "dedications": {
       "access": "wfs",
@@ -621,6 +708,33 @@
       "title": "Verkehrszählstellen Kfz/Rad (SensorThings)",
       "url": "https://iot.hamburg.de/v1.1"
     },
+    "traffic_signals": {
+      "access": "unknown",
+      "attribution": null,
+      "error": null,
+      "fallback": true,
+      "files": [
+        {
+          "bbox": [
+            548339.0,
+            5918549.3,
+            582373.0,
+            5952236.2
+          ],
+          "bytes": 156812,
+          "crs": "EPSG:25832",
+          "layer": "osm",
+          "n_features": 5558,
+          "path": "data/raw/traffic_signals__osm.parquet",
+          "sha256": "5fd456bc7bce11f492edddb4600781aa9dbfd421fbdb3dbe40d7a4cf09384985"
+        }
+      ],
+      "license": "ODbL-1.0",
+      "retrieved_at": "2026-11-05T17:54:50+00:00",
+      "status": "fallback",
+      "title": "Lichtsignalanlagen (Standorte)",
+      "url": null
+    },
     "traffic_volumes": {
       "access": "ogc_api_features",
       "attribution": null,
@@ -661,9 +775,36 @@
       "status": "ok",
       "title": "Verkehrsmengen auf Hauptverkehrsstraßen in Hamburg",
       "url": "https://api.hamburg.de/datasets/v1/verkehrsmengen"
+    },
+    "universities": {
+      "access": "unknown",
+      "attribution": null,
+      "error": null,
+      "fallback": true,
+      "files": [
+        {
+          "bbox": [
+            555223.2,
+            5923512.6,
+            582488.5,
+            5942531.8
+          ],
+          "bytes": 47446,
+          "crs": "EPSG:25832",
+          "layer": "osm",
+          "n_features": 111,
+          "path": "data/raw/universities__osm.parquet",
+          "sha256": "364ea14c5f83a7f341c785e6082935f27b3ab90114c6cb3f4117e6c7590017bd"
+        }
+      ],
+      "license": "ODbL-1.0",
+      "retrieved_at": "2026-11-05T17:54:51+00:00",
+      "status": "fallback",
+      "title": "Hochschulen",
+      "url": null
     }
   },
-  "updated_at": "2026-11-04T21:28:38+00:00",
+  "updated_at": "2026-11-05T17:54:53+00:00",
   "web_assets": {
     "basemap": {
       "assets": {

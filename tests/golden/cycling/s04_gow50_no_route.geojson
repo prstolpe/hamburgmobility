@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_no_route",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_no_route",
+        "description": "GOW50 ohne Radnetzkategorie: trotzdem baulich getrennt",
+        "cat_final": "GOW50",
+        "cycle_cat": "none",
+        "dtv": 9000,
+        "cyc_peak_h_oneway": 80,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "separated_oneway_both",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_oneway.none"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "S-01",
+          "L-02"
+        ],
+        "refs_used": [
+          "lanes.rules[L-02].lane_capacity_veh_h.value",
+          "lanes.rules[L-02].target_vc.value",
+          "lanes.rules[L-02].peak_h_dir_from_dtv.factor"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            565800.0,
+            5935000.0
+          ],
+          [
+            565920.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

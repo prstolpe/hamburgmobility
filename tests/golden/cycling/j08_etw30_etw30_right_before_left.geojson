@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "name": "etw30_etw30_right_before_left",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "etw30_etw30_right_before_left",
+        "description": "ETW30 x ETW30 -> rechts vor links",
+        "legs": [
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 1500,
+        "space_radius_m": 10,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "equal_right_before_left",
+        "expected_rules": [
+          "J-06"
+        ],
+        "expected_cyclist_treatment": [],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          566600.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

@@ -116,3 +116,16 @@ def test_template_rows_round_trip():
 def test_template_rejects_unknown_ids():
     with pytest.raises(ov.OverrideError, match="seg_gone"):
         ov.template_csv(["seg_gone"], segments(), author="", today="2026-10-28")
+
+
+# --- correction layers of the cycle network extension (prompts/14) ---------------------------
+
+
+@pytest.mark.parametrize("path, columns", [
+    (ov.CYCLE_NETWORK_OVERRIDES_PATH, ov.CYCLE_NETWORK_COLUMNS),
+    (ov.JUNCTION_OVERRIDES_PATH, ov.JUNCTION_COLUMNS),
+])
+def test_cycling_override_files_have_expected_header(path, columns):
+    df = ov.read_overrides(path)
+    assert list(df.columns) == columns
+    assert set(df["review_status"]) <= set(ov.REVIEW_STATUS)

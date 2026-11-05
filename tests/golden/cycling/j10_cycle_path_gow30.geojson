@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "name": "cycle_path_gow30",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "cycle_path_gow30",
+        "description": "Eigenständiger Radweg x GOW30 -> Radwegfurt mit Vorrang",
+        "legs": [
+          {
+            "cat": "cycle_path",
+            "cycle_cat": "BASIS",
+            "facility": "own_path"
+          },
+          {
+            "cat": "GOW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 6000,
+        "space_radius_m": 10,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "cycle_crossing_priority",
+        "expected_rules": [
+          "J-08"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-03"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          567000.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

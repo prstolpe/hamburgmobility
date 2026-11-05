@@ -1,0 +1,46 @@
+{
+  "type": "FeatureCollection",
+  "name": "etw_erf_rsv_own_path",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "etw_erf_rsv_own_path",
+        "description": "Fußgängerzone auf RSV-Korridor -> eigene Trasse bevorzugt",
+        "cat_final": "ETW_ERF",
+        "cycle_cat": "RSV",
+        "dtv": 0,
+        "cyc_peak_h_oneway": 400,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "own_path",
+        "expected_width_refs": [],
+        "expected_lanes_per_direction": "shared",
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "L-01"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            567000.0,
+            5935000.0
+          ],
+          [
+            567120.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

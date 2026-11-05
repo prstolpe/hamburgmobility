@@ -1,13 +1,19 @@
-"""Load and validate config/rules.yaml."""
+"""Load and validate config/rules.yaml, config/cycling_rules.yaml and config/design_rules.yaml."""
 
 import re
 from pathlib import Path
 
 import yaml
 
+from config.schema.cycling_model import CyclingRuleSet
+from config.schema.design_model import DesignRuleSet
+from config.schema.provenance import collect_ids
 from config.schema.rules_model import RULE_REF, RuleSet, Threshold
 
-DEFAULT_RULES_PATH = Path(__file__).resolve().parents[2] / "config" / "rules.yaml"
+CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
+DEFAULT_RULES_PATH = CONFIG_DIR / "rules.yaml"
+DEFAULT_CYCLING_RULES_PATH = CONFIG_DIR / "cycling_rules.yaml"
+DEFAULT_DESIGN_RULES_PATH = CONFIG_DIR / "design_rules.yaml"
 
 # Words in rule conditions that are operators or control words, not segment features.
 _KEYWORDS = {"and", "or", "not", "in", "if", "else", "default", "no", "passed"}
@@ -18,6 +24,24 @@ def load_rules(path: str | Path = DEFAULT_RULES_PATH) -> RuleSet:
     """Read rules.yaml and validate it; raises pydantic.ValidationError if invalid."""
     with open(path, encoding="utf-8") as f:
         return RuleSet.model_validate(yaml.safe_load(f))
+
+
+def load_cycling_rules(path: str | Path = DEFAULT_CYCLING_RULES_PATH) -> CyclingRuleSet:
+    """Read cycling_rules.yaml and validate it; raises pydantic.ValidationError if invalid."""
+    with open(path, encoding="utf-8") as f:
+        return CyclingRuleSet.model_validate(yaml.safe_load(f))
+
+
+def load_design_rules(path: str | Path = DEFAULT_DESIGN_RULES_PATH) -> DesignRuleSet:
+    """Read design_rules.yaml and validate it; raises pydantic.ValidationError if invalid."""
+    with open(path, encoding="utf-8") as f:
+        return DesignRuleSet.model_validate(yaml.safe_load(f))
+
+
+def all_rule_ids(rules: RuleSet, cycling: CyclingRuleSet, design: DesignRuleSet) -> list[str]:
+    """Rule ids of all three rule files (they share one id space for rule_trace)."""
+    return (collect_ids(rules.model_dump(exclude={"meta", "sources"}, by_alias=True))
+            + cycling.rule_ids() + design.rule_ids())
 
 
 def network_highways(rules: RuleSet) -> list[str]:

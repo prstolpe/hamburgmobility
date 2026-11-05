@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow30_etw30_footway_exit",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow30_etw30_footway_exit",
+        "description": "GOW30 x ETW30 -> Gehwegüberfahrt",
+        "legs": [
+          {
+            "cat": "GOW30",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 6000,
+        "space_radius_m": 12,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "continuous_footway_exit",
+        "expected_rules": [
+          "J-05"
+        ],
+        "expected_cyclist_treatment": [],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          566400.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

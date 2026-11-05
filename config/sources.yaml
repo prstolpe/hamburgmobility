@@ -2,8 +2,8 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.8
-  date: 2026-11-04
+  version: 0.1.9
+  date: 2026-11-05
   crs_work: EPSG:25832
 
 sources:
@@ -78,6 +78,7 @@ sources:
     license: unknown
     purpose: [dtv_calibration]
     check_status: open  # 2026-10-28: Endpunkt erreichbar (9.279 Things, gemischte IoT-Daten)
+    note: "Rad-Dauerzählstellen mit Tageswerten: eigene Quelle bike_counters (2026-11-05)."
     fetch: {inventory: locations_things}  # nur Bestand im Bezirk (Locations + Things), keine Messwerte
 
   bike_volumes_dbradplus:
@@ -89,20 +90,46 @@ sources:
     fetch: {collections: [jahr2025], bbox: false}  # neuestes vollständiges Jahr (Entscheidung 2026-10-28); ganz Hamburg ohne bbox (2026-11-04)
     format: GeoJSON
     license: ODbL-1.0  # 2026-10-28: license-Link der Landing Page (api.hamburg.de)
-    purpose: [cycling_exposure]
+    purpose: [cycling_exposure, cycle_demand_plausibility]
     check_status: verified
-    note: "Stichprobe aus App-Nutzenden, nicht repräsentativ."
+    note: "Stichprobe aus App-Nutzenden, nicht repräsentativ. Für das Radnetz nur Plausibilitätsvergleich, nicht zur Kalibrierung (prompts/15)."
     fetch_issue: "2026-10-28: Abruf jahr2025 mit bbox scheitert reproduzierbar – der Server liefert HTTP 200 mit abgebrochenem JSON (offset 10000 nach 63.156 Bytes, offset 11000 nach 153.435 Bytes; auch mit bbox in CRS84). Ohne bbox funktionieren dieselben Offsets. Bei der Datenstelle melden; keine Umgehung eingebaut. 2026-11-04: Seit das Arbeitsgebiet ganz Hamburg ist, wird die ganze Collection ohne bbox abgerufen und danach auf das Arbeitsgebiet beschnitten; das ist der gewünschte Umfang, keine Umgehung. Ergebnis 2026-11-04: scheitert ebenfalls (HTTP 200, abgebrochenes JSON bei offset 1000 nach 150.646 Bytes). Quelle bleibt fehlerhaft; bei der Datenstelle melden."
 
   cycle_network:
     title: Radnetz Hamburg (Radrouten, Radrouten+), ersetzt seit 2025 die Velorouten
     provider: BVM
     access: unknown
-    url: null  # TODO: Dienst im Geoportal unter Fachdaten/Verkehr/Radnetz Hamburg ermitteln
+    url: null  # bleibt OSM-Fallback für S-FEAT-07 (in_cycle_network); amtlicher Dienst seit 2026-11-05 als cycle_network_official, Umstellung offen (docs/open_questions.md)
     purpose: [overlay_cycle_network]
     check_status: catalog
     fallback: "OSM relations cycle_network=DE:HH:Radnetz_Hamburg"
     fallback_osm: {relations: {cycle_network: ["DE:HH:Radnetz_Hamburg"]}}
+
+  cycle_network_official:
+    title: Radnetz Hamburg – amtlicher WFS (Radnetz-Abschnitte und Radrouten)
+    provider: BVM
+    access: wfs
+    url: https://geodienste.hamburg.de/wfs_radnetz  # 2026-11-05: Transparenzportal „Radnetz Hamburg“ (Stand 2026-05-20), GetCapabilities HTTP 200 (WFS 2.0.0, EPSG:25832)
+    format: GML
+    license: dl-de/by-2.0  # 2026-11-05: laut GetCapabilities (ows:Fees)
+    attribution: "Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende"  # laut ows:Fees
+    purpose: [cycle_network_design, validation_cycling]
+    check_status: verified  # 2026-11-05: radnetz 1.026 Abschnitte (laenge, status), radrouten 90 Objekte (titel, verbindung, route, richtung, status)
+    fetch: {typenames: ["de.hh.up:radnetz", "de.hh.up:radrouten"]}
+    note: "Bezirksrouten gibt es als WFS bisher nur für Hamburg-Nord (HH_WFS_Bezirksradrouten_Hamburg_Nord). radrouten überlagert radnetz (gleiche Trassen als Routen)."
+
+  bike_counters:
+    title: Verkehrsdaten Rad (Infrarotdetektoren) Hamburg – Zählstellen mit Tageswerten
+    provider: BVM / Urban Data Platform
+    access: sensorthings_counters
+    url: https://iot.hamburg.de/v1.1  # 2026-11-05: Transparenzportal „Verkehrsdaten Rad (Infrarotdetektoren) Hamburg“ (Stand 2026-11-04), Filter aus den dort verlinkten STA-Abfragen
+    format: JSON
+    license: dl-de/by-2.0  # 2026-11-05: Lizenz des Datensatzes im Transparenzportal
+    attribution: "Freie und Hansestadt Hamburg"  # ownerData der Datastreams
+    purpose: [cycle_demand_calibration, validation_cycling]
+    check_status: verified  # 2026-11-05: 312 Zählstellen mit Tagesdatastream, Tageswerte 2025 vollständig abrufbar
+    fetch: {service_name: HH_STA_Verkehrsdaten_Rad_Infrarotdetektoren, layer_name: Anzahl_Fahrraeder_Zaehlstelle_1-Tag, year: 2025}
+    note: "Tageswerte liegen laut Datensatzbeschreibung nur für das aktuelle und das letzte Jahr vor; 2025 ist das neueste vollständige Jahr. Tage sind lokale Kalendertage (Intervall ab 23:00/22:00 UTC). Daten in Echtzeit, nicht umfassend qualitätsgesichert. Zählstellen mit richtung „Keine Richtung“ und richtungsbezogene Zählstellen kommen gemeinsam vor."
 
   alkis:
     title: ALKIS Flurstücke, Gebäude, tatsächliche Nutzung
@@ -199,7 +226,7 @@ sources:
     provider: BSB / LGV
     access: unknown
     url: null  # TODO: WFS hinter dem Schulinfosystem ermitteln; Fallback OSM amenity=school
-    purpose: [sensitive_facilities]
+    purpose: [sensitive_facilities, cycle_destinations]
     check_status: catalog
     fallback_osm: {tags: {amenity: [school]}}
 
@@ -211,6 +238,32 @@ sources:
     purpose: [sensitive_facilities]
     check_status: open
     fallback_osm: {tags: {amenity: [kindergarten]}}
+
+  traffic_signals:
+    title: Lichtsignalanlagen (Standorte)
+    provider: BVM / LSBG
+    access: unknown
+    url: null  # TODO: vollständiges amtliches LSA-Verzeichnis ermitteln (Transparenzanfrage); „Traffic Lights Data Hamburg“ (SensorThings) deckt laut Beschreibung nur rund die Hälfte der Knoten ab
+    purpose: [junction_type_ist, stops_per_km]
+    check_status: open
+    fallback_osm: {tags: {highway: [traffic_signals]}, columns: [highway, crossing, traffic_signals]}
+
+  universities:
+    title: Hochschulen
+    provider: BWFGB / LGV
+    access: unknown
+    url: null  # TODO: amtliche Quelle ermitteln; Fallback OSM amenity=university|college
+    purpose: [cycle_destinations]
+    check_status: open
+    fallback_osm: {tags: {amenity: [university, college]}, columns: [amenity]}
+
+  centres:
+    title: Zentren (Bezirks- und Stadtteilzentren)
+    provider: BSW
+    access: unknown
+    url: null  # TODO: Hamburger Zentrenkonzept – Datensatz/Dienst ermitteln; nicht durch eine Ersatzquelle ersetzen
+    purpose: [cycle_destinations, cycle_network_design]
+    check_status: open
 
   population_grid:
     title: Zensus 2022 Bevölkerung im 100-m-Gitter
@@ -245,7 +298,7 @@ sources:
     license: dl-de/by-2.0
     attribution: "Hamburger Verkehrsverbund GmbH"
     as_of: "gültig 2026-04-08 bis 2026-12-12 (feed_info.txt)"
-    purpose: [bus_network, bus_trips_weekday]
+    purpose: [bus_network, bus_trips_weekday, rapid_transit_stops, tram, bus_per_peak_h]
     check_status: verified  # 2026-10-28: ZIP geladen, feed_info.txt gelesen
     fetch: {download: zip}
     note: "Fahrplanperiode endet 2026-12-12; danach neuen Datensatz im Transparenzportal wählen und URL ersetzen."
@@ -297,7 +350,8 @@ sources:
     format: PBF
     license: ODbL-1.0
     attribution: "© OpenStreetMap-Beitragende"
-    purpose: [network, maxspeed, lanes, width, cycleway, sidewalk, parking]
+    purpose: [network, maxspeed, lanes, width, cycleway, sidewalk, parking, cycle_infrastructure, cycle_destinations]
+    cycle_tags: "Radinfrastruktur wird in prompts/15 direkt aus dem PBF gelesen: highway=cycleway, cycleway:*, bicycle=*, bicycle_road=yes, oneway:bicycle; Ziele: shop=*"
     check_status: verified  # 2026-10-28: HTTP 200, ca. 54 MB, täglich aktualisiert
     fetch: {download: pbf}
     note: "'latest' ändert sich täglich: Stand beim Abruf über Last-Modified, Abrufdatum und SHA-256 in data/manifest.json einfrieren; Datei danach nicht erneut laden, sondern lokal wiederverwenden."

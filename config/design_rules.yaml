@@ -1,0 +1,159 @@
+# Soll-Querschnitt und Knotenpunkte – Regelwerk (Entwurf, nicht amtlich)
+# source_type: swov_crow | de_regelwerk | hamburg | assumption
+# status: draft | reviewed | approved (Pflicht bei jeder Regel mit id)
+# source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
+meta:
+  version: 0.1.1
+  date: 2026-11-05
+  crs_work: EPSG:25832
+  depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
+
+sources:
+  CROW_GOW30_2023: {title: 'CROW Handreiking voorlopige inrichtingskenmerken GOW30 v1.0 (2023)', url: 'https://www.amersfoort.nl/sites/default/files/2025-09/2023-crow-handreiking-voorlopige-inrichtingskenmerken-gow30.pdf'}
+  SWOV_ROT_2022: {title: 'SWOV-Factsheet Rotondes en andere kruispunten (2022)', url: 'https://swov.nl/sites/default/files/bestanden/downloads/FS%20Rotondes%20en%20andere%20kruispunten_1.pdf'}
+  SWOV_FS_2023: {title: 'SWOV-Factsheet Principles for a safe road network (2023)', url: 'https://swov.nl/en/fact-sheet/principles-safe-road-network'}
+  DCE_INFRA: {title: 'Dutch Cycling Embassy – Cycling infrastructure', url: 'https://dutchcycling.nl/expertises/cycling-infrastructure/'}
+  NL_MUNI_CASTRICUM_2020: {title: 'Gemeente Castricum, Eisen fietsnetwerk (2020)', url: 'https://www.castricum.nl/fileadmin/Castricum/documenten-per-onderwerp/raadsdocumenten/Fietsbeleidsplan-eisen-fietsnetwerk-Castricum-april-2020.pdf'}
+  RAST_06: {title: 'FGSV RASt 06', url: null, note: 'Original prüfen'}
+  ERA_2010: {title: 'FGSV Empfehlungen für Radverkehrsanlagen (2010)', url: 'https://www.fgsv-verlag.de/pub/media/pdf/284_Gwiasda_P_Radverkehr_an_inneroertlichen_Hauptverkehrsstrassen.pdf', note: 'Werte über Sekundärquellen; Original prüfen'}
+  HBS_2015: {title: 'FGSV Handbuch für die Bemessung von Straßenverkehrsanlagen', url: null, note: 'Kapazitätswerte am Original prüfen'}
+
+# ---------------------------------------------------------------
+# 1. Anzahl der Kfz-Fahrstreifen (je Richtung)
+# ---------------------------------------------------------------
+lanes:
+  principle: 'So wenige Fahrstreifen wie möglich; zweiter Fahrstreifen nur bei nachgewiesener Kapazitätsnot an GOW50'
+  default_per_direction: {SW: null, GOW50: 1, GOW30: 1, ETW30: shared, ETW_ERF: shared, GOW80: 1, ETW60: shared, source_type: assumption, note: 'GOW30/ETW nach L-01 (CROW_GOW30_2023); GOW50/GOW80 Grundsatz so wenige wie möglich'}
+  rules:
+    - id: L-01
+      status: draft
+      rule: 'GOW30, ETW30, ETW_ERF: höchstens 1 Fahrstreifen je Richtung, keine Mittellinie auf GOW30'
+      source: CROW_GOW30_2023
+      source_type: swov_crow
+    - id: L-02
+      status: draft
+      rule: 'GOW50: 2 Fahrstreifen je Richtung nur wenn peak_h_dir > lane_capacity_veh_h * target_vc'
+      source_type: assumption
+      lane_capacity_veh_h: {value: 900, source: HBS_2015, source_type: assumption, note: 'wirksame Kapazität je Fahrstreifen an LSA-geregelten Stadtstraßen; HBS prüfen'}
+      target_vc: {value: 0.85, source_type: assumption}
+      peak_h_dir_from_dtv: {factor: 0.055, note: '0,10 Spitzenstundenanteil x 0,55 Lastrichtung', source_type: assumption}
+    - id: L-03
+      status: draft
+      rule: 'Bei 2x2 bauliche Richtungstrennung (Mittelstreifen)'
+      source: CROW_GOW30_2023
+      source_type: swov_crow
+    - id: L-04
+      status: draft
+      rule: 'Busfahrstreifen statt 2. Kfz-Fahrstreifen, wenn bus_per_peak_h_dir >= bus_lane_trigger'
+      source_type: assumption
+      bus_lane_trigger: {value: 20, source_type: assumption}
+    - id: L-05
+      status: draft
+      rule: 'Abbiegestreifen nur an Knoten mit LSA und nachgewiesenem Bedarf; nicht im Strecken-Soll-Profil'
+      source_type: assumption
+    - id: L-06
+      status: draft
+      rule: 'Kein Fahrstreifenzuwachs gegenüber Ist ohne fachliche Freigabe (overrides)'
+      source_type: assumption
+  lane_width_m:
+    GOW50: {general: 3.25, with_bus: 3.50, source: RAST_06, source_type: assumption}
+    GOW50_2x1_carriageway: {value: 6.50, source: RAST_06, source_type: assumption}
+    GOW50_bus_carriageway: {value: 7.00, source: CROW_GOW30_2023, source_type: swov_crow}
+    GOW30_narrow_profile: {carriageway_range: [5.80, 8.40], max_dtv: 6000, source: CROW_GOW30_2023, source_type: swov_crow}
+    GOW30_wide_profile: {carriageway_range: [8.40, 10.70], max_dtv: 10000, source: CROW_GOW30_2023, source_type: swov_crow}
+    ETW30_mixed: {value: 5.80, bus: 6.50, source: CROW_GOW30_2023, source_type: swov_crow}
+    median_min_m: {value: 2.00, source_type: assumption}
+
+# ---------------------------------------------------------------
+# 2. Lage der Radanlagen
+# ---------------------------------------------------------------
+placement:
+  rules:
+    - {id: PL-01, rule: 'separated_oneway_both: je Richtung im Seitenraum rechts, zwischen Gehweg und Trennstreifen/Parken/Bäumen', source_type: assumption, note: 'vorher swov_crow ohne Quelle; CROW-Quelle ergänzen', status: draft}
+    - {id: PL-02, rule: 'separated_twoway einseitig nur, wenn eine Seite <= 1 Knoten je 300 m und keine Ziele (Wasser, Park, Bahn) oder Außerorts', source_type: assumption, status: draft}
+    - {id: PL-03, rule: 'cycle_lane: am rechten Fahrbahnrand; bei Längsparken Trennstreifen buffer_to_parking', source: ERA_2010, source_type: de_regelwerk, note: 'Quelle ergänzt: buffer_to_parking stammt aus ERA_2010 (cycling_rules.widths_m.de)', status: draft}
+    - {id: PL-04, rule: 'Trennstreifen zur Fahrbahn bei separated: >= 0.75 m (Annahme 1.00 m bei GOW50 mit Bus)', source_type: assumption, status: draft}
+    - {id: PL-05, rule: 'Bushaltestellen: Radweg hinter der Haltestelle führen (Bushaltestelleninsel), wenn Breite reicht', source_type: assumption, status: draft}
+    - {id: PL-06, rule: 'Einbahnstraßen ETW30: Radverkehr in Gegenrichtung zulassen', source_type: assumption, status: draft}
+
+# ---------------------------------------------------------------
+# 3. Raumaufteilung im verfügbaren Straßenraum
+# ---------------------------------------------------------------
+cross_section_allocation:
+  description: 'Soll-Profil aus Bausteinen; Mindestbedarf zuerst, dann Regelmaß, dann Zusatzfunktionen'
+  source_type: assumption
+  elements_min_m:
+    sidewalk: {min: 2.50, standard: 3.00, note: 'RASt 06 prüfen; bei Geschäftsstraßen breiter'}
+    building_buffer: 0.00
+    cycle_track: 'aus cycling_rules.widths_m.project_target'
+    buffer_cycle_carriageway: 0.75
+    parking_parallel: 2.00
+    tree_strip: 2.00
+    loading_zone: 2.50
+    bus_lane: 3.50
+    tram: {value: 6.50, note: 'zweigleisig; nur falls vorhanden/geplant'}
+  fill_order:
+    - sidewalks_min
+    - cycling_min
+    - transit_lanes_if_required
+    - motor_lanes_min
+    - buffers_min
+    - cycling_to_target_width
+    - sidewalks_to_standard
+    - trees_or_greening
+    - loading_zones
+    - parking
+  degrade_cascade_if_not_fit:
+    - {step: D1, action: 'Parken entfernen (Ladezonen behalten, wenn Geschäftsnutzung)'}
+    - {step: D2, action: 'Baumstreifen auf Baumscheiben in Parkreihe reduzieren'}
+    - {step: D3, action: 'zweiten Kfz-Fahrstreifen streichen (L-02 neu prüfen, ggf. Busspur behalten)'}
+    - {step: D4, action: 'Radweg auf Mindestbreite, Gehweg auf Mindestbreite'}
+    - {step: D5, action: 'Kategorie GOW50 -> GOW30 vorschlagen (C-G30-02) und Profil neu bilden'}
+    - {step: D6, action: 'Kfz-Einrichtungsverkehr oder Kfz-Durchfahrtsunterbrechung prüfen (Flag, keine Automatik)'}
+    - {step: D7, action: 'Radroute auf Parallelstraße verlegen (Flag an Netzentwurf zurückgeben)'}
+  output_fields: [profile_elements, total_required_m, available_m, fit_class, degrade_steps_applied, lanes_per_direction, cycle_facility, cycle_width_m, cycle_side]
+
+# ---------------------------------------------------------------
+# 4. Knotenpunkte
+# ---------------------------------------------------------------
+junctions:
+  inputs: [leg_categories, leg_cycle_categories, entering_dtv_sum, tram_present, signal_present_ist, space_radius_m, legs_count]
+  types:
+    - roundabout_single_lane_cycle_priority
+    - roundabout_single_lane_cycle_yield
+    - turbo_roundabout
+    - signal_protected
+    - priority_raised
+    - priority_flat_coloured
+    - continuous_footway_exit
+    - equal_right_before_left
+    - cycle_crossing_priority
+    - cycle_crossing_signal
+    - grade_separated_cycle
+  decision_table:
+    source: [SWOV_ROT_2022, CROW_GOW30_2023, NL_MUNI_CASTRICUM_2020]
+    source_type: swov_crow
+    rows:
+      - {id: J-01, legs: 'GOW50+GOW50', if: 'entering_dtv_sum <= roundabout_max_dtv and space_radius_m >= roundabout_min_radius and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv and space ok', else_then: turbo_roundabout, otherwise: signal_protected, status: draft}
+      - {id: J-02, legs: 'GOW50+GOW30', same_as: J-01, status: draft}
+      - {id: J-03, legs: 'GOW30+GOW30', then: roundabout_single_lane_cycle_priority, fallback: priority_flat_coloured, note: 'CROW: bevorzugt Kreisverkehr; sonst Vorfahrtknoten mit eingefärbter Kreuzungsfläche', status: draft}
+      - {id: J-04, legs: 'GOW50+ETW30', then: continuous_footway_exit, fallback: priority_raised, note: 'Gehwegüberfahrt bzw. Vorfahrt GOW mit Plateau', status: draft}
+      - {id: J-05, legs: 'GOW30+ETW30', then: continuous_footway_exit, fallback: priority_raised, source: CROW_GOW30_2023, status: draft}
+      - {id: J-06, legs: 'ETW30+ETW30', then: equal_right_before_left, source: SWOV_ROT_2022, status: draft}
+      - {id: J-07, legs: 'ETW30(cycle_street)+ETW30', then: priority_raised, note: 'Fahrradstraße hat Vorfahrt', source: NL_MUNI_CASTRICUM_2020, status: draft}
+      - {id: J-08, legs: 'cycle_path+GOW30', then: cycle_crossing_priority, note: 'Radweg mit Vorrang, aufgepflastert, rot', status: draft}
+      - {id: J-09, legs: 'cycle_path(RSV|HAUPT)+GOW50', if: 'entering_dtv_sum > grade_sep_min_dtv', then: grade_separated_cycle, otherwise: cycle_crossing_signal, note: 'Tunnel/Brücke bei hoher Belastung (DCE)', status: draft}
+      - {id: J-10, legs: 'any+SW', then: grade_separated_cycle, status: draft}
+      - {id: J-11, legs: 'any with tram', then: signal_protected, status: draft}
+  thresholds:
+    roundabout_max_dtv: {value: 25000, source_type: assumption, note: 'Summe zufließender Kfz/24h einstreifiger Kreisverkehr; CROW/HBS prüfen'}
+    turbo_max_dtv: {value: 35000, source_type: assumption}
+    grade_sep_min_dtv: {value: 30000, source_type: assumption}
+    roundabout_min_radius: {value: 20, unit: m, note: 'Außendurchmesser ca. 40 m inkl. Radring; Platzbedarf entspricht etwa vierarmigem Knoten (DCE)', source_type: assumption}
+  cyclist_treatment:
+    - {id: JC-01, rule: 'Kreisverkehr innerorts mit umlaufendem Radweg, Radverkehr bevorrechtigt', source: SWOV_ROT_2022, source_type: swov_crow, note: 'CROW-Empfehlung innerorts; SWOV: Wartepflicht sicherer – Zielkonflikt dokumentieren. Deutsches Recht: Vorrang nur bei fahrbahnnaher Führung, StVO/VwV prüfen', status: draft}
+    - {id: JC-02, rule: 'LSA-Knoten als geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor Kfz, indirektes Linksabbiegen', source: [DCE_INFRA, SWOV_FS_2023], source_type: swov_crow, status: draft}
+    - {id: JC-03, rule: 'Furten im Zuge RSV/HAUPT: Breite = Radwegbreite, rot, aufgepflastert wo Vorrang', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft}
+    - {id: JC-04, rule: 'Mittelinsel für Querung GOW durch Radroute >= 3.00 m (HAUPT), >= 2.50 m (BASIS)', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft}
+    - {id: JC-05, rule: 'Freies Rechtsabbiegen für Rad an LSA, wo sicher', source_type: assumption, status: draft}
+  output_fields: [node_id, legs, junction_type_soll, junction_type_ist, rule_trace, cyclist_treatment, conflict_flags]

@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "name": "etw30_erschl_mixed",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "etw30_erschl_mixed",
+        "description": "ETW30, Quartiersnetz -> Mischverkehr, keine Radanlage",
+        "cat_final": "ETW30",
+        "cycle_cat": "ERSCHL",
+        "dtv": 800,
+        "cyc_peak_h_oneway": 40,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "mixed",
+        "expected_width_refs": [],
+        "expected_lanes_per_direction": "shared",
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "S-02",
+          "L-01"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            566800.0,
+            5935000.0
+          ],
+          [
+            566920.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

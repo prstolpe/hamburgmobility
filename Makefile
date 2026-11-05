@@ -13,7 +13,11 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 PIPELINE_TARGETS := fetch network conflate features crosssection classify coherence discrepancy export validate
-.PHONY: help install dirs test web web-test a11y basemap site-data override-template $(PIPELINE_TARGETS)
+# Cycle network extension (prompts 14–21, docs/guide_radnetz.md); runs after classify (needs cat_final).
+#   cycle-demand -> cycle-network -> cycle-principles -> cycle-facility -> cross-section-soll -> junctions
+#   -> export-cycling
+CYCLING_TARGETS := cycle-demand cycle-network cycle-principles cycle-facility cross-section-soll junctions export-cycling
+.PHONY: help install dirs test web web-test a11y basemap site-data override-template $(PIPELINE_TARGETS) $(CYCLING_TARGETS)
 
 # run_step(target, script): run pipeline/<script>.py if it exists, otherwise report that it is missing.
 define run_step
@@ -85,6 +89,29 @@ site-data: ## Pack data/out for the GitHub release "data-latest" (deployment wor
 
 validate: dirs ## Validation and sensitivity (before export) -> reports/validation.md
 	$(call run_step,validate,validate)
+
+cycle-demand: dirs ## Cycle graph and cycle demand model (prompt 15)
+	$(call run_step,cycle-demand,c01_cycle_graph)
+	$(call run_step,cycle-demand,c02_cycle_demand)
+
+cycle-network: dirs ## Target cycle network: hierarchy and gap closing (prompt 16)
+	$(call run_step,cycle-network,c03_cycle_network)
+
+cycle-principles: dirs ## Five principles per route and network, Ist and Soll (prompt 17)
+	$(call run_step,cycle-principles,c04_principles)
+
+cycle-facility: dirs ## Cycle facility type and width per segment (prompt 18)
+	$(call run_step,cycle-facility,c05_facility)
+
+cross-section-soll: dirs ## Target cross section: lanes, placement, space allocation (prompt 19)
+	$(call run_step,cross-section-soll,c06_cross_section_soll)
+
+junctions: dirs ## Target junction type and cyclist treatment per node (prompt 20)
+	$(call run_step,junctions,c07_junctions)
+
+export-cycling: dirs ## Cycling validation and export of the cycling layers (prompt 21)
+	$(call run_step,export-cycling,c08_validate_cycling)
+	@echo "export-cycling: Export der Radnetz-Ebenen folgt mit Prompt 21 (Erweiterung von pipeline/s09_export.py)"
 
 test: ## Run tests (Python and website unit tests)
 	uv run pytest

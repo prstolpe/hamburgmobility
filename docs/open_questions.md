@@ -137,6 +137,31 @@ Format: `- [ ] Frage – Wer klärt – Status/Antwort`. Claude Code trägt hier
 - [ ] Größe der Webseite: Steckbriefe je Abschnitt wachsen mit ganz Hamburg etwa um das 15-Fache (reports/export.md, Prüfung gegen 1 GB GitHub Pages). Falls zu groß: Steckbriefe bündeln oder Daten auf eigenen Speicher (tiles_base_url) – Team
 - [ ] DB Rad+ jahr2025: Abruf scheitert seit 2026-11-04 auch ohne bbox (abgebrochenes JSON ab offset 1000). Bei der Datenstelle melden – Team
 
+## Radnetz (Prompt 14, cycling_rules.yaml/design_rules.yaml 0.1.1, sources.yaml 0.1.9, 2026-11-05)
+Fachlich:
+- [ ] Projekt-Sollbreiten (`widths_m.project_target`) zwischen ERA-Regelmaß und NL-Hauptnetz festlegen – Verkehrsplaner*in
+- [ ] CROW-Ontwerpwijzer 2016 im Original: Umwegfaktor, Breiten nach Intensität, Fahrradstraßen-Kriterien prüfen – Verkehrsplaner*in
+- [ ] ERA 2010 Bild 7 (Belastungsbereiche) und Neufassung ERA prüfen; S-04 anpassen – Verkehrsplaner*in
+- [ ] Kapazitätsschwellen L-02 (900 Kfz/h je Fahrstreifen, v/c 0,85) und Kreisverkehrsgrenzen (25.000/35.000 Kfz/24h) mit HBS abgleichen – Verkehrsplaner*in
+- [ ] Vorrang Radverkehr am Kreisverkehr (CROW vs. SWOV vs. StVO/VwV) – Entscheidung und Rechtsprüfung – Team
+- [ ] Gewichte der fünf Prinzipien und Widerstandsfaktoren festlegen – Team
+- [ ] Hamburger Standards (ReStra, PLAST Radverkehr) als zusätzliche Quelle `hamburg` einpflegen – GIS/Verkehrsplanung
+- [ ] Metadaten-Ergänzungen in 0.1.1 freigeben (Werte unverändert): als `assumption` markiert wurden RSV `trip_length_km` [5, 15], `principle_weights`, `lanes.default_per_direction`, L-02, L-04; PL-01 war `swov_crow` ohne Quelle und ist jetzt `assumption` (CROW-Quelle ergänzen?); PL-03 hat die Quelle ERA_2010 erhalten (Trennstreifen buffer_to_parking) – Verkehrsplaner*in
+- [ ] Breite eigener Radtrassen (`own_path`, z. B. RSV statt Fußgängerzone) ist in `widths_m` nicht festgelegt; goldener Fall s10 erwartet deshalb keine Breite – Verkehrsplaner*in
+- [ ] ETW60 außerorts: Ist `mixed` bei DTV ≤ `mixed_rural_max_dtv` nur erlaubt oder die Soll-Führung? Goldener Fall s14 deckt nur DTV > 2 500 ab – Verkehrsplaner*in
+- [ ] J-01 `else_if` enthält die informelle Bedingung „space ok“; vor Prompt 20 als prüfbare Bedingung mit Schwelle formulieren (z. B. Radius für Turbokreisverkehr) – Verkehrsplaner*in
+
+Daten:
+- [x] Dienst-URL „Radnetz Hamburg“ (Radrouten, Radrouten+, Bezirksrouten) im Geoportal – GIS – 2026-11-05: https://geodienste.hamburg.de/wfs_radnetz (radnetz 1.026 Abschnitte, 664 km; radrouten 90), Quelle `cycle_network_official`. Bezirksrouten als WFS nur für Hamburg-Nord
+- [ ] `in_cycle_network` (S-FEAT-07) nutzt weiter das OSM-Radnetz (`cycle_network`). Auf den amtlichen WFS umstellen? Ändert Merkmal und Priorisierung des Straßenfunktionsplans (neue rules.yaml-Version) – Team
+- [ ] Amtliches Radnetz: 664 km Netzlänge (Bestand 610 km, Ergänzungen/In Arbeit/Verbesserungspotential 416 km, Mehrfachzählung bei Richtungsführung möglich) gegenüber 369 km laut Jahresbericht 2025. Welche `status`-Werte gelten im Vergleich (Prompt 16) als amtliches Netz? – GIS
+- [x] Inhalt von https://iot.hamburg.de/v1.1: welche Rad-Dauerzählstellen, welcher Zeitraum – GIS – 2026-11-05: Datensatz „Verkehrsdaten Rad (Infrarotdetektoren) Hamburg“, serviceName HH_STA_Verkehrsdaten_Rad_Infrarotdetektoren; 312 Zählstellen, Tageswerte nur aktuelles und letztes Jahr; 2025 geladen (Quelle `bike_counters`)
+- [ ] Rad-Zählstellen: 104 mit richtung „Keine Richtung“ und 208 richtungsbezogene. Sind die richtungslosen Summen der richtungsbezogenen am selben Querschnitt? Für die Kalibrierung (Prompt 15) Doppelzählung vermeiden – GIS
+- [ ] Zentren (Bezirks-/Stadtteilzentren) für Korridore und Ziele: Datensatz zum Hamburger Zentrenkonzept ermitteln (Quelle `centres`, url null) – GIS
+- [ ] Hochschulen: amtliche Quelle statt OSM-Fallback (111 Objekte amenity=university|college) – GIS
+- [ ] Amtliche LSA-Standorte (statt nur OSM) – Transparenzanfrage – Team. 2026-11-05: OSM liefert 5.558 Knoten highway=traffic_signals; „Traffic Lights Data Hamburg“ (SensorThings) deckt laut Beschreibung nur rund die Hälfte der Knoten ab
+- [ ] Ist-Fahrstreifen und Radwegbreiten: Vollständigkeit OSM je Bezirk – GIS
+
 ## Daten
 - [ ] Führt HH_WFS_Strategisches_Strassennetz ein Attribut „Hauptverkehrsstraße“ mit Stand 2023? – GIS
 - [x] Welche Jahrgänge enthält api.hamburg.de/datasets/v1/verkehrsmengen (DTV Hauptverkehrsstraßen)? – GIS – 2026-10-28: dtv_hvs_2019, dtvw_hvs_2014, dtv_bab_2019, dtvw_bab_2013 (siehe reports/data_report.md)

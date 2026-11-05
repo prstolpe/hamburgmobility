@@ -1,0 +1,46 @@
+{
+  "type": "FeatureCollection",
+  "name": "etw_erf_basis_mixed",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "etw_erf_basis_mixed",
+        "description": "Verkehrsberuhigter Bereich, Bezirksroute -> Mischverkehr",
+        "cat_final": "ETW_ERF",
+        "cycle_cat": "BASIS",
+        "dtv": 300,
+        "cyc_peak_h_oneway": 60,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "mixed",
+        "expected_width_refs": [],
+        "expected_lanes_per_direction": "shared",
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "L-01"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            567200.0,
+            5935000.0
+          ],
+          [
+            567320.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

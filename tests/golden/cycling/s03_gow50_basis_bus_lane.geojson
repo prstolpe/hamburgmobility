@@ -1,0 +1,55 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_basis_bus_lane",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_basis_bus_lane",
+        "description": "GOW50, Bezirksroute, DTV 20 000 und 24 Busse/h je Richtung -> Busfahrstreifen statt 2. Kfz-Fahrstreifen",
+        "cat_final": "GOW50",
+        "cycle_cat": "BASIS",
+        "dtv": 20000,
+        "cyc_peak_h_oneway": 200,
+        "bus_peak_h_dir": 24,
+        "space_fits_preferred": true,
+        "expected_facility": "separated_oneway_both",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_oneway.BASIS"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": true,
+        "expected_rules": [
+          "S-01",
+          "L-02",
+          "L-04"
+        ],
+        "refs_used": [
+          "lanes.rules[L-02].lane_capacity_veh_h.value",
+          "lanes.rules[L-02].target_vc.value",
+          "lanes.rules[L-02].peak_h_dir_from_dtv.factor",
+          "lanes.rules[L-04].bus_lane_trigger.value"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            565600.0,
+            5935000.0
+          ],
+          [
+            565720.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

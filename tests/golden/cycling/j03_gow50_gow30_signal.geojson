@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_gow30_signal",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_gow30_signal",
+        "description": "GOW50 x GOW30, 40 000 Kfz/24h (> 35 000) -> geschützte LSA-Kreuzung",
+        "legs": [
+          {
+            "cat": "GOW50",
+            "cycle_cat": "HAUPT",
+            "facility": null
+          },
+          {
+            "cat": "GOW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 40000,
+        "space_radius_m": 30,
+        "tram_present": false,
+        "signal_present_ist": true,
+        "expected_junction_type": "signal_protected",
+        "expected_rules": [
+          "J-02",
+          "J-01"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-02"
+        ],
+        "refs_used": [
+          "junctions.thresholds.turbo_max_dtv.value"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          565600.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

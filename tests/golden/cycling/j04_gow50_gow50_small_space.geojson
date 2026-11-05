@@ -1,0 +1,52 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_gow50_small_space",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_gow50_small_space",
+        "description": "GOW50 x GOW50, 18 000 Kfz/24h, nur 12 m Radius -> kein Kreisverkehr",
+        "legs": [
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 18000,
+        "space_radius_m": 12,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "signal_protected",
+        "expected_rules": [
+          "J-01"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-02"
+        ],
+        "refs_used": [
+          "junctions.thresholds.roundabout_min_radius.value"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          565800.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

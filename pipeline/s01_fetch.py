@@ -22,7 +22,7 @@ import geopandas as gpd
 import pandas as pd
 import yaml
 
-from pipeline.lib import ogcapi, wfs
+from pipeline.lib import ogcapi, sensorthings, wfs
 from pipeline.lib.area import RURAL_PATH, WORK_AREA_PATH, build_work_area, load_area_config, select_districts, select_rural
 from pipeline.lib.boundary import BoundaryError, boundaries_from_pbf
 from pipeline.lib.crs import WORK_CRS
@@ -37,6 +37,8 @@ RAW_DIR = REPO_ROOT / "data" / "raw"
 REPORT_PATH = REPO_ROOT / "reports" / "data_report.md"
 SAMPLE_SIZE = 30
 SAMPLE_SEED = 42
+# OSM tags kept for fallback sources unless sources.yaml lists `fallback_osm.columns`.
+OSM_FALLBACK_COLUMNS = ["amenity", "cycle_network", "network", "ref", "route"]
 
 
 @dataclass
@@ -134,8 +136,8 @@ def fetch_osm_fallback(pbf: Path, source_id: str, src: dict, area_wgs84) -> Resu
     if gdf is None or gdf.empty:
         result.status, result.error = "fallback_fehlt", "keine passenden OSM-Objekte gelesen"
         return result
-    keep = [c for c in ("id", "osm_type", "name", "amenity", "cycle_network", "network", "ref", "route",
-                        "geometry") if c in gdf.columns]
+    wanted = ["id", "osm_type", "name", *spec.get("columns", OSM_FALLBACK_COLUMNS), "geometry"]
+    keep = [c for c in dict.fromkeys(wanted) if c in gdf.columns]
     result.files = [_write_layer(clean(gdf[keep]), source_id, "osm")]
     return result
 
@@ -320,6 +322,31 @@ def fetch_sensorthings(session, source_id: str, src: dict, area, area_wgs84) -> 
             "things": json.dumps(things, ensure_ascii=False)}})
     gdf = keep_intersecting(clean(features_to_gdf(features, crs="EPSG:4326")), area)
     result.files.append(_write_layer(gdf, source_id, "locations_things"))
+    result.retrieved_at = _now()
+    return result
+
+
+def fetch_sensorthings_counters(session, source_id: str, src: dict, area) -> Result:
+    """Counter stations of one SensorThings service with their daily counts of one year (fetch.year)."""
+    spec = src["fetch"]
+    year = int(spec["year"])
+    result = Result(source_id, src["title"], "ok", url=src["url"], license=src.get("license"),
+                    note=f"Zählstellen mit Tageswerten {year} (layerName {spec['layer_name']})")
+    stations = sensorthings.counter_stations(session, src["url"], spec["service_name"], spec["layer_name"])
+    stations = keep_intersecting(clean(stations), area)
+    parts = []
+    for row in stations.itertuples():
+        df = sensorthings.daily_counts(session, src["url"], int(row.datastream_id), year)
+        df.insert(0, "datastream_id", int(row.datastream_id))
+        df.insert(0, "thing_id", int(row.thing_id))
+        parts.append(df)
+    daily = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(
+        columns=["thing_id", "datastream_id", "date", "count"])
+    stations["n_days"] = stations["datastream_id"].map(daily.groupby("datastream_id").size()).fillna(0).astype(int)
+    result.files.append(_write_layer(stations, source_id, "stations"))
+    path = RAW_DIR / f"{source_id}__daily_{year}.parquet"
+    daily.to_parquet(path)
+    result.files.append({"layer": f"daily_{year}", "n_rows": len(daily), **file_record(path)})
     result.retrieved_at = _now()
     return result
 
@@ -522,7 +549,8 @@ def main(argv: list[str] | None = None) -> int:
             handlers = {"download": lambda: fetch_download(session, source_id, src, area, manifest, args.refresh),
                         "wfs": lambda: fetch_wfs(session, source_id, src, area, tiles),
                         "ogc_api_features": lambda: fetch_ogcapi(session, source_id, src, area, tiles),
-                        "sensorthings": lambda: fetch_sensorthings(session, source_id, src, area, area_wgs84)}
+                        "sensorthings": lambda: fetch_sensorthings(session, source_id, src, area, area_wgs84),
+                        "sensorthings_counters": lambda: fetch_sensorthings_counters(session, source_id, src, area)}
             try:
                 result = handlers[src["access"]]()
             except FetchError as exc:

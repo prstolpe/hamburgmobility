@@ -243,3 +243,27 @@
   Datenanalyse, Ortsprüfung offen.
 - tests/test_classification_data.py::test_hvs_is_never_etw: HVS als ETW ist nur mit approved Override erlaubt
   (guide.md 7.1, „einzeln begründen“).
+
+## cycling_rules.yaml 0.1.0, design_rules.yaml 0.1.0 – 2026-11-05
+- Neu: Regelwerke der Radnetz-Erweiterung (docs/guide_radnetz.md, prompts/14–21). Alle Regeln Entwurf.
+
+## cycling_rules.yaml 0.1.1, design_rules.yaml 0.1.1 – 2026-11-05
+- Nur Metadaten, keine Werte geändert (geprüft durch Vergleich aller Werte mit 0.1.0). Anlass: Schema-Prüfung
+  (config/schema/cycling_model.py, design_model.py) verlangt für jede Regel und jeden Zahlenwert source_type
+  und für jede Regel mit id einen status.
+- `status: draft` an allen 49 Regeln mit id.
+- cycling_rules: `trip_length_km` je Radkategorie als Eintrag mit `range` und Quelle (HAUPT/BASIS/ERSCHL:
+  DCE_INFRA laut docs/guide_radnetz.md, Delft-Beispiel; RSV: assumption); `principle_weights`: assumption.
+- design_rules: `lanes.default_per_direction`, L-02 und L-04 (Regelebene): assumption; PL-01 von swov_crow ohne
+  Quelle auf assumption (Quelle fehlt); PL-03 Quelle ERA_2010 ergänzt (neu in `sources`).
+- Vererbung: source/source_type gelten für alle Einträge darunter (Kommentar im Dateikopf).
+
+## sources.yaml 0.1.9 – 2026-11-05
+- Neu: `cycle_network_official` – WFS Radnetz Hamburg (https://geodienste.hamburg.de/wfs_radnetz, dl-de/by-2.0),
+  Feature-Typen radnetz und radrouten. `cycle_network` bleibt OSM-Fallback für S-FEAT-07 (Umstellung offen).
+- Neu: `bike_counters` – Rad-Dauerzählstellen (SensorThings, Datensatz „Verkehrsdaten Rad (Infrarotdetektoren)
+  Hamburg“), 312 Zählstellen mit Tageswerten 2025; neuer Zugriffstyp `sensorthings_counters` in s01_fetch.py.
+- Neu: `traffic_signals` (OSM-Fallback highway=traffic_signals; amtliches Verzeichnis offen), `universities`
+  (OSM-Fallback amenity=university|college), `centres` (url null, Zentrenkonzept offen).
+- `fallback_osm.columns`: gewünschte OSM-Spalten je Fallback-Quelle.
+- purpose ergänzt bei bike_volumes_dbradplus (nur Plausibilität), schools, gtfs_hvv, osm (Radinfrastruktur aus dem PBF).

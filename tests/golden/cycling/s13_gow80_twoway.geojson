@@ -1,0 +1,52 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow80_twoway",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow80_twoway",
+        "description": "Außerorts GOW80, Bezirksroute -> Zweirichtungsradweg",
+        "cat_final": "GOW80",
+        "cycle_cat": "BASIS",
+        "dtv": 8000,
+        "cyc_peak_h_oneway": 60,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "separated_twoway",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_twoway.BASIS"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "L-02"
+        ],
+        "refs_used": [
+          "lanes.rules[L-02].lane_capacity_veh_h.value",
+          "lanes.rules[L-02].target_vc.value",
+          "lanes.rules[L-02].peak_h_dir_from_dtv.factor"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            567600.0,
+            5935000.0
+          ],
+          [
+            567720.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

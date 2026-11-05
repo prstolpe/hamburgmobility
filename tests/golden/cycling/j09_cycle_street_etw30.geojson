@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "name": "cycle_street_etw30",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "cycle_street_etw30",
+        "description": "Fahrradstraße (ETW30, Hauptroute) x ETW30 -> Fahrradstraße bevorrechtigt, aufgepflastert",
+        "legs": [
+          {
+            "cat": "ETW30",
+            "cycle_cat": "HAUPT",
+            "facility": "cycle_street"
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 1800,
+        "space_radius_m": 10,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "priority_raised",
+        "expected_rules": [
+          "J-07"
+        ],
+        "expected_cyclist_treatment": [],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          566800.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

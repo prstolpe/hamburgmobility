@@ -46,6 +46,21 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
 - Bei Netzwerkfehlern oder nicht erreichbaren Endpunkten: abbrechen und berichten, keine
   Ersatzquellen erfinden.
 
+## Radnetz und Soll-Querschnitt
+- Erweiterung ab Prompt 14 (prompts/14_cycling_setup.md bis 21_web_validation_cycling.md):
+  hierarchisches Radnetz nach den fünf Prinzipien, Führungsform/Breite, Soll-Querschnitt, Knotenpunkte.
+- docs/guide_radnetz.md – Methodik mit Quellen. Bei Fachfragen zum Radnetz zuerst hier nachsehen.
+- config/cycling_rules.yaml – Radnetzkategorien, Prinzipien, Trennungsmatrix, Breiten.
+- config/design_rules.yaml – Fahrstreifen, Lage der Radanlagen, Raumaufteilung, Knotenpunkte.
+- Schemas: config/schema/cycling_model.py, design_model.py; Loader in pipeline/lib/rules.py.
+  source/source_type gelten auch für Einträge darunter; jede Regel mit id braucht status.
+- Auch hier gilt: keine Schwellen im Code; Regeländerungen mit neuer meta.version und CHANGELOG-Eintrag.
+- Korrekturebenen (nur review_status = approved wird übernommen):
+  overrides/cycle_network_overrides.csv (edge_id), overrides/junction_overrides.csv (node_id).
+- Pipeline-Skripte: pipeline/cNN_name.py; goldene Fälle in tests/golden/cycling/.
+- Make-Ziele: make cycle-demand | make cycle-network | make cycle-principles | make cycle-facility |
+  make cross-section-soll | make junctions | make export-cycling
+
 ## Befehle
 make fetch | make network | make conflate | make features | make crosssection | make classify |
 make coherence | make discrepancy | make export | make web | make validate | make test

@@ -1,0 +1,56 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_rsv_two_lanes_wide",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_rsv_two_lanes_wide",
+        "description": "GOW50, RSV, Spitzenstunde 900 Rad/h je Richtung (> 750: +0,50 m), DTV 20 000 ohne Bus -> 2x2 mit Mittelstreifen",
+        "cat_final": "GOW50",
+        "cycle_cat": "RSV",
+        "dtv": 20000,
+        "cyc_peak_h_oneway": 900,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "separated_oneway_both",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_oneway.RSV",
+          "widths_m.project_target.intensity_upgrade[0].add_m"
+        ],
+        "expected_lanes_per_direction": 2,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "S-01",
+          "L-02",
+          "L-03"
+        ],
+        "refs_used": [
+          "lanes.rules[L-02].lane_capacity_veh_h.value",
+          "lanes.rules[L-02].target_vc.value",
+          "lanes.rules[L-02].peak_h_dir_from_dtv.factor",
+          "demand.intensity_classes_peak_h.oneway"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            565400.0,
+            5935000.0
+          ],
+          [
+            565520.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

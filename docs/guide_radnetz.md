@@ -1,0 +1,101 @@
+# Radnetz und Soll-Querschnitt – Methodik (Erweiterung des Straßenfunktionsplans)
+
+Stand 05.11.2026 · nicht amtlicher Entwurf · [F] = Fakt mit Quelle, [B] = Bewertung/Annahme
+
+## Kurzfassung
+
+Die Erweiterung legt ein zweites Netz über den Straßenfunktionsplan: ein hierarchisches Radnetz,
+das nach den fünf Prinzipien der niederländischen Radverkehrsplanung entworfen und geprüft wird.
+Aus Straßenkategorie (`cat_final`), Radnetzkategorie, Radverkehrsstärke und verfügbarem
+Straßenraum bestimmt ein Regelwerk dann je Abschnitt Führungsform, Breite und Lage der
+Radanlage sowie die Zahl der Kfz-Fahrstreifen und je Knoten den Knotentyp [B].
+Wie bisher gilt: Automatik schlägt vor, Menschen entscheiden; jede Entscheidung hat einen
+`rule_trace`.
+
+Neue Konfiguration:
+- `config/cycling_rules.yaml` – Radnetzkategorien, fünf Prinzipien als Prüfregeln, Trennungsmatrix, Breiten
+- `config/design_rules.yaml` – Fahrstreifen, Lage, Raumaufteilung, Knotenpunkte
+- `overrides/cycle_network_overrides.csv`, `overrides/junction_overrides.csv` – Korrekturebenen
+
+## 1. Die fünf Prinzipien und ihre Übersetzung
+
+Die fünf Hauptanforderungen der CROW-Ontwerpwijzer sind Zusammenhang (cohesion),
+Direktheit, Sicherheit, Komfort und Attraktivität ([Dutch Cycling Embassy](https://dutchcycling.nl/expertises/cycling-infrastructure/)) [F].
+
+| Prinzip | Kern [F] | Messgröße im Projekt [B] |
+| --- | --- | --- |
+| Zusammenhang | einheitliches Netz, das Quellen und Ziele verbindet | Maschenweite je Ebene, zusammenhängende Komponenten, Abdeckung wichtiger Ziele, Kontinuität der Führung |
+| Direktheit | wenige Umwege und Halte, Bevorrechtigung | Umwegfaktor, Halte/km, Zeitverlust s/km |
+| Sicherheit | Verkehrs- und soziale Sicherheit, Trennung von schnellem Kfz-Verkehr; Radrouten möglichst nicht parallel zu belasteten Hauptstraßen | Führungsform nach Trennungsmatrix, Knotentyp, Beleuchtung, Unfälle |
+| Komfort | wenig Halte, glatte Beläge, klare Wegweisung | Breite ≥ Soll, geschlossene Decke, Steigungen |
+| Attraktivität | Grün, Ruhe, gepflegte Straßen | Grünanteil, Lärm, Parallelität zu DTV-starken Straßen |
+
+Netzebenen nach dem Delft-Beispiel ([DCE](https://dutchcycling.nl/expertises/cycling-infrastructure/)) [F]:
+Stadtnetz 400–600 m Maschenweite (Wege 2–3 km), Bezirksnetz 200–300 m (1–2 km),
+Quartiersnetz 100–150 m (0,5–1 km). Darüber liegen Radschnellverbindungen; Hessen setzt dafür
+≥ 2.000 Radfahrende/Werktag, Zielgeschwindigkeit 20 km/h, Entwurfsgeschwindigkeit 30 km/h und
+≤ 30 s/km Zeitverlust innerorts an ([Hessen 2019](https://mobil.hessen.de/sites/mobil.hessen.de/files/2022-01/handbuch_qualitaetsstandards_und_musterloesungen_150dpi_maerz_2019.pdf)) [F].
+
+Hamburgs „Radnetz Hamburg“ umfasst 23 übergeordnete Radrouten mit 369 km; der Anteil
+geschützter Radinfrastruktur und Fahrradstraßen liegt bei 66 %
+([Jahresbericht 2025, März 2026](https://www.hamburg.de/resource/blob/1152164/b439698b0306d2e755aeccfc216dd29e/jahresbericht-2025-rad-und-fussverkehr-data.pdf)) [F].
+Das amtliche Radnetz ist Startpunkt und Vergleichsebene, nicht Ergebnis [B].
+
+## 2. Kategorien
+
+| Code | Hamburg-Begriff | NL-Vorbild | Maschenweite | Auslöser |
+| --- | --- | --- | --- | --- |
+| RSV | Radschnellverbindung / Radroute+ | snelfietsroute | Korridore | ≥ 2.000 Rad/Werktag (Hessen) [F], ≥ 5 km [F] |
+| HAUPT | Radroute | hoofdfietsroute | 400–600 m [F] | Stadtnetz, Bezirkszentren, Schnellbahn |
+| BASIS | Bezirksroute | wijkontsluitend | 200–300 m [F] | Schulen, Nahversorgung |
+| ERSCHL | Quartiersnetz | buurtnetwerk | 100–150 m [F] | alle übrigen befahrbaren Straßen/Wege |
+
+## 3. Netzentwurf in fünf Schritten
+
+1. **Kandidatennetz:** alle für Rad befahrbaren Kanten (OSM, Straßenabschnitte, eigenständige Wege) mit Ist- und Soll-Widerstand (`routing_impedance`).
+2. **Nachfrage:** Radverkehrsstärke je Kante aus einem einfachen Nachfragemodell (Bevölkerungsgitter → Ziele, Gravitationsansatz, Routenwahl auf wahrgenommenem Widerstand), kalibriert an Zählstellen und DB Rad+ [B].
+3. **Hierarchie:** Kanten mit hoher Modellbelastung und Lage auf Korridoren zwischen Zentren werden RSV/HAUPT; amtliche Radrouten erhalten einen Startbonus; Maschenregeln erzwingen Lückenschlüsse [B].
+4. **Prinzipienprüfung:** Kriterien P-COH bis P-ATT je Route und Netz; Flags statt automatischer Reparatur.
+5. **Korrektur:** `overrides/cycle_network_overrides.csv` mit Begründung; nur `approved` wird übernommen.
+
+Zielkonflikt Direktheit vs. Sicherheit/Attraktivität: Die DCE empfiehlt Routen, die nicht parallel
+zu belasteten Hauptstraßen verlaufen [F]. Regel P-ATT-03 schlägt eine Parallelroute vor, wenn sie
+innerhalb von 200 m liegt und den Umwegfaktor einhält; die Hauptstraße erhält trotzdem getrennte
+Radwege (GOW50), weil dort Ziele liegen [B].
+
+## 4. Führungsform, Breite, Lage
+
+Die Trennungsmatrix (`separation_matrix`) kombiniert Straßenkategorie und Radnetzkategorie:
+- GOW50: immer baulich getrennte Einrichtungsradwege beidseitig; keine Radstreifen an GOW50 ([CROW 2023](https://www.amersfoort.nl/sites/default/files/2025-09/2023-crow-handreiking-voorlopige-inrichtingskenmerken-gow30.pdf)) [F].
+- GOW30: Radfahrstreifen (CROW min. 1,70 m, ideal 2,20 m) [F]; Hauptroute bevorzugt getrennt [B].
+- ETW30: Mischverkehr; Hauptroute als Fahrradstraße; keine Radstreifen auf ETW [F CROW].
+
+Breiten: deutsche Regelwerte (Radweg 2,00 m, Zweirichtung 2,50 m, Radfahrstreifen 1,85 m,
+Schutzstreifen 1,50 m, Trennstreifen 0,75 m) ([ERA 2010 via FGSV-Kolloquium](https://www.fgsv-verlag.de/pub/media/pdf/284_Gwiasda_P_Radverkehr_an_inneroertlichen_Hauptverkehrsstrassen.pdf)) [F],
+E Klima 2,25 m für Radfahrstreifen [F] und niederländische Werte für Hauptnetze (Einrichtung 3,00 m,
+Zweirichtung 4,00 m in einer kommunalen CROW-Umsetzung, [Castricum 2020](https://www.castricum.nl/fileadmin/Castricum/documenten-per-onderwerp/raadsdocumenten/Fietsbeleidsplan-eisen-fietsnetwerk-Castricum-april-2020.pdf)) [F].
+Das Projekt-Soll in `widths_m.project_target` ist eine Setzung zwischen beiden und wird mit der
+Spitzenstunde (15 % der Tagesmenge, [RWS 2021](https://www.ndw.nu/binaries/ndw/documenten/publicaties/2021/7/23/operationalisatie-definitie-van-voldoende-veilige-wegen-en-fietsinfrastructuur/Operationalisatie+Definitie+KN+SPV+30-50-70-60-80-fietspaden+definitief+def.pdf)) verbreitert [B].
+
+## 5. Fahrstreifen und Raumaufteilung
+
+- Grundsatz: so wenige Kfz-Fahrstreifen wie möglich; GOW30/ETW höchstens einer je Richtung [F CROW].
+- GOW50: zweiter Fahrstreifen nur bei rechnerischer Kapazitätsnot (Regel L-02, Werte = Annahme, am HBS prüfen); dann Mittelstreifen [F CROW]; Busfahrstreifen hat Vorrang vor zweitem Kfz-Streifen (L-04) [B].
+- Raumaufteilung: Bausteine in fester Reihenfolge (Gehwege → Radverkehr → ÖPNV → Kfz-Minimum → Puffer → Regelbreiten → Grün → Laden → Parken). Reicht der Raum nicht, greift die Abbaukaskade D1–D7, protokolliert im `rule_trace` [B].
+- Ergebnis je Abschnitt: Soll-Profil mit Elementen und Breiten, Fahrstreifen je Richtung, Führungsform, Radwegbreite und -seite, Passung (passt/eng/passt nicht).
+
+## 6. Knotenpunkte
+
+- Kreisverkehre sind der sicherste Knotentyp; ein vierarmiger einstreifiger Kreisverkehr hat 4 statt 24 Konfliktpunkte; Kreisverkehre mit getrennten Radwegen sind für Radfahrende am sichersten ([SWOV 2022](https://swov.nl/sites/default/files/bestanden/downloads/FS%20Rotondes%20en%20andere%20kruispunten_1.pdf)) [F].
+- CROW empfiehlt innerorts Vorrang für Radfahrende auf umlaufenden Radwegen; SWOV-Analysen sehen Wartepflicht als sicherer [F] – im Regelwerk als dokumentierter Zielkonflikt (JC-01). In Deutschland hängt die Vorfahrt am Kreisverkehr von der fahrbahnnahen Führung ab; vor Gebrauch rechtlich prüfen [B].
+- LSA-Knoten sind nach Volumenkorrektur die unsichersten [F]; sie kommen nur bei hoher Belastung oder Straßenbahn zum Einsatz und werden dann als geschützte Kreuzung gestaltet [B].
+- Sehr belastete oder schnelle Kreuzungen von Hauptrouten: Tunnel oder Brücke ([DCE](https://dutchcycling.nl/expertises/cycling-infrastructure/)) [F].
+- Entscheidungstabelle J-01 bis J-11 in `design_rules.yaml`; Schwellen für Kreisverkehrskapazität sind Annahmen.
+
+## 7. Grenzen
+
+- Radverkehrsstärken sind modelliert, nicht gezählt; DB Rad+ ist eine nicht repräsentative Stichprobe [B].
+- CROW-Ontwerpwijzer und ERA wurden nicht im Original geprüft; viele Werte stammen aus Sekundärquellen [B].
+- Die FGSV-Neufassung der ERA ist angekündigt; Breiten können sich ändern [B].
+- Knotentypen setzen Platz und Leistungsfähigkeit voraus, die das Projekt nur grob schätzt [B].
+- Der Entwurf ersetzt keine Planung; er macht Netzlogik und Raumansprüche sichtbar [B].

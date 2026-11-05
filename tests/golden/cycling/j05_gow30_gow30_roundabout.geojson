@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow30_gow30_roundabout",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow30_gow30_roundabout",
+        "description": "GOW30 x GOW30 -> Kreisverkehr bevorzugt",
+        "legs": [
+          {
+            "cat": "GOW30",
+            "cycle_cat": "BASIS",
+            "facility": null
+          },
+          {
+            "cat": "GOW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 9000,
+        "space_radius_m": 22,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "roundabout_single_lane_cycle_priority",
+        "expected_rules": [
+          "J-03"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-01"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          566000.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

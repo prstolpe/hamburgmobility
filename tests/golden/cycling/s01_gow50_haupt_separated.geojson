@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_haupt_separated",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_haupt_separated",
+        "description": "GOW50, Hauptroute, DTV 12 000 (unter L-02-Auslöser), kein Bus",
+        "cat_final": "GOW50",
+        "cycle_cat": "HAUPT",
+        "dtv": 12000,
+        "cyc_peak_h_oneway": 300,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "separated_oneway_both",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_oneway.HAUPT"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "S-01",
+          "L-02"
+        ],
+        "refs_used": [
+          "lanes.rules[L-02].lane_capacity_veh_h.value",
+          "lanes.rules[L-02].target_vc.value",
+          "lanes.rules[L-02].peak_h_dir_from_dtv.factor"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            565200.0,
+            5935000.0
+          ],
+          [
+            565320.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

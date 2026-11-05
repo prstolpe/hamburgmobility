@@ -1,0 +1,51 @@
+{
+  "type": "FeatureCollection",
+  "name": "etw30_haupt_cycle_street",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "etw30_haupt_cycle_street",
+        "description": "ETW30, Hauptroute, 1 500 Kfz/24h (<= 2 500) -> Fahrradstraße",
+        "cat_final": "ETW30",
+        "cycle_cat": "HAUPT",
+        "dtv": 1500,
+        "cyc_peak_h_oneway": 300,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": true,
+        "expected_facility": "cycle_street",
+        "expected_width_refs": [
+          "widths_m.project_target.cycle_street_carriageway.value"
+        ],
+        "expected_lanes_per_direction": "shared",
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "S-02",
+          "L-01"
+        ],
+        "refs_used": [
+          "cycle_street.max_motor_vehicles_day.value"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            566600.0,
+            5935000.0
+          ],
+          [
+            566720.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

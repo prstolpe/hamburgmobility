@@ -1,0 +1,215 @@
+# Radnetz Hamburg – Regelwerk nach den fünf Prinzipien (Entwurf, nicht amtlich)
+# source_type: swov_crow | de_regelwerk | hamburg | assumption
+# status: draft | reviewed | approved (Pflicht bei jeder Regel mit id)
+# source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
+# Werte mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen.
+meta:
+  version: 0.1.1
+  date: 2026-11-05
+  crs_work: EPSG:25832
+  depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
+
+sources:
+  DCE_INFRA: {title: 'Dutch Cycling Embassy – Cycling infrastructure (fünf Prinzipien, Netzmaschen Delft)', url: 'https://dutchcycling.nl/expertises/cycling-infrastructure/'}
+  CROW_OW_2016: {title: 'CROW Ontwerpwijzer fietsverkeer / Design manual for bicycle traffic (2016)', url: 'https://crowplatform.com/product/design-manual-for-bicycle-traffic/', note: 'Original nicht online geprüft'}
+  CROW_GOW30_2023: {title: 'CROW Handreiking voorlopige inrichtingskenmerken GOW30 v1.0 (2023)', url: 'https://www.amersfoort.nl/sites/default/files/2025-09/2023-crow-handreiking-voorlopige-inrichtingskenmerken-gow30.pdf'}
+  SWOV_ROT_2022: {title: 'SWOV-Factsheet Rotondes en andere kruispunten (2022)', url: 'https://swov.nl/sites/default/files/bestanden/downloads/FS%20Rotondes%20en%20andere%20kruispunten_1.pdf'}
+  RWS_OPS_2021: {title: 'RWS/Sweco Operationalisatie voldoende veilige wegen en fietspaden (2021), Tabelle 3.4 nach CROW 2016', url: 'https://www.ndw.nu/binaries/ndw/documenten/publicaties/2021/7/23/operationalisatie-definitie-van-voldoende-veilige-wegen-en-fietsinfrastructuur/Operationalisatie+Definitie+KN+SPV+30-50-70-60-80-fietspaden+definitief+def.pdf'}
+  NL_MUNI_CASTRICUM_2020: {title: 'Gemeente Castricum, Eisen fietsnetwerk (2020) – kommunale Umsetzung CROW', url: 'https://www.castricum.nl/fileadmin/Castricum/documenten-per-onderwerp/raadsdocumenten/Fietsbeleidsplan-eisen-fietsnetwerk-Castricum-april-2020.pdf'}
+  ERA_2010: {title: 'FGSV Empfehlungen für Radverkehrsanlagen (2010)', url: 'https://www.fgsv-verlag.de/pub/media/pdf/284_Gwiasda_P_Radverkehr_an_inneroertlichen_Hauptverkehrsstrassen.pdf', note: 'Werte über Sekundärquellen; Original prüfen'}
+  ERA_FORTSCHREIBUNG_2023: {title: 'Gwiasda: Fortschreibung der ERA, Basisstandard (Nationaler Radverkehrskongress 2023)', url: 'https://www.adfc.de/fileadmin/Gliederungen/Pedale/aachen/user_upload/pdf/2023/D3-Peter-Gwiasda.pdf'}
+  HESSEN_QS_2019: {title: 'Hessen: Handbuch Qualitätsstandards und Musterlösungen Radverkehr (2019)', url: 'https://mobil.hessen.de/sites/mobil.hessen.de/files/2022-01/handbuch_qualitaetsstandards_und_musterloesungen_150dpi_maerz_2019.pdf'}
+  HH_RAD_2025: {title: 'Hamburg: Jahresbericht 2025 Rad- und Fußverkehr (März 2026)', url: 'https://www.hamburg.de/resource/blob/1152164/b439698b0306d2e755aeccfc216dd29e/jahresbericht-2025-rad-und-fussverkehr-data.pdf'}
+
+# ---------------------------------------------------------------
+# Radnetz-Kategorien (Hierarchie)
+# ---------------------------------------------------------------
+cycle_categories:
+  RSV:
+    label_de: 'Radschnellverbindung / Radroute+'
+    nl: 'snelfietsroute / doorfietsroute'
+    trip_length_km: {range: [5, 15], source_type: assumption, note: 'nicht in DCE_INFRA; Quelle ergänzen'}
+    min_route_length_km: {value: 5, source: DCE_INFRA, source_type: swov_crow, note: 'ECF-Kriterium; Hessen: RSV 10 km, RDV 5 km'}
+    demand_trigger_cyclists_weekday: {value: 2000, source: HESSEN_QS_2019, source_type: de_regelwerk}
+    target_speed_kmh: {value: 20, source: HESSEN_QS_2019, source_type: de_regelwerk}
+    design_speed_kmh: {value: 30, source: HESSEN_QS_2019, source_type: de_regelwerk}
+    max_time_loss_s_per_km: {value: 30, scope: innerorts, source: HESSEN_QS_2019, source_type: de_regelwerk}
+  HAUPT:
+    label_de: 'Radroute (Hauptnetz)'
+    nl: 'hoofdfietsroute (stedelijk netwerk)'
+    mesh_m: {range: [400, 600], source: DCE_INFRA, source_type: swov_crow}
+    trip_length_km: {range: [2, 3], source: DCE_INFRA, source_type: swov_crow, note: 'Delft: Stadtnetz Wege 2–3 km'}
+    target_speed_kmh: {value: 20, source_type: assumption}
+    max_time_loss_s_per_km: {value: 30, source_type: assumption, note: 'analog RDV innerorts'}
+  BASIS:
+    label_de: 'Bezirksroute (Basisnetz)'
+    nl: 'wijkontsluitend netwerk'
+    mesh_m: {range: [200, 300], source: DCE_INFRA, source_type: swov_crow}
+    trip_length_km: {range: [1, 2], source: DCE_INFRA, source_type: swov_crow, note: 'Delft: Bezirksnetz Wege 1–2 km'}
+    target_speed_kmh: {value: 18, source_type: assumption}
+  ERSCHL:
+    label_de: 'Quartiersnetz (Erschließung)'
+    nl: 'buurtnetwerk'
+    mesh_m: {range: [100, 150], source: DCE_INFRA, source_type: swov_crow}
+    trip_length_km: {range: [0.5, 1], source: DCE_INFRA, source_type: swov_crow, note: 'Delft: Quartiersnetz Wege 0,5–1 km'}
+
+# ---------------------------------------------------------------
+# Die fünf Prinzipien als prüfbare Kriterien (Score 0–1 je Route und Netz)
+# ---------------------------------------------------------------
+principles:
+  cohesion:
+    description: 'Lückenloses Netz, Quellen und Ziele verbunden, Maschenweite je Ebene eingehalten'
+    source: [DCE_INFRA, CROW_OW_2016]
+    source_type: swov_crow
+    checks:
+      - {id: P-COH-01, metric: 'max_mesh_side_m je Kategorie', rule: 'Masche > mesh_m.max -> Lückenflag', source_type: swov_crow, status: draft}
+      - {id: P-COH-02, metric: 'connected_components', rule: 'jede Kategorie-Ebene inkl. höherer Ebenen zusammenhängend', source_type: swov_crow, status: draft}
+      - {id: P-COH-03, metric: 'destination_coverage', rule: 'Anteil Ziele (Schulen, Zentren, Schnellbahnhalte) <= coverage_m vom HAUPT/RSV-Netz', coverage_m: 300, source_type: assumption, status: draft}
+      - {id: P-COH-04, metric: 'category_continuity', rule: 'Route behält Kategorie und Führungsform über Knoten; Wechsel nur an Knoten mit sicherer Überleitung', source_type: swov_crow, status: draft}
+  directness:
+    description: 'Kurze Wege und Zeiten: geringe Umwege, wenig Halte'
+    source: [DCE_INFRA, HESSEN_QS_2019]
+    source_type: swov_crow
+    checks:
+      - {id: P-DIR-01, metric: 'detour_factor (Netzweg / kürzester Weg auf allen befahrbaren Wegen)', thresholds: {RSV: 1.1, HAUPT: 1.2, BASIS: 1.3}, source_type: assumption, note: 'Werte als Annahme; CROW-Original prüfen', status: draft}
+      - {id: P-DIR-02, metric: 'stops_per_km (LSA, Wartepflicht)', thresholds: {RSV: 0.5, HAUPT: 1.0, BASIS: 2.0}, source_type: assumption, status: draft}
+      - {id: P-DIR-03, metric: 'time_loss_s_per_km', thresholds: {RSV: 30, HAUPT: 30}, source: HESSEN_QS_2019, source_type: de_regelwerk, status: draft}
+  safety:
+    description: 'Verkehrssicherheit und soziale Sicherheit: Trennung bei Tempo- und Massendifferenz, sichere Knoten, belebte und beleuchtete Wege'
+    source: [DCE_INFRA, SWOV_ROT_2022, CROW_GOW30_2023]
+    source_type: swov_crow
+    checks:
+      - {id: P-SAF-01, metric: 'facility_matches_separation_matrix', rule: 'Führungsform entspricht separation_matrix', source_type: swov_crow, status: draft}
+      - {id: P-SAF-02, metric: 'junction_type_matches', rule: 'Knotentyp entspricht design_rules.junctions', source_type: swov_crow, status: draft}
+      - {id: P-SAF-03, metric: 'social_safety', rule: 'beleuchtet und mit Sichtbezug zu Bebauung, sonst Flag bei Nutzung nachts', source_type: assumption, status: draft}
+      - {id: P-SAF-04, metric: 'injury_crashes_cyclists_per_km_5y', rule: 'Gewicht in Priorisierung', source_type: assumption, status: draft}
+  comfort:
+    description: 'Wenig Halte und Störungen, glatte Oberfläche, ausreichende Breite, geringe Steigungen, klare Wegweisung'
+    source: [DCE_INFRA]
+    source_type: swov_crow
+    checks:
+      - {id: P-COM-01, metric: 'width_ok (Breite >= erforderliche Breite)', source_type: swov_crow, status: draft}
+      - {id: P-COM-02, metric: 'surface_smooth (asphalt/concrete)', rule: 'RSV/HAUPT: geschlossene Decke', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft}
+      - {id: P-COM-03, metric: 'max_gradient_pct', thresholds: {RSV: 4, HAUPT: 5}, source_type: assumption, note: 'Hamburg flach; nur Brücken/Rampen relevant', status: draft}
+  attractiveness:
+    description: 'Grün, ruhig, angenehm; nicht parallel zu sehr belasteten Hauptstraßen, wenn gleichwertige Alternative besteht'
+    source: [DCE_INFRA]
+    source_type: swov_crow
+    checks:
+      - {id: P-ATT-01, metric: 'green_share (Bäume/Grünflächen im 20-m-Puffer)', source_type: assumption, status: draft}
+      - {id: P-ATT-02, metric: 'noise_exposure (Lärmkarte Lden)', source_type: assumption, status: draft}
+      - {id: P-ATT-03, metric: 'parallel_to_high_volume', rule: 'Route liegt an Straße mit DTV > 15000 und Parallelweg <= 200 m mit detour_factor <= Schwelle -> Alternativvorschlag', dtv: 15000, parallel_max_m: 200, source_type: assumption, status: draft}
+
+# Gewichte für den Routen-Gesamtscore (Annahme, Sensitivitätsanalyse)
+principle_weights: {cohesion: 0.2, directness: 0.25, safety: 0.3, comfort: 0.15, attractiveness: 0.1, source_type: assumption}
+
+# Kantenkosten für Netzentwurf und Routing ("wahrgenommener Widerstand")
+routing_impedance:
+  description: 'Länge x Faktor; Faktoren nach Stressniveau der Ist- bzw. Soll-Führung'
+  source_type: assumption
+  factors:
+    separated_track_or_cycle_street: 1.0
+    etw30_mixed: 1.05
+    gow30_cycle_lane: 1.25
+    gow50_cycle_lane_or_mixed: 2.0
+    gow50_separated_track: 1.1
+    unpaved_or_cobbles: 1.3
+    signal_delay_s: 25
+    give_way_delay_s: 8
+
+# ---------------------------------------------------------------
+# Trennungsmatrix: Kfz-Kategorie (cat_final) x Radnetz-Kategorie -> Führungsform
+# ---------------------------------------------------------------
+separation_matrix:
+  source: [CROW_GOW30_2023, ERA_2010, CROW_OW_2016]
+  source_type: swov_crow
+  note: 'Führungsformen: separated_oneway_both | separated_twoway | cycle_lane | cycle_street | mixed | own_path'
+  GOW50:
+    RSV: separated_oneway_both
+    HAUPT: separated_oneway_both
+    BASIS: separated_oneway_both
+    ERSCHL: separated_oneway_both
+    none: separated_oneway_both
+  GOW30:
+    RSV: separated_oneway_both
+    HAUPT: {preferred: separated_oneway_both, fallback: cycle_lane}
+    BASIS: cycle_lane
+    ERSCHL: cycle_lane
+    none: cycle_lane
+  ETW30:
+    RSV: cycle_street
+    HAUPT: cycle_street
+    BASIS: mixed
+    ERSCHL: mixed
+    none: mixed
+  ETW_ERF:
+    RSV: {preferred: own_path, fallback: mixed, note: 'RSV möglichst nicht durch Fußgängerzonen'}
+    HAUPT: mixed
+    BASIS: mixed
+    ERSCHL: mixed
+    none: mixed
+  SW: {all: own_path, note: 'kein Radverkehr auf Stroomweg; eigene Trasse'}
+  rural:
+    GOW80: separated_twoway
+    ETW60: {preferred: separated_twoway, fallback: mixed, condition: 'mixed nur bei DTV <= mixed_rural_max_dtv'}
+  rules:
+    - {id: S-01, rule: 'Kein Radfahr- oder Schutzstreifen an GOW50', source: CROW_GOW30_2023, source_type: swov_crow, status: draft}
+    - {id: S-02, rule: 'Kein Radstreifen auf ETW30; Hauptroute auf ETW als Fahrradstraße', source: CROW_GOW30_2023, source_type: swov_crow, status: draft}
+    - {id: S-03, rule: 'Zweirichtungsradweg innerorts nur einseitig an Straßen mit einseitiger Bebauung/Zielen oder wenigen Knoten', source_type: assumption, status: draft}
+    - {id: S-04, rule: 'Mischverkehr auf Fahrbahn nur bei Kfz <= mixed_max_kfz_h', mixed_max_kfz_h: 700, condition: 'Fahrbahn < 6 m', source: ERA_2010, source_type: de_regelwerk, note: 'ERA S. 22 über Sekundärquelle; > 400 Kfz/h bei 6–7 m problematisch', status: draft}
+  mixed_rural_max_dtv: {value: 2500, source_type: assumption}
+
+cycle_street:
+  max_motor_vehicles_day: {value: 2500, source_type: assumption, note: 'CROW-Fietsberaad 2018 prüfen'}
+  cyclists_dominant: {rule: 'Radverkehr >= Kfz-Verkehr in der Spitzenstunde', source_type: assumption}
+  priority_over_crossing_ETW: {value: true, source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow}
+  legal_de: 'Fahrradstraße nach StVO Zeichen 244.1; Voraussetzungen der VwV-StVO prüfen'
+
+# ---------------------------------------------------------------
+# Radverkehrsstärken und Breiten
+# ---------------------------------------------------------------
+demand:
+  peak_hour_share_of_day: {value: 0.15, source: RWS_OPS_2021, source_type: swov_crow}
+  intensity_classes_peak_h:
+    oneway: [[0, 150], [150, 750], [750, null]]
+    twoway: [[0, 50], [50, 150], [150, 350], [350, null]]
+    source: RWS_OPS_2021
+    source_type: swov_crow
+
+widths_m:
+  de:
+    source: [ERA_2010, ERA_FORTSCHREIBUNG_2023]
+    source_type: de_regelwerk
+    separated_oneway: {standard: 2.00, min: 1.60}
+    separated_twoway: {standard: 2.50, min: 2.00, oneside_standard: 3.00}
+    cycle_lane: {standard: 1.85, e_klima: 2.25, era_basis_2023: 2.00}
+    advisory_lane: {standard: 1.50, min: 1.25}
+    buffer_to_parking: {standard: 0.75, min: 0.50}
+    shared_foot_cycle: {standard: 4.00, min: 3.00}
+  nl:
+    source: NL_MUNI_CASTRICUM_2020
+    source_type: swov_crow
+    note: 'kommunale Umsetzung; CROW-Original prüfen'
+    hoofdnet_oneway: {standard: 3.00, min: 2.50}
+    hoofdnet_twoway: {standard: 4.00, min: 3.50}
+    basis_oneway: {min: 2.00}
+    basis_twoway: {min: 3.00}
+    cycle_lane_hoofdnet: {standard: 2.50, min: 2.00}
+    cycle_lane_basis: {standard: 2.00, min: 1.75}
+  gow30_cycle_lane: {min: 1.70, ideal: 2.20, source: CROW_GOW30_2023, source_type: swov_crow}
+  # Projekt-Sollwerte: Kombination (Annahme, fachlich festzulegen)
+  project_target:
+    source_type: assumption
+    separated_oneway: {RSV: 3.00, HAUPT: 2.50, BASIS: 2.00, ERSCHL: 2.00, none: 2.00}
+    separated_twoway: {RSV: 4.00, HAUPT: 3.50, BASIS: 3.00, ERSCHL: 2.50, none: 2.50}
+    cycle_lane: {HAUPT: 2.50, BASIS: 2.25, ERSCHL: 2.00, none: 2.00}
+    cycle_street_carriageway: {value: 4.00, note: 'Fahrradstraße ohne Mittellinie; Begegnung Rad nebeneinander'}
+    intensity_upgrade:
+      - {if: 'oneway peak_h > 750', add_m: 0.50}
+      - {if: 'twoway peak_h > 350', add_m: 0.50}
+
+# Radnetzdaten
+hamburg_reference:
+  radnetz_routes: {value: 23, note: 'übergeordnete Radrouten', source: HH_RAD_2025, source_type: hamburg}
+  radnetz_km: {value: 369, source: HH_RAD_2025, source_type: hamburg}
+  protected_share_kpi: {value: 0.66, note: 'geschützte Radinfrastruktur und Fahrradstraßen', source: HH_RAD_2025, source_type: hamburg}

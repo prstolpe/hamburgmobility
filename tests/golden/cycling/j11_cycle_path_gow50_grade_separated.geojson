@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "name": "cycle_path_gow50_grade_separated",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "cycle_path_gow50_grade_separated",
+        "description": "Radweg (Hauptroute) x GOW50, 35 000 Kfz/24h (> 30 000) -> Brücke/Tunnel",
+        "legs": [
+          {
+            "cat": "cycle_path",
+            "cycle_cat": "HAUPT",
+            "facility": "own_path"
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 35000,
+        "space_radius_m": 20,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "grade_separated_cycle",
+        "expected_rules": [
+          "J-09"
+        ],
+        "expected_cyclist_treatment": [],
+        "refs_used": [
+          "junctions.thresholds.grade_sep_min_dtv.value"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          567200.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}
