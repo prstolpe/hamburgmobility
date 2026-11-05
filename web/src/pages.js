@@ -102,7 +102,10 @@ export function imprintHtml(meta) {
   <h1>Impressum und Datenschutz</h1>
   <p><strong>${esc(meta.disclaimer)}.</strong> Keine Behördenseite.</p>
   <h2>Verantwortlich</h2>
-  <p>Wird vom Projektteam vor der Veröffentlichung eingetragen.</p>
+  ${meta.imprint?.name
+    ? `<p>${esc(meta.imprint.name)}<br>${(meta.imprint.address ?? []).map(esc).join("<br>")}</p>
+  ${meta.imprint.email ? `<p>E-Mail: <a href="mailto:${esc(meta.imprint.email)}">${esc(meta.imprint.email)}</a></p>` : ""}`
+    : "<p>Wird vom Projektteam vor der Veröffentlichung eingetragen.</p>"}
   <h2>Datenschutz</h2>
   <ul>
     <li>Kein Tracking, keine Cookies, keine Analysewerkzeuge.</li>

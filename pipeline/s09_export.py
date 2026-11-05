@@ -397,7 +397,7 @@ def main() -> int:
             "width_classes_m": {"ETW30": required_width_for("ETW30", rules), "GOW50": required_width_for("GOW50", rules)},
             "disclaimer": texts["disclaimer"], "site_title": web["site_title"],
             "github_repo": web.get("github_repo"), "feedback_email": web.get("feedback_email"),
-            "tiles_base_url": web.get("tiles_base_url"),
+            "tiles_base_url": web.get("tiles_base_url"), "imprint": web.get("imprint"),
             "sources": ctx["sources"], "attribution": attribution,
             "downloads": [{"file": f.name, "bytes": f.stat().st_size, "text": DOWNLOAD_TEXTS[f.name]}
                           for f in sorted(dl.iterdir()) if f.name in DOWNLOAD_TEXTS],

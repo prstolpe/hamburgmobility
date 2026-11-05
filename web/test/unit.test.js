@@ -143,3 +143,17 @@ describe("legend categories", () => {
     expect(html).not.toContain("GOW80");
   });
 });
+
+describe("Impressum", () => {
+  it("shows the responsible person from meta.imprint", async () => {
+    const { imprintHtml } = await import("../src/pages.js");
+    const html = imprintHtml({ disclaimer: "Entwurf", imprint: { name: "Erika Muster", address: ["Musterweg 1", "20000 Hamburg"] } });
+    expect(html).toContain("Erika Muster");
+    expect(html).toContain("Musterweg 1<br>20000 Hamburg");
+    expect(html).not.toContain("Wird vom Projektteam");
+  });
+  it("keeps the placeholder without imprint data", async () => {
+    const { imprintHtml } = await import("../src/pages.js");
+    expect(imprintHtml({ disclaimer: "Entwurf" })).toContain("Wird vom Projektteam");
+  });
+});
