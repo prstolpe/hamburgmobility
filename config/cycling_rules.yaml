@@ -4,7 +4,7 @@
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 # Werte mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen.
 meta:
-  version: 0.1.1
+  version: 0.2.0
   date: 2026-11-05
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
@@ -116,6 +116,122 @@ routing_impedance:
     unpaved_or_cobbles: 1.3
     signal_delay_s: 25
     give_way_delay_s: 8
+  # Ist-Zustand je Kante (prompts/15, c01_cycle_graph.py). Erste zutreffende Regel bestimmt den Faktor;
+  # die Bedingungsnamen (when) sind in pipeline/lib/cycle_graph.py festgelegt, Schwellen und Listen stehen hier.
+  ist_mapping:
+    source_type: assumption
+    rules:
+      - {id: C-IMP-01, when: cycle_street, factor: separated_track_or_cycle_street, status: draft, description: 'Fahrradstraße (amtlich oder OSM bicycle_road=yes / cyclestreet=yes)'}
+      - {id: C-IMP-02, when: own_path, factor: separated_track_or_cycle_street, status: draft, description: 'eigenständiger Rad- oder Fußweg mit Radfreigabe (C-GRAPH-01)'}
+      - {id: C-IMP-03, when: separated_track, factor: gow50_separated_track, status: draft, description: 'Radweg am Fahrbahnrand in derselben OSM-Linie (cycleway*=track|opposite_track); getrennt erfasste Radwege (cycleway=separate) sind eigene Kanten'}
+      - {id: C-IMP-04, when: low_speed_access_road, factor: etw30_mixed, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh und Erschließungsstraße (cat_final in access_categories, ohne cat_final highway in access_highways)'}
+      - {id: C-IMP-05, when: low_speed_with_lane, factor: gow30_cycle_lane, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh, Hauptstraße mit Radfahr- oder Schutzstreifen'}
+      - {id: C-IMP-06, when: low_speed_mixed, factor: gow30_cycle_lane, status: draft, note: 'Lücke: routing_impedance hat keinen Faktor für Hauptstraße Tempo 30 ohne Radstreifen; vorläufig wie C-IMP-05 (docs/open_questions.md)'}
+      - {id: C-IMP-07, when: other, factor: gow50_cycle_lane_or_mixed, status: draft, description: 'alle übrigen befahrbaren Straßen (Ist-Tempo > low_speed_max_kmh)'}
+      - {id: C-IMP-08, when: unpaved_or_cobbles, multiply: unpaved_or_cobbles, status: draft, description: 'zusätzlich bei surface in unpaved_surfaces'}
+    low_speed_max_kmh: 30
+    speed_fallback: 'speed_ist_kmh, sonst travel_speed_kmh (S-FEAT-02)'
+    access_categories: [ETW30, ETW_ERF, ETW60]
+    access_highways: [residential, living_street, pedestrian, service, track]
+    unpaved_surfaces: [unpaved, gravel, fine_gravel, compacted, dirt, earth, ground, grass, sand, mud, woodchips, pebblestone, sett, cobblestone, unhewn_cobblestone]
+
+# ---------------------------------------------------------------
+# Radgraph (prompts/15, c01_cycle_graph.py) – alle Werte Annahmen, vor Gebrauch fachlich prüfen
+# ---------------------------------------------------------------
+cycle_graph:
+  source_type: assumption
+  rules:
+    - id: C-GRAPH-01
+      description: 'Kanten: Straßenabschnitte (segments.parquet) außer Kfz-Straßen und Radverbot; dazu highway=cycleway sowie Fuß- und sonstige Wege mit Radfreigabe'
+      exclude_highways: [motorway, motorway_link]
+      exclude_motorroad: true
+      bicycle_forbidden: ['no']
+      path_highways: [path, footway, pedestrian, bridleway]
+      bicycle_allowed: ['yes', designated, permissive]
+      note: 'highway=pedestrian (auch als Straßenabschnitt) nur mit bicycle_allowed. bicycle=use_sidepath sperrt die Fahrbahn nicht (Netz bleibt zusammenhängend); der parallele Radweg ist günstiger (C-IMP-02).'
+      status: draft
+    - id: C-GRAPH-02
+      description: 'Einbahnstraßen (oneway=yes|-1, auch Radwege): Gegenrichtung nur mit oneway:bicycle=no'
+      status: draft
+    - id: C-GRAPH-03
+      description: 'Fähren mit Radmitnahme (route=ferry, bicycle in ferry_bicycle_allowed) als Kanten; Enden an den nächsten Graphknoten angebunden; Widerstand = Länge + Wartezeit'
+      ferry_bicycle_allowed: ['yes', designated, customers]
+      ferry_wait_s: 450
+      ferry_snap_m: 400
+      note: 'Wartezeit = halber 15-Minuten-Takt (Annahme); aus GTFS ableitbar (offene Frage). Anleger liegen bis rund 400 m vom Radgraph entfernt (Pontons ohne Radfreigabe); die Anbindungsstrecke zählt zum Widerstand (Schieben).'
+      status: draft
+    - id: C-GRAPH-04
+      description: 'Wartezeit signal_delay_s auf jedem Bogen, der in einen Knoten mit highway=traffic_signals (OSM) führt'
+      status: draft
+    - id: C-GRAPH-05
+      description: 'Wartezeit give_way_delay_s auf Bögen von Erschließungsstraßen und eigenständigen Wegen in einen Knoten ohne LSA, an dem eine Hauptstraße liegt'
+      priority_categories: [SW, GOW80, GOW50, GOW30]
+      priority_highways_without_category: [trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link]
+      status: draft
+    - id: C-GRAPH-06
+      description: 'Bezug eigenständiger Wege zu einem Straßenabschnitt (sidepath_of): nächster Abschnitt im Puffer mit kleinem Richtungswinkel und ausreichender Überdeckung'
+      buffer_m: 15
+      max_angle_deg: 20
+      min_overlap: 0.6
+      note: 'Werte wie S-CONF-01 (rules.yaml)'
+      status: draft
+  cycling_speed_kmh: 15
+  cycling_speed_note: 'Umrechnung der Wartezeiten in Widerstandsmeter (Annahme)'
+
+# ---------------------------------------------------------------
+# Nachfragemodell (prompts/15, c02_cycle_demand.py) – alle Werte Annahmen, vor Gebrauch fachlich prüfen
+# ---------------------------------------------------------------
+demand_model:
+  source_type: assumption
+  rules:
+    - id: C-DEM-01
+      description: 'Zonen: Zensus-Gitter 100 m zu Quadraten von zone_m im Gitter EPSG:3035 zusammengefasst; Quellstärke = Einwohner'
+      zone_m: 500
+      status: draft
+    - id: C-DEM-02
+      description: 'Zielstärke je Zone = Summe über Zieltypen von Gewicht x Anteil der Zone an der Hamburger Summe des Typs'
+      weights: {jobs_floor_area: 0.40, shops: 0.20, schools: 0.15, universities: 0.10, rapid_transit_stops: 0.15}
+      rapid_transit_route_types: [1, 2, 109, 402]
+      rapid_transit_note: 'Schnellbahnhalte = Stationen (parent_station) mit Fahrten dieser route_type; HVV-GTFS nutzt erweiterte Typen: 109 S-Bahn, 402 U-Bahn, 2 AKN/Regionalbahn (routes.txt 2026-04-08)'
+      status: draft
+    - id: C-DEM-03
+      description: 'Arbeitsplatz-Proxy: Geschossfläche oberirdischer ALKIS-Gebäude (Grundfläche x anzahlgs, fehlend 1) ohne excluded_functions (Wohn- und Nebengebäude); gemischte Gebäude mit Wohnen nur mit mixed_use_storeys Geschossen'
+      alkis_gebnutzbez: [Gebaeude]
+      alkis_rellage_excluded: ['Unter der Erdoberfläche']
+      excluded_functions: [Wohnhaus, Wohnheim, 'Land- und forstwirtschaftliches Wohngebäude', Gartenhaus, Garage, Tiefgarage, Parkhaus, Parkdeck, 'Gebäude zum Parken', 'Treibhaus, Gewächshaus', 'Scheune und Stall', Stall, Schutzbunker, Toilette]
+      mixed_use_functions: ['Wohngebäude mit Handel und Dienstleistungen', 'Gemischt genutztes Gebäude mit Wohnen', 'Gebäude für Handel und Dienstleistung mit Wohnen', 'Wohngebäude mit Gewerbe und Industrie', 'Gebäude für Gewerbe und Industrie mit Wohnen', 'Land- und forstwirtschaftliches Wohn- und Betriebsgebäude', 'Wohngebäude mit Gemeinbedarf']
+      mixed_use_storeys: 1
+      note: 'excluded_functions: Wohngebäude und Nebengebäude ohne Arbeitsplätze (Liste nach S-FEAT-05 alkis_ancillary_functions); nur Werte, die in den Daten vorkommen'
+      status: draft
+    - id: C-DEM-04
+      description: 'Produktionsgebundenes Gravitationsmodell T_ij = P_i x A_j f(d_ij) / Summe_k A_k f(d_ik), f(d) = exp(-beta d), d = wahrgenommener Widerstand in km; nur Relationen im Distanzband'
+      beta_per_km: 0.25
+      distance_band_km: [0.5, 15]
+      status: draft
+    - id: C-DEM-05
+      description: 'Umlegung auf kürzeste Wege nach Widerstand; stochastic = Mittel aus iterations Läufen mit log-normal gestörten Widerständen (sigma), aon = ein Lauf ohne Störung'
+      method: stochastic
+      iterations: 3
+      noise_sigma: 0.1
+      seed: 42
+      status: draft
+    - id: C-DEM-06
+      description: 'Kalibrierung: ein Skalierungsfaktor k für Hamburg = geometrisches Mittel von Zählwert/Modellwert an den Querschnitten; Zählwert = Mittel Mo-Fr 2025 der Zählstellen ohne Richtung (= Summe beider Richtungen), Tage mit count > 0; Modellwert = Summe beider Richtungen aller Kanten, die ein Querschnitt von transect_half_m quer zur nächsten Kante (höchstens counter_snap_m entfernt) in einem Winkel von mindestens transect_min_angle_deg schneidet'
+      scope: global
+      min_valid_weekdays: 150
+      transect_half_m: 25
+      transect_min_angle_deg: 45
+      counter_snap_m: 30
+      dbradplus_snap_m: 15
+      note: 'DB Rad+ nur Plausibilitätsvergleich, nicht zur Kalibrierung (nicht repräsentativ)'
+      status: draft
+    - id: C-DEM-07
+      description: 'demand_confidence: hoch = höchstens high_radius_m von einem Querschnitt, dessen Verhältnis Zählwert/kalibrierter Modellwert in high_ratio_band liegt; niedrig = höchstens border_m von der Landesgrenze, in ländlichen Stadtteilen oder unter low_flow_day Rad/Tag; sonst mittel; hoch hat Vorrang vor niedrig, außer ohne Modellwert (nicht im Hauptnetz)'
+      high_radius_m: 500
+      high_ratio_band: [0.5, 2.0]
+      border_m: 2000
+      low_flow_day: 50
+      status: draft
 
 # ---------------------------------------------------------------
 # Trennungsmatrix: Kfz-Kategorie (cat_final) x Radnetz-Kategorie -> Führungsform

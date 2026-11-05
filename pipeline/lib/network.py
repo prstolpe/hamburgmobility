@@ -45,7 +45,7 @@ def _rounded(points: Iterable[Sequence[float]]) -> list[tuple[int, int]]:
 
 
 def segment_id(way_ids: Iterable[int], end_coords: Iterable[Sequence[float]],
-               path_coords: Sequence[Sequence[float]] | None = None) -> str:
+               path_coords: Sequence[Sequence[float]] | None = None, prefix: str = ID_PREFIX) -> str:
     """Stable ID: hash of sorted unique way IDs and sorted end coordinates rounded to 1 m.
 
     path_coords (all node coordinates in walking order) is only added for segments whose ways and
@@ -58,7 +58,7 @@ def segment_id(way_ids: Iterable[int], end_coords: Iterable[Sequence[float]],
         path = _rounded(path_coords)
         path = min(path, path[::-1])  # independent of walking direction
         key += "|" + ";".join(f"{x},{y}" for x, y in path)
-    return ID_PREFIX + hashlib.sha1(key.encode("utf-8")).hexdigest()[:ID_HEX_LENGTH]
+    return prefix + hashlib.sha1(key.encode("utf-8")).hexdigest()[:ID_HEX_LENGTH]
 
 
 def _check_crs(edges: gpd.GeoDataFrame) -> None:
@@ -144,12 +144,15 @@ def _unique_in_order(values: Iterable) -> list:
 
 
 def segments_from_edges(edges: gpd.GeoDataFrame, differ: Sequence[str], split_attribute: str,
-                        min_length_m: float, split_rule_id: str) -> gpd.GeoDataFrame:
+                        min_length_m: float, split_rule_id: str, prefix: str = ID_PREFIX,
+                        return_members: bool = False) -> gpd.GeoDataFrame:
     """Merge node-to-node edges into segments.
 
     edges: columns u, v (node ids), way_id, name, the `differ` attributes, split_attribute and
     LineString geometry from u to v, in EPSG:25832.
-    Returns one row per segment, sorted by segment_id.
+    Returns one row per segment, sorted by segment_id. prefix: ID prefix (the cycle graph uses its
+    own). return_members: add member_rows (row positions of `edges` in walking order from node_u)
+    and member_forward (True where that edge runs u -> v in walking direction).
     """
     _check_crs(edges)
     e = edges.reset_index(drop=True)
@@ -195,6 +198,8 @@ def segments_from_edges(edges: gpd.GeoDataFrame, differ: Sequence[str], split_at
             "node_v": chain.nodes[-1],
             "split_rule": split_rule_id if chain.split else None,
             "_path": [node_xy[n] for n in chain.nodes],
+            "member_rows": list(chain.edges),
+            "member_forward": [us[k] == node for node, k in zip(chain.nodes, chain.edges)],
             "geometry": LineString(line),
         }
         for col in differ:  # uniform by construction; longest value if differ is not enforced
@@ -206,19 +211,21 @@ def segments_from_edges(edges: gpd.GeoDataFrame, differ: Sequence[str], split_at
 
     seg = gpd.GeoDataFrame(records, geometry="geometry", crs=edges.crs)
     seg["length_m"] = seg.geometry.length
-    seg = _assign_ids(seg)
+    seg = _assign_ids(seg, prefix)
     columns = ["segment_id", "osm_way_ids", *differ, "name", "maxspeed_osm", "length_m",
                "node_u", "node_v", "split_rule", "geometry"]
+    if return_members:
+        columns += ["member_rows", "member_forward"]
     return seg[columns].sort_values("segment_id").reset_index(drop=True)
 
 
-def _assign_ids(seg: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def _assign_ids(seg: gpd.GeoDataFrame, prefix: str = ID_PREFIX) -> gpd.GeoDataFrame:
     ends = [[path[0], path[-1]] for path in seg["_path"]]
-    ids = [segment_id(w, end) for w, end in zip(seg["osm_way_ids"], ends)]
+    ids = [segment_id(w, end, prefix=prefix) for w, end in zip(seg["osm_way_ids"], ends)]
     seen: dict[str, int] = {}
     for i in ids:
         seen[i] = seen.get(i, 0) + 1
-    ids = [segment_id(w, end, path) if seen[i] > 1 else i
+    ids = [segment_id(w, end, path, prefix=prefix) if seen[i] > 1 else i
            for i, w, end, path in zip(ids, seg["osm_way_ids"], ends, seg["_path"])]
     duplicates = sorted({i for i in ids if ids.count(i) > 1}) if len(set(ids)) != len(ids) else []
     if duplicates:

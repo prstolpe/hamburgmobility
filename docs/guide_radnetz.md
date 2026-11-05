@@ -58,6 +58,21 @@ Das amtliche Radnetz ist Startpunkt und Vergleichsebene, nicht Ergebnis [B].
 4. **Prinzipienprüfung:** Kriterien P-COH bis P-ATT je Route und Netz; Flags statt automatischer Reparatur.
 5. **Korrektur:** `overrides/cycle_network_overrides.csv` mit Begründung; nur `approved` wird übernommen.
 
+### 3.1 Radgraph und Nachfragemodell (Prompt 15, umgesetzt)
+
+- **Radgraph** (pipeline/c01_cycle_graph.py, Regeln C-GRAPH-01…06): Straßenabschnitte mit Radverkehr, eigenständige Rad-
+  und freigegebene Fußwege sowie Fähren mit Radmitnahme aus OSM, gerichtet (Gegenrichtung in Einbahnstraßen nur mit
+  `oneway:bicycle=no`). Kanten-ID `ce_…` stabil wie `segment_id`; Bezug zum Abschnitt über `segment_id` bzw. `sidepath_of`.
+- **Widerstand Ist** (C-IMP-01…08): Länge × Faktor aus `routing_impedance` je Führung und Tempo, plus Wartezeit an LSA und
+  bei Wartepflicht, umgerechnet mit 15 km/h [B].
+- **Nachfrage** (pipeline/c02_cycle_demand.py, C-DEM-01…07): Einwohner aus dem Zensus-Gitter in 500-m-Zonen; Ziele aus
+  ALKIS-Geschossfläche (Nichtwohnen), Geschäften, Schulen, Hochschulen und Schnellbahnstationen; Gravitationsmodell mit
+  exponentiellem Distanzverfall im Band 0,5–15 km; Umlegung auf kürzeste Wege nach wahrgenommenem Widerstand, gemittelt
+  über drei Läufe mit leicht gestörten Widerständen [B].
+- **Kalibrierung:** ein Faktor für Hamburg an den 104 Rad-Zählquerschnitten (Werktagsmittel 2025). DB Rad+ dient nur dem
+  Plausibilitätsvergleich [B]. Ergebnis und Güte: reports/cycle_demand.md. Alle Parameter sind Annahmen und offen zur
+  Freigabe (docs/open_questions.md).
+
 Zielkonflikt Direktheit vs. Sicherheit/Attraktivität: Die DCE empfiehlt Routen, die nicht parallel
 zu belasteten Hauptstraßen verlaufen [F]. Regel P-ATT-03 schlägt eine Parallelroute vor, wenn sie
 innerhalb von 200 m liegt und den Umwegfaktor einhält; die Hauptstraße erhält trotzdem getrennte

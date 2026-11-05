@@ -267,3 +267,32 @@
   (OSM-Fallback amenity=university|college), `centres` (url null, Zentrenkonzept offen).
 - `fallback_osm.columns`: gewünschte OSM-Spalten je Fallback-Quelle.
 - purpose ergänzt bei bike_volumes_dbradplus (nur Plausibilität), schools, gtfs_hvv, osm (Radinfrastruktur aus dem PBF).
+
+## sources.yaml 0.1.10 – 2026-11-05: DB Rad+ abrufbar
+- Ursache des abgebrochenen DB-Rad+-Abrufs gefunden: einzelne Datensätze liefert der Server mit HTTP 500
+  (z. B. `jahr2025?limit=1&offset=1581`, Error ID 8c3d758741fc1e75); Seiten mit einem solchen Datensatz brechen mit
+  HTTP 200 mitten im JSON ab.
+- Neu: `fetch.skip_broken_records: true` (nur bike_volumes_dbradplus, Entscheidung 2026-11-05). Der Abruf halbiert eine
+  fehlerhafte Seite bis zum einzelnen Datensatz, überspringt ihn und protokolliert den offset in data/manifest.json
+  (`skipped_records`) und reports/data_report.md (pipeline/lib/ogcapi.py `get_items_skipping_broken`). Prüfung
+  numberMatched = geladen + übersprungen; mehr als 100 defekte Datensätze oder gar keine lesbare Seite bricht ab.
+- Ergebnis 2026-11-05: 150 778 Linien im Arbeitsgebiet, übersprungen offset 1581, 36024, 40622.
+
+## cycling_rules.yaml 0.2.0 – 2026-11-05: Radgraph und Nachfragemodell (Prompt 15)
+- Alle neuen Werte sind Vorschläge (source_type assumption, status draft) und fachlich freizugeben
+  (docs/open_questions.md). Bestehende Werte unverändert.
+- `routing_impedance.ist_mapping` (C-IMP-01…08): Ist-Widerstandsfaktor je Kante, erste zutreffende Regel; Tempo-Grenze
+  30 km/h, Erschließungskategorien, unbefestigte Beläge. C-IMP-06 (Hauptstraße Tempo 30 ohne Radstreifen) nutzt
+  vorläufig `gow30_cycle_lane`, weil `factors` dafür keinen Wert hat.
+- `cycle_graph` (C-GRAPH-01…06): Kantenauswahl, Einbahnstraßen (Gegenrichtung nur mit oneway:bicycle=no), Fähren
+  (Wartezeit 450 s, Anbindung ≤ 400 m mit Anbindungsstrecke im Widerstand), LSA- und Wartepflicht-Verzögerung,
+  Bezug eigenständiger Wege zum Straßenabschnitt (Werte wie S-CONF-01), Radgeschwindigkeit 15 km/h für die
+  Umrechnung von Wartezeiten.
+- `demand_model` (C-DEM-01…07): Zonen 500 m, Zielgewichte, Arbeitsplatz-Proxy aus ALKIS, Gravitationsmodell
+  exp(−0,25·d) im Band 0,5–15 km, stochastische Umlegung (3 Läufe, σ 0,1, Seed 42), Kalibrierung mit einem Faktor
+  an den Zählstellen ohne Richtung (Mo–Fr 2025), demand_confidence.
+- Schema config/schema/cycling_model.py: neue Abschnitte, Prüfung der Bedingungsnamen und Faktorschlüssel,
+  Zielgewichte summieren zu 1, Distanzband und Umlegungsverfahren.
+- pipeline/lib/network.py: `segment_id`/`segments_from_edges` mit optionalem Präfix und Mitgliedskanten
+  (Standard unverändert, segment_id bleibt gleich).
+- Neue Abhängigkeiten: scipy (kürzeste Wege), matplotlib (Abbildungen im Report).

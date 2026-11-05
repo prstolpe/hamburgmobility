@@ -1,7 +1,8 @@
 """pydantic model for config/cycling_rules.yaml (cycle network, five principles, separation matrix, widths).
 
 Deep sections stay plain dicts; the cross-checks below validate provenance, ids, categories and
-facility names. Rule texts stay strings; later prompts (15–18) evaluate them.
+facility names. Rule texts stay strings; later prompts (16–18) evaluate them. Prompt 15 adds cycle_graph,
+demand_model and routing_impedance.ist_mapping, whose condition names are fixed here.
 """
 
 from datetime import date
@@ -21,6 +22,15 @@ PRINCIPLES = {"cohesion", "directness", "safety", "comfort", "attractiveness"}
 RURAL_CATEGORIES = {"GOW80", "ETW60"}
 # Keys of a matrix cell given as a dict; the others are metadata or conditions.
 CELL_FACILITY_KEYS = {"preferred", "fallback", "all"}
+# Condition names of routing_impedance.ist_mapping; evaluated in pipeline/lib/cycle_graph.py.
+IMPEDANCE_CONDITIONS = {"cycle_street", "own_path", "separated_track", "low_speed_access_road", "low_speed_with_lane",
+                        "low_speed_mixed", "other", "unpaved_or_cobbles"}
+# Factor keys that are delays (seconds), not length factors.
+DELAY_KEYS = {"signal_delay_s", "give_way_delay_s"}
+ASSIGNMENT_METHODS = {"stochastic", "aon"}
+DESTINATION_TYPES = {"jobs_floor_area", "shops", "schools", "universities", "rapid_transit_stops"}
+GRAPH_RULE_IDS = {f"C-GRAPH-0{i}" for i in range(1, 7)}
+DEMAND_RULE_IDS = {f"C-DEM-0{i}" for i in range(1, 8)}
 
 
 class _Strict(BaseModel):
@@ -81,6 +91,41 @@ def _check_project_target(target: dict) -> None:
             raise ValueError(f"widths_m.project_target.{facility}: unknown cycle categories {sorted(cols - columns)}")
 
 
+def _check_ist_mapping(impedance: dict) -> None:
+    factors = set(impedance["factors"]) - DELAY_KEYS
+    for rule in impedance["ist_mapping"]["rules"]:
+        if rule["when"] not in IMPEDANCE_CONDITIONS:
+            raise ValueError(f"routing_impedance.ist_mapping {rule['id']}: unknown condition {rule['when']!r}")
+        key = rule.get("factor", rule.get("multiply"))
+        if key not in factors:
+            raise ValueError(f"routing_impedance.ist_mapping {rule['id']}: unknown factor {key!r}")
+
+
+def _rules_by_id(section: dict, expected: set[str], name: str) -> dict[str, dict]:
+    rules = {r["id"]: r for r in section["rules"]}
+    missing = sorted(expected - set(rules))
+    if missing:
+        raise ValueError(f"{name}: rules missing: {missing}")
+    return rules
+
+
+def _check_demand_model(section: dict) -> None:
+    rules = _rules_by_id(section, DEMAND_RULE_IDS, "demand_model")
+    weights = {k: v for k, v in rules["C-DEM-02"]["weights"].items() if k not in META_KEYS}
+    if set(weights) != DESTINATION_TYPES:
+        raise ValueError(f"demand_model C-DEM-02: destination types must be {sorted(DESTINATION_TYPES)}, got {sorted(weights)}")
+    if abs(sum(weights.values()) - 1.0) > 1e-9:
+        raise ValueError(f"demand_model C-DEM-02: weights must sum to 1, got {sum(weights.values())}")
+    lo, hi = rules["C-DEM-04"]["distance_band_km"]
+    if not 0 <= lo < hi:
+        raise ValueError(f"demand_model C-DEM-04: distance_band_km must be [min, max] with min < max, got {[lo, hi]}")
+    if rules["C-DEM-05"]["method"] not in ASSIGNMENT_METHODS:
+        raise ValueError(f"demand_model C-DEM-05: assignment method must be one of {sorted(ASSIGNMENT_METHODS)}")
+    lo, hi = rules["C-DEM-07"]["high_ratio_band"]
+    if not 0 < lo < hi:
+        raise ValueError(f"demand_model C-DEM-07: high_ratio_band must be [min, max] with 0 < min < max")
+
+
 class CyclingRuleSet(_Strict):
     meta: Meta
     sources: dict[str, Source]
@@ -88,6 +133,8 @@ class CyclingRuleSet(_Strict):
     principles: dict[str, dict[str, Any]]
     principle_weights: dict[str, Any]
     routing_impedance: dict[str, Any]
+    cycle_graph: dict[str, Any]
+    demand_model: dict[str, Any]
     separation_matrix: dict[str, Any]
     cycle_street: dict[str, Any]
     demand: dict[str, Any]
@@ -119,4 +166,7 @@ class CyclingRuleSet(_Strict):
 
         _check_matrix(self.separation_matrix)
         _check_project_target(self.widths_m["project_target"])
+        _check_ist_mapping(self.routing_impedance)
+        _rules_by_id(self.cycle_graph, GRAPH_RULE_IDS, "cycle_graph")
+        _check_demand_model(self.demand_model)
         return self

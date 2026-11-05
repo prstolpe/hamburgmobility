@@ -121,12 +121,34 @@
     "bike_volumes_dbradplus": {
       "access": "ogc_api_features",
       "attribution": null,
-      "error": "https://api.hamburg.de/datasets/v1/dbradplus/collections/jahr2025/items?f=json&crs=http%3A%2F%2Fwww.opengis.net%2Fdef%2Fcrs%2FEPSG%2F0%2F25832&limit=1000&offset=1000: invalid JSON after 150646 bytes (Expecting ',' delimiter: line 1 column 150647 (char 150646))",
+      "error": null,
       "fallback": false,
-      "files": [],
+      "files": [
+        {
+          "bbox": [
+            548508.0,
+            5917198.4,
+            587557.4,
+            5955179.3
+          ],
+          "bytes": 4823074,
+          "crs": "EPSG:25832",
+          "layer": "jahr2025",
+          "n_features": 150778,
+          "path": "data/raw/bike_volumes_dbradplus__jahr2025.parquet",
+          "sha256": "bbce00785ad76b705be6abd3c379bdeb2a8fd16d080f3c9c9e083f6f5ab18d66"
+        }
+      ],
       "license": "ODbL-1.0",
-      "retrieved_at": null,
-      "status": "fehler",
+      "retrieved_at": "2026-11-05T18:18:20+00:00",
+      "skipped_records": {
+        "jahr2025": [
+          1581,
+          36024,
+          40622
+        ]
+      },
+      "status": "ok",
       "title": "Radverkehrsmengen (DB Rad+)",
       "url": "https://api.hamburg.de/datasets/v1/dbradplus"
     },
@@ -804,7 +826,7 @@
       "url": null
     }
   },
-  "updated_at": "2026-11-05T17:54:53+00:00",
+  "updated_at": "2026-11-05T18:18:20+00:00",
   "web_assets": {
     "basemap": {
       "assets": {

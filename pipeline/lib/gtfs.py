@@ -118,3 +118,38 @@ def shapes_gdf(feed: dict, shape_ids=None) -> gpd.GeoDataFrame:
         include_groups=False)
     gdf = gpd.GeoDataFrame(geometry=lines.to_list(), index=lines.index, crs="EPSG:4326")
     return to_work_crs(gdf)
+
+
+def rapid_transit_stations(path: str | Path, route_types: tuple[int, ...]) -> gpd.GeoDataFrame:
+    """Stations served by trips of the given route types (C-DEM-02), one row per station, EPSG:25832.
+
+    Platforms are grouped by parent_station; a stop without parent is its own station. Reads only the
+    GTFS columns trip_id/stop_id (stop_times), route_id/trip_id (trips), route_id/route_type (routes)
+    and the stop coordinates.
+    """
+    path = Path(path)
+
+    def read(name: str, cols: list[str]) -> pd.DataFrame:
+        if path.is_dir():
+            return pd.read_csv(path / f"{name}.txt", dtype=str, usecols=lambda c: c in cols)
+        with zipfile.ZipFile(path) as z:
+            n = {Path(x).name: x for x in z.namelist()}[f"{name}.txt"]
+            with z.open(n) as f:
+                return pd.read_csv(f, dtype=str, usecols=lambda c: c in cols)
+
+    routes = read("routes", ["route_id", "route_type"])
+    rail = set(routes.loc[routes["route_type"].astype(int).isin(route_types), "route_id"])
+    trips = read("trips", ["route_id", "trip_id"])
+    trip_ids = set(trips.loc[trips["route_id"].isin(rail), "trip_id"])
+    stop_ids = set(read("stop_times", ["trip_id", "stop_id"]).query("trip_id in @trip_ids")["stop_id"])
+    stops = read("stops", ["stop_id", "stop_name", "stop_lat", "stop_lon", "parent_station"]).set_index("stop_id")
+    served = stops.loc[stops.index.intersection(list(stop_ids))]
+    station = served["parent_station"].where(served["parent_station"].notna(), served.index.to_series())
+    st = stops.reindex(sorted(set(station)))
+    missing = st["stop_lat"].isna()
+    if missing.any():
+        raise ValueError(f"GTFS {path}: parent stations without coordinates: {list(st.index[missing][:5])}")
+    gdf = gpd.GeoDataFrame({"station_id": st.index, "name": st["stop_name"].to_numpy()},
+                           geometry=gpd.points_from_xy(st["stop_lon"].astype(float), st["stop_lat"].astype(float)),
+                           crs="EPSG:4326")
+    return to_work_crs(gdf.reset_index(drop=True))

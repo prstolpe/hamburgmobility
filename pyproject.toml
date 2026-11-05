@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
     "duckdb>=2.0.0",
     "geopandas>=1.2.0",
+    "matplotlib>=3.11.2",
     "networkx>=3.7",
     "osmnx>=2.1.1",
     "pyarrow>=26.0.0",
@@ -15,6 +16,7 @@ dependencies = [
     "python-igraph>=1.0.0",
     "pyyaml>=6.0.3",
     "requests>=2.34.2",
+    "scipy>=1.18.1",
     "shapely>=2",
 ]
 

@@ -172,3 +172,59 @@ def test_rejects_design_number_without_source_type(des):
     def mutate(d):
         d["junctions"]["thresholds"]["turbo_max_dtv"].pop("source_type")
     _rejects(DesignRuleSet, _mutated(des, mutate), "source_type")
+
+
+# --- prompt 15: cycle graph, Ist impedance mapping, demand model ------------------------------
+
+
+def _imp_rules(d):
+    return d["routing_impedance"]["ist_mapping"]["rules"]
+
+
+def _dem(d, rule_id):
+    return _by_id(d["demand_model"]["rules"], rule_id)
+
+
+def test_ist_mapping_covers_every_condition(cyc):
+    from config.schema.cycling_model import IMPEDANCE_CONDITIONS
+    assert {r["when"] for r in _imp_rules(cyc)} == IMPEDANCE_CONDITIONS
+
+
+def test_ist_mapping_ends_with_catch_all(cyc):
+    plain = [r for r in _imp_rules(cyc) if "factor" in r]
+    assert plain[-1]["when"] == "other"
+
+
+def test_rejects_unknown_impedance_factor(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _imp_rules(d)[0].update(factor="nonsense")), "unknown factor")
+
+
+def test_rejects_unknown_impedance_condition(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _imp_rules(d)[0].update(when="sunny")), "unknown condition")
+
+
+def test_rejects_unknown_assignment_method(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _dem(d, "C-DEM-05").update(method="magic")), "assignment method")
+
+
+def test_rejects_destination_weights_not_summing_to_one(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _dem(d, "C-DEM-02")["weights"].update(shops=0.9)), "sum to 1")
+
+
+def test_rejects_unknown_destination_type(cyc):
+    def mutate(d):
+        w = _dem(d, "C-DEM-02")["weights"]
+        w["bakeries"] = w.pop("shops")
+    _rejects(CyclingRuleSet, _mutated(cyc, mutate), "destination types")
+
+
+def test_rejects_reversed_distance_band(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _dem(d, "C-DEM-04").update(distance_band_km=[15, 0.5])), "distance_band_km")
+
+
+def test_rejects_demand_rule_missing(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["demand_model"]["rules"].pop()), "C-DEM-07")
+
+
+def test_rejects_new_section_without_source_type(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["cycle_graph"].pop("source_type")), "source_type missing")

@@ -2,7 +2,7 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.9
+  version: 0.1.10
   date: 2026-11-05
   crs_work: EPSG:25832
 
@@ -87,13 +87,14 @@ sources:
     access: ogc_api_features
     url: https://api.hamburg.de/datasets/v1/dbradplus
     collections_seen: [aktuelles_jahr, jahr2022, jahr2023, jahr2024, jahr2025, letzte_woche]  # /collections am 2026-10-28
-    fetch: {collections: [jahr2025], bbox: false}  # neuestes vollständiges Jahr (Entscheidung 2026-10-28); ganz Hamburg ohne bbox (2026-11-04)
+    fetch: {collections: [jahr2025], bbox: false, skip_broken_records: true}  # neuestes vollständiges Jahr (Entscheidung 2026-10-28); ganz Hamburg ohne bbox (2026-11-04); einzelne defekte Datensätze überspringen und protokollieren (Entscheidung 2026-11-05)
     format: GeoJSON
     license: ODbL-1.0  # 2026-10-28: license-Link der Landing Page (api.hamburg.de)
     purpose: [cycling_exposure, cycle_demand_plausibility]
     check_status: verified
     note: "Stichprobe aus App-Nutzenden, nicht repräsentativ. Für das Radnetz nur Plausibilitätsvergleich, nicht zur Kalibrierung (prompts/15)."
     fetch_issue: "2026-10-28: Abruf jahr2025 mit bbox scheitert reproduzierbar – der Server liefert HTTP 200 mit abgebrochenem JSON (offset 10000 nach 63.156 Bytes, offset 11000 nach 153.435 Bytes; auch mit bbox in CRS84). Ohne bbox funktionieren dieselben Offsets. Bei der Datenstelle melden; keine Umgehung eingebaut. 2026-11-04: Seit das Arbeitsgebiet ganz Hamburg ist, wird die ganze Collection ohne bbox abgerufen und danach auf das Arbeitsgebiet beschnitten; das ist der gewünschte Umfang, keine Umgehung. Ergebnis 2026-11-04: scheitert ebenfalls (HTTP 200, abgebrochenes JSON bei offset 1000 nach 150.646 Bytes). Quelle bleibt fehlerhaft; bei der Datenstelle melden."
+    fetch_issue_cause: "2026-11-05: Ursache gefunden. Einzelne Datensätze kann der Server nicht ausliefern: items?f=json&limit=1&offset=1581 liefert HTTP 500 (Error ID 8c3d758741fc1e75). Seiten, die einen solchen Datensatz enthalten, beginnen mit HTTP 200 und brechen mitten im JSON ab. Abruf 2026-11-05: übersprungen offset 1581, 36024, 40622 (150 778 Linien geladen). Seitdem überspringt der Abruf (fetch.skip_broken_records) diese Datensätze einzeln und schreibt ihre offsets in data/manifest.json (skipped_records) und reports/data_report.md. Fehlermeldung an die Urban Data Platform steht aus (docs/open_questions.md)."
 
   cycle_network:
     title: Radnetz Hamburg (Radrouten, Radrouten+), ersetzt seit 2025 die Velorouten

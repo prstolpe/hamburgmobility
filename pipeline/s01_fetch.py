@@ -54,6 +54,7 @@ class Result:
     attribution: str | None = None
     error: str | None = None
     note: str | None = None
+    skipped_records: dict[str, list[int]] = field(default_factory=dict)  # collection -> offsets (skip_broken_records)
 
 
 def _now() -> str:
@@ -288,12 +289,22 @@ def fetch_ogcapi(session, source_id: str, src: dict, area, tiles) -> Result:
     if missing:
         raise FetchError(f"collections not offered by the API: {missing}")
     use_bbox = src["fetch"].get("bbox", True)
+    skip_broken = bool(src["fetch"].get("skip_broken_records", False))
+    if skip_broken and use_bbox:
+        raise FetchError("fetch.skip_broken_records needs fetch.bbox: false (offset paging over the whole collection)")
     for collection in wanted:
-        if use_bbox:
+        if skip_broken:
+            gdf, skipped = ogcapi.get_items_skipping_broken(session, src["url"], collection)
+            result.skipped_records[collection] = skipped
+        elif use_bbox:
             gdf = _concat([ogcapi.get_items(session, src["url"], collection, bbox) for bbox in tiles])
         else:
             gdf = ogcapi.get_items(session, src["url"], collection, None)
         result.files.append(_write_layer(keep_intersecting(clean(gdf), area), source_id, collection))
+    if any(result.skipped_records.values()):
+        result.note = "; ".join(f"{c}: {len(o)} Datensatz/Datensätze vom Server nicht lieferbar (HTTP 500), "
+                                f"übersprungen bei offset {', '.join(map(str, o))}"
+                                for c, o in result.skipped_records.items() if o)
     result.retrieved_at = _now()
     return result
 
@@ -468,6 +479,10 @@ def _manifest_entry(r: Result, src: dict, previous: dict) -> dict:
     entry.update({"title": r.title, "url": r.url, "access": src.get("access"), "status": r.status,
                   "license": r.license, "attribution": src.get("attribution"), "retrieved_at": r.retrieved_at,
                   "fallback": r.status.startswith("fallback"), "files": r.files, "error": r.error})
+    if r.skipped_records:
+        entry["skipped_records"] = r.skipped_records
+    elif "skipped_records" in previous and r.note == "aus früherem Abruf (nicht neu geladen)":
+        entry["skipped_records"] = previous["skipped_records"]
     return entry
 
 

@@ -218,3 +218,30 @@ def test_network_highways_include_access_ways():
 ])
 def test_select_ways(row, keep):
     assert select_ways(_ways(row), load_rules()).tolist() == [keep]
+
+
+# --- options used by the cycle graph (prompts/15) ------------------------------------------------
+
+
+def test_prefix_option_changes_only_the_prefix():
+    coords = {1: (0, 0), 2: (100, 0), 3: (200, 0)}
+    edges = _edges([(1, 2, 10, "residential", "30"), (2, 3, 10, "residential", "30")], coords)
+    plain = _segments(edges)
+    other = segments_from_edges(edges, differ=["highway"], split_attribute="maxspeed", min_length_m=MIN_LENGTH_M,
+                                split_rule_id=SPLIT_RULE, prefix="ce_")
+    assert other["segment_id"].iloc[0] == "ce_" + plain["segment_id"].iloc[0].removeprefix("seg_")
+    assert segment_id([10], [(0, 0), (200, 0)], prefix="ce_").startswith("ce_")
+
+
+def test_members_list_edge_rows_in_walking_order_with_orientation():
+    coords = {1: (0, 0), 2: (100, 0), 3: (200, 0)}
+    # second edge digitised against the walking direction
+    edges = _edges([(1, 2, 10, "residential", "30"), (3, 2, 11, "residential", "30")], coords)
+    seg = segments_from_edges(edges, differ=["highway"], split_attribute="maxspeed", min_length_m=MIN_LENGTH_M,
+                              split_rule_id=SPLIT_RULE, return_members=True)
+    row = seg.iloc[0]
+    rows, forward = list(row["member_rows"]), list(row["member_forward"])
+    if row["node_u"] == 3:  # chain may be walked from either end
+        rows, forward = rows[::-1], [not f for f in forward[::-1]]
+    assert rows == [0, 1] and forward == [True, False]
+    assert "member_rows" not in _segments(edges).columns
