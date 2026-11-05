@@ -1,4 +1,4 @@
-// Table view per district: sortable, paginated, keyboard operable; alternative to the map (WCAG 2.2).
+// Table view per Bezirk: sortable, paginated, keyboard operable; alternative to the map (WCAG 2.2).
 import { rowMatches } from "./state.js";
 import { esc, num } from "./util.js";
 
@@ -18,7 +18,18 @@ const COLUMNS = [
   { key: "len", label: "Länge m", type: "num" },
 ];
 
-export function renderTable(root, rows, getState, { onOpen }) {
+/** Asks for a Bezirk before loading its table (the whole city at once would be too large). */
+export function renderDistrictChooser(root, districts, onPick) {
+  root.innerHTML = `
+    <p id="table-summary">Die Tabelle zeigt einen Bezirk auf einmal. Bitte einen Bezirk wählen:</p>
+    <ul class="district-list">${districts.map((b) => `<li><button type="button" data-bz="${esc(b)}">${esc(b)}</button></li>`).join("")}</ul>`;
+  root.onclick = (ev) => {
+    const b = ev.target.closest("button[data-bz]");
+    if (b) onPick(b.dataset.bz);
+  };
+}
+
+export function renderTable(root, rows, getState, { onOpen, onOtherDistrict, caption = "Abschnitte" }) {
   let sort = { key: "pr", dir: "descending" };
   let page = 0;
 
@@ -41,10 +52,11 @@ export function renderTable(root, rows, getState, { onOpen }) {
     page = Math.min(page, pages - 1);
     const slice = all.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
     root.innerHTML = `
-      <p id="table-summary">${num(all.length)} Abschnitte (Filter wie auf der Karte). Seite ${page + 1} von ${pages}.</p>
+      <p id="table-summary">${num(all.length)} Abschnitte (Filter wie auf der Karte). Seite ${page + 1} von ${pages}.
+        ${onOtherDistrict ? `<button type="button" class="link" data-other-district>anderen Bezirk wählen</button>` : ""}</p>
       <div class="table-wrap" tabindex="0" role="region" aria-labelledby="table-caption">
       <table>
-        <caption id="table-caption">Abschnitte im Bezirk – sortierbar über die Spaltenköpfe</caption>
+        <caption id="table-caption">${esc(caption)} – sortierbar über die Spaltenköpfe</caption>
         <thead><tr>${COLUMNS.map((c) => `<th scope="col" aria-sort="${sort.key === c.key ? sort.dir : "none"}">
           <button type="button" data-sort="${c.key}">${esc(c.label)}</button></th>`).join("")}<th scope="col">Steckbrief</th></tr></thead>
         <tbody>${slice.map((r) => `<tr>
@@ -73,6 +85,8 @@ export function renderTable(root, rows, getState, { onOpen }) {
       root.querySelector("#table-summary")?.focus();
     } else if (b.dataset.open) {
       onOpen(b.dataset.open);
+    } else if ("otherDistrict" in b.dataset) {
+      onOtherDistrict();
     }
   };
   draw();

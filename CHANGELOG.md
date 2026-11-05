@@ -213,3 +213,33 @@
 
 ## config/plain_language.yaml 0.3.0 – 2026-11-04
 - Text für H-STR-01 im Steckbrief, Spaltenbeschreibung `cat_cascade`.
+
+## rules.yaml 0.13.0, sources.yaml 0.1.8 – 2026-11-04: ganz Hamburg
+- Arbeitsgebiet ist ganz Hamburg statt des Pilotbezirks Eimsbüttel: alle sieben Bezirke (OSM admin_level 9 innerhalb
+  der Stadtgrenze), Puffer 500 m. config/project.yaml: Abschnitt `area` ersetzt `pilot_district`; für Testläufe kann
+  `districts` eine Liste sein. Gemeinsame Funktionen in pipeline/lib/area.py.
+- Ausgeschlossen (Entscheidung Projektteam 2026-11-04):
+  - Neuwerk samt Scharhörn und Wattenmeer (abgetrennter Teil von Hamburg-Mitte). In OSM umfasst der Stadtteil Neuwerk
+    nur die Insel (7,6 km²); entfernt wird darum der ganze abgetrennte Polygonteil (226 km²).
+  - 17 ländliche Stadtteile (Vier- und Marschlande, Süderelbe; 172,8 km²) werden nicht klassifiziert und auf der
+    Karte grau gezeigt. Grund: Für `outside_builtup_area` (C-RUR-01) gibt es keine Datenquelle. Geprüft wurde, das
+    Netz an den 145 Ortstafeln aus OSM (traffic_sign=city_limit) zu schneiden: Es bleibt ein zusammenhängendes Netz
+    von 4 472 km über fast ganz Hamburg, weil in den Dörfern Ortstafeln fehlen; nur 26 Ways tragen DE:rural.
+    Liste status: proposed (docs/open_questions.md).
+- S-FEAT-01: Normierung über ganz Hamburg (note ergänzt). Schwellen unverändert; die Ergebnisse in Eimsbüttel ändern
+  sich durch die neue Bezugsverteilung (reports/validation.md, Vergleich mit dem Pilotlauf).
+- C-MISS-01: note zu `outside_builtup_area` aktualisiert.
+- Abruf (s01): WFS und OGC API in Kacheln zu 10 km, doppelte Objekte an Kachelgrenzen entfernt.
+- sources.yaml 0.1.8: DB Rad+ ohne bbox (ganz Hamburg); der Abruf scheitert seit 2026-11-04 aber auch ohne bbox
+  (abgebrochenes JSON bei offset 1000) – Quelle bleibt „fehler“, keine Umgehung. Basemap-Ausschnitt: Arbeitsgebiet.
+- Berichte: Tabellen je Bezirk, Stichproben nach Bezirk geschichtet, Prioritätenliste Top 30 Hamburg plus Top 10 je
+  Bezirk. Webseite: Bezirksfilter mit allen Bezirken, Tabelle je Bezirk (data/out/table/), Bezirksgrenzen,
+  Stil für GOW80/ETW60.
+
+## overrides.csv – 2026-11-04
+- 7 Korrekturen (approved, prstolpe) für HVS-Abschnitte, die C-ERF-01 zu ETW_ERF machte: Reeperbahn
+  (`seg_3129d58aeb9c8e41`) und Sengelmannstraße Hauptfahrbahn (`seg_3b1d68013e44c2c9`) → GOW30; Sengelmannstraße
+  Nebenfahrbahn und 4 Fußwege in Hamburg-Mitte → ETW_ERF bestätigt (in_hvs ist dort ein Abgleichfehler). Befund aus
+  Datenanalyse, Ortsprüfung offen.
+- tests/test_classification_data.py::test_hvs_is_never_etw: HVS als ETW ist nur mit approved Override erlaubt
+  (guide.md 7.1, „einzeln begründen“).

@@ -5,6 +5,7 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
 import { sfpLayers } from "./layers.js";
+import { RURAL_FILL } from "./palette.js";
 import { dataUrl } from "./util.js";
 
 maplibregl.setWorkerUrl(workerUrl);
@@ -54,9 +55,12 @@ export function createMap(container, meta, state, { onSelect, onMove }) {
   }
 
   map.on("load", () => {
-    map.addSource("district", { type: "geojson", data: dataUrl("district.geojson") });
+    map.addSource("district", { type: "geojson", data: dataUrl("districts.geojson") });
     map.addLayer({ id: "district-line", type: "line", source: "district",
       paint: { "line-color": "#333333", "line-width": 1.5, "line-dasharray": [4, 2] } });
+    // Rural Stadtteile: not classified (config/project.yaml, rural_exclude)
+    map.addSource("rural", { type: "geojson", data: dataUrl("rural_excluded.geojson") });
+    map.addLayer({ id: "rural-fill", type: "fill", source: "rural", paint: { "fill-color": RURAL_FILL, "fill-opacity": 0.18 } });
     apply(state);
   });
   map.on("click", (ev) => {

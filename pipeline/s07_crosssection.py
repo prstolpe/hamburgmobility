@@ -19,8 +19,8 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import shapely
-import yaml
 
+from pipeline.lib.area import area_label, district_names, load_area_config, read_work_area, sample_by_district
 from pipeline.lib.crosssection import (
     XsParams,
     aggregate_widths,
@@ -39,7 +39,6 @@ from pipeline.lib.rules import load_rules
 from pipeline.s02_network import _pbf_from_manifest
 from pipeline.s04_features import _layer, _now, _fmt, _pct, text_histogram
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 FEATURES_PATH = REPO_ROOT / "data" / "interim" / "features.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "crosssection.parquet"
 TRANSECTS_PATH = REPO_ROOT / "data" / "interim" / "transects.parquet"
@@ -212,7 +211,7 @@ def validation(t: gpd.GeoDataFrame) -> dict | None:
 def write_report(out: gpd.GeoDataFrame, t: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
     rules, xs = ctx["rules"], ctx["xs"]
     area = out[out["conflated"].astype(bool)]
-    pilot = area[area["bezirk"] == ctx["pilot"]]
+    pilot = area[area["bezirk"].isin(ctx["districts"])]
     req = required_widths(rules)
     n = len(t)
     km = area["length_m"].sum() / 1000
@@ -221,7 +220,7 @@ def write_report(out: gpd.GeoDataFrame, t: gpd.GeoDataFrame, ctx: dict, checks: 
         "# Querschnittsbericht – Stufe 7", "",
         f"Erzeugt: {_now()} von `pipeline/s07_crosssection.py`, rules.yaml {rules.meta.version}. Nicht amtlicher Entwurf.", "",
         "## Kennzahlen", "",
-        f"- Abschnitte im Arbeitsgebiet: {_fmt(len(area))} ({_fmt(km, 1)} km); im Bezirk {ctx['pilot']}: {_fmt(len(pilot))}",
+        f"- Abschnitte im Arbeitsgebiet: {_fmt(len(area))} ({_fmt(km, 1)} km); davon mit Bezirk ({ctx['pilot']}): {_fmt(len(pilot))}",
         f"- Transekte: {_fmt(n)} (alle {xs.spacing_m:.0f} m, ± {xs.half_length_m:.0f} m, Tangente ± {xs.tangent_half_m:.0f} m, "
         f"Mittellinie vereinfacht {xs.simplify_m:.0f} m)",
         f"- Verworfen: nahe Knoten (≤ {xs.node_exclusion_m:.0f} m) {_pct(t['near_node'].mean())}, Brücke/Tunnel "
@@ -240,7 +239,7 @@ def write_report(out: gpd.GeoDataFrame, t: gpd.GeoDataFrame, ctx: dict, checks: 
         "", "## Prüfungen", "", "| Prüfung | Ergebnis | Detail |", "| --- | --- | --- |",
         *[f"| {c['name']} | {'ok' if c['ok'] else 'FEHLER'} | {c['detail']} |" for c in checks],
         "", "## Validierung im Orthophoto (Prüfschritt)", "",
-        f"{N_TRANSECT_SAMPLE} zufällige gültige Transekte im Bezirk {ctx['pilot']} (Seed {SAMPLE_SEED}) stehen in "
+        f"{N_TRANSECT_SAMPLE} zufällige gültige Transekte in {ctx['pilot']} (Seed {SAMPLE_SEED}) stehen in "
         "`reports/transect_sample.geojson` (EPSG:4326, Breite Verkehrsfläche Grenze zu Grenze). Messung im DOP20 "
         "eintragen in `reports/transect_measurements.csv` (Spalten `transect_id`, `measured_m`) und Stufe neu laufen lassen.", "",
     ]
@@ -274,6 +273,13 @@ def write_report(out: gpd.GeoDataFrame, t: gpd.GeoDataFrame, ctx: dict, checks: 
         share = area.groupby(col)["length_m"].sum() / area["length_m"].sum()
         lines.append(f"| {target} | {r:.2f} m | " + " | ".join(_pct(share.get(k, 0.0)) for k in
                                                                  ("fits", "tight", "does_not_fit", "none")) + " |")
+    lines += ["", "## Machbarkeit GOW50 und Breitenabdeckung je Bezirk (Anteil der Länge)", "",
+              "| Bezirk | km | mit width_p10_m | GOW50 fits | tight | does_not_fit |", "| --- | ---: | ---: | ---: | ---: | ---: |"]
+    for bz, g in sorted(pilot.groupby("bezirk")) + [("**gesamt**", pilot)]:
+        L = g["length_m"].sum()
+        sh = g.groupby(g["feasibility_GOW50"].fillna("none"))["length_m"].sum() / L
+        lines.append(f"| {bz} | {_fmt(L / 1000, 1)} | {_pct(g.loc[g['width_p10_m'].notna(), 'length_m'].sum() / L)} | "
+                     + " | ".join(_pct(sh.get(k, 0.0)) for k in ("fits", "tight", "does_not_fit")) + " |")
     lines += ["", "## width_p10_m nach highway-Klasse (Median über Abschnitte)", "",
               "| highway | Abschnitte | mit Breite | p10 Verkehrsfläche | p10 Fassade | GOW50 fits |",
               "| --- | ---: | ---: | ---: | ---: | ---: |"]
@@ -286,16 +292,16 @@ def write_report(out: gpd.GeoDataFrame, t: gpd.GeoDataFrame, ctx: dict, checks: 
               "", "### width_p10_m je Abschnitt (m)", "", *text_histogram(area["width_p10_m"]),
               "", f"Fassade schmaler als Verkehrsfläche bei {_pct((both['width_facade_m'] < both['width_traffic_m'] - 0.5).mean())} "
               "der Transekte mit beiden Werten (Hinweis auf Gebäude im Straßenflurstück, Arkaden oder Versatz).", ""]
-    lines += [f"## Stichprobe ({len(ctx['sample'])} zufällige Abschnitte im Bezirk {ctx['pilot']}, Seed {SAMPLE_SEED})", "",
+    lines += [f"## Stichprobe ({len(ctx['sample'])} zufällige Abschnitte in {ctx['pilot']}, nach Bezirk geschichtet, Seed {SAMPLE_SEED})", "",
               "Links auf OSM-Karte und OSM-Way; Orthophoto-/Panoramax-Links folgen, sobald das Linkformat geklärt ist.", "",
-              "| segment_id | Name | highway | Länge m | Transekte | gültig | p10 Verkehrsfl. | Median | p10 Fassade | GOW50 | GOW30 | Karte | Way |",
-              "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- |"]
+              "| segment_id | Bezirk | Name | highway | Länge m | Transekte | gültig | p10 Verkehrsfl. | Median | p10 Fassade | GOW50 | GOW30 | Karte | Way |",
+              "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- | --- |"]
     for _, r in ctx["sample"].iterrows():
         pt = gpd.GeoSeries([r.geometry.interpolate(0.5, normalized=True)], crs=WORK_CRS).to_crs(4326).iloc[0]
 
         def f(v, d=1):
             return "–" if pd.isna(v) else f"{float(v):.{d}f}"
-        lines.append(f"| `{r['segment_id']}` | {r['name'] if isinstance(r['name'], str) else '–'} | {r['highway']} | "
+        lines.append(f"| `{r['segment_id']}` | {r['bezirk']} | {r['name'] if isinstance(r['name'], str) else '–'} | {r['highway']} | "
                      f"{r['length_m']:.0f} | {r['n_transects']} | {r['width_n_valid']} | {f(r['width_p10_m'])} | "
                      f"{f(r['width_median_m'])} | {f(r['facade_width_p10_m'])} | {r['feasibility_GOW50'] or '–'} | "
                      f"{r['feasibility_GOW30_narrow'] or '–'} | [Karte]({osm_map_link(pt)}) | [Way]({osm_way_link(r['osm_way_ids'][0])}) |")
@@ -313,8 +319,8 @@ def write_report(out: gpd.GeoDataFrame, t: gpd.GeoDataFrame, ctx: dict, checks: 
 def main() -> int:
     rules = load_rules()
     xs = XsParams.from_rules(rules)
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        project = yaml.safe_load(f)["pilot_district"]
+    cfg = load_area_config()
+    names = district_names()
     if not FEATURES_PATH.exists():
         print("crosssection: data/interim/features.parquet missing; run `make features` first", file=sys.stderr)
         return 1
@@ -335,8 +341,7 @@ def main() -> int:
         return 1
 
     feat = gpd.read_parquet(FEATURES_PATH)
-    district = gpd.read_parquet(REPO_ROOT / "data" / "raw" / "district_boundary.parquet")
-    work_area = to_work_crs(district).geometry.union_all().buffer(project["buffer_m"])
+    work_area = read_work_area(cfg)
     work_area_wgs84 = gpd.GeoSeries([work_area], crs=WORK_CRS).to_crs(4326).iloc[0]
     traffic = nutzung.loc[nutzung["nutzart"].isin(xs.nutzart)].geometry.reset_index(drop=True)
     buildings = alkis_buildings(raw_buildings, FeatureParams.from_rules(rules)).geometry
@@ -354,11 +359,10 @@ def main() -> int:
     out["crosssection_trace"] = [_trace(r) if c else None for c, (_, r) in zip(in_area, out.iterrows())]
 
     checks = run_checks(feat, out, t)
-    pilot = out[(out["bezirk"] == project["name"]) & in_area]
-    rnd = random.Random(SAMPLE_SEED)
-    sample = pilot.loc[sorted(rnd.sample(list(pilot.index), min(SAMPLE_SIZE, len(pilot))))]
+    pilot = out[out["bezirk"].isin(names) & in_area]
+    sample = sample_by_district(pilot, SAMPLE_SIZE, SAMPLE_SEED)
     transect_sample = pick_transect_sample(t, set(pilot["segment_id"]))
-    ctx = {"rules": rules, "xs": xs, "pilot": project["name"], "sample": sample, "validation": validation(t),
+    ctx = {"rules": rules, "xs": xs, "pilot": area_label(names), "districts": names, "sample": sample, "validation": validation(t),
            "n_traffic": len(traffic), "n_buildings": len(buildings)}
     write_report(out, t, ctx, checks)
     for c in checks:

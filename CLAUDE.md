@@ -6,8 +6,9 @@ außerorts GOW80, ETW60) nach Duurzaam Veilig zuordnen, Diskrepanzen zum Ist zei
 erklärbar, reproduzierbar und fortschreibbar machen.
 Automatik schlägt vor, Menschen entscheiden (overrides/overrides.csv).
 
-## Pilotbezirk
-Eimsbüttel
+## Gebiet
+Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtteile werden nicht klassifiziert
+(config/project.yaml, Abschnitt `area`). Pilotbezirk war Eimsbüttel (bis rules.yaml 0.12.0).
 
 ## Wo was steht
 - docs/guide.md – vollständige fachliche Anleitung. Bei Fachfragen zuerst hier nachsehen.

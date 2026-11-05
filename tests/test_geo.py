@@ -34,3 +34,24 @@ def test_parquet_safe_serialises_mixed_columns(tmp_path):
     values = gpd.read_parquet(path)["m"]
     assert values.iloc[:3].tolist() == ['{"k": 1}', "2", "x"]
     assert values.isna().iloc[3]
+
+
+def test_tile_bboxes_cover_area_and_skip_empty_tiles():
+    from shapely.geometry import Polygon, Point
+    from pipeline.lib.geo import tile_bboxes
+    # L-shaped area: the top-right tile of the 2x2 grid does not touch it.
+    area = Polygon([(0, 0), (20000, 0), (20000, 9000), (9000, 9000), (9000, 20000), (0, 20000)])
+    tiles = tile_bboxes(area, 10000)
+    assert len(tiles) == 3
+    assert (10000.0, 10000.0, 20000.0, 20000.0) not in tiles
+    for p in [Point(1, 1), Point(19999, 8999), Point(8999, 19999)]:
+        assert any(box(*t).contains(p) for t in tiles)
+
+
+def test_merging_overlapping_tiles_drops_duplicates():
+    import geopandas as gpd
+    from shapely.geometry import LineString
+    from pipeline.lib.geo import clean
+    line = LineString([(9000, 0), (11000, 0)])  # crosses the tile border, returned by both tiles
+    a = gpd.GeoDataFrame({"name": ["X"]}, geometry=[line], crs="EPSG:25832")
+    assert len(clean(gpd.pd.concat([a, a]))) == 1

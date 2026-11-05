@@ -38,8 +38,13 @@ def test_only_work_area_classified(out):
 
 
 def test_hvs_is_never_etw(out):
-    hvs = out["in_hvs"].fillna(False).astype(bool)
-    assert not out.loc[hvs, "cat_proposed"].isin(["ETW30", "ETW_ERF", "ETW60"]).any()
+    """HVS as ETW must be justified one by one (guide 7.1): only allowed with an approved override."""
+    from pipeline.lib.overrides import APPLIED_STATUS, read_overrides
+    ov = read_overrides()
+    justified = set(ov.loc[ov["review_status"] == APPLIED_STATUS, "segment_id"])
+    hvs = out["in_hvs"].fillna(False).astype(bool) & ~out["segment_id"].isin(justified)
+    bad = out.loc[hvs & out["cat_proposed"].isin(["ETW30", "ETW_ERF", "ETW60"]), "segment_id"]
+    assert bad.empty, f"HVS als ETW ohne approved Override: {sorted(bad)}"
 
 
 def test_trace_matches_category(out):

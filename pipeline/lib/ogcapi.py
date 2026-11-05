@@ -14,10 +14,12 @@ def collections(session, url: str) -> list[dict]:
     return [{"id": c["id"], "title": c.get("title")} for c in data.get("collections", [])]
 
 
-def get_items(session, url: str, collection: str, bbox: Bbox, limit: int = 1000) -> gpd.GeoDataFrame:
+def get_items(session, url: str, collection: str, bbox: Bbox | None, limit: int = 1000) -> gpd.GeoDataFrame:
+    """All items in bbox (bbox=None: the whole collection)."""
     label = f"{url} {collection}"
-    params = {"f": "json", "limit": limit, "bbox": ",".join(str(v) for v in bbox),
-              "bbox-crs": CRS_URI, "crs": CRS_URI}
+    params = {"f": "json", "limit": limit, "crs": CRS_URI}
+    if bbox is not None:
+        params.update({"bbox": ",".join(str(v) for v in bbox), "bbox-crs": CRS_URI})
     page = get_json(session, f"{url}/collections/{collection}/items", params=params)
     matched = page.get("numberMatched")
     features = list(page.get("features", []))
@@ -32,5 +34,6 @@ def get_items(session, url: str, collection: str, bbox: Bbox, limit: int = 1000)
     if matched is not None and len(features) != matched:
         raise FetchError(f"{label}: numberMatched {matched}, got {len(features)}")
     gdf = features_to_gdf(features)
-    check_in_bbox(gdf, bbox, label)
+    if bbox is not None:
+        check_in_bbox(gdf, bbox, label)
     return gdf

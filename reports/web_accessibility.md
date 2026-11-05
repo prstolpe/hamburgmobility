@@ -1,6 +1,6 @@
 # Barrierefreiheit der Webseite (axe-core)
 
-Erzeugt: 2026-11-04T20:42:09Z mit `npm --prefix web run a11y` (Playwright, axe-core 4.13.0, Regeln WCAG 2.0/2.1/2.2 A und AA) gegen `vite preview` mit den Daten aus data/out. Geräte: Desktop Chrome und Pixel 7 (emuliert).
+Erzeugt: 2026-11-05T07:34:34Z mit `npm --prefix web run a11y` (Playwright, axe-core 4.13.0, Regeln WCAG 2.0/2.1/2.2 A und AA) gegen `vite preview` mit den Daten aus data/out. Geräte: Desktop Chrome und Pixel 7 (emuliert).
 
 Ergebnis: **0 kritisch, 0 schwerwiegend, 0 mittel, 0 gering.**
 
@@ -8,6 +8,7 @@ Ergebnis: **0 kritisch, 0 schwerwiegend, 0 mittel, 0 gering.**
 | --- | --- | --- | ---: | ---: |
 | desktop | Karte | keine | 29 | 2 |
 | desktop | Karte mit Steckbrief | keine | 32 | 2 |
+| desktop | Tabelle (Bezirk wählen) | keine | 25 | 0 |
 | desktop | Tabelle | keine | 25 | 0 |
 | desktop | Methode | keine | 26 | 0 |
 | desktop | Downloads | keine | 24 | 0 |
@@ -15,6 +16,7 @@ Ergebnis: **0 kritisch, 0 schwerwiegend, 0 mittel, 0 gering.**
 | desktop | Impressum | keine | 23 | 0 |
 | mobile | Karte | keine | 29 | 2 |
 | mobile | Karte mit Steckbrief | keine | 32 | 2 |
+| mobile | Tabelle (Bezirk wählen) | keine | 25 | 0 |
 | mobile | Tabelle | keine | 26 | 1 |
 | mobile | Methode | keine | 26 | 0 |
 | mobile | Downloads | keine | 24 | 0 |

@@ -1,6 +1,6 @@
 // Map layers on the vector tiles (source "sfp", layers "segments" and "facilities"), legends and filters.
 import {
-  CASING, CATEGORY_STYLE, DISC_TYPE_STYLE, FEASIBILITY_STYLE, OVERLAY_COLORS, SPEED_CLASSES, UNKNOWN, WIDTH_STYLE,
+  CASING, CATEGORY_STYLE, RURAL_FILL, DISC_TYPE_STYLE, FEASIBILITY_STYLE, OVERLAY_COLORS, SPEED_CLASSES, UNKNOWN, WIDTH_STYLE,
 } from "./palette.js";
 
 const SRC = "sfp";
@@ -23,7 +23,8 @@ export function groups(layer, meta) {
   const known = (attr) => ["has", attr];
   switch (layer) {
     case "cat":
-      return Object.entries(CATEGORY_STYLE).map(([cat, s]) => ({
+      // only categories that occur in the data (GOW80/ETW60 stay out while rural Stadtteile are not classified)
+      return Object.entries(CATEGORY_STYLE).filter(([cat]) => !meta.categories_present || meta.categories_present.includes(cat)).map(([cat, s]) => ({
         key: cat, label: `${cat} – ${meta.categories[cat]?.label ?? cat}`, filter: ["==", ["get", "cat"], cat], ...s,
       }));
     case "speed": {
@@ -143,5 +144,8 @@ export function legendHtml(layer, meta) {
     const w = typeof g.width === "number" ? Math.max(2, Math.min(g.width, 6)) : 4;
     return `<li><svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${CASING}" stroke-width="${w + 4}" stroke-linecap="round"/><line x1="2" y1="7" x2="34" y2="7" stroke="${g.color}" stroke-width="${w}" ${dash}/></svg><span>${g.label}</span></li>`;
   });
+  if (meta.rural_excluded?.length) {
+    items.push(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${RURAL_FILL}" fill-opacity="0.35" stroke="${RURAL_FILL}"/></svg><span>außerorts – nicht bewertet (ländliche Stadtteile)</span></li>`);
+  }
   return `<ul class="legend">${items.join("")}</ul>`;
 }

@@ -13,15 +13,14 @@ not written (the report is).
 """
 
 import json
-import random
 import sys
 import time
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import yaml
 
+from pipeline.lib.area import area_label, district_names, sample_by_district
 from pipeline.lib import sensitivity as sens
 from pipeline.lib import validation as val
 from pipeline.lib.crs import WORK_CRS
@@ -32,11 +31,13 @@ from pipeline.lib.rules import load_rules
 from pipeline.s04_features import _fmt, _now, _pct
 from pipeline.s05b_harmonise import approved_override_ids, street_strokes
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "discrepancy.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "validation.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "validation.md"
 METRICS_PATH = REPO_ROOT / "reports" / "validation_metrics.json"
+# Pilot run (Eimsbüttel, rules.yaml 0.12.0), saved before the first city-wide run; not in git.
+BASELINE_PATH = REPO_ROOT / "data" / "baseline" / "eimsbuettel_discrepancy.parquet"
+BASELINE_DISTRICT = "Eimsbüttel"
 OPEN_QUESTIONS = REPO_ROOT / "docs" / "open_questions.md"
 OVERRIDES = REPO_ROOT / "overrides" / "overrides.csv"
 SAMPLES = {"conflation": REPO_ROOT / "reports" / "conflation_sample.csv",
@@ -176,9 +177,10 @@ def _street_lines(groups: pd.DataFrame, limit: int | None = None) -> list[str]:
     return lines
 
 
-def section_hvs(area: pd.DataFrame, pilot_name: str) -> tuple[list[str], dict]:
+def section_hvs(area: pd.DataFrame, districts: list[str]) -> tuple[list[str], dict]:
+    pilot_name = area_label(districts)
     t_all = val.crosstab_km(area, URBAN_CATS)
-    t_pilot = val.crosstab_km(area[area["bezirk"] == pilot_name], URBAN_CATS)
+    t_pilot = val.crosstab_km(area[area["bezirk"].isin(districts)], URBAN_CATS)
     hvs_other, district_gow50 = val.hvs_deviations(area)
     hvs_km = t_all["HVS"].sum()
     gow_share = (t_all.loc["GOW50", "HVS"] + t_all.loc["GOW30", "HVS"]) / hvs_km if hvs_km else float("nan")
@@ -188,12 +190,12 @@ def section_hvs(area: pd.DataFrame, pilot_name: str) -> tuple[list[str], dict]:
              "GOW50 einzeln begründen.", "",
              f"**Kennzahl: {_p(gow_share)} der HVS-km im Arbeitsgebiet sind GOW50 oder GOW30.**", "",
              "### Arbeitsgebiet gesamt (km)", "", *_crosstab_lines(t_all), "",
-             f"### Bezirk {pilot_name} (km)", "", *_crosstab_lines(t_pilot), "",
-             "### Je Bezirk (Nachbarbezirke nur mit ihrem Anteil am Arbeitsgebiet)", "",
+             f"### {pilot_name} (km)", "", *_crosstab_lines(t_pilot), "",
+             "### Je Bezirk", "",
              "| Bezirk | km | HVS km | davon GOW50/GOW30 | HVS außerhalb GOW50/GOW30 km | Bezirksstraßen mit GOW50 km |",
              "| --- | ---: | ---: | ---: | ---: | ---: |"]
     bez = area["bezirk"].map(lambda b: b if isinstance(b, str) else val.NO_DISTRICT)
-    for b in [*sorted(set(bez) - {val.NO_DISTRICT}, key=lambda x: (x != pilot_name, x)), val.NO_DISTRICT]:
+    for b in [*sorted(set(bez) - {val.NO_DISTRICT}), val.NO_DISTRICT]:
         g = area[bez == b]
         if g.empty:
             continue
@@ -262,7 +264,8 @@ def section_tempo(area: pd.DataFrame, rules) -> tuple[list[str], dict]:
                    "etw30_data_error_candidates": len(cand)}
 
 
-def section_sensitivity(area: pd.DataFrame, rules, res: dict, pilot_name: str, viewers: dict, geoms) -> tuple[list[str], dict]:
+def section_sensitivity(area: pd.DataFrame, rules, res: dict, districts: list[str], viewers: dict, geoms) -> tuple[list[str], dict]:
+    pilot_name = area_label(districts)
     base, length = area["cat_proposed"], area["length_m"]
     summ = res["summary"]
     total_km = length.sum() / 1000
@@ -321,7 +324,7 @@ def section_sensitivity(area: pd.DataFrame, rules, res: dict, pilot_name: str, v
                      f"{_p(length[u].sum() / length[m].sum())} | {alt_txt} |")
     bez = area["bezirk"].map(lambda b: b if isinstance(b, str) else val.NO_DISTRICT)
     lines += ["", "Je Bezirk:", "", "| Bezirk | km | unsicher km | Anteil |", "| --- | ---: | ---: | ---: |"]
-    for b in [*sorted(set(bez) - {val.NO_DISTRICT}, key=lambda x: (x != pilot_name, x)), val.NO_DISTRICT]:
+    for b in [*sorted(set(bez) - {val.NO_DISTRICT}), val.NO_DISTRICT]:
         m = bez == b
         if m.any():
             lines.append(f"| {b} | {_km(length[m].sum() / 1000)} | {_km(length[m & unc].sum() / 1000)} | "
@@ -342,33 +345,31 @@ def section_sensitivity(area: pd.DataFrame, rules, res: dict, pilot_name: str, v
         lines.append(f"| `{k}` | {c:+.2f} |".replace(f"{c:+.2f}", f"{c:+.2f}".replace(".", ",")))
 
     # priority
-    pilot_mask = (area["bezirk"] == pilot_name).to_numpy()
+    pilot_mask = area["bezirk"].isin(districts).to_numpy()
     base_prio = pd.to_numeric(area["priority"], errors="coerce")
     stab = sens.top_stability(base_prio[pilot_mask], res["priority_runs"][pilot_mask], area["segment_id"][pilot_mask], TOP_N)
     stays = pd.Series(stab["stay_share"])
-    lines += ["", f"### 3.3 Priorität: Top {TOP_N} im Bezirk {pilot_name} bei variierten Gewichten", "",
+    lines += ["", f"### 3.3 Priorität: Top {TOP_N} in {pilot_name} bei variierten Gewichten", "",
               f"Gleiche Läufe; risk mit variierten `priority.risk_weights`, Diskrepanzen aus dem Basislauf (eine geänderte "
               f"Kategorie ändert auch die Diskrepanz – das ist hier nicht abgebildet). Im Mittel bleiben "
               f"**{_p(stab['mean_overlap'])} der Top {TOP_N}** in der Top {TOP_N}. "
               f"{int((stays >= 0.9).sum())} Abschnitte bleiben in mindestens 90 % der Läufe, {int((stays < 0.5).sum())} in weniger "
               f"als der Hälfte.", ""]
 
-    sample_lines = ["", f"### 3.4 Stichprobe: {SAMPLE_SIZE} zufällige unsichere Abschnitte im Bezirk {pilot_name} (Seed {SAMPLE_SEED})", "",
+    sample_lines = ["", f"### 3.4 Stichprobe: {SAMPLE_SIZE} zufällige unsichere Abschnitte in {pilot_name}, nach Bezirk geschichtet (Seed {SAMPLE_SEED})", "",
                     "Zur Durchsicht: Welche Kategorie ist fachlich richtig? Befund als Korrektur in overrides/overrides.csv.", ""]
-    pilot_unc = list(area.index[pilot_mask & unc.to_numpy()])
-    rnd = random.Random(SAMPLE_SEED)
-    pick = sorted(rnd.sample(pilot_unc, min(SAMPLE_SIZE, len(pilot_unc))))
+    pick = list(sample_by_district(area[pilot_mask & unc.to_numpy()], SAMPLE_SIZE, SAMPLE_SEED).index)
     if not pick:
         sample_lines += ["_keine_"]
     else:
-        sample_lines += ["| segment_id | Straße | highway | Soll | andere Kategorie | Wechselquote | Wechsel bei ±20 % | Orthophoto | Panoramax | OSM |",
-                         "| --- | --- | --- | --- | --- | ---: | --- | --- | --- | --- |"]
+        sample_lines += ["| segment_id | Bezirk | Straße | highway | Soll | andere Kategorie | Wechselquote | Wechsel bei ±20 % | Orthophoto | Panoramax | OSM |",
+                         "| --- | --- | --- | --- | --- | --- | ---: | --- | --- | --- | --- |"]
         for i in pick:
             r = area.loc[i]
             mid = geoms.loc[i].interpolate(0.5, normalized=True)
             wgs = gpd.GeoSeries([mid], crs=WORK_CRS).to_crs(4326).iloc[0]
             oat = r["_oat"]
-            sample_lines.append(f"| `{r['segment_id']}` | {_name(r['name'])} | {r['highway']} | {r['cat_proposed']} | "
+            sample_lines.append(f"| `{r['segment_id']}` | {r['bezirk']} | {_name(r['name'])} | {r['highway']} | {r['cat_proposed']} | "
                                 f"{summ.loc[i, 'alt_category']} ({_p(summ.loc[i, 'alt_share'])}) | {_g(round(summ.loc[i, 'change_rate'], 3))} | "
                                 f"{', '.join(f'`{x}`' for x in oat) or '–'} | [DOP]({orthophoto_link(mid, viewers)}) | "
                                 f"[Bilder]({panoramax_link(wgs, viewers)}) | [Way]({osm_way_link(r['osm_way_ids'][0])}) |")
@@ -465,6 +466,29 @@ def section_status(stats: dict) -> list[str]:
             "| Externe Fachprüfung (Hochschule oder Planungsbüro) | **offen** – dieser Bericht ist die Grundlage | – |", ""]
 
 
+def section_baseline(area: pd.DataFrame) -> list[str]:
+    """Eimsbüttel: pilot run (normalised over Eimsbüttel + 500 m) vs. this run (normalised over Hamburg)."""
+    head = ["## Vergleich mit dem Pilotlauf Eimsbüttel", ""]
+    if not BASELINE_PATH.exists():
+        return head + [f"_Kein Pilotlauf unter `{BASELINE_PATH.relative_to(REPO_ROOT)}`._", ""]
+    base = pd.read_parquet(BASELINE_PATH, columns=["segment_id", "bezirk", "cat_final", "priority", "length_m"])
+    base = base[(base["bezirk"] == BASELINE_DISTRICT) & base["cat_final"].notna()]
+    cur = area[area["bezirk"] == BASELINE_DISTRICT]
+    r = val.compare_baseline(base, cur, TOP_N)
+    lines = head + [
+        "Pilotlauf: rules.yaml 0.12.0, Normierung über Eimsbüttel + 500 m. Jetzt: Normierung über ganz Hamburg "
+        "(S-FEAT-01), Schwellen unverändert. Verglichen werden Abschnitte mit gleicher segment_id.", "",
+        f"- Abschnitte in beiden Läufen: {r['n_common']}; nur im Pilotlauf: {r['n_only_base']}; nur jetzt: {r['n_only_new']}",
+        f"- Kategorie (cat_final) geändert: {r['n_changed']} Abschnitte, {_km(r['km_changed'])} km "
+        f"({_p(r['km_changed'] / r['km_common']) if r['km_common'] else '–'} der Länge)",
+        f"- Top {TOP_N} der Priorität: {_p(r['top_overlap'])} sind in beiden Läufen in der Top {TOP_N}", ""]
+    if r["changes"].empty:
+        return lines + ["_keine Kategoriewechsel_", ""]
+    lines += ["| vorher | jetzt | Abschnitte | km |", "| --- | --- | ---: | ---: |"]
+    lines += [f"| {x['from']} | {x['to']} | {x['n']} | {_km(x['km'])} |" for x in r["changes"].to_dict("records")]
+    return lines + [""]
+
+
 def section_limits(area: pd.DataFrame, metrics: dict) -> list[str]:
     no_dtv = float(area["dtv_official"].isna().mean())
     return ["## 6. Grenzen", "",
@@ -541,8 +565,7 @@ def write_report(parts: list[list[str]], checks: list[dict], rules, metrics: dic
 
 def main() -> int:
     rules = load_rules()
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        pilot_name = yaml.safe_load(f)["pilot_district"]["name"]
+    districts = district_names()
     if not IN_PATH.exists():
         print("validate: data/interim/discrepancy.parquet missing; run `make discrepancy` first", file=sys.stderr)
         return 1
@@ -560,16 +583,16 @@ def main() -> int:
     area["_oat"] = sens.oat_changes(area["cat_proposed"], res["oat"])
 
     viewers = load_viewers()
-    hvs_lines, m1 = section_hvs(area, pilot_name)
+    hvs_lines, m1 = section_hvs(area, districts)
     t = val.crosstab_km(area, URBAN_CATS)
     gow_hvs = t.loc["GOW50", "HVS"] + t.loc["GOW30", "HVS"]
     m1["hvs_gow50_share"] = t.loc["GOW50", "HVS"] / gow_hvs if gow_hvs else float("nan")
     tempo_lines, m2 = section_tempo(area, rules)
-    sens_lines, m3 = section_sensitivity(area, rules, res, pilot_name, viewers, geoms)
+    sens_lines, m3 = section_sensitivity(area, rules, res, districts, viewers, geoms)
     dq_lines, m4 = section_quality(area, rules)
     sample_lines, m5 = section_samples(rules)
     metrics = {**m1, **m2, **m3, **m4, **m5}
-    parts = [section_status(m5), hvs_lines, tempo_lines, sens_lines, dq_lines, sample_lines,
+    parts = [section_status(m5), hvs_lines, tempo_lines, sens_lines, dq_lines, sample_lines, section_baseline(area),
              section_limits(area, metrics), section_open_questions()]
     previous = json.loads(METRICS_PATH.read_text(encoding="utf-8")) if METRICS_PATH.exists() else None
     write_report(parts, checks, rules, metrics, previous)

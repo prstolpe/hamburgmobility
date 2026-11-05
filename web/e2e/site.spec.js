@@ -8,7 +8,8 @@ const SEG = search.find((s) => s.name === "Hallerstraße")?.ids[0] ?? search[0].
 const PAGES = {
   "Karte": "#karte",
   "Karte mit Steckbrief": `#karte?seg=${SEG}`,
-  "Tabelle": "#tabelle",
+  "Tabelle (Bezirk wählen)": "#tabelle",
+  "Tabelle": "#tabelle?bz=Eimsb%C3%BCttel",
   "Methode": "#methode",
   "Downloads": "#downloads",
   "Quellen und Lizenzen": "#quellen",
@@ -22,6 +23,7 @@ async function ready(page, hash) {
   page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
   await page.goto(`/${hash}`);
   await expect(page.locator("#banner-text")).toContainText("Nicht amtlicher Diskussionsentwurf");
+  await expect(page.locator("#banner-text")).toContainText("Datenstand"); // set after meta.json and search.json
   return errors;
 }
 
@@ -29,7 +31,7 @@ test("map loads basemap and segment tiles without errors", async ({ page }) => {
   const errors = await ready(page, "#karte");
   await page.waitForFunction(() => document.querySelector("#map canvas"));
   await page.waitForTimeout(3000);
-  await expect(page.locator("#legend li")).toHaveCount(5);
+  await expect(page.locator("#legend li")).toHaveCount(6); // 5 categories in the data + rural Stadtteile
   await page.screenshot({ path: `test-results/karte-${test.info().project.name}.png` });
   expect(errors).toEqual([]);
 });
@@ -56,7 +58,7 @@ test("layer switch and filter are reflected in the URL", async ({ page }) => {
 });
 
 test("table is sortable and opens a profile", async ({ page }) => {
-  await ready(page, "#tabelle");
+  await ready(page, "#tabelle?bz=Eimsb%C3%BCttel");
   await expect(page.locator("#table-root tbody tr")).toHaveCount(100);
   await page.getByRole("button", { name: "Straße", exact: true }).click();
   await expect(page.locator("th[aria-sort='descending'] button")).toHaveText("Straße");
@@ -84,7 +86,8 @@ for (const [name, hash] of Object.entries(PAGES)) {
   test(`axe: ${name}`, async ({ page }) => {
     await ready(page, hash);
     if (hash.includes("seg=")) await expect(page.locator("#panel-title")).toBeVisible();
-    if (hash === "#tabelle") await expect(page.locator("#table-root tbody tr").first()).toBeVisible();
+    if (hash === "#tabelle") await expect(page.locator("#table-root button[data-bz]").first()).toBeVisible();
+    if (hash.startsWith("#tabelle?")) await expect(page.locator("#table-root tbody tr").first()).toBeVisible();
     if (hash.startsWith("#karte")) await page.waitForTimeout(1500);
     const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     results.push({ project: test.info().project.name, name, violations: r.violations.map((v) => ({

@@ -10,14 +10,13 @@ changed segments in the pilot district. Segments with an approved override are n
 """
 
 import json
-import random
 import sys
 
 import geopandas as gpd
 import pandas as pd
-import yaml
 
 from pipeline.lib import coherence as coh
+from pipeline.lib.area import area_label, district_names, sample_by_district
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.harmonise import RULE_ID, harmonise
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
@@ -26,7 +25,6 @@ from pipeline.lib.overrides import read_overrides
 from pipeline.lib.rules import load_rules
 from pipeline.s04_features import _fmt, _now
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "classified.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "harmonised.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "harmonisation.md"
@@ -93,10 +91,11 @@ def _km(m: float) -> str:
     return f"{m / 1000:.1f}".replace(".", ",")
 
 
-def write_report(out: gpd.GeoDataFrame, res: dict, rules, pilot: str, checks: list[dict]) -> None:
+def write_report(out: gpd.GeoDataFrame, res: dict, rules, districts: list[str], checks: list[dict]) -> None:
+    pilot = area_label(districts)
     area = out[out["conflated"].astype(bool) & out["cat_proposed"].notna()]
     ch = area[area["cat_proposed"] != area["cat_cascade"]]
-    pch = ch[ch["bezirk"] == pilot]
+    pch = ch[ch["bezirk"].isin(districts)]
     min_run = rules.coherence_rule("N2").param("min_run_m")
     lines = ["# Harmonisierung je Straßenzug – Stufe 5b", "",
              f"Erzeugt: {_now()} von `pipeline/s05b_harmonise.py`, rules.yaml {rules.meta.version}. Nicht amtlicher Entwurf.", "",
@@ -107,10 +106,14 @@ def write_report(out: gpd.GeoDataFrame, res: dict, rules, pilot: str, checks: li
              *[f"| {c['name']} | {'ok' if c['ok'] else 'FEHLER'} | {c['detail']} |" for c in checks], "",
              "## Kennzahlen", "",
              f"- Straßenzüge: {_fmt(len(res['strokes']))}; geänderte Abschnitte: {_fmt(len(ch))} ({_km(ch['length_m'].sum())} km) "
-             f"im Arbeitsgebiet, davon {_fmt(len(pch))} ({_km(pch['length_m'].sum())} km) im Bezirk {pilot}.", "",
+             f"im Arbeitsgebiet, davon {_fmt(len(pch))} ({_km(pch['length_m'].sum())} km) in {pilot}.", "",
              "| Wechsel | Abschnitte | km |", "| --- | ---: | ---: |"]
     for (f, t), g in ch.groupby(["cat_cascade", "cat_proposed"]):
         lines.append(f"| {f} → {t} | {_fmt(len(g))} | {_km(g['length_m'].sum())} |")
+    lines += ["", "| Bezirk | geänderte Abschnitte | km | Anteil an der Länge im Bezirk |", "| --- | ---: | ---: | ---: |"]
+    for bz, g in pch.groupby("bezirk"):
+        share = g["length_m"].sum() / area.loc[area["bezirk"] == bz, "length_m"].sum()
+        lines.append(f"| {bz} | {_fmt(len(g))} | {_km(g['length_m'].sum())} | {f'{100 * share:.1f}'.replace('.', ',')} % |")
     step_of = {sid: steps[-1]["step"] for sid, steps in res["trace"].items()}
     lines += ["", "| Schritt | Abschnitte |", "| --- | ---: |"]
     for k, v in pd.Series([step_of[s] for s in ch["segment_id"]]).value_counts().sort_index().items():
@@ -121,21 +124,22 @@ def write_report(out: gpd.GeoDataFrame, res: dict, rules, pilot: str, checks: li
         a, b = area.loc[area["cat_cascade"] == c, "length_m"].sum(), area.loc[area["cat_proposed"] == c, "length_m"].sum()
         if a or b:
             lines.append(f"| {c} | {_km(a)} | {_km(b)} |")
-    names = pch.assign(name=pch["name"].fillna("–")).groupby("name")["length_m"].agg(["count", "sum"]).sort_values("sum", ascending=False)
-    lines += ["", f"Straßen mit den meisten geänderten km im Bezirk {pilot}:", "", "| Straße | Abschnitte | km |", "| --- | ---: | ---: |",
-              *[f"| {n} | {int(r['count'])} | {_km(r['sum'])} |" for n, r in names.head(20).iterrows()]]
+    names = (pch.assign(name=pch["name"].fillna("–")).groupby(["bezirk", "name"])["length_m"].agg(["count", "sum"])
+             .sort_values("sum", ascending=False))
+    lines += ["", f"Straßen mit den meisten geänderten km in {pilot}:", "", "| Bezirk | Straße | Abschnitte | km |",
+              "| --- | --- | ---: | ---: |",
+              *[f"| {b} | {n} | {int(r['count'])} | {_km(r['sum'])} |" for (b, n), r in names.head(20).iterrows()]]
     viewers = load_viewers()
-    rnd = random.Random(SAMPLE_SEED)
-    pick = sorted(rnd.sample(list(pch.index), min(SAMPLE_SIZE, len(pch))))
-    lines += ["", f"## Stichprobe: {len(pick)} zufällige geänderte Abschnitte im Bezirk {pilot} (Seed {SAMPLE_SEED})", "",
-              "| segment_id | Straße | highway | Kaskade | neu | Schritt | Lauf m | Orthophoto | Panoramax | OSM |",
-              "| --- | --- | --- | --- | --- | --- | ---: | --- | --- | --- |"]
+    pick = list(sample_by_district(pch, SAMPLE_SIZE, SAMPLE_SEED).index)
+    lines += ["", f"## Stichprobe: {len(pick)} zufällige geänderte Abschnitte in {pilot}, nach Bezirk geschichtet (Seed {SAMPLE_SEED})", "",
+              "| segment_id | Bezirk | Straße | highway | Kaskade | neu | Schritt | Lauf m | Orthophoto | Panoramax | OSM |",
+              "| --- | --- | --- | --- | --- | --- | --- | ---: | --- | --- | --- |"]
     for i in pick:
         r = out.loc[i]
         mid = r.geometry.interpolate(0.5, normalized=True)
         wgs = gpd.GeoSeries([mid], crs=WORK_CRS).to_crs(4326).iloc[0]
         last = res["trace"][r["segment_id"]][-1]
-        lines.append(f"| `{r['segment_id']}` | {r['name'] if isinstance(r['name'], str) else '–'} | {r['highway']} | "
+        lines.append(f"| `{r['segment_id']}` | {r['bezirk']} | {r['name'] if isinstance(r['name'], str) else '–'} | {r['highway']} | "
                      f"{r['cat_cascade']} | {r['cat_proposed']} | {last['step']} | {last['run_m']:.0f} | "
                      f"[DOP]({orthophoto_link(mid, viewers)}) | [Bilder]({panoramax_link(wgs, viewers)}) | "
                      f"[Way]({osm_way_link(r['osm_way_ids'][0])}) |")
@@ -145,15 +149,14 @@ def write_report(out: gpd.GeoDataFrame, res: dict, rules, pilot: str, checks: li
 
 def main() -> int:
     rules = load_rules()
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        pilot = yaml.safe_load(f)["pilot_district"]["name"]
+    districts = district_names()
     if not IN_PATH.exists():
         print("harmonise: data/interim/classified.parquet missing; run `make classify` first", file=sys.stderr)
         return 1
     inp = gpd.read_parquet(IN_PATH)
     out, res = apply(inp, rules, approved_override_ids())
     checks = run_checks(inp, out, rules)
-    write_report(out, res, rules, pilot, checks)
+    write_report(out, res, rules, districts, checks)
     for c in checks:
         print(f"harmonise: {c['name']}: {c['ok']} ({c['detail']})")
     if not all(c["ok"] for c in checks):

@@ -11,27 +11,27 @@ The run stops with exit code 1 if a check fails; outputs are then not written.
 """
 
 import json
-import random
 import sys
 from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
-import yaml
 
+from pipeline.lib.area import area_label, district_names, sample_by_district
 from pipeline.lib.classify import classification_inputs, classify_segment
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_map_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT
+from pipeline.lib.report import district_breakdown
 from pipeline.lib.rules import all_thresholds, load_rules, referenced_features
 from pipeline.s04_features import _fmt, _now, _pct
 
 __all__ = ["classification_inputs", "classify_segment", "classify_frame", "main"]
 
-PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "crosssection.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "classified.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "classification.md"
+MAX_STREET_ROWS = 50  # report readability only
 SAMPLE_CSV = REPO_ROOT / "reports" / "classification_sample.csv"
 GOLDEN_DIR = REPO_ROOT / "tests" / "golden"
 SAMPLE_SIZE = 30
@@ -112,12 +112,9 @@ def _points(geom):
 
 
 def pick_sample(pilot: gpd.GeoDataFrame, categories: list[str]) -> gpd.GeoDataFrame:
-    rnd = random.Random(SAMPLE_SEED)
-    parts = []
-    for cat in categories:
-        idx = list(pilot.index[pilot["cat_proposed"] == cat])
-        if idx:
-            parts.append(pilot.loc[sorted(rnd.sample(idx, min(SAMPLE_SIZE, len(idx))))])
+    """Up to SAMPLE_SIZE segments per category, spread over the Bezirke (sample_by_district)."""
+    parts = [sample_by_district(pilot[pilot["cat_proposed"] == cat], SAMPLE_SIZE, SAMPLE_SEED)
+             for cat in categories if (pilot["cat_proposed"] == cat).any()]
     return pd.concat(parts) if parts else pilot.iloc[0:0]
 
 
@@ -125,7 +122,7 @@ def write_sample_csv(sample: gpd.GeoDataFrame, viewers: dict) -> None:
     rows = []
     for _, r in sample.iterrows():
         work, wgs = _points(r.geometry)
-        rows.append({"segment_id": r["segment_id"], "cat_proposed": r["cat_proposed"], "confidence": r["confidence"],
+        rows.append({"segment_id": r["segment_id"], "bezirk": r["bezirk"], "cat_proposed": r["cat_proposed"], "confidence": r["confidence"],
                      "rule_path": r["rule_path"], "name": r["name"], "highway": r["highway"],
                      "in_hvs": r["in_hvs"], "conn_score": round(r["conn_score"], 3) if pd.notna(r["conn_score"]) else None,
                      "length_m": round(r["length_m"], 1),
@@ -161,14 +158,14 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
     rules, pilot_name = ctx["rules"], ctx["pilot"]
     cats = list(rules.categories)
     area = out[out["conflated"].astype(bool)]
-    pilot = area[area["bezirk"] == pilot_name]
+    pilot = area[area["bezirk"].isin(ctx["districts"])]
     total_km = area["length_m"].sum()
     lines = [
         "# Klassifikationsbericht – Stufe 5", "",
         f"Erzeugt: {_now()} von `pipeline/s05_classify.py`, rules.yaml {rules.meta.version}. Nicht amtlicher Entwurf: "
         "Die Automatik schlägt vor, Menschen entscheiden (overrides/overrides.csv).", "",
         "## Kennzahlen", "",
-        f"- Klassifiziert: {_fmt(len(area))} Abschnitte im Arbeitsgebiet ({_km(total_km)} km), davon {_fmt(len(pilot))} im Bezirk "
+        f"- Klassifiziert: {_fmt(len(area))} Abschnitte im Arbeitsgebiet ({_km(total_km)} km), davon {_fmt(len(pilot))} in "
         f"{pilot_name} ({_km(pilot['length_m'].sum())} km). Abschnitte außerhalb des Arbeitsgebiets bleiben leer.",
         f"- Defaults aus C-MISS-01 genutzt: " + ", ".join(
             f"{k} {_pct(v)}" for k, v in ctx["defaults_share"].items()) + " der Abschnitte im Arbeitsgebiet.", "",
@@ -181,6 +178,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         lines.append(f"| {cat} | {rules.categories[cat].label_de} | {_km(p['length_m'].sum())} | "
                      f"{_pct(p['length_m'].sum() / pilot['length_m'].sum())} | {_km(a['length_m'].sum())} | "
                      f"{_pct(a['length_m'].sum() / total_km)} | {_fmt(len(a))} |")
+    lines += ["", "### km-Anteile je Kategorie und Bezirk", "", *district_breakdown(pilot, "cat_proposed", cats)]
     lines += ["", "### confidence (Anteil der Länge im Arbeitsgebiet)", "",
               "| Kategorie | hoch | mittel | niedrig |", "| --- | ---: | ---: | ---: |"]
     for cat in cats + ["alle"]:
@@ -213,9 +211,9 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
               f"- HVS = `in_hvs` (DTV-Linien 2019, S-CONF-04). Bezirksstraße = keine HVS und keine Autobahn "
               f"({', '.join(sorted(FEDERAL_HIGHWAY))}); Annahme für diesen Bericht.", ""]
 
-    lines += [f"## Kreuztabelle Soll × HVS – Bezirk {pilot_name} (km)", "", *_crosstab(pilot, cats), "",
+    lines += [f"## Kreuztabelle Soll × HVS – {pilot_name} (km)", "", *_crosstab(pilot, cats), "",
               "## Kreuztabelle Soll × HVS – Arbeitsgebiet (km)", "", *_crosstab(area, cats), "",
-              "### HVS-km je Bezirk (Arbeitsgebiet, Bezirke nur mit ihrem Anteil im Arbeitsgebiet)", "",
+              "### HVS-km je Bezirk (Arbeitsgebiet)", "",
               "| Bezirk | " + " | ".join(cats) + " |", "| --- |" + " ---: |" * len(cats)]
     hv = area[area["in_hvs"].fillna(False).astype(bool)]
     for bez, g in hv.groupby(hv["bezirk"].fillna("–")):
@@ -252,29 +250,32 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
                   "auf Bezirksstraßen hin – bei der Durchsicht prüfen."]
         lines += ["", "| Bezirk | Name | highway | Abschnitte | km | conn_score min–max | confidence niedrig | Beispiel |",
                   "| --- | --- | --- | ---: | ---: | --- | ---: | --- |"]
-        grp = bez.assign(name=bez["name"].map(_name)).groupby([bez["bezirk"].fillna("–"), "name"])
-        for (b, n), g in sorted(grp, key=lambda kv: (kv[0][0] != pilot_name, -kv[1]["length_m"].sum())):
+        grp = sorted(bez.assign(name=bez["name"].map(_name)).groupby([bez["bezirk"].fillna("–"), "name"]),
+                     key=lambda kv: (-kv[1]["length_m"].sum(), kv[0]))
+        if len(grp) > MAX_STREET_ROWS:
+            lines[-2:-2] = [f"Gezeigt: die {MAX_STREET_ROWS} längsten von {len(grp)} Straßen (Bezirk + Name).", ""]
+        for (b, n), g in grp[:MAX_STREET_ROWS]:
             lines.append(f"| {b} | {n} | {', '.join(sorted(set(g['highway'])))} | {len(g)} | {_km(g['length_m'].sum())} | "
                          f"{g['conn_score'].min():.2f}–{g['conn_score'].max():.2f} | {int((g['confidence'] == 'niedrig').sum())} | "
                          f"`{g['segment_id'].iloc[0]}` |")
 
     sample, viewers = ctx["sample"], ctx["viewers"]
-    lines += ["", f"## Stichprobe: bis zu {SAMPLE_SIZE} zufällige Abschnitte je Kategorie im Bezirk {pilot_name} (Seed {SAMPLE_SEED})", "",
+    lines += ["", f"## Stichprobe: bis zu {SAMPLE_SIZE} zufällige Abschnitte je Kategorie in {pilot_name}, nach Bezirk geschichtet (Seed {SAMPLE_SEED})", "",
               "Zur manuellen Durchsicht im Orthophoto (Geoportal Hamburg, DOP belaubt) und in Panoramax. Befund in "
               "`reports/classification_sample.csv` eintragen (Spalten cat_expected_manual, check_ok, comment).", "",
               "**Durchsicht: offen.**", ""]
     for cat in cats:
         s = sample[sample["cat_proposed"] == cat]
         if s.empty:
-            lines += [f"### {cat}", "", "_keine Abschnitte im Bezirk_", ""]
+            lines += [f"### {cat}", "", "_keine Abschnitte_", ""]
             continue
         lines += [f"### {cat} ({len(s)} von {int((pilot['cat_proposed'] == cat).sum())})", "",
-                  "| segment_id | Name | highway | m | HVS | conn_score | confidence | Regeln | Orthophoto | Panoramax | OSM |",
-                  "| --- | --- | --- | ---: | --- | ---: | --- | --- | --- | --- | --- |"]
+                  "| segment_id | Bezirk | Name | highway | m | HVS | conn_score | confidence | Regeln | Orthophoto | Panoramax | OSM |",
+                  "| --- | --- | --- | --- | ---: | --- | ---: | --- | --- | --- | --- | --- |"]
         for _, r in s.iterrows():
             work, wgs = _points(r.geometry)
             cs = "–" if pd.isna(r["conn_score"]) else f"{r['conn_score']:.2f}"
-            lines.append(f"| `{r['segment_id']}` | {_name(r['name'])} | {r['highway']} | {r['length_m']:.0f} | "
+            lines.append(f"| `{r['segment_id']}` | {r['bezirk']} | {_name(r['name'])} | {r['highway']} | {r['length_m']:.0f} | "
                          f"{_hvs_label(r['in_hvs'])} | {cs} | {r['confidence']} | {r['rule_path']} | "
                          f"[DOP]({orthophoto_link(work, viewers)}) | [Bilder]({panoramax_link(wgs, viewers)}) | "
                          f"[Way]({osm_way_link(r['osm_way_ids'][0])}) |")
@@ -292,8 +293,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
 
 def main() -> int:
     rules = load_rules()
-    with open(PROJECT_PATH, encoding="utf-8") as f:
-        pilot_name = yaml.safe_load(f)["pilot_district"]["name"]
+    names = district_names()
     if not IN_PATH.exists():
         print("classify: data/interim/crosssection.parquet missing; run `make crosssection` first", file=sys.stderr)
         return 1
@@ -308,10 +308,10 @@ def main() -> int:
 
     golden = golden_results(rules)
     checks = run_checks(inp, out, golden, rules)
-    pilot = out[in_area & (out["bezirk"] == pilot_name)]
+    pilot = out[in_area & out["bezirk"].isin(names)]
     sample = pick_sample(pilot, list(rules.categories))
     viewers = load_viewers()
-    ctx = {"rules": rules, "pilot": pilot_name, "sample": sample, "viewers": viewers, "defaults_share": defaults_share}
+    ctx = {"rules": rules, "pilot": area_label(names), "districts": names, "sample": sample, "viewers": viewers, "defaults_share": defaults_share}
     write_report(out, ctx, checks)
     for c in checks:
         print(f"classify: {c['name']}: {c['ok']} ({c['detail']})")

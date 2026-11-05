@@ -4,6 +4,7 @@
 
 export const CASING = "#ffffff";
 export const UNKNOWN = "#767676";
+export const RURAL_FILL = "#767676"; // rural Stadtteile, not classified (area, not a line: no casing contrast needed)
 
 export const CATEGORY_STYLE = {
   SW: { color: "#332288", width: 6, dash: null },
@@ -11,6 +12,9 @@ export const CATEGORY_STYLE = {
   GOW30: { color: "#AA4499", width: 4, dash: [3, 1.5] },
   ETW30: { color: "#0077BB", width: 2.5, dash: null },
   ETW_ERF: { color: "#117733", width: 3, dash: [0.6, 1.4] },
+  // außerorts (Regel S-FEAT-BUA-01, Entwurf)
+  GOW80: { color: "#882255", width: 5, dash: [6, 2] },
+  ETW60: { color: "#007A6E", width: 2.5, dash: [1.5, 1.5] },
 };
 
 export const SPEED_CLASSES = [

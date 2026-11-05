@@ -69,3 +69,13 @@ def test_truncated_page_raises():
 
     with pytest.raises(FetchError, match="invalid JSON"):
         get_items(FakeSession(handler), URL, "c1", BBOX)
+
+
+def test_without_bbox_requests_whole_collection():
+    from tests.fakes import FakeResponse, FakeSession, point_feature
+    from pipeline.lib import ogcapi
+    session = FakeSession(lambda url, params: FakeResponse(payload={
+        "numberMatched": 1, "features": [point_feature(560500, 5935500)], "links": []}))
+    gdf = ogcapi.get_items(session, "https://example.org/api", "jahr2025", None)
+    assert len(gdf) == 1
+    assert "bbox" not in session.calls[0][1] and "bbox-crs" not in session.calls[0][1]

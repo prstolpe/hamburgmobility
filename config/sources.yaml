@@ -2,8 +2,8 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.7
-  date: 2026-10-28
+  version: 0.1.8
+  date: 2026-11-04
   crs_work: EPSG:25832
 
 sources:
@@ -86,13 +86,13 @@ sources:
     access: ogc_api_features
     url: https://api.hamburg.de/datasets/v1/dbradplus
     collections_seen: [aktuelles_jahr, jahr2022, jahr2023, jahr2024, jahr2025, letzte_woche]  # /collections am 2026-10-28
-    fetch: {collections: [jahr2025]}  # neuestes vollständiges Jahr (Entscheidung 2026-10-28)
+    fetch: {collections: [jahr2025], bbox: false}  # neuestes vollständiges Jahr (Entscheidung 2026-10-28); ganz Hamburg ohne bbox (2026-11-04)
     format: GeoJSON
     license: ODbL-1.0  # 2026-10-28: license-Link der Landing Page (api.hamburg.de)
     purpose: [cycling_exposure]
     check_status: verified
     note: "Stichprobe aus App-Nutzenden, nicht repräsentativ."
-    fetch_issue: "2026-10-28: Abruf jahr2025 mit bbox scheitert reproduzierbar – der Server liefert HTTP 200 mit abgebrochenem JSON (offset 10000 nach 63.156 Bytes, offset 11000 nach 153.435 Bytes; auch mit bbox in CRS84). Ohne bbox funktionieren dieselben Offsets. Bei der Datenstelle melden; keine Umgehung eingebaut."
+    fetch_issue: "2026-10-28: Abruf jahr2025 mit bbox scheitert reproduzierbar – der Server liefert HTTP 200 mit abgebrochenem JSON (offset 10000 nach 63.156 Bytes, offset 11000 nach 153.435 Bytes; auch mit bbox in CRS84). Ohne bbox funktionieren dieselben Offsets. Bei der Datenstelle melden; keine Umgehung eingebaut. 2026-11-04: Seit das Arbeitsgebiet ganz Hamburg ist, wird die ganze Collection ohne bbox abgerufen und danach auf das Arbeitsgebiet beschnitten; das ist der gewünschte Umfang, keine Umgehung. Ergebnis 2026-11-04: scheitert ebenfalls (HTTP 200, abgebrochenes JSON bei offset 1000 nach 150.646 Bytes). Quelle bleibt fehlerhaft; bei der Datenstelle melden."
 
   cycle_network:
     title: Radnetz Hamburg (Radrouten, Radrouten+), ersetzt seit 2025 die Velorouten
@@ -326,12 +326,12 @@ web_assets:
   basemap:
     title: Protomaps Basemap (Tagesbuild, Vektorkacheln aus OpenStreetMap und Natural Earth)
     provider: Protomaps
-    url: https://build.protomaps.com/{build}.pmtiles  # 2026-10-28: Build 20261028 (Version 4.15.2) laut https://build-metadata.protomaps.dev/builds.json, HTTP 200, pmtiles show gelesen
+    url: https://build.protomaps.com/{build}.pmtiles  # 2026-10-28: Build 20261028 (Version 4.15.2) laut https://build-metadata.protomaps.dev/builds.json; 2026-11-04: 20261028 HTTP 404, Build 20261103 HTTP 200 (Freigabe Projektteam)
     info: https://docs.protomaps.com/basemaps/downloads
     license: ODbL-1.0
     attribution: "© OpenStreetMap-Beitragende; Protomaps"
     check_status: verified
-    note: "Nur der Ausschnitt Eimsbüttel mit Puffer (pmtiles extract, bis Zoom 15) wird ausgeliefert; kein Abruf zur Laufzeit."
+    note: "Nur der Ausschnitt des Arbeitsgebiets (ganz Hamburg ohne Neuwerk, mit Puffer; pmtiles extract, bis Zoom 15) wird ausgeliefert; kein Abruf zur Laufzeit."
   basemap_assets:
     title: Protomaps basemaps-assets (Schriften als Glyphen-PBF, Sprites)
     provider: Protomaps

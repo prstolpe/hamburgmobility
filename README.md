@@ -14,14 +14,15 @@ Schritt für Schritt zu bauen. Code wird erst durch die Prompts erzeugt.
 | `overrides/overrides.csv` | Fachliche Korrekturen. Startet leer. |
 | `docs/open_questions.md` | Offene fachliche Fragen. Claude trägt hier ein, statt zu raten. |
 | `docs/licenses.md` | Lizenz- und Quellenvermerke. |
-| `prompts/01_…md` bis `prompts/12_…md` | Die zwölf Prompts in empfohlener Reihenfolge. |
+| `prompts/01_…md` bis `prompts/13_…md` | Die Prompts in empfohlener Reihenfolge (13: Ausweitung auf ganz Hamburg). |
 
 ## Kurzanleitung
 
 1. **Voraussetzungen:** Git, Python 3.12, [uv](https://docs.astral.sh/uv/), Claude Code, ca. 10 GB freier Platz.
    Für Prompt 11 (Webseite) zusätzlich Node.js und `tippecanoe`.
 2. **Repository anlegen:** Ordner entpacken, `git init`, erster Commit mit genau diesen Dateien.
-3. **Pilotbezirk festlegen** (Vorschlag: Altona oder Eimsbüttel) und in `CLAUDE.md` unter „Pilotbezirk“ eintragen.
+3. **Gebiet festlegen** in `config/project.yaml`, Abschnitt `area`: `districts: all` für ganz Hamburg (Stand seit
+   2026-11-04) oder eine Liste von Bezirken für Testläufe; Ausschlüsse unter `exclude` und `rural_exclude`.
 4. **Vor Prompt 03:** Verkehrsplaner*in prüft `config/rules.yaml` – jede Regel gegen ihre Quelle.
    Werte mit `source_type: assumption` bewusst freigeben oder ändern.
 5. **Claude Code im Repository starten** und die Prompts der Reihe nach ausführen (siehe unten).
@@ -44,6 +45,7 @@ Ja, nacheinander – aber nicht alle in einer Sitzung und nie ohne Prüfschritt.
 | 10 | `10_discrepancy.md` | 09 | Top-30-Liste plausibel |
 | 11 | `11_web.md` | 10 | Barrierefreiheit, Mobiltest |
 | 12 | `12_validation.md` | 11 | Externe Fachprüfung |
+| 13 | `13_hamburg.md` | 12 | Vergleich Eimsbüttel vorher/nachher, Liste ländlicher Stadtteile |
 
 Hinweis: In `docs/guide.md` heißen die Prompts P0–P11. Der Querschnitt (dort P9) läuft hier
 **vor** der Klassifikation, weil die GOW30-Regel `C-G30-02` die Straßenraumbreite braucht.
