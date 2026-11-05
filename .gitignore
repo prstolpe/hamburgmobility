@@ -19,3 +19,6 @@ web/dist/
 .vscode/
 web/test-results/
 web/playwright-report/
+
+# Generated reports too large for git (written by pipeline/s06_coherence.py)
+reports/coherence_flags.geojson
