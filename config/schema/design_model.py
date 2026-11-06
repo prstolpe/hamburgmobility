@@ -28,6 +28,12 @@ TYPE_KEYS = ("then", "else_then", "otherwise", "fallback")
 PROFILE_RULE_IDS = {"PRF-01", "PRF-02", "PRF-03", "PRF-04", "PRF-05", "PRF-06", "PRF-07"}
 # Cascade step that switches to the fallback facility of the matrix cell (not a degrade step).
 FALLBACK_STEP = "fallback"
+# Method rules of the junction step read by pipeline/lib/junctions.py (prompt 20).
+JUNCTION_METHOD_IDS = {"J-M-01", "J-M-02", "J-M-03", "J-M-04", "J-M-05", "J-M-06", "J-M-07"}
+# Ist junction types derived from OSM (J-M-06).
+IST_JUNCTION_TYPES = ("roundabout", "signal_plateau", "signal", "plateau", "none_mapped")
+# Keys of a cyclist_treatment applies_to clause.
+TREATMENT_CLAUSE_KEYS = {"types", "cycle_cats", "crossing_categories"}
 
 
 class _Strict(BaseModel):
@@ -66,7 +72,11 @@ class Junctions(_Strict):
     decision_table: DecisionTable
     thresholds: dict[str, dict[str, Any]]
     cyclist_treatment: list[dict[str, Any]]
+    method: list[dict[str, Any]]
     output_fields: list[str]
+
+    def method_rule(self, rule_id: str) -> dict[str, Any]:
+        return next(r for r in self.method if r.get("id") == rule_id)
 
 
 def _check_lane_defaults(defaults: dict) -> None:
@@ -99,6 +109,47 @@ def _check_junctions(j: Junctions) -> None:
         unknown_legs = set(_LEG_TOKEN.findall(row.legs)) - leg_words
         if unknown_legs:
             raise ValueError(f"{row.id}.legs: unknown categories {sorted(unknown_legs)}")
+    _check_junction_method(j, types, row_ids)
+    for entry in j.cyclist_treatment:
+        clauses = entry.get("applies_to")
+        if not isinstance(clauses, list) or not clauses:
+            raise ValueError(f"{entry.get('id')}.applies_to: list of clauses required")
+        for clause in clauses:
+            if not set(clause) <= TREATMENT_CLAUSE_KEYS or "types" not in clause:
+                raise ValueError(f"{entry.get('id')}.applies_to: keys must be {sorted(TREATMENT_CLAUSE_KEYS)} incl. types")
+            if not set(clause["types"]) <= types:
+                raise ValueError(f"{entry.get('id')}.applies_to: unknown junction type {sorted(set(clause['types']) - types)}")
+            if not set(clause.get("cycle_cats", [])) <= CYCLE_CATEGORIES:
+                raise ValueError(f"{entry.get('id')}.applies_to: unknown cycle category")
+            if not set(clause.get("crossing_categories", [])) <= EXPECTED_CATEGORIES:
+                raise ValueError(f"{entry.get('id')}.applies_to: unknown road category")
+
+
+def _check_junction_method(j: Junctions, types: set, row_ids: set) -> None:
+    ids = {r.get("id") for r in j.method}
+    missing = JUNCTION_METHOD_IDS - ids
+    if missing:
+        raise ValueError(f"junctions.method: rules missing {sorted(missing)}")
+    order = j.method_rule("J-M-05")["evaluation_order"]
+    if sorted(order) != sorted(row_ids):
+        raise ValueError(f"J-M-05.evaluation_order: must list every decision row once, got {order}")
+    if j.method_rule("J-M-05")["on_unknown"] not in TYPE_KEYS:
+        raise ValueError(f"J-M-05.on_unknown: must be one of {TYPE_KEYS}")
+    alias = j.method_rule("J-M-04")["category_alias"]
+    if not (set(alias) | set(alias.values())) <= EXPECTED_CATEGORIES:
+        raise ValueError("J-M-04.category_alias: unknown categories")
+    if not set(j.method_rule("J-M-02")["zero_dtv_categories"]) <= EXPECTED_CATEGORIES:
+        raise ValueError("J-M-02.zero_dtv_categories: unknown categories")
+    ist_check = j.method_rule("J-M-06")["ist_check"]
+    if set(ist_check) != types:
+        raise ValueError(f"J-M-06.ist_check: must cover the junction types exactly, missing {sorted(types - set(ist_check))}")
+    for soll, entry in ist_check.items():
+        for key in ("ok", "not_checkable"):
+            unknown = set(entry[key]) - set(IST_JUNCTION_TYPES)
+            if unknown:
+                raise ValueError(f"J-M-06.ist_check.{soll}.{key}: unknown Ist types {sorted(unknown)}")
+    if not set(j.method_rule("J-M-07")["sort_keys"]) <= {"crashes_cyc", "cycle_rank", "entering_dtv_sum"}:
+        raise ValueError("J-M-07.sort_keys: unknown key")
 
 
 def _check_profile(profile: dict, allocation: dict) -> None:

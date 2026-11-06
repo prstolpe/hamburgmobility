@@ -3,7 +3,7 @@
 # status: draft | reviewed | approved (Pflicht bei jeder Regel mit id)
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.2.0
+  version: 0.3.0
   date: 2026-11-06
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
@@ -186,7 +186,7 @@ junctions:
     source: [SWOV_ROT_2022, CROW_GOW30_2023, NL_MUNI_CASTRICUM_2020]
     source_type: swov_crow
     rows:
-      - {id: J-01, legs: 'GOW50+GOW50', if: 'entering_dtv_sum <= roundabout_max_dtv and space_radius_m >= roundabout_min_radius and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv and space ok', else_then: turbo_roundabout, otherwise: signal_protected, status: draft}
+      - {id: J-01, legs: 'GOW50+GOW50', if: 'entering_dtv_sum <= roundabout_max_dtv and space_radius_m >= roundabout_min_radius and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv and space_radius_m >= roundabout_min_radius', else_then: turbo_roundabout, otherwise: signal_protected, status: draft}
       - {id: J-02, legs: 'GOW50+GOW30', same_as: J-01, status: draft}
       - {id: J-03, legs: 'GOW30+GOW30', then: roundabout_single_lane_cycle_priority, fallback: priority_flat_coloured, note: 'CROW: bevorzugt Kreisverkehr; sonst Vorfahrtknoten mit eingefärbter Kreuzungsfläche', status: draft}
       - {id: J-04, legs: 'GOW50+ETW30', then: continuous_footway_exit, fallback: priority_raised, note: 'Gehwegüberfahrt bzw. Vorfahrt GOW mit Plateau', status: draft}
@@ -203,9 +203,83 @@ junctions:
     grade_sep_min_dtv: {value: 30000, source_type: assumption}
     roundabout_min_radius: {value: 20, unit: m, note: 'Außendurchmesser ca. 40 m inkl. Radring; Platzbedarf entspricht etwa vierarmigem Knoten (DCE)', source_type: assumption}
   cyclist_treatment:
-    - {id: JC-01, rule: 'Kreisverkehr innerorts mit umlaufendem Radweg, Radverkehr bevorrechtigt', source: SWOV_ROT_2022, source_type: swov_crow, note: 'CROW-Empfehlung innerorts; SWOV: Wartepflicht sicherer – Zielkonflikt dokumentieren. Deutsches Recht: Vorrang nur bei fahrbahnnaher Führung, StVO/VwV prüfen', status: draft}
-    - {id: JC-02, rule: 'LSA-Knoten als geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor Kfz, indirektes Linksabbiegen', source: [DCE_INFRA, SWOV_FS_2023], source_type: swov_crow, status: draft}
-    - {id: JC-03, rule: 'Furten im Zuge RSV/HAUPT: Breite = Radwegbreite, rot, aufgepflastert wo Vorrang', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft}
-    - {id: JC-04, rule: 'Mittelinsel für Querung GOW durch Radroute >= 3.00 m (HAUPT), >= 2.50 m (BASIS)', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft}
-    - {id: JC-05, rule: 'Freies Rechtsabbiegen für Rad an LSA, wo sicher', source_type: assumption, status: draft}
-  output_fields: [node_id, legs, junction_type_soll, junction_type_ist, rule_trace, cyclist_treatment, conflict_flags]
+    # applies_to (Zuordnung in pipeline/c07_junctions.py, Annahme 2026-11-06): Liste von Klauseln, eine passende genügt.
+    # types = Soll-Knotentypen; cycle_cats = mindestens ein Arm dieser Radkategorie (bei crossing_categories: ein Arm
+    # außerhalb des durchgehenden Zugs); crossing_categories = Kategorie des Zugs (erster Teil des Kategoriepaars), den
+    # diese Radroute quert. Bedingungen einer Klausel gelten zusammen.
+    - {id: JC-01, rule: 'Kreisverkehr innerorts mit umlaufendem Radweg, Radverkehr bevorrechtigt', source: SWOV_ROT_2022, source_type: swov_crow, note: 'CROW-Empfehlung innerorts; SWOV: Wartepflicht sicherer – Zielkonflikt dokumentieren. Deutsches Recht: Vorrang nur bei fahrbahnnaher Führung, StVO/VwV prüfen', status: draft,
+       applies_to: [{types: [roundabout_single_lane_cycle_priority, turbo_roundabout]}]}
+    - {id: JC-02, rule: 'LSA-Knoten als geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor Kfz, indirektes Linksabbiegen', source: [DCE_INFRA, SWOV_FS_2023], source_type: swov_crow, status: draft,
+       applies_to: [{types: [signal_protected]}]}
+    - {id: JC-03, rule: 'Furten im Zuge RSV/HAUPT: Breite = Radwegbreite, rot, aufgepflastert wo Vorrang', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft,
+       applies_to: [{types: [cycle_crossing_priority, cycle_crossing_signal, signal_protected, priority_raised, priority_flat_coloured], cycle_cats: [RSV, HAUPT]},
+                    {types: [cycle_crossing_priority]}],
+       note_applies: 'eigenständige Radwegfurt mit Vorrang immer rot und aufgepflastert (Typbeschreibung J-08), auch im BASIS-Netz'}
+    - {id: JC-04, rule: 'Mittelinsel für Querung GOW durch Radroute >= 3.00 m (HAUPT), >= 2.50 m (BASIS)', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft,
+       applies_to: [{types: [cycle_crossing_priority, cycle_crossing_signal, priority_raised, priority_flat_coloured, continuous_footway_exit], cycle_cats: [RSV, HAUPT, BASIS], crossing_categories: [GOW50, GOW30]}],
+       median_width_m: {HAUPT: 3.00, BASIS: 2.50}}
+    - {id: JC-05, rule: 'Freies Rechtsabbiegen für Rad an LSA, wo sicher', source_type: assumption, status: draft,
+       applies_to: [{types: [signal_protected]}]}
+  # Verfahren der Stufe c07 (pipeline/c07_junctions.py, prompts/20_junctions.md). Alle Werte Annahmen, status draft.
+  method:
+    - id: J-M-01
+      rule: 'Knoten = Knoten des Straßengraphen (Abschnitte mit cat_final) mit Grad >= 3 sowie Knoten, an denen ein eigenständiger Radweg (Radgraph kind path, kein begleitender Radweg) auf einen Straßenabschnitt trifft. Knoten, die über einen Straßenabschnitt von höchstens cluster_radius_m verbunden sind, und Knoten desselben Kreisverkehrs bilden einen Knotenpunkt (zweibahnige Straßen, Kreisverkehre).'
+      source_type: assumption
+      status: draft
+      cluster_radius_m: {value: 25, unit: m, source_type: assumption, note: 'Startwert aus prompts/20_junctions.md'}
+      cycle_path_highways: [cycleway]
+      cycle_path_network_cats: [RSV, HAUPT, BASIS]
+      note: 'Eigenständiger Radweg = Kante kind path ohne sidepath_of, die highway in cycle_path_highways hat oder zum Radnetz (cycle_path_network_cats) gehört; sonst würde jeder Gehweg-Anschluss ein Knotenpunkt.'
+    - id: J-M-02
+      rule: 'Arme = Straßenabschnitte und eigenständige Radwege, die den Knotenpunkt verlassen (innere Abschnitte zählen nicht), Richtungsfahrbahnen nach arm_merge zusammengefasst. entering_dtv_sum = Summe über die Kfz-Arme von dtv_share_entering x DTV des Arms. Arme ohne DTV: ETW-Arme zählen 0 (DTV dort fast nie erfasst), fehlt DTV an einem GOW/SW-Arm, ist die Summe eine Untergrenze (Flag dtv_partial); fehlt sie an allen GOW/SW-Armen, ist sie unbekannt (Flag dtv_unknown).'
+      source_type: assumption
+      status: draft
+      dtv_share_entering: {value: 0.5, source_type: assumption, note: 'Hälfte des Querschnitts-DTV fließt zu (prompts/20_junctions.md)'}
+      zero_dtv_categories: [ETW30, ETW_ERF, ETW60]
+      arm_merge: 'Richtungsfahrbahnen: Arme mit gleichem Straßennamen und gleichem DTV, deren Richtung vom Knotenpunkt aus um höchstens arm_merge_angle_deg abweicht, bilden einen Arm (DTV einmal, höchste Kategorie und Radkategorie). Grund: der amtliche DTV steht auf beiden Richtungsfahrbahnen als Querschnittswert. Die Richtung wird zum Punkt im Abstand search_radius_m (J-M-03) entlang des Arms gemessen.'
+      arm_merge_angle_deg: {value: 30, unit: deg, source_type: assumption, note: 'gegenüberliegende Arme ca. 180°, abzweigende ca. 90°'}
+    - id: J-M-03
+      rule: 'space_radius_m = Radius des größten einbeschriebenen Kreises in der ALKIS-Verkehrsfläche (nutzart aus S-XS-02), zugeschnitten auf search_radius_m um die Knoten des Knotenpunkts; ganz von Verkehrsfläche umschlossene Inseln (Mittelinseln bestehender Kreisverkehre, Dreiecksinseln) zählen als Fläche. Ohne Verkehrsfläche am Knoten: unbekannt (Flag space_unknown).'
+      source_type: assumption
+      status: draft
+      search_radius_m: {value: 40, unit: m, source_type: assumption, note: 'doppelter roundabout_min_radius, damit ein Kreisverkehr um den Knoten Platz finden kann'}
+      tolerance_m: {value: 0.5, unit: m, source_type: assumption, note: 'Rechengenauigkeit des einbeschriebenen Kreises'}
+    - id: J-M-04
+      rule: 'Kategoriepaar wie N6 (rules.yaml): höchste Straßenkategorie (bis zu zwei ihrer Arme = durchgehender Zug) und höchste der übrigen Arme; Rang nach N6.category_rank. Bleibt neben dem Zug keine Straße, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Kategorien ohne eigene Zeile der Tabelle werden über category_alias abgebildet (Flag category_alias).'
+      source: [SWOV_FS_2023]
+      source_type: assumption
+      status: draft
+      note: 'prompts/20 nennt „die beiden ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50. Die N6-Lesart (Zug zählt einmal) ist als Annahme gewählt, docs/open_questions.md.'
+      category_alias: {ETW_ERF: ETW30}
+    - id: J-M-05
+      rule: 'Zeilen der Entscheidungstabelle in evaluation_order prüfen; die erste Zeile, deren legs passen, entscheidet. same_as übernimmt Bedingungen und Typen der genannten Zeile. Ist eine Bedingung wegen fehlender Werte unbekannt, gilt on_unknown (Flag condition_unknown, confidence low).'
+      source_type: assumption
+      status: draft
+      evaluation_order: [J-10, J-11, J-09, J-08, J-07, J-01, J-02, J-03, J-04, J-05, J-06]
+      on_unknown: then
+      fallback_if: {types: [roundabout_single_lane_cycle_priority, roundabout_single_lane_cycle_yield, turbo_roundabout], condition: 'space_radius_m < roundabout_min_radius'}
+      fallback_note: 'fallback einer Zeile gilt, wenn then ein Kreisverkehr ist und der Platz nicht reicht; sonst bleibt fallback als Alternative im rule_trace'
+      note: 'on_unknown then = sicherster Typ der Zeile (Kreisverkehr) als Vorschlag, bis Werte vorliegen'
+    - id: J-M-06
+      rule: 'junction_type_ist aus OSM: junction=roundabout/circular an einem Arm oder inneren Abschnitt -> roundabout; highway=traffic_signals im Umkreis N6.signal_radius_m eines Knotens -> signal (mit traffic_calming=table -> signal_plateau); nur table -> plateau; sonst none_mapped. Handlungsbedarf, wenn Ist nicht in ist_check[Soll].ok und nicht in not_checkable liegt.'
+      source_type: assumption
+      status: draft
+      ist_check:
+        roundabout_single_lane_cycle_priority: {ok: [roundabout], not_checkable: []}
+        roundabout_single_lane_cycle_yield: {ok: [roundabout], not_checkable: []}
+        turbo_roundabout: {ok: [roundabout], not_checkable: []}
+        signal_protected: {ok: [signal, signal_plateau], not_checkable: []}
+        priority_raised: {ok: [plateau], not_checkable: [none_mapped]}
+        priority_flat_coloured: {ok: [], not_checkable: [none_mapped, plateau]}
+        continuous_footway_exit: {ok: [], not_checkable: [none_mapped, plateau]}
+        equal_right_before_left: {ok: [none_mapped, plateau], not_checkable: []}
+        cycle_crossing_priority: {ok: [plateau], not_checkable: [none_mapped]}
+        cycle_crossing_signal: {ok: [signal, signal_plateau], not_checkable: []}
+        grade_separated_cycle: {ok: [], not_checkable: []}
+      note: 'Geschützte Kreuzung, eingefärbte Fläche, Gehwegüberfahrt und Furtgestaltung sind in OSM kaum erfasst; dort not_checkable statt Abweichung. Ein Knoten mit gemeinsamem OSM-Knoten ist nie planfrei, daher bei grade_separated_cycle immer Handlungsbedarf.'
+    - id: J-M-07
+      rule: 'Priorität der Knoten mit Handlungsbedarf: absteigend nach Radunfällen (Unfallatlas, je Unfall der nächste Knotenpunkt im Umkreis cluster_radius_m), dann Radkategorie des ranghöchsten Arms, dann Kfz-Zufluss. Unfälle werden nur als Anzahl je Knotenpunkt gespeichert.'
+      source_type: assumption
+      status: draft
+      sort_keys: [crashes_cyc, cycle_rank, entering_dtv_sum]
+  output_fields: [node_id, legs, junction_type_soll, junction_type_ist, rule_trace_junction, cyclist_treatment, conflict_flags, confidence]

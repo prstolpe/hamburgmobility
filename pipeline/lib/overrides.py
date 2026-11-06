@@ -150,6 +150,55 @@ def apply_cycle_network(edges: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def validate_junctions(df: pd.DataFrame, all_ids: Iterable[str], types: Iterable[str]) -> None:
+    """Raise OverrideError listing all problems of overrides/junction_overrides.csv (prompts/20).
+    all_ids = every node_id of the current junctions, types = junctions.types of design_rules.yaml."""
+    if list(df.columns) != JUNCTION_COLUMNS:
+        raise OverrideError(f"junction_overrides.csv: Spalten müssen genau {', '.join(JUNCTION_COLUMNS)} sein "
+                            f"(gefunden: {', '.join(map(str, df.columns))})")
+    known, allowed = set(all_ids), set(types)
+    errors = []
+    counts = df["node_id"].value_counts()
+    for i, r in enumerate(df.itertuples(index=False), start=2):
+        where = f"Zeile {i} ({r.node_id or 'ohne node_id'})"
+        if _blank(r.node_id):
+            errors.append(f"{where}: node_id fehlt")
+        elif r.node_id not in known:
+            errors.append(f"{where}: node_id verwaist – kein Knotenpunkt im aktuellen Netz; Korrektur prüfen")
+        if not _blank(r.node_id) and counts.get(r.node_id, 0) > 1:
+            errors.append(f"{where}: node_id doppelt")
+        if r.junction_type_final not in allowed:
+            errors.append(f"{where}: ungültiger Knotentyp {r.junction_type_final!r} (erlaubt: {', '.join(sorted(allowed))})")
+        if _blank(r.reason):
+            errors.append(f"{where}: Begründung fehlt (Spalte reason)")
+        if _blank(r.author):
+            errors.append(f"{where}: author fehlt")
+        if not _is_iso_date(r.date):
+            errors.append(f"{where}: Datum {r.date!r} nicht im Format JJJJ-MM-TT")
+        if r.review_status not in REVIEW_STATUS:
+            errors.append(f"{where}: review_status {r.review_status!r} ungültig (erlaubt: {', '.join(REVIEW_STATUS)})")
+    if errors:
+        raise OverrideError("junction_overrides.csv ungültig:\n  " + "\n  ".join(errors))
+
+
+def apply_junctions(junctions: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
+    """Copy with junction_type_final, junction_type_source and junction_override_*; junction_type_soll unchanged."""
+    out = junctions.copy()
+    approved = df[df["review_status"] == APPLIED_STATUS].set_index("node_id")
+    hit = out["node_id"].isin(approved.index)
+    out["junction_type_final"] = out["junction_type_soll"]
+    out["junction_type_source"] = out["junction_type_soll"].map(lambda v: None if _blank(v) else "proposed")
+    for col in ("reason", "author", "date", "source"):
+        out[f"junction_override_{col}"] = None
+    if hit.any():
+        ids = out.loc[hit, "node_id"]
+        out.loc[hit, "junction_type_final"] = ids.map(approved["junction_type_final"]).to_numpy()
+        out.loc[hit, "junction_type_source"] = "override"
+        for col in ("reason", "author", "date", "source"):
+            out.loc[hit, f"junction_override_{col}"] = ids.map(approved[col]).to_numpy()
+    return out
+
+
 def template_csv(segment_ids: list[str], segments: pd.DataFrame, author: str, today: str) -> str:
     """CSV rows for new overrides: cat_final = cat_proposed, review_status = draft, reason empty
     (a person has to fill it in; validate() rejects empty reasons)."""

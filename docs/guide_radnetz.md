@@ -173,6 +173,11 @@ in design_rules.yaml 0.2.0 (Setzungen sind Annahmen, status draft):
 - LSA-Knoten sind nach Volumenkorrektur die unsichersten [F]; sie kommen nur bei hoher Belastung oder Straßenbahn zum Einsatz und werden dann als geschützte Kreuzung gestaltet [B].
 - Sehr belastete oder schnelle Kreuzungen von Hauptrouten: Tunnel oder Brücke ([DCE](https://dutchcycling.nl/expertises/cycling-infrastructure/)) [F].
 - Entscheidungstabelle J-01 bis J-11 in `design_rules.yaml`; Schwellen für Kreisverkehrskapazität sind Annahmen.
+- Umsetzung (pipeline/c07_junctions.py, Verfahren J-M-01…07): Knotenpunkte aus Netzknoten mit Grad ≥ 3 und
+  Anschlüssen eigenständiger Radwege, nahe Knoten und Kreisverkehre zusammengefasst; Richtungsfahrbahnen als ein Arm;
+  Kategoriepaar wie N6; Platz aus der ALKIS-Verkehrsfläche; Ist-Typ aus OSM. Alle Verfahrensschritte sind Annahmen [B].
+- Ergebnis, Ist → Soll, Prioritäten, planfreie Querungen und Abgleich mit N6: reports/junctions.md;
+  Prüfliste je Soll-Typ: reports/junctions_review.csv.
 
 ## 7. Grenzen
 

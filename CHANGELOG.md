@@ -359,6 +359,25 @@
 - Neu: pipeline/c05_facility.py, pipeline/lib/facility.py; Ausgaben data/interim/cycle_facility.parquet (je segment_id),
   reports/cycle_facility.md. Goldene Fälle Führung/Breite (tests/golden/cycling/s*) ohne xfail.
 
+## design_rules.yaml 0.3.0 – 2026-11-06: Knotenpunkte (Prompt 20)
+- J-01 `else_if`: informelles „space ok“ ersetzt durch `space_radius_m >= roundabout_min_radius` (gleiche Platzschwelle
+  wie der einstreifige Kreisverkehr; eigener Platzbedarf für Turbokreisverkehre fehlt, offene Frage). Schwellen unverändert.
+- Neuer Abschnitt `junctions.method` (J-M-01…07), alle Setzungen Annahmen (source_type assumption, status draft):
+  - J-M-01 Knoten: Grad ≥ 3 und Anschluss eigenständiger Radwege (cycleway oder RSV/HAUPT/BASIS, kein begleitender
+    Radweg); Zusammenfassung über Abschnitte ≤ cluster_radius_m 25 m (Startwert aus Prompt 20) und ganze Kreisverkehre.
+  - J-M-02 Arme und Zufluss: ½ DTV je Arm; ETW-Arme ohne DTV zählen 0; Richtungsfahrbahnen (gleicher Name, gleicher DTV,
+    Richtung ≤ 30°) bilden einen Arm, weil der amtliche DTV auf beiden Fahrbahnen als Querschnittswert steht.
+  - J-M-03 Platz: größter einbeschriebener Kreis in der ALKIS-Verkehrsfläche (S-XS-02) im Umkreis 40 m; umschlossene
+    Inseln zählen als Fläche (sonst hätten bestehende Kreisverkehre wegen der Mittelinsel zu wenig Platz).
+  - J-M-04 Kategoriepaar wie N6 (durchgehender Zug zählt einmal) statt wörtlich „die beiden ranghöchsten Arme“;
+    category_alias ETW_ERF → ETW30.
+  - J-M-05 Reihenfolge J-10, J-11, J-09, J-08, J-07, J-01…J-06; unbekannte Bedingung → `then` der Zeile; `fallback`
+    gilt, wenn `then` ein Kreisverkehr ist und der Platz nicht reicht.
+  - J-M-06 Ist-Typ aus OSM und ist_check je Soll-Typ (Handlungsbedarf); J-M-07 Prioritätsreihenfolge.
+- JC-01…JC-05: `applies_to`-Klauseln (Soll-Typ, Radkategorie, gequerte Straßenkategorie) als Annahme der Zuordnung.
+- Schema (config/schema/design_model.py): `junctions.method`, Prüfung von evaluation_order, ist_check, category_alias und
+  applies_to.
+
 ## design_rules.yaml 0.2.0 – 2026-11-06: Soll-Querschnitt (Prompt 19)
 - Neuer Abschnitt `profile_assignment` (PRF-01…07), alle Setzungen Annahmen (source_type assumption, status draft),
   fachlich freizugeben (docs/open_questions.md). lanes, placement und cross_section_allocation bleiben unverändert;
