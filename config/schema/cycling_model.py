@@ -3,7 +3,8 @@
 Deep sections stay plain dicts; the cross-checks below validate provenance, ids, categories and
 facility names. Rule texts stay strings; later prompts (16–18) evaluate them. Prompt 15 adds cycle_graph,
 demand_model and routing_impedance.ist_mapping, whose condition names are fixed here; prompt 16 adds
-network_design (C-NET-01..13); prompt 17 adds principle_scoring (C-PRI-01..16).
+network_design (C-NET-01..13); prompt 17 adds principle_scoring (C-PRI-01..16); prompt 18 adds
+facility_assignment (C-FAC-01..07).
 """
 
 from datetime import date
@@ -38,6 +39,12 @@ SOLL_FACTOR_EXTRA_KEYS = {"path"}
 PRINCIPLE_RULE_IDS = {f"C-PRI-{i:02d}" for i in range(1, 17)}
 # Score forms of C-PRI-01; evaluated in pipeline/lib/principles.py.
 SCORE_FORMS = {"share", "ratio", "inverse_ratio", "excess", "percentile_inverse"}
+FACILITY_RULE_IDS = {f"C-FAC-0{i}" for i in range(1, 8)}
+# Ist classes of C-FAC-05 (prompts/18); evaluated in pipeline/lib/facility.py.
+IST_CLASSES = {"cycle_street", "track", "lane", "shared_lane", "no"}
+# Flags of pipeline/lib/facility.py that C-FAC-07 may name.
+FACILITY_FLAGS = {"dtv_unknown", "fallback_check_p19", "cycle_street_blocked", "mixed_over_s04", "no_target_width",
+                  "ist_width_unknown"}
 
 
 class _Strict(BaseModel):
@@ -207,6 +214,50 @@ def _check_principle_scoring(section: dict, principles: dict, impedance: dict, w
         raise ValueError(f"principle_scoring C-PRI-16: unknown checks {sorted(unknown)}")
 
 
+def width_ref(widths: dict, path: str):
+    """Value at a dotted path relative to widths_m (C-FAC-04 floor, de_reference, nl_reference)."""
+    node = widths
+    for key in path.split("."):
+        node = node[key]
+    return node
+
+
+def _check_facility_assignment(section: dict, widths: dict) -> None:
+    rules = _rules_by_id(section, FACILITY_RULE_IDS, "facility_assignment")
+    if set(rules["C-FAC-01"]["category_order"]) != CYCLE_CATEGORIES:
+        raise ValueError(f"facility_assignment C-FAC-01: category_order must name {sorted(CYCLE_CATEGORIES)}")
+    c04 = rules["C-FAC-04"]
+    targets = set(widths["project_target"]) - META_KEYS
+    if not set(c04["target_by_facility"]) <= FACILITIES or not set(c04["target_by_facility"].values()) <= targets:
+        raise ValueError("facility_assignment C-FAC-04: target_by_facility must map facilities to widths_m.project_target keys")
+    for key in ("floor", "de_reference", "nl_reference"):
+        for fac, path in c04[key].items():
+            if fac not in FACILITIES:
+                raise ValueError(f"facility_assignment C-FAC-04 {key}: unknown facility {fac!r}")
+            try:
+                value = width_ref(widths, path)
+            except (KeyError, TypeError):
+                raise ValueError(f"facility_assignment C-FAC-04 {key}.{fac}: widths_m.{path} not found") from None
+            if not isinstance(value, (int, float)):
+                raise ValueError(f"facility_assignment C-FAC-04 {key}.{fac}: widths_m.{path} is not a number")
+    c05 = rules["C-FAC-05"]
+    if set(c05["ist_classes"]) != IST_CLASSES:
+        raise ValueError(f"facility_assignment C-FAC-05: ist_classes must be {sorted(IST_CLASSES)}")
+    if set(c05["to_facility"]) != IST_CLASSES or not set(c05["to_facility"].values()) | {c05["twoway_track_facility"]} <= FACILITIES:
+        raise ValueError("facility_assignment C-FAC-05: to_facility must map every Ist class to a facility")
+    c06 = rules["C-FAC-06"]
+    if not set(c06["missing_classes"]) <= IST_CLASSES:
+        raise ValueError("facility_assignment C-FAC-06: missing_classes must be Ist classes")
+    if not set(c06["not_assessed_soll"]) <= FACILITIES:
+        raise ValueError("facility_assignment C-FAC-06: not_assessed_soll must be facilities")
+    unknown = set(rules["C-FAC-07"]["lowers_confidence"]) - FACILITY_FLAGS
+    if unknown:
+        raise ValueError(f"facility_assignment C-FAC-07: unknown flags {sorted(unknown)}")
+    share = rules["C-FAC-03"]["motor_peak_hour_share"]["value"]
+    if not 0 < share <= 1:
+        raise ValueError("facility_assignment C-FAC-03: motor_peak_hour_share must be in (0, 1]")
+
+
 class CyclingRuleSet(_Strict):
     meta: Meta
     sources: dict[str, Source]
@@ -219,6 +270,7 @@ class CyclingRuleSet(_Strict):
     demand_model: dict[str, Any]
     network_design: dict[str, Any]
     separation_matrix: dict[str, Any]
+    facility_assignment: dict[str, Any]
     cycle_street: dict[str, Any]
     demand: dict[str, Any]
     widths_m: dict[str, Any]
@@ -254,4 +306,5 @@ class CyclingRuleSet(_Strict):
         _check_demand_model(self.demand_model)
         _check_network_design(self.network_design, self.routing_impedance)
         _check_principle_scoring(self.principle_scoring, self.principles, self.routing_impedance, self.widths_m)
+        _check_facility_assignment(self.facility_assignment, self.widths_m)
         return self

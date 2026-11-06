@@ -314,3 +314,40 @@ def test_rejects_principle_rule_without_status(cyc):
 
 def test_rejects_confidence_classes_out_of_order(cyc):
     _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-13").update(medium=0.9)), "medium")
+
+
+# --- facility_assignment (prompts/18) ----------------------------------------------------------
+
+
+def _fac(d: dict, rule_id: str) -> dict:
+    return _by_id(d["facility_assignment"]["rules"], rule_id)
+
+
+def test_facility_rules_complete(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["facility_assignment"]["rules"].pop()), "C-FAC-07")
+
+
+def test_rejects_width_path_not_in_widths(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-04")["floor"].update(cycle_lane="de.nowhere.min")),
+             "not found")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-04")["de_reference"].update(cycle_lane="de.cycle_lane")),
+             "not a number")
+
+
+def test_rejects_unknown_target_key(cyc):
+    _rejects(CyclingRuleSet,
+             _mutated(cyc, lambda d: _fac(d, "C-FAC-04")["target_by_facility"].update(cycle_lane="nowhere")),
+             "target_by_facility")
+
+
+def test_rejects_unknown_ist_class_or_facility(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-05")["to_facility"].update({"no": "bike_lane"})), "to_facility")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-06")["missing_classes"].append("gravel")), "missing_classes")
+
+
+def test_rejects_unknown_confidence_flag(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-07")["lowers_confidence"].append("magic")), "unknown flags")
+
+
+def test_rejects_facility_rule_without_status(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-03").pop("status")), "status")

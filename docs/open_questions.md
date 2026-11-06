@@ -179,3 +179,11 @@ Fachlich:
 - [ ] Prompt 17: P-COH-02 für RSV: die 23 RSV-Läufe bilden 6 getrennte Komponenten (größte 30 % der Länge); jede RSV-Route außerhalb der größten Komponente erhält 0. RSV sind Korridore über dem HAUPT-Netz – Zusammenhang für RSV mit HAUPT prüfen statt allein? – Methodik
 - [ ] Prompt 17: Der Handlungsbedarf (Δ) entsteht fast nur aus Sicherheit und Komfort, weil Direktheit, Attraktivität, Unfälle und Maschen im Soll wie im Ist gerechnet werden; die Gewichts-Sensitivität ist deshalb gering (Top 30 bleibt zu ≥ 28/30 gleich). Soll für Halte nach Prompt 20 und Wirkung auf Unfälle festlegen – Methodik
 - [ ] Prompt 17: 20 Routen zur Durchsicht mit Ortskundigen in reports/cycle_principles_review.csv eintragen (Spalten reviewer, assessment, comment) – Team
+- [ ] Prompt 18 (cycling_rules.yaml 0.5.0): neue Annahmen C-FAC-01…07 freigeben – Verkehrsplaner*in
+  - Kfz-DTV fehlt auf 99,9 % der ETW30-Abschnitte (nur HVS-Zählung 2019). Fahrradstraßen-Bedingung (C-FAC-02) und S-04 (C-FAC-03) gelten ohne DTV vorläufig als erfüllt (Entscheidung Projektteam 2026-11-06, Flag `dtv_unknown`, confidence medium; 3 452 km). Kfz-Mengen für Erschließungsstraßen beschaffen oder schätzen?
+  - Kfz-Spitzenstundenanteil 0,10 (C-FAC-03) aus der Notiz zu L-02 übernommen; mit HBS abgleichen. „Radverkehr dominant“ = Rad/h (beide Richtungen) ≥ Kfz/h
+  - cycle_cat_final je Abschnitt = höchste Kategorie seiner Kanten und begleitenden Radwege; Radverkehr = Maximum über die Kanten (Näherung)
+  - Lücke „zu schmal“ gegen die Projekt-Sollbreite (nicht gegen das DE-Minimum); Ist-Breite ist nur auf 119 km bekannt
+  - Begleitende Radwege auf beiden Straßenseiten zählen als Radweg je Seite, auch wenn sie in beiden Richtungen befahrbar sind (C-FAC-05; weicht von C-PRI-02 ab, c04 zählt sie als Zweirichtungsradweg). C-PRI-02 angleichen?
+- [ ] Prompt 18: Soll Fahrradstraße, Ist baulicher Radweg auf 248 km RSV/HAUPT/BASIS (z. B. Walddörferstraße, Fabriciusstraße). Nach C-PRI-03 erfüllt ein Radweg die Fahrradstraße nicht („falscher Typ“). Radweg an ETW30 als gleichwertig zulassen (satisfies.cycle_street ergänzen)? – Verkehrsplaner*in
+- [ ] Prompt 18: 1 383 km HAUPT liegen auf ETW30 und werden damit Soll-Fahrradstraße (1 423 km Soll gegenüber 27 km Ist). Ist das als Netzumfang gewollt oder sollen HAUPT-Routen stärker gebündelt werden (Prompt 16, C-NET)? – Team

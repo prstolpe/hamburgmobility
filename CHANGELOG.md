@@ -340,3 +340,21 @@
   Führungsnamen, Breitenverweise, confidence-Klassen und unavailable-Prüfungen.
 - Neu: pipeline/c04_principles.py, pipeline/lib/principles.py; Ausgaben data/interim/cycle_principles.parquet
   (Zeilen je edge_id und route_id), reports/cycle_principles.md (+ sechs Karten), reports/cycle_principles_review.csv.
+
+## cycling_rules.yaml 0.5.0 – 2026-11-06: Führungsform und Breite (Prompt 18)
+- Neuer Abschnitt `facility_assignment` (C-FAC-01…07), alle Werte Vorschläge (source_type assumption, status draft) und
+  fachlich freizugeben (docs/open_questions.md). Trennungsmatrix, cycle_street, S-04 und widths_m bleiben unverändert.
+  - C-FAC-01 Soll-Führung aus der Matrix; Fallback nur bei space_fits_preferred = false (Prompt 19), sonst Flag
+    fallback_check_p19; ETW60-Fallback mixed nur bei DTV ≤ mixed_rural_max_dtv; Radkategorie je Abschnitt = höchste der Kanten.
+  - C-FAC-02 Fahrradstraße nur bei Kfz/Tag ≤ max_motor_vehicles_day und Rad ≥ Kfz in der Spitzenstunde, sonst mixed und
+    Flag cycle_street_blocked. Ohne DTV vorläufig erfüllt (Entscheidung Projektteam 2026-11-06, Flag dtv_unknown).
+  - C-FAC-03 S-04 bei mixed: Kfz/h = DTV × motor_peak_hour_share 0,10 (aus der Notiz zu L-02, Annahme); Flag mixed_over_s04.
+  - C-FAC-04 Sollbreite = project_target + intensity_upgrade, Untergrenze de.*.min (Radfahrstreifen: CROW gow30_cycle_lane.min,
+    weil ERA dort keinen Mindestwert nennt); Vergleichswerte DE-Regelmaß und NL-Hauptnetz.
+  - C-FAC-05 Ist-Klasse aus OSM (cycle_street/track/lane/shared_lane/no) und Abbildung auf die Führungsnamen; begleitende
+    Radwege auf beiden Seiten → Radweg je Seite.
+  - C-FAC-06 facility_gap (missing/wrong_type/too_narrow/none/not_assessed) mit C-PRI-03 satisfies/partial;
+    C-FAC-07 facility_confidence.
+- Schema config/schema/cycling_model.py: `facility_assignment` mit Prüfung der Regel-IDs, Breitenpfade, Ist-Klassen und Flags.
+- Neu: pipeline/c05_facility.py, pipeline/lib/facility.py; Ausgaben data/interim/cycle_facility.parquet (je segment_id),
+  reports/cycle_facility.md. Goldene Fälle Führung/Breite (tests/golden/cycling/s*) ohne xfail.

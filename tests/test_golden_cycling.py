@@ -3,9 +3,9 @@
 s*.geojson: sections with expected facility, target width (as references into cycling_rules.yaml, so no
 number is copied) and lanes per direction. j*.geojson: junctions with expected target junction type.
 
-Structure tests run now. The evaluation tests are xfail until the pipeline steps exist:
-facility/width prompt 18 (pipeline/c05_facility.py), lanes prompt 19 (pipeline/c06_cross_section_soll.py),
-junctions prompt 20 (pipeline/c07_junctions.py). Each of those prompts removes its xfail.
+Structure tests run now. Facility/width is evaluated by pipeline/c05_facility.py (prompt 18). The other evaluation
+tests are xfail until the pipeline steps exist: lanes prompt 19 (pipeline/c06_cross_section_soll.py), junctions
+prompt 20 (pipeline/c07_junctions.py). Each of those prompts removes its xfail.
 """
 
 import importlib
@@ -143,14 +143,13 @@ def test_every_junction_row_has_a_case():
     assert {r.id for r in DESIGN.junctions.decision_table.rows} <= covered
 
 
-# --- evaluation (xfail until the pipeline step exists) ---------------------------------------
+# --- evaluation (lanes and junctions xfail until the pipeline step exists) ---------------------------------------
 
 
 def _step(module: str):
     return importlib.import_module(f"pipeline.{module}")
 
 
-@pytest.mark.xfail(raises=ImportError, strict=True, reason="Prompt 18: pipeline/c05_facility.py")
 @pytest.mark.parametrize("path", SECTION_FILES, ids=lambda p: p.stem)
 def test_golden_facility_and_width(path):
     props = _props(path)

@@ -4,7 +4,7 @@
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 # Werte mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen.
 meta:
-  version: 0.4.0
+  version: 0.5.0
   date: 2026-11-06
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
@@ -466,6 +466,55 @@ cycle_street:
   cyclists_dominant: {rule: 'Radverkehr >= Kfz-Verkehr in der Spitzenstunde', source_type: assumption}
   priority_over_crossing_ETW: {value: true, source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow}
   legal_de: 'Fahrradstraße nach StVO Zeichen 244.1; Voraussetzungen der VwV-StVO prüfen'
+
+# ---------------------------------------------------------------
+# Führungsform und Breite je Straßenabschnitt (prompts/18, pipeline/c05_facility.py)
+# Alle Setzungen sind Annahmen und vor Gebrauch fachlich zu prüfen (docs/open_questions.md).
+# ---------------------------------------------------------------
+facility_assignment:
+  source_type: assumption
+  rules:
+    - id: C-FAC-01
+      description: 'Soll-Führung = separation_matrix[cat_final][cycle_cat_final] (außerorts separation_matrix.rural). Zelle mit preferred/fallback: preferred; fallback nur, wenn space_fits_preferred = false (Prompt 19). Ist der Raum noch nicht geprüft, bleibt preferred und das Flag fallback_check_p19 wird gesetzt. ETW60: fallback mixed nur bei DTV <= separation_matrix.mixed_rural_max_dtv. cycle_cat_final je Abschnitt = höchste Radkategorie seiner Straßenkanten und begleitenden Radwege (category_order), ohne Kante: none'
+      category_order: [RSV, HAUPT, BASIS, ERSCHL]
+      status: draft
+    - id: C-FAC-02
+      description: 'Fahrradstraße nur, wenn Kfz/Tag <= cycle_street.max_motor_vehicles_day und Radverkehr in der Spitzenstunde (cyc_peak_h, beide Richtungen) >= Kfz in der Spitzenstunde (DTV x motor_peak_hour_share). Sonst Soll mixed und Flag cycle_street_blocked („Kfz-Menge reduzieren (Filter) oder Route verlegen“). Fehlt das DTV: Bedingung vorläufig erfüllt, Flag dtv_unknown (Entscheidung Projektteam 2026-11-06: Erschließungsstraßen ohne Zählung gelten als schwach belastet)'
+      dtv_missing_counts_as_met: true
+      status: draft
+    - id: C-FAC-03
+      description: 'Prüfung S-04 bei Soll mixed: Kfz/h = DTV x motor_peak_hour_share (beide Richtungen) gegen separation_matrix S-04 mixed_max_kfz_h; überschritten: Flag mixed_over_s04 (Soll bleibt mixed, Maßnahme Verkehrsmenge senken). Fahrbahnbreite (width_median_m) wird nur protokolliert. Fehlt das DTV: vorläufig erfüllt, Flag dtv_unknown'
+      motor_peak_hour_share: {value: 0.10, note: 'Spitzenstundenanteil Kfz, aus der Notiz zu design_rules L-02 (0,10 x 0,55 Lastrichtung); HBS prüfen'}
+      dtv_missing_counts_as_met: true
+      status: draft
+    - id: C-FAC-04
+      description: 'Soll-Breite = widths_m.project_target der Führung und Radkategorie plus intensity_upgrade (oneway: cyc_peak_h je Richtung, twoway: beide Richtungen), nie unter der Untergrenze (floor). Mischverkehr und eigene Trasse ohne Sollbreite (own_path: docs/open_questions.md). Vergleichswerte für den Steckbrief: DE-Regelmaß und NL-Hauptnetz. Pfade relativ zu widths_m'
+      target_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway}
+      floor: {separated_oneway_both: de.separated_oneway.min, separated_twoway: de.separated_twoway.min, cycle_lane: gow30_cycle_lane.min}
+      floor_note: 'ERA nennt für Radfahrstreifen keinen Mindestwert in widths_m.de; Untergrenze daher CROW gow30_cycle_lane.min'
+      de_reference: {separated_oneway_both: de.separated_oneway.standard, separated_twoway: de.separated_twoway.standard, cycle_lane: de.cycle_lane.standard}
+      nl_reference: {separated_oneway_both: nl.hoofdnet_oneway.standard, separated_twoway: nl.hoofdnet_twoway.standard, cycle_lane: nl.cycle_lane_hoofdnet.standard}
+      status: draft
+    - id: C-FAC-05
+      description: 'Ist-Führung aus OSM je Abschnitt, erste zutreffende Klasse in Reihenfolge von ist_classes: cycle_street (fahrradstrasse_official oder OSM bicycle_road/cyclestreet = yes), track (cycleway*-Wert in track_values oder begleitender Radweg sidepath_of), lane (lane_values), shared_lane (shared_values), sonst no (auch ohne cycleway-Tag). Abbildung auf die Führungsnamen mit to_facility; begleitende Radwege auf beiden Straßenseiten -> separated_oneway_both, nur auf einer Seite und in beiden Richtungen befahrbar -> twoway_track_facility (Abweichung von C-PRI-02, das jeden in beiden Richtungen befahrbaren begleitenden Radweg als Zweirichtungsradweg zählt). Ist-Breite aus OSM wie C-PRI-08'
+      ist_classes: [cycle_street, track, lane, shared_lane, 'no']
+      track_values: [track, opposite_track, separate]
+      track_note: 'separate = getrennt erfasster Radweg; auch wenn kein sidepath_of gefunden wurde, als track gewertet'
+      lane_values: [lane, opposite_lane]
+      shared_values: [shared_lane, share_busway, opposite_share_busway]
+      to_facility: {cycle_street: cycle_street, track: separated_oneway_both, lane: cycle_lane, shared_lane: mixed, 'no': mixed}
+      twoway_track_facility: separated_twoway
+      status: draft
+    - id: C-FAC-06
+      description: 'facility_gap, erste zutreffende Stufe: not_assessed (kein Soll oder Soll in not_assessed_soll), missing (Ist erfüllt das Soll nach C-PRI-03 satisfies nicht und Ist-Klasse in missing_classes), wrong_type (Ist erfüllt das Soll nicht), too_narrow (Ist-Breite bekannt und < Soll-Breite), sonst none. gap_partial = Ist ist Teilerfüllung (C-PRI-03 partial) oder fallback der Zelle'
+      missing_classes: ['no', shared_lane]
+      not_assessed_soll: [own_path]
+      not_assessed_note: 'own_path = eigene Trasse abseits der Straße (SW, RSV statt Fußgängerzone); die Ist-Führung auf der Straße sagt darüber nichts'
+      status: draft
+    - id: C-FAC-07
+      description: 'facility_confidence: low ohne cat_final, medium bei einem Flag aus lowers_confidence, sonst high'
+      lowers_confidence: [dtv_unknown, fallback_check_p19]
+      status: draft
 
 # ---------------------------------------------------------------
 # Radverkehrsstärken und Breiten

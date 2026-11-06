@@ -112,6 +112,22 @@ pipeline/c04_principles.py, Prüfungen P-COH/P-DIR/P-SAF/P-COM/P-ATT aus `princi
 - Ergebnis, Top-30-Routen, Karten je Prinzip und Gewichts-Sensitivität (±20 %): reports/cycle_principles.md;
   20 Routen zur Durchsicht mit Ortskundigen: reports/cycle_principles_review.csv.
 
+### 3.4 Führungsform und Breite (Prompt 18, umgesetzt)
+
+pipeline/c05_facility.py je Straßenabschnitt, Regeln C-FAC-01…07 in `facility_assignment` (alle Annahmen, status draft):
+
+- **Soll-Führung** aus der Trennungsmatrix (cat_final × cycle_cat_final, höchste Radkategorie der Kanten des Abschnitts).
+  Bei Zellen mit Fallback bleibt bis Prompt 19 die bevorzugte Führung; der Fallback folgt erst, wenn der Raum nicht reicht [B].
+- **Fahrradstraße** nur bei höchstens 2 500 Kfz/Tag und Radverkehr ≥ Kfz in der Spitzenstunde, sonst Mischverkehr mit dem
+  Hinweis „Kfz-Menge reduzieren (Filter) oder Route verlegen“. **S-04:** Mischverkehr bis 700 Kfz/h (DTV × 0,10) [B].
+  Kfz-Mengen gibt es nur für Hauptverkehrsstraßen; ohne Zählung gelten beide Bedingungen vorläufig als erfüllt
+  (Entscheidung 2026-11-06, Flag dtv_unknown) [B].
+- **Sollbreite** = Projekt-Soll plus Verbreiterung nach Spitzenstunde, nie unter dem deutschen Mindestmaß; DE-Regelmaß und
+  NL-Hauptnetz werden als Vergleich mitgeführt. Mischverkehr und eigene Trasse ohne Sollbreite [B].
+- **Ist-Führung** aus OSM (Fahrradstraße, Radweg, Streifen, Sharrow/Busspur, keine) und **Lücke**: fehlt, falscher Typ,
+  zu schmal (nur wo OSM eine Breite hat) [B].
+- Ergebnis, Matrix Straßen- × Radkategorie, Lückenliste und 30 Stichproben je Führungsform: reports/cycle_facility.md.
+
 ## 4. Führungsform, Breite, Lage
 
 Die Trennungsmatrix (`separation_matrix`) kombiniert Straßenkategorie und Radnetzkategorie:
