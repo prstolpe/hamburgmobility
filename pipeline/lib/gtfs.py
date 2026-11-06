@@ -105,6 +105,57 @@ def trips_per_shape(feed: dict, day: dt.date, route_types: tuple[int, ...]) -> t
     return counts.rename("trips"), int((~has_shape).sum())
 
 
+def trip_start_hours(path: str | Path) -> pd.Series:
+    """Hour of the first departure of every trip (stop_times, smallest stop_sequence), PRF-02.
+
+    Reads only trip_id, departure_time and stop_sequence. GTFS times may pass 24:00 (e.g. 25:10:00); the hour is
+    kept as written.
+    """
+    path = Path(path)
+    cols = ["trip_id", "departure_time", "stop_sequence"]
+    if path.is_dir():
+        st = pd.read_csv(path / "stop_times.txt", dtype=str, usecols=cols)
+    else:
+        with zipfile.ZipFile(path) as z:
+            n = {Path(x).name: x for x in z.namelist()}["stop_times.txt"]
+            with z.open(n) as f:
+                st = pd.read_csv(f, dtype=str, usecols=cols)
+    st["seq"] = st["stop_sequence"].astype(int)
+    first = st.sort_values(["trip_id", "seq"]).drop_duplicates("trip_id")
+    hours = first["departure_time"].str.split(":", n=1).str[0].astype(int)
+    return pd.Series(hours.to_numpy(), index=first["trip_id"].to_numpy(), name="hour")
+
+
+def hourly_trips_per_shape(feed: dict, start_hours: pd.Series, day: dt.date, route_types: tuple[int, ...]) -> pd.DataFrame:
+    """Trips on day per shape_id (rows) and start hour (columns) for the given route types (PRF-02)."""
+    routes = feed["routes"]
+    if routes.empty:
+        return pd.DataFrame()
+    sel = set(routes.loc[routes["route_type"].astype(int).isin(route_types), "route_id"])
+    trips = feed["trips"]
+    trips = trips[trips["route_id"].isin(sel) & trips["service_id"].isin(active_services(feed, day))]
+    if "shape_id" not in trips:
+        return pd.DataFrame()
+    trips = trips[trips["shape_id"].notna()].copy()
+    trips["hour"] = trips["trip_id"].map(start_hours)
+    trips = trips[trips["hour"].notna()]
+    hist = trips.groupby(["shape_id", trips["hour"].astype(int)]).size().unstack(fill_value=0)
+    hist.columns.name = "hour"
+    return hist
+
+
+def shape_direction(seg_geoms, shape_geom) -> "np.ndarray":
+    """+1 where a segment runs in the direction of the shape, -1 against it (start and end projected on the shape)."""
+    import numpy as np
+
+    geoms = np.asarray(seg_geoms.values if hasattr(seg_geoms, "values") else seg_geoms)
+    start = shapely.line_interpolate_point(geoms, 0.0, normalized=True)
+    end = shapely.line_interpolate_point(geoms, 1.0, normalized=True)
+    d0 = shapely.line_locate_point(shape_geom, start)
+    d1 = shapely.line_locate_point(shape_geom, end)
+    return np.where(d1 >= d0, 1, -1)
+
+
 def shapes_gdf(feed: dict, shape_ids=None) -> gpd.GeoDataFrame:
     """One LineString per shape_id in EPSG:25832, points ordered by shape_pt_sequence (optionally only shape_ids)."""
     s = feed["shapes"]

@@ -1,7 +1,7 @@
-"""pydantic model for config/design_rules.yaml (lanes, placement, cross-section allocation, junctions).
+"""pydantic model for config/design_rules.yaml (lanes, placement, cross-section allocation, profile, junctions).
 
 Conditions stay strings; prompts 19 and 20 evaluate them. The cross-checks validate provenance,
-ids, categories, junction types and the names used in junction conditions.
+ids, categories, junction types, the names used in junction conditions and the profile rules (prompt 19).
 """
 
 import re
@@ -10,7 +10,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from config.schema.cycling_model import CYCLE_CATEGORIES, Meta, Source
+from config.schema.cycling_model import CYCLE_CATEGORIES, FACILITIES, Meta, Source
 from config.schema.provenance import META_KEYS, check_provenance, collect_ids
 from config.schema.rules_model import EXPECTED_CATEGORIES
 
@@ -24,6 +24,10 @@ LEG_WORDS = {"any", "with", "tram", "cycle_path", "cycle_street"}
 _LEG_TOKEN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 # Row keys naming a junction type.
 TYPE_KEYS = ("then", "else_then", "otherwise", "fallback")
+# Rules of profile_assignment read by pipeline/lib/profile.py (prompt 19).
+PROFILE_RULE_IDS = {"PRF-01", "PRF-02", "PRF-03", "PRF-04", "PRF-05", "PRF-06", "PRF-07"}
+# Cascade step that switches to the fallback facility of the matrix cell (not a degrade step).
+FALLBACK_STEP = "fallback"
 
 
 class _Strict(BaseModel):
@@ -97,12 +101,43 @@ def _check_junctions(j: Junctions) -> None:
             raise ValueError(f"{row.id}.legs: unknown categories {sorted(unknown_legs)}")
 
 
+def _check_profile(profile: dict, allocation: dict) -> None:
+    rules = {r.get("id"): r for r in profile.get("rules", [])}
+    missing = PROFILE_RULE_IDS - set(rules)
+    if missing:
+        raise ValueError(f"profile_assignment: rules missing {sorted(missing)}")
+    steps = [s["step"] for s in allocation["degrade_cascade_if_not_fit"]]
+    order = rules["PRF-06"]["cascade_order"]
+    unknown = [s for s in order if s not in steps and s != FALLBACK_STEP]
+    if unknown:
+        raise ValueError(f"PRF-06.cascade_order: unknown steps {unknown}")
+    if [s for s in order if s != FALLBACK_STEP] != steps:
+        raise ValueError(f"PRF-06.cascade_order: must contain the degrade steps {steps} in order")
+    if not set(rules["PRF-06"]["flag_only_steps"]) <= set(order):
+        raise ValueError("PRF-06.flag_only_steps: not in cascade_order")
+    prf03 = rules["PRF-03"]
+    elements = set(allocation["elements_min_m"]) | set(prf03.get("extra_elements", []))
+    cells = prf03["cycle_elements"]
+    if set(cells) != FACILITIES:
+        raise ValueError(f"PRF-03.cycle_elements: facilities must be {sorted(FACILITIES)}, got {sorted(cells)}")
+    for fac, cell in cells.items():
+        for key in ("element", "buffer"):
+            if cell.get(key) is not None and cell[key] not in elements:
+                raise ValueError(f"PRF-03.cycle_elements.{fac}.{key}: unknown element {cell[key]!r}")
+    for rule_id, key in (("PRF-03", "no_sidewalk_categories"), ("PRF-03", "tree_categories"),
+                         ("PRF-04", "no_profile_categories")):
+        unknown = set(rules[rule_id][key]) - EXPECTED_CATEGORIES
+        if unknown:
+            raise ValueError(f"{rule_id}.{key}: unknown categories {sorted(unknown)}")
+
+
 class DesignRuleSet(_Strict):
     meta: Meta
     sources: dict[str, Source]
     lanes: Lanes
     placement: dict[str, Any]
     cross_section_allocation: dict[str, Any]
+    profile_assignment: dict[str, Any]
     junctions: Junctions
 
     def rule_ids(self) -> list[str]:
@@ -123,5 +158,6 @@ class DesignRuleSet(_Strict):
             raise ValueError(f"degrade_cascade_if_not_fit: duplicate steps {steps}")
 
         _check_lane_defaults(self.lanes.default_per_direction)
+        _check_profile(self.profile_assignment, self.cross_section_allocation)
         _check_junctions(self.junctions)
         return self

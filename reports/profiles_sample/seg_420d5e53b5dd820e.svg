@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1512" height="242" viewBox="0 0 1512 242" font-family="sans-serif" font-size="10">
+<rect x="0" y="0" width="1512" height="242" fill="#ffffff"/>
+<text x="16.0" y="18" font-size="13" font-weight="bold">Vorsetzen / Baumwall – Hamburg-Mitte</text>
+<text x="16.0" y="34" fill="#444">seg_420d5e53b5dd820e · GOW30 · Rad ERSCHL · Radfahrstreifen · passt</text>
+<rect x="536.2" y="52.0" width="66.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="3.00"><title>Gehweg 3,00 m</title></rect>
+<text transform="translate(569.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 3,00</text>
+<rect x="602.2" y="52.0" width="44.0" height="120.0" fill="#5b8c3a" stroke="#ffffff" stroke-width="1" data-element="tree_strip" data-width-m="2.00"><title>Baumstreifen 2,00 m</title></rect>
+<text transform="translate(624.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Baumstreifen 2,00</text>
+<rect x="646.2" y="52.0" width="44.0" height="120.0" fill="#e06c5a" stroke="#ffffff" stroke-width="1" data-element="cycle_lane" data-width-m="2.00"><title>Radfahrstreifen 2,00 m</title></rect>
+<text transform="translate(668.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Radfahrstreifen 2,00</text>
+<rect x="690.2" y="52.0" width="77.0" height="120.0" fill="#555b61" stroke="#ffffff" stroke-width="1" data-element="carriageway" data-width-m="3.50"><title>Fahrbahn 3,50 m</title></rect>
+<text x="728.7" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Fahrbahn 3,50</text>
+<rect x="767.2" y="52.0" width="44.0" height="120.0" fill="#e06c5a" stroke="#ffffff" stroke-width="1" data-element="cycle_lane" data-width-m="2.00"><title>Radfahrstreifen 2,00 m</title></rect>
+<text transform="translate(789.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Radfahrstreifen 2,00</text>
+<rect x="811.2" y="52.0" width="55.0" height="120.0" fill="#c9a227" stroke="#ffffff" stroke-width="1" data-element="loading_zone" data-width-m="2.50"><title>Ladezone 2,50 m</title></rect>
+<text transform="translate(838.7,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Ladezone 2,50</text>
+<rect x="866.2" y="52.0" width="44.0" height="120.0" fill="#5b8c3a" stroke="#ffffff" stroke-width="1" data-element="tree_strip" data-width-m="2.00"><title>Baumstreifen 2,00 m</title></rect>
+<text transform="translate(888.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Baumstreifen 2,00</text>
+<rect x="910.2" y="52.0" width="66.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="3.00"><title>Gehweg 3,00 m</title></rect>
+<text transform="translate(943.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 3,00</text>
+<text x="536.2" y="206.0" fill="#222">Soll-Bedarf 20,00 m</text>
+<line x1="536.2" y1="192.0" x2="976.2" y2="192.0" stroke="#222" stroke-width="2"/>
+<line x1="16.0" y1="218.0" x2="1496.4" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
+<text x="16.0" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 67,29 m</text>
+</svg>

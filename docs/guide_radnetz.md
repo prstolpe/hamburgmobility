@@ -149,6 +149,23 @@ Spitzenstunde (15 % der Tagesmenge, [RWS 2021](https://www.ndw.nu/binaries/ndw/d
 - Raumaufteilung: Bausteine in fester Reihenfolge (Gehwege → Radverkehr → ÖPNV → Kfz-Minimum → Puffer → Regelbreiten → Grün → Laden → Parken). Reicht der Raum nicht, greift die Abbaukaskade D1–D7, protokolliert im `rule_trace` [B].
 - Ergebnis je Abschnitt: Soll-Profil mit Elementen und Breiten, Fahrstreifen je Richtung, Führungsform, Radwegbreite und -seite, Passung (passt/eng/passt nicht).
 
+### 5.1 Soll-Querschnitt (Prompt 19, umgesetzt)
+
+pipeline/c06_cross_section_soll.py je Straßenabschnitt, Regeln L-01…06, PL-01…06 und `profile_assignment` PRF-01…07
+in design_rules.yaml 0.2.0 (Setzungen sind Annahmen, status draft):
+
+- **Fahrstreifen:** Ist aus den amtlichen Fahrstreifen je Richtung (sonst OSM lanes); Soll nach L-01/L-02, ohne DTV
+  = Ist mit niedriger confidence; nie mehr als im Ist (L-06) [B].
+- **Busfahrstreifen** statt zweitem Kfz-Streifen ab 20 Bussen je Spitzenstunde und Richtung; die Spitzenstunde kommt aus
+  dem HVV-GTFS (stärkste Abfahrtsstunde der stärkeren Richtung, Entscheidung 2026-11-06) [B].
+- **Profil:** Gehwege, Radanlage (Lage nach PL-01…03), ÖPNV, Fahrbahn, Trennstreifen, Bäume an GOW, Ladezone bei
+  Geschäftsnutzung und Parken nur, wo es heute Parken gibt. Verfügbar = width_p10_m (Verkehrsfläche); die Fassadenbreite
+  zeigt das Potenzial [B].
+- **Abbau:** D1 Parken, D2 Bäume, dann Fallback der Matrixzelle aus Prompt 18, D3 zweiter Fahrstreifen, D4 Mindestbreiten,
+  D5 Vorschlag GOW50 → GOW30 (nicht übernommen), D6/D7 nur als Hinweis (D7 nur, wo die Radanlage eigene Breite belegt) [B].
+- Ergebnis, Abbaustufen, Fahrstreifen Ist → Soll und Querschnitts-Skizzen: reports/cross_section_soll.md,
+  reports/profiles_sample/*.svg.
+
 ## 6. Knotenpunkte
 
 - Kreisverkehre sind der sicherste Knotentyp; ein vierarmiger einstreifiger Kreisverkehr hat 4 statt 24 Konfliktpunkte; Kreisverkehre mit getrennten Radwegen sind für Radfahrende am sichersten ([SWOV 2022](https://swov.nl/sites/default/files/bestanden/downloads/FS%20Rotondes%20en%20andere%20kruispunten_1.pdf)) [F].

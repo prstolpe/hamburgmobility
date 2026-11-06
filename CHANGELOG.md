@@ -358,3 +358,22 @@
 - Schema config/schema/cycling_model.py: `facility_assignment` mit Prüfung der Regel-IDs, Breitenpfade, Ist-Klassen und Flags.
 - Neu: pipeline/c05_facility.py, pipeline/lib/facility.py; Ausgaben data/interim/cycle_facility.parquet (je segment_id),
   reports/cycle_facility.md. Goldene Fälle Führung/Breite (tests/golden/cycling/s*) ohne xfail.
+
+## design_rules.yaml 0.2.0 – 2026-11-06: Soll-Querschnitt (Prompt 19)
+- Neuer Abschnitt `profile_assignment` (PRF-01…07), alle Setzungen Annahmen (source_type assumption, status draft),
+  fachlich freizugeben (docs/open_questions.md). lanes, placement und cross_section_allocation bleiben unverändert;
+  Werte werden über Pfade auf bestehende Einträge verwiesen (lane_width_m, elements_min_m, widths_m, C-G30-01 frontage).
+  - PRF-01 Ist-Fahrstreifen (amtlich vor OSM), Einrichtungsverkehr, ohne DTV Soll = Ist (höchstens 2 je Richtung).
+  - PRF-02 Busse und Straßenbahnen je Spitzenstunde und Richtung aus GTFS (Abfahrtsstunde der ersten Haltestelle,
+    stärkste Stunde der stärkeren Richtung; Entscheidung Projektteam 2026-11-06).
+  - PRF-03 Bausteine je Kategorie: Gehwege beidseitig (nicht ETW_ERF), Radanlage je Führungsform, Baumstreifen an GOW,
+    Ladezone bei Geschäftsnutzung, Parken nur wo OSM heute Parken zeigt (Entscheidung 2026-11-06).
+  - PRF-04 Fahrbahnbreiten je Kategorie und Fahrstreifenzahl; SW/GOW80/ETW60 ohne Profilregeln.
+  - PRF-05 Passung gegen width_p10_m (Verkehrsfläche, maßgeblich) und facade_width_p10_m (Potenzial).
+  - PRF-06 Kaskade D1, D2, Fallback der Matrixzelle (Entscheidung 2026-11-06), D3, D4, D5, D6/D7 nur als Flag.
+  - PRF-07 PL-02/PL-05 nicht prüfbar (Flag pl02_unchecked).
+- Schema config/schema/design_model.py: `profile_assignment` mit Prüfung der Regel-IDs, Kaskadenstufen, Bausteine,
+  Führungsformen und Kategorien.
+- Neu: pipeline/c06_cross_section_soll.py, pipeline/lib/profile.py, GTFS-Hilfen in pipeline/lib/gtfs.py
+  (trip_start_hours, hourly_trips_per_shape, shape_direction); Ausgaben data/interim/cross_section_soll.parquet,
+  reports/cross_section_soll.md, reports/profiles_sample/*.svg. Goldene Fälle Fahrstreifen/Busfahrstreifen ohne xfail.

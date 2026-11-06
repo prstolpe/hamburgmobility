@@ -351,3 +351,46 @@ def test_rejects_unknown_confidence_flag(cyc):
 
 def test_rejects_facility_rule_without_status(cyc):
     _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-03").pop("status")), "status")
+
+
+# --- prompt 19: profile_assignment (design_rules.yaml) -------------------------------------------
+
+
+def _prf(d, rule_id):
+    return _by_id(d["profile_assignment"]["rules"], rule_id)
+
+
+def test_profile_rules_complete():
+    from config.schema.design_model import PROFILE_RULE_IDS
+    rules = load_design_rules()
+    ids = {r["id"] for r in rules.profile_assignment["rules"]}
+    assert PROFILE_RULE_IDS <= ids
+
+
+def test_profile_cascade_covers_all_degrade_steps():
+    rules = load_design_rules()
+    steps = [s["step"] for s in rules.cross_section_allocation["degrade_cascade_if_not_fit"]]
+    order = _by_id(rules.profile_assignment["rules"], "PRF-06")["cascade_order"]
+    assert [s for s in order if s != "fallback"] == steps
+
+
+def test_rejects_unknown_cascade_step(des):
+    _rejects(DesignRuleSet, _mutated(des, lambda d: _prf(d, "PRF-06")["cascade_order"].append("D9")), "D9")
+
+
+def test_rejects_cycle_elements_missing_facility(des):
+    _rejects(DesignRuleSet, _mutated(des, lambda d: _prf(d, "PRF-03")["cycle_elements"].pop("mixed")), "cycle_elements")
+
+
+def test_rejects_unknown_profile_element(des):
+    def mutate(d):
+        _prf(d, "PRF-03")["cycle_elements"]["separated_twoway"]["element"] = "hover_lane"
+    _rejects(DesignRuleSet, _mutated(des, mutate), "hover_lane")
+
+
+def test_rejects_unknown_category_in_profile_rules(des):
+    _rejects(DesignRuleSet, _mutated(des, lambda d: _prf(d, "PRF-03")["tree_categories"].append("GOW70")), "GOW70")
+
+
+def test_rejects_profile_rule_missing(des):
+    _rejects(DesignRuleSet, _mutated(des, lambda d: d["profile_assignment"]["rules"].pop()), "PRF-07")
