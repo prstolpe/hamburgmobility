@@ -262,3 +262,55 @@ def test_rejects_official_and_planned_overlap(cyc):
 def test_rejects_bonus_out_of_range(cyc):
     _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-04").update(max_reduction=1.5)), "max_reduction")
     _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-05").update(multiplier=0)), "multiplier")
+
+
+# --- principle_scoring (prompts/17) ----------------------------------------------------------
+
+
+def _pri(d: dict, rule_id: str) -> dict:
+    return _by_id(d["principle_scoring"]["rules"], rule_id)
+
+
+def test_principle_scoring_rules_complete(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["principle_scoring"]["rules"].pop()), "C-PRI-16")
+
+
+def test_score_forms_name_every_check(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-01")["score_forms"].pop("P-DIR-01")), "score_forms")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-01")["score_forms"].update({"P-XXX-01": "share"})),
+             "score_forms")
+
+
+def test_rejects_unknown_score_form(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-01")["score_forms"].update({"P-DIR-01": "magic"})),
+             "unknown score form")
+
+
+def test_rejects_unknown_facility_in_mapping(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-02")["by_condition"].update(other="bike_lane")),
+             "unknown facilities")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-03")["partial"].update(mixed=["bike_lane"])),
+             "unknown facility")
+
+
+def test_rejects_partial_overlapping_satisfies(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-03")["partial"].update(mixed=["mixed"])), "overlaps")
+
+
+def test_rejects_width_reference_outside_project_target(cyc):
+    _rejects(CyclingRuleSet,
+             _mutated(cyc, lambda d: _pri(d, "C-PRI-08")["required_by_facility"].update(cycle_lane="nowhere")),
+             "required_by_facility")
+
+
+def test_rejects_unavailable_unknown_check(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-16")["unavailable"].update({"P-XXX-09": "x"})),
+             "C-PRI-16")
+
+
+def test_rejects_principle_rule_without_status(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-10").pop("status")), "status")
+
+
+def test_rejects_confidence_classes_out_of_order(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _pri(d, "C-PRI-13").update(medium=0.9)), "medium")

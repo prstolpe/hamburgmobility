@@ -93,6 +93,25 @@ zu belasteten Hauptstraßen verlaufen [F]. Regel P-ATT-03 schlägt eine Parallel
 innerhalb von 200 m liegt und den Umwegfaktor einhält; die Hauptstraße erhält trotzdem getrennte
 Radwege (GOW50), weil dort Ziele liegen [B].
 
+### 3.3 Prinzipienprüfung (Prompt 17, umgesetzt)
+
+pipeline/c04_principles.py, Prüfungen P-COH/P-DIR/P-SAF/P-COM/P-ATT aus `principles`, Bewertung nach C-PRI-01…16 in
+`principle_scoring` (alle Annahmen, status draft):
+
+- **Zwei Sichten:** score_ist bewertet den heutigen Zustand der Soll-Route, score_soll den Zustand nach regelkonformem
+  Ausbau (Führung nach Trennungsmatrix, Sollbreite, geschlossene Decke, Beleuchtung). Die Differenz ist der
+  Handlungsbedarf [B].
+- **Scores:** je Prüfung 0–1, je Prinzip das Mittel der bewerteten Prüfungen, gesamt mit `principle_weights`.
+  Fehlende Daten (z. B. OSM width) zählen nicht als gut, sondern senken die confidence [B].
+- **Ist-Führung** aus der Ist-Widerstandsregel (C-IMP) und OSM cycleway; begleitende Radwege gelten als baulich getrennt
+  und ersetzen die Führung der Straße daneben [B].
+- **Direktheit:** Umwegfaktor je Route und als Netzstichprobe (OD-Paare je Kategorie, Seed dokumentiert); Halte an LSA
+  und bei Wartepflicht, Zeitverlust mit den Wartezeiten aus `routing_impedance` [B].
+- **Nicht bewertet (Daten fehlen):** Knotentyp P-SAF-02 (Prompt 20), Steigung P-COM-03 (kein Höhenmodell), Lärm P-ATT-02
+  (keine Lärmkarte). Grünanteil ohne Straßenbaumkataster, aus ALKIS-Nutzung und OSM-Bäumen [B].
+- Ergebnis, Top-30-Routen, Karten je Prinzip und Gewichts-Sensitivität (±20 %): reports/cycle_principles.md;
+  20 Routen zur Durchsicht mit Ortskundigen: reports/cycle_principles_review.csv.
+
 ## 4. Führungsform, Breite, Lage
 
 Die Trennungsmatrix (`separation_matrix`) kombiniert Straßenkategorie und Radnetzkategorie:

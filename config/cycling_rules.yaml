@@ -4,7 +4,7 @@
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 # Werte mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen.
 meta:
-  version: 0.3.0
+  version: 0.4.0
   date: 2026-11-06
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
@@ -102,6 +102,107 @@ principles:
 
 # Gewichte für den Routen-Gesamtscore (Annahme, Sensitivitätsanalyse)
 principle_weights: {cohesion: 0.2, directness: 0.25, safety: 0.3, comfort: 0.15, attractiveness: 0.1, source_type: assumption}
+
+# ---------------------------------------------------------------
+# Bewertung nach den fünf Prinzipien (prompts/17, c04_principles.py) – alle Werte Annahmen, vor Gebrauch fachlich prüfen.
+# Schwellen der Prüfungen stehen weiter in `principles`; hier steht nur, wie daraus Scores werden.
+# ---------------------------------------------------------------
+principle_scoring:
+  source_type: assumption
+  rules:
+    - id: C-PRI-01
+      description: 'Score je Prüfung 0–1 nach score_forms; Prinzip-Score = Mittel der bewerteten Prüfungen (gleiches Gewicht); Gesamtscore mit principle_weights, umgelegt auf die Prinzipien mit Score. Fehlende Daten: die Prüfung zählt nicht zum Score und senkt die confidence (C-PRI-13). Nicht anwendbar (z. B. P-DIR-03 ohne Schwelle für BASIS, P-COM-01 bei Mischverkehr) zählt weder zum Score noch zur confidence. Routenwerte sind längengewichtete Mittel der Kanten mit Wert'
+      score_forms: {P-COH-01: share, P-COH-02: share, P-COH-03: share, P-COH-04: inverse_ratio, P-DIR-01: excess, P-DIR-02: inverse_ratio, P-DIR-03: inverse_ratio, P-SAF-01: share, P-SAF-02: share, P-SAF-03: share, P-SAF-04: percentile_inverse, P-COM-01: ratio, P-COM-02: share, P-COM-03: inverse_ratio, P-ATT-01: ratio, P-ATT-02: share, P-ATT-03: share}
+      forms_note: 'share = Wert selbst (Anteil 0–1); ratio = min(Wert / Sollwert, 1); inverse_ratio = min(Schwelle / Wert, 1), Wert 0 -> 1; excess = 1 - (Wert - Schwelle) / (Schwelle - 1), begrenzt auf 0–1 (Umwegfaktor bis zur Schwelle -> 1, doppelte Überschreitung -> 0); percentile_inverse = 1 - Perzentilrang unter allen Routen bzw. Kanten des Soll-Netzes'
+      network_only: [P-COH-03]
+      status: draft
+    - id: C-PRI-02
+      description: 'Ist-Führung je Kante aus der Bedingung der Ist-Widerstandsregel (C-IMP-xx, when) und den OSM-cycleway-Werten. Begleitende Radwege (sidepath_of) gelten als baulich getrennt: Einrichtungsradweg, wenn nur eine Richtung befahrbar ist, sonst Zweirichtungsradweg. Eine Straßenkante mit begleitendem Radweg übernimmt dessen Führung, Breite, Belag und Beleuchtung (Radfahrende nutzen den Radweg). Fähren und Straßenkanten ohne Ist-Regel: unbekannt'
+      by_condition: {cycle_street: cycle_street, own_path: own_path, separated_track: separated_oneway_both, low_speed_access_road: mixed, low_speed_with_lane: cycle_lane, low_speed_mixed: mixed, other: mixed}
+      lane_upgrade: cycle_lane
+      lane_upgrade_note: 'Straßenkante mit cycleway*=lane|opposite_lane (Wert im impedance_trace) wird cycle_lane, auch bei Ist-Tempo > 30 (C-IMP-07)'
+      sidepath_oneway: separated_oneway_both
+      sidepath_twoway: separated_twoway
+      status: draft
+    - id: C-PRI-03
+      description: 'P-SAF-01: Ist-Führung gegen die Soll-Führung der Trennungsmatrix (cat_final x cycle_cat_final; begleitende Radwege nach ihrer Straße, eigenständige Wege own_path). Voll erfüllt (satisfies) -> 1, teilweise (partial oder Ist = fallback der Zelle) -> partial_score, sonst 0. Soll-Führung = preferred bzw. all der Zelle'
+      partial_score: 0.5
+      satisfies:
+        separated_oneway_both: [separated_oneway_both, own_path]
+        separated_twoway: [separated_twoway, separated_oneway_both, own_path]
+        cycle_lane: [cycle_lane, separated_oneway_both, separated_twoway, own_path]
+        cycle_street: [cycle_street, own_path]
+        mixed: [mixed, cycle_street, separated_oneway_both, separated_twoway, own_path]
+        own_path: [own_path]
+      partial:
+        separated_oneway_both: [separated_twoway]
+        cycle_street: [mixed]
+        own_path: [separated_oneway_both, separated_twoway]
+      partial_note: 'Zweirichtungsradweg statt beidseitiger Einrichtungsradwege (S-03); Mischverkehr statt Fahrradstraße auf einer ETW30-Hauptroute; Radweg neben der Straße statt eigener Trasse (SW, RSV in Fußgängerzonen). Radfahrstreifen erfüllen Mischverkehr nicht (S-02)'
+      status: draft
+    - id: C-PRI-04
+      description: 'P-DIR-01 Umwegfaktor (Länge, ungerichtet, gleich für Ist und Soll): (a) je Route Länge der Route / kürzester Weg zwischen ihren Enden auf allen befahrbaren Kanten der Hauptkomponente; verzweigte Routen ohne Wert. (b) Netz: od_pairs_per_category zufällige OD-Paare je Kategorie (RSV, HAUPT, BASIS) zwischen Knoten des Netzes dieser Ebene mit höheren Ebenen, Luftlinie im Band cycle_categories.<Kategorie>.trip_length_km; Netzweg auf dieser Ebene / kürzester Weg auf allen befahrbaren Kanten'
+      od_pairs_per_category: 200
+      seed: 42
+      status: draft
+    - id: C-PRI-05
+      description: 'P-DIR-02/03 Halte und Zeitverlust je Route: ein Halt an jeder LSA (OSM highway=traffic_signals) an Knoten der Route und an inneren Knoten ihrer Kanten, und an jedem Knoten ohne LSA, an dem eine vorfahrtberechtigte Straße (C-GRAPH-05) anliegt, wenn mindestens eine der Routenkanten dort (an den Routenenden: die eine Kante) nicht vorfahrtberechtigt ist, wie die Knotenwartezeiten im Radgraphen; begleitende Radwege haben den Vorrang ihrer Straße. Zeitverlust = Halte x routing_impedance.factors signal_delay_s bzw. give_way_delay_s. Kanten: Halte der Kante (LSA, Wartepflicht an beiden Enden) je km. Soll = Ist bis Prompt 20 (Soll-Knotentypen)'
+      status: draft
+    - id: C-PRI-06
+      description: 'P-SAF-03 soziale Sicherheit: Anteil beleuchteter Länge an der Länge mit bekanntem OSM-lit-Wert; Sichtbezug zu Bebauung wird nicht geprüft. Soll: beleuchtet (soll_lit)'
+      lit_values: ['yes', '24/7', automatic, limited, interval, sunset-sunrise, dusk-dawn]
+      unlit_values: ['no', disused]
+      soll_lit: true
+      status: draft
+    - id: C-PRI-07
+      description: 'P-SAF-04 Unfälle: Unfälle mit Radbeteiligung (Unfallatlas IstRad, alle Schweregrade, Jahre aus sources.yaml) je Kante, Zuordnung zum nächsten Kantenstück höchstens rules.yaml P-RISK-01 snap_m entfernt; je km (Länge mindestens P-RISK-01 min_length_m) über den Zeitraum. Score = 1 - Perzentilrang. Soll = Ist (keine Prognose der Wirkung; der Wert bleibt Hinweis auf Unfallhäufungen). Nur Summen je Kante und Route werden gespeichert'
+      status: draft
+    - id: C-PRI-08
+      description: 'P-COM-01 Breite: Ist-Breite aus OSM (eigene Wege und begleitende Radwege: width, sonst est_width; Radweg oder Radfahrstreifen in der Straßenlinie: cycleway:width bzw. cycleway:both|right|left:width; Fahrradstraße: width der Fahrbahn) gegen widths_m.project_target der Ist-Führung und Radnetzkategorie plus intensity_upgrade (Spitzenstunde cyc_peak_h je Richtung bzw. beide Richtungen). Mischverkehr und Führungen ohne Sollbreite: nicht anwendbar; fehlende Breite = unbekannt. Soll = Sollbreite (Score 1)'
+      required_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, own_path: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway}
+      own_path_note: 'eigene Radtrassen haben keine Sollbreite in widths_m (docs/open_questions.md); vorläufig wie Zweirichtungsradweg'
+      status: draft
+    - id: C-PRI-09
+      description: 'P-COM-02 Belag: RSV/HAUPT Anteil der Länge mit geschlossener Decke (smooth_surfaces); BASIS/ERSCHL Anteil der Länge ohne unbefestigte oder grobe Beläge (routing_impedance.ist_mapping.unpaved_surfaces). OSM surface (Radweg in der Straßenlinie: cycleway:surface bzw. cycleway:both|right|left:surface, sonst surface der Straße); fehlender Belag = unbekannt. Soll: geschlossene Decke (Score 1)'
+      smooth_surfaces: [asphalt, concrete, 'concrete:plates', 'concrete:lanes']
+      status: draft
+    - id: C-PRI-10
+      description: 'P-ATT-01 Grünanteil im Puffer buffer_m um die Kante: Fläche aus ALKIS-Nutzung (nutzart in green_nutzart) und OSM-Bäumen (natural=tree als Kreis mit tree_crown_radius_m, natural=tree_row als Linie mit demselben Puffer), ohne Doppelzählung. Score = min(Grünanteil / target_share, 1). Kein Straßenbaumkataster (sources.yaml street_trees ohne Endpunkt, Entscheidung 2026-11-06). Soll = Ist'
+      buffer_m: 20
+      green_nutzart: [Wald, Gehoelz, Sport Freizeit Und Erholungsflaeche, Friedhof, Landwirtschaft, Heide, Moor, Sumpf]
+      tree_crown_radius_m: 4
+      target_share: 0.3
+      status: draft
+    - id: C-PRI-11
+      description: 'P-ATT-03 Parallelität: Anteil der Länge nicht an Straßen mit DTV > P-ATT-03 dtv (DTV der Straße bzw. bei begleitenden Radwegen der Straße daneben; ohne DTV-Wert gilt die Straße als nicht belastet, DTV liegt nur für Hauptverkehrsstraßen vor). Soll = Ist (die Alternativen hat c03 bereits übernommen)'
+      status: draft
+    - id: C-PRI-12
+      description: 'Zusammenhang je Route: P-COH-01 Anteil der Länge, der nicht am Rand einer zu großen Masche der eigenen oder einer niedrigeren Ebene liegt (cycle_mesh_gaps.parquet, Rand +- gap_edge_buffer_m); P-COH-02 1, wenn die Route in der größten zusammenhängenden Komponente ihrer Ebene (mit höheren Ebenen) liegt, sonst 0; P-COH-04 Wechsel je km gegen max_changes_per_km: Ist = Wechsel der Ist-Führung entlang der Route, Soll = Wechsel der Soll-Führung plus Kategoriewechsel (cycle_routes.n_category_changes). P-COH-01/02 gleich für Ist und Soll'
+      gap_edge_buffer_m: 2
+      max_changes_per_km: 1.0
+      status: draft
+    - id: C-PRI-13
+      description: 'confidence je Route bzw. Kante und Sicht: Summe über die Prinzipien von principle_weight x mittlerer Datenanteil der anwendbaren Prüfungen (Datenanteil = Längenanteil mit Wert, 0 bei unavailable); Klasse high ab high, medium ab medium, sonst low'
+      high: 0.8
+      medium: 0.6
+      status: draft
+    - id: C-PRI-14
+      description: 'Gewichts-Sensitivität: jedes principle_weight einzeln um +-delta (relativ) verändert, die übrigen anteilig umgelegt (Summe 1); verglichen werden die Top-top_n-Routen nach Handlungsbedarf-km = (score_soll - score_ist) x Länge in km (Rangfolge im Report; sonst stehen sehr kurze Verdichtungsstücke vorn)'
+      delta: 0.2
+      top_n: 30
+      status: draft
+    - id: C-PRI-15
+      description: 'Stichprobe für die Durchsicht mit Ortskundigen: review_n Routen, nach Kategorie geschichtet (Anteile nach Routenzahl, mindestens eine je Kategorie), Seed seed'
+      review_n: 20
+      seed: 42
+      status: draft
+    - id: C-PRI-16
+      description: 'Prüfungen ohne Datengrundlage im aktuellen Lauf: unbekannt für Ist und Soll, senken die confidence'
+      unavailable:
+        P-SAF-02: 'Knotentypen erst mit Prompt 20 (pipeline/c07_junctions.py)'
+        P-COM-03: 'kein Höhenmodell geladen (sources.yaml laserscan ohne Abruf)'
+        P-ATT-02: 'keine Lärmkarte (sources.yaml noise_maps ohne Endpunkt, Entscheidung 2026-11-06)'
+      status: draft
 
 # Kantenkosten für Netzentwurf und Routing ("wahrgenommener Widerstand")
 routing_impedance:

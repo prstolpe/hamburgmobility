@@ -3,7 +3,7 @@
 Deep sections stay plain dicts; the cross-checks below validate provenance, ids, categories and
 facility names. Rule texts stay strings; later prompts (16–18) evaluate them. Prompt 15 adds cycle_graph,
 demand_model and routing_impedance.ist_mapping, whose condition names are fixed here; prompt 16 adds
-network_design (C-NET-01..13).
+network_design (C-NET-01..13); prompt 17 adds principle_scoring (C-PRI-01..16).
 """
 
 from datetime import date
@@ -35,6 +35,9 @@ DEMAND_RULE_IDS = {f"C-DEM-0{i}" for i in range(1, 8)}
 NETWORK_RULE_IDS = {f"C-NET-{i:02d}" for i in range(1, 14)}
 # Keys of C-NET-03 soll_factors besides the road categories: own paths (kind = path).
 SOLL_FACTOR_EXTRA_KEYS = {"path"}
+PRINCIPLE_RULE_IDS = {f"C-PRI-{i:02d}" for i in range(1, 17)}
+# Score forms of C-PRI-01; evaluated in pipeline/lib/principles.py.
+SCORE_FORMS = {"share", "ratio", "inverse_ratio", "excess", "percentile_inverse"}
 
 
 class _Strict(BaseModel):
@@ -152,12 +155,65 @@ def _check_network_design(section: dict, impedance: dict) -> None:
         raise ValueError("network_design C-NET-01: job_cluster_quantile must be in (0, 1)")
 
 
+def principle_check_ids(principles: dict) -> set[str]:
+    return {c["id"] for p in principles.values() for c in p["checks"]}
+
+
+def _check_principle_scoring(section: dict, principles: dict, impedance: dict, widths: dict) -> None:
+    rules = _rules_by_id(section, PRINCIPLE_RULE_IDS, "principle_scoring")
+    checks = principle_check_ids(principles)
+    forms = rules["C-PRI-01"]["score_forms"]
+    if set(forms) != checks:
+        raise ValueError(f"principle_scoring C-PRI-01: score_forms must name every check, missing "
+                         f"{sorted(checks - set(forms))}, unknown {sorted(set(forms) - checks)}")
+    bad = sorted(k for k, v in forms.items() if v not in SCORE_FORMS)
+    if bad:
+        raise ValueError(f"principle_scoring C-PRI-01: unknown score form for {bad}")
+    for name in ("network_only",):
+        unknown = set(rules["C-PRI-01"][name]) - checks
+        if unknown:
+            raise ValueError(f"principle_scoring C-PRI-01 {name}: unknown checks {sorted(unknown)}")
+    c02 = rules["C-PRI-02"]
+    conditions = IMPEDANCE_CONDITIONS - {"unpaved_or_cobbles"}
+    if set(c02["by_condition"]) != conditions:
+        raise ValueError(f"principle_scoring C-PRI-02: by_condition must map {sorted(conditions)}")
+    used = list(c02["by_condition"].values()) + [c02["lane_upgrade"], c02["sidepath_oneway"], c02["sidepath_twoway"]]
+    if not set(used) <= FACILITIES:
+        raise ValueError(f"principle_scoring C-PRI-02: unknown facilities {sorted(set(used) - FACILITIES)}")
+    c03 = rules["C-PRI-03"]
+    if set(c03["satisfies"]) != FACILITIES:
+        raise ValueError("principle_scoring C-PRI-03: satisfies must name every facility")
+    for key in ("satisfies", "partial"):
+        for soll, ist in c03[key].items():
+            if soll not in FACILITIES or not set(ist) <= FACILITIES:
+                raise ValueError(f"principle_scoring C-PRI-03 {key}.{soll}: unknown facility")
+            if key == "partial" and set(ist) & set(c03["satisfies"].get(soll, [])):
+                raise ValueError(f"principle_scoring C-PRI-03 partial.{soll}: overlaps satisfies")
+    if not 0 < c03["partial_score"] < 1:
+        raise ValueError("principle_scoring C-PRI-03: partial_score must be in (0, 1)")
+    req = rules["C-PRI-08"]["required_by_facility"]
+    targets = set(widths["project_target"]) - META_KEYS
+    if not set(req) <= FACILITIES or not set(req.values()) <= targets:
+        raise ValueError("principle_scoring C-PRI-08: required_by_facility must map facilities to widths_m.project_target keys")
+    if not 0 < rules["C-PRI-10"]["target_share"] <= 1:
+        raise ValueError("principle_scoring C-PRI-10: target_share must be in (0, 1]")
+    c13 = rules["C-PRI-13"]
+    if not 0 < c13["medium"] < c13["high"] <= 1:
+        raise ValueError("principle_scoring C-PRI-13: need 0 < medium < high <= 1")
+    if not 0 < rules["C-PRI-14"]["delta"] < 1:
+        raise ValueError("principle_scoring C-PRI-14: delta must be in (0, 1)")
+    unknown = set(rules["C-PRI-16"]["unavailable"]) - checks
+    if unknown:
+        raise ValueError(f"principle_scoring C-PRI-16: unknown checks {sorted(unknown)}")
+
+
 class CyclingRuleSet(_Strict):
     meta: Meta
     sources: dict[str, Source]
     cycle_categories: dict[str, dict[str, Any]]
     principles: dict[str, dict[str, Any]]
     principle_weights: dict[str, Any]
+    principle_scoring: dict[str, Any]
     routing_impedance: dict[str, Any]
     cycle_graph: dict[str, Any]
     demand_model: dict[str, Any]
@@ -197,4 +253,5 @@ class CyclingRuleSet(_Strict):
         _rules_by_id(self.cycle_graph, GRAPH_RULE_IDS, "cycle_graph")
         _check_demand_model(self.demand_model)
         _check_network_design(self.network_design, self.routing_impedance)
+        _check_principle_scoring(self.principle_scoring, self.principles, self.routing_impedance, self.widths_m)
         return self

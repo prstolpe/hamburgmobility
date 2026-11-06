@@ -2,8 +2,8 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.10
-  date: 2026-11-05
+  version: 0.1.11
+  date: 2026-11-06
   crs_work: EPSG:25832
 
 sources:
@@ -141,7 +141,7 @@ sources:
     format: GML
     license: dl-de/by-2.0  # laut Metadatensatz und ows:Fees
     attribution: "Freie und Hansestadt Hamburg, Landesbetrieb Geoinformation und Vermessung (LGV)"
-    purpose: [street_space_width, land_use, building_function]
+    purpose: [street_space_width, land_use, building_function, green_share]  # green_share: Grünanteil P-ATT-01 (prompts/17, C-PRI-10)
     check_status: verified  # 2026-10-28: GetCapabilities gelesen (WFS 2.0.0, vereinfachtes Schema 'ave', EPSG:25832); Stichprobe: nutzart, funktion, gebnutzbez, rellage
     fetch: {typenames: ["ave:Nutzung", "ave:GebaeudeBauwerk"]}
     note: "Weitere Feature-Typen: KatasterBezirk, Flurstueck, NutzungFlurstueck, VerwaltungsEinheit. Bezirksgrenze bleibt vorerst aus OSM."
@@ -351,7 +351,7 @@ sources:
     format: PBF
     license: ODbL-1.0
     attribution: "© OpenStreetMap-Beitragende"
-    purpose: [network, maxspeed, lanes, width, cycleway, sidewalk, parking, cycle_infrastructure, cycle_destinations]
+    purpose: [network, maxspeed, lanes, width, cycleway, sidewalk, parking, cycle_infrastructure, cycle_destinations, lit, surface, trees]  # lit/surface/width/trees: Prinzipienprüfung (prompts/17, C-PRI-06/08/09/10)
     cycle_tags: "Radinfrastruktur wird in prompts/15 direkt aus dem PBF gelesen: highway=cycleway, cycleway:*, bicycle=*, bicycle_road=yes, oneway:bicycle; Ziele: shop=*"
     check_status: verified  # 2026-10-28: HTTP 200, ca. 54 MB, täglich aktualisiert
     fetch: {download: pbf}

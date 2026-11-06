@@ -317,3 +317,26 @@
 - Neu: pipeline/c03_cycle_network.py, pipeline/lib/cycle_network.py; Ausgaben data/interim/cycle_network.parquet,
   cycle_routes.parquet, cycle_mesh_gaps.parquet, reports/cycle_network.md (+ drei Karten).
 
+
+## cycling_rules.yaml 0.4.0 / sources.yaml 0.1.11 – 2026-11-06: Fünf Prinzipien prüfen (Prompt 17)
+- Neuer Abschnitt `principle_scoring` (C-PRI-01…16), alle Werte Vorschläge (source_type assumption, status draft) und
+  fachlich freizugeben (docs/open_questions.md). Schwellen der Prüfungen (`principles`), Gewichte (`principle_weights`),
+  Breiten, Trennungsmatrix und Widerstandsfaktoren bleiben unverändert; C-PRI regelt nur, wie aus Prüfwerten Scores werden.
+  - C-PRI-01 Score-Formen je Prüfung (share, ratio, inverse_ratio, excess, percentile_inverse), unbekannt ≠ gut,
+    nicht anwendbar zählt nicht; C-PRI-02 Ist-Führung aus der Ist-Widerstandsregel, begleitende Radwege;
+    C-PRI-03 Erfüllung der Trennungsmatrix (voll/teilweise 0,5).
+  - C-PRI-04 Umwegfaktor je Route und Netzstichprobe (200 OD-Paare je Kategorie, Seed 42, Band trip_length_km);
+    C-PRI-05 Halte (LSA, Wartepflicht nach C-GRAPH-05) und Zeitverlust; Soll = Ist bis Prompt 20.
+  - C-PRI-06 Beleuchtung (OSM lit); C-PRI-07 Unfälle mit Radbeteiligung je km (snap_m/min_length_m aus P-RISK-01);
+    C-PRI-08 Breite gegen widths_m.project_target (eigene Wege vorläufig wie Zweirichtungsradweg);
+    C-PRI-09 Belag; C-PRI-10 Grünanteil 20-m-Puffer aus ALKIS-Nutzung und OSM-Bäumen (Ziel 30 %, Kronenradius 4 m);
+    C-PRI-11 P-ATT-03 Anteil an Straßen mit DTV > 15 000; C-PRI-12 Maschenrand, Komponenten, Wechsel je km (Schwelle 1);
+    C-PRI-13 confidence (high ab 0,8, medium ab 0,6); C-PRI-14 Gewichts-Sensitivität ±20 %, Top 30;
+    C-PRI-15 Stichprobe 20 Routen; C-PRI-16 nicht bewertbar: P-SAF-02 (Prompt 20), P-COM-03 (kein Höhenmodell),
+    P-ATT-02 (keine Lärmkarte, Entscheidung 2026-11-06).
+- sources.yaml: purpose von alkis (green_share) und osm (lit, surface, trees) ergänzt; keine neuen Endpunkte.
+  Straßenbaumkataster und Lärmkarten bleiben ohne Endpunkt (Entscheidung 2026-11-06: ALKIS + OSM-Bäume, Lärm unbewertet).
+- Schema config/schema/cycling_model.py: `principle_scoring` mit Prüfung der Regel-IDs, Score-Formen je Prüfung,
+  Führungsnamen, Breitenverweise, confidence-Klassen und unavailable-Prüfungen.
+- Neu: pipeline/c04_principles.py, pipeline/lib/principles.py; Ausgaben data/interim/cycle_principles.parquet
+  (Zeilen je edge_id und route_id), reports/cycle_principles.md (+ sechs Karten), reports/cycle_principles_review.csv.
