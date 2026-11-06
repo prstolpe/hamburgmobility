@@ -157,34 +157,14 @@ Fachlich:
   - Nachfrage (C-DEM-01…07): Zonen 500 m; Zielgewichte Geschossfläche 0,40 / Geschäfte 0,20 / Schulen 0,15 / Hochschulen 0,10 / Schnellbahn 0,15; β = 0,25/km im Band 0,5–15 km; 3 Läufe mit σ = 0,1; mindestens 150 Werktage je Zählstelle; Querschnitt ±25 m, Winkel ≥ 45°; Konfidenz: 500 m, Faktor 2, 2 km Grenzabstand, 50 Rad/Tag
 - [ ] Prompt 15: Kalibrierungsgüte nur mäßig (Spearman 0,53, mittlere relative Abweichung 154 %, 41 % der Querschnitte innerhalb Faktor 2; reports/cycle_demand.md). Beobachtet: Hauptstraßen ohne erfassten Radweg (Faktor 2,0) werden gemieden; Nebenstraßen parallel dazu bündeln bis rund 19 000 Rad/Tag, das Dreifache des höchsten Zählwerts (5 900); Zählstellen an Knoten erfassen den Querschnitt schlecht. Sensitivitätsläufe siehe Unterpunkt. Entscheiden, ob Faktoren, Streuung oder β angepasst werden (neue Version, CHANGELOG), bevor Prompt 16 die Werte nutzt – Team
   - Sensitivität 2026-11-05 (einmalig gerechnet, nicht übernommen; Ausgangslage Spearman 0,53 / Abweichung 154 % / 41 % innerhalb Faktor 2): σ = 0,3 → 0,48 / 182 % / 36 %; Faktor `gow50_cycle_lane_or_mixed` 1,5 statt 2,0 → 0,56 / 113 % / 52 %; beides → 0,48 / 156 % / 39 %. Mehr Streuung hilft nicht; ein milderer Faktor für Hauptstraßen ohne erfassten Radweg verbessert die Anpassung etwas. Fehlende cycleway-Tags an Hauptstraßen (OSM) prüfen, bevor der Faktor geändert wird
-Daten:
-- [x] Dienst-URL „Radnetz Hamburg“ (Radrouten, Radrouten+, Bezirksrouten) im Geoportal – GIS – 2026-11-05: https://geodienste.hamburg.de/wfs_radnetz (radnetz 1.026 Abschnitte, 664 km; radrouten 90), Quelle `cycle_network_official`. Bezirksrouten als WFS nur für Hamburg-Nord
-- [ ] `in_cycle_network` (S-FEAT-07) nutzt weiter das OSM-Radnetz (`cycle_network`). Auf den amtlichen WFS umstellen? Ändert Merkmal und Priorisierung des Straßenfunktionsplans (neue rules.yaml-Version) – Team
-- [ ] Amtliches Radnetz: 664 km Netzlänge (Bestand 610 km, Ergänzungen/In Arbeit/Verbesserungspotential 416 km, Mehrfachzählung bei Richtungsführung möglich) gegenüber 369 km laut Jahresbericht 2025. Welche `status`-Werte gelten im Vergleich (Prompt 16) als amtliches Netz? – GIS
-- [x] Inhalt von https://iot.hamburg.de/v1.1: welche Rad-Dauerzählstellen, welcher Zeitraum – GIS – 2026-11-05: Datensatz „Verkehrsdaten Rad (Infrarotdetektoren) Hamburg“, serviceName HH_STA_Verkehrsdaten_Rad_Infrarotdetektoren; 312 Zählstellen, Tageswerte nur aktuelles und letztes Jahr; 2025 geladen (Quelle `bike_counters`)
-- [x] Rad-Zählstellen: 104 mit richtung „Keine Richtung“ und 208 richtungsbezogene. Sind die richtungslosen Summen der richtungsbezogenen am selben Querschnitt? – GIS – 2026-11-05: ja. Jede richtungslose Zählstelle liegt rund 10 m neben zwei richtungsbezogenen (rund 20 m auseinander); ihr Tageswert ist deren Summe (Median-Verhältnis 1,00 an 102 Querschnitten). Prompt 15 kalibriert nur an den richtungslosen
-- [ ] Zentren (Bezirks-/Stadtteilzentren) für Korridore und Ziele: Datensatz zum Hamburger Zentrenkonzept ermitteln (Quelle `centres`, url null) – GIS
-- [ ] Hochschulen: amtliche Quelle statt OSM-Fallback (111 Objekte amenity=university|college) – GIS
-- [ ] Amtliche LSA-Standorte (statt nur OSM) – Transparenzanfrage – Team. 2026-11-05: OSM liefert 5.558 Knoten highway=traffic_signals; „Traffic Lights Data Hamburg“ (SensorThings) deckt laut Beschreibung nur rund die Hälfte der Knoten ab
-- [ ] Ist-Fahrstreifen und Radwegbreiten: Vollständigkeit OSM je Bezirk – GIS
-
-## Daten
-- [ ] Führt HH_WFS_Strategisches_Strassennetz ein Attribut „Hauptverkehrsstraße“ mit Stand 2023? – GIS
-- [x] Welche Jahrgänge enthält api.hamburg.de/datasets/v1/verkehrsmengen (DTV Hauptverkehrsstraßen)? – GIS – 2026-10-28: dtv_hvs_2019, dtvw_hvs_2014, dtv_bab_2019, dtvw_bab_2013 (siehe reports/data_report.md)
-- [ ] Gibt es Kfz-Zählungen auf Bezirksstraßen? Transparenzanfrage an Bezirksämter – Team
-- [ ] Dienst-URL für „Radnetz Hamburg“ im Geoportal – GIS
-- [ ] Endpunkte für Schulen, Kitas, Lärmkarten, Laserscan, Baumkataster, ALKIS-Download – GIS (GTFS, Zensus und ALKIS 2026-10-28 erledigt: WFS_HH_ALKIS_vereinfacht)
-- [x] Abdeckung Hamburgs im Unfallatlas je Jahr – GIS – 2026-10-28: laut Datensatzbeschreibung ab 2016; 2021–2025 je 6 397–7 332 Unfälle (sources.yaml 0.1.6)
-- [ ] Gibt es amtliche Flächen für Fahrbahn/Radweg/Gehweg (LSBG, Bezirke)? Transparenzanfrage – Team
-- [ ] Lizenzen der OGC-API-Datensätze (api.hamburg.de) auf den Landing Pages prüfen – GIS
-- [ ] HH_WFS_Strategisches_Strassennetz liefert seit 2026-10-28 HTTP 404 (Dataport-Fehlerseite). Neue Dienst-URL ermitteln (Geoportal/Transparenzportal); wird für die Conflation (Prompt 05) gebraucht – GIS
-- [ ] DB Rad+ (api.hamburg.de/datasets/v1/dbradplus, jahr2025): Abfrage bricht reproduzierbar ab (HTTP 200, abgeschnittenes JSON). 2026-11-05: Ursache sind einzelne Datensätze, die der Server nicht ausliefern kann (`items?f=json&limit=1&offset=1581` → HTTP 500, Error ID 8c3d758741fc1e75; ebenso offset 36024 und 40622). Der Abruf überspringt sie seitdem und protokolliert sie (sources.yaml 0.1.10). Offen: Fehler mit diesen Angaben an die Urban Data Platform melden; nach der Behebung `skip_broken_records` wieder entfernen – Team
-- [ ] Lizenz fehlt in der API für „Zulässige Höchstgeschwindigkeiten“ und „Verkehrsmengen“ sowie in GetCapabilities von „Ruhige Gebiete“ – GIS
-- [ ] Verkehrsmengen auf Hauptverkehrsstraßen liegen in der API nur bis 2019 (DTV) vor. Gibt es neuere Zählungen? – GIS
-- [x] Direkter Download-Link für das Zensus-2022-Gitter (100 m, Bevölkerung) in sources.yaml eintragen – 2026-10-28 erledigt (sources.yaml 0.1.3)
-- [x] Linkformat für Orthophoto (Geoportal Hamburg) und Panoramax in den Stichproben-Reports festlegen; bisher nur OSM-Links – Team – 2026-10-28: sources.yaml 0.1.5 `viewers` (Geoportal Layer 19968, Panoramax-Hash), genutzt ab reports/classification.md
-- [ ] SensorThings (iot.hamburg.de): 3.137 Locations im Arbeitsgebiet, gemischte IoT-Daten. Welche Things sind Kfz-/Rad-Zählstellen (Filterkriterium)? – GIS
-
-## Rechtlich / Veröffentlichung
-- [ ] ODbL-Pflichten bei Kombination OSM + amtliche Daten juristisch prüfen lassen – Team
-- [ ] Rückmeldekanal und Datenschutz (GitHub-Issues, Formular) festlegen – Team
+  - 2026-11-06: Prompt 16 nutzt die Werte aus 0.2.0 unverändert (Entscheidung prstolpe); reports/cycle_network.md weist auf die mäßige Kalibrierung hin. Frage bleibt offen
+- [ ] Prompt 16 (cycling_rules.yaml 0.3.0): neue Annahmen C-NET-01…13 freigeben – Verkehrsplaner*in
+  - Korridorpunkte: Innenstadt = Rathausmarkt (Koordinate gesetzt); Umsteigeknoten = ≥ 2 Verkehrsmittel im Umkreis 250 m; nur OSM amenity=university; Arbeitsplatzschwerpunkte = Zonen ab 98-%-Quantil der Geschossfläche; Zusammenfassen ab 500 m; Paare = 4 nächste bis 15 km plus Innenstadt
+  - Soll-Widerstand je cat_final (Faktoren aus routing_impedance), Bonus Nachfrage bis −30 % ab 2.000 Rad/Werktag, Bonus amtliches Radnetz × 0,8 (alle Status)
+  - RSV: Lücken bis 500 m überbrückt; Barrieren Bahn/Flüsse/Kanäle; Ausschlussflächen ≥ 5 ha (Wasser, Wald, Parks, Friedhöfe, Flughafen); Kernbereich der Verdichtung 0,5; 40 Runden; Mindestlänge Teilungsroute 50 m
+  - BASIS-Anbindung von Schulen und Nahversorgung (supermarket, convenience, bakery, butcher, greengrocer, chemist) ab 150 m
+  - P-ATT-03: Läufe ab 300 m, höchstens 60 m an der Hauptstraße zum Anschließen/Queren; Kontinuität: Lücken bis 200 m angehoben
+- [ ] Prompt 16: Die Maschenregel (HAUPT 600 m, BASIS 300 m, DCE/Delft) ergibt rund 2.000 km HAUPT und 1.000 km BASIS gegenüber 371 km amtlichem Bestand (reports/cycle_network.md). Passen die Delfter Maschenweiten für Hamburg, oder gelten sie nur für dicht bebaute Gebiete? – Team
+- [ ] Prompt 16: P-ATT-03 verlegt nur 6 von rund 460 Läufen; meist gibt es keine durchgehende Parallelstraße im Abstand ≤ 200 m (Alternative nutzt dann lange Stücke der Hauptstraße). Teilweise Verlegung zulassen (nur die Abschnitte mit Parallelstraße) oder parallel_max_m prüfen? – Verkehrsplaner*in
+- [ ] Prompt 16: Rund 100 HAUPT- und 700 BASIS-Maschen bleiben über der Höchstweite (Lückenliste in reports/cycle_network.md, data/interim/cycle_mesh_gaps.parquet), meist Wald, Hafen, Bahn- oder Wasserflächen ohne querendes Wegenetz; Wirtschaftswege (highway=track) fehlen im Radgraphen (C-GRAPH-01). Als Lücke melden oder Wege aufnehmen? – Team
+- [ ] Prompt 16: Hochschulen aus OSM enthalten Einzelgebäude und Institute („Gebäude D“, „Institut für Theoretische Physik“); amtliche Hochschulstandorte würden Korridorpunkte bereinigen (siehe Daten: Hochschulen) – GIS

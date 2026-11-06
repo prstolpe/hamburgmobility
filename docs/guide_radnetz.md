@@ -73,6 +73,21 @@ Das amtliche Radnetz ist Startpunkt und Vergleichsebene, nicht Ergebnis [B].
   Plausibilitätsvergleich [B]. Ergebnis und Güte: reports/cycle_demand.md. Alle Parameter sind Annahmen und offen zur
   Freigabe (docs/open_questions.md).
 
+### 3.2 Netzentwurf (Prompt 16, umgesetzt)
+
+pipeline/c03_cycle_network.py, Regeln C-NET-01…13 in `network_design` (alle Annahmen, status draft):
+
+- **Soll-Widerstand:** Länge × Faktor der regelkonformen Führung je cat_final plus Wartezeiten des Ist-Zustands; Boni für
+  hohe Nachfrage und für Kanten des amtlichen Radnetzes [B].
+- **Korridore:** Innenstadt, Schnellbahn-Umsteigeknoten, Hochschulen und Arbeitsplatzschwerpunkte, je mit den nächsten
+  Punkten und der Innenstadt verbunden. Bezirks- und Stadtteilzentren fehlen noch (kein Datensatz) [B].
+- **Hierarchie:** RSV auf Korridorläufen ab 2.000 Rad/Werktag und 5 km [F]; HAUPT und BASIS durch Teilen zu großer Maschen
+  (Seite des flächengleichen Quadrats, Barrieren Bahn und Gewässer, ohne Wald-, Wasser- und Parkflächen) [B];
+  Schulen und Nahversorgung an das BASIS-Netz angebunden; ERSCHL für alle übrigen Kanten.
+- **P-ATT-03 und Kontinuität:** Parallelroute statt Hauptstraße, wenn sie im 200-m-Puffer den Umwegfaktor einhält;
+  kurze Kategorielücken entlang einer Route werden geschlossen [B].
+- Ergebnis, Vergleich mit dem amtlichen Radnetz (Status Bestand) und Lückenliste: reports/cycle_network.md.
+
 Zielkonflikt Direktheit vs. Sicherheit/Attraktivität: Die DCE empfiehlt Routen, die nicht parallel
 zu belasteten Hauptstraßen verlaufen [F]. Regel P-ATT-03 schlägt eine Parallelroute vor, wenn sie
 innerhalb von 200 m liegt und den Umwegfaktor einhält; die Hauptstraße erhält trotzdem getrennte

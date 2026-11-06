@@ -296,3 +296,24 @@
 - pipeline/lib/network.py: `segment_id`/`segments_from_edges` mit optionalem Präfix und Mitgliedskanten
   (Standard unverändert, segment_id bleibt gleich).
 - Neue Abhängigkeiten: scipy (kürzeste Wege), matplotlib (Abbildungen im Report).
+
+## cycling_rules.yaml 0.3.0 – 2026-11-06: Netzentwurf (Prompt 16)
+- Neuer Abschnitt `network_design` (C-NET-01…13), alle Werte Vorschläge (source_type assumption, status draft) und
+  fachlich freizugeben (docs/open_questions.md). Bestehende Werte unverändert; Schwellen der Hierarchie kommen weiter aus
+  `cycle_categories` (RSV-Auslöser 2.000 Rad/Werktag, 5 km, Maschenweiten) und `principles` (P-ATT-03, P-DIR-01, P-COH-03).
+  - C-NET-01/02 Korridorpunkte und -paare: Innenstadt (Rathausmarkt), Umsteigeknoten (≥ 2 Verkehrsmittel im Umkreis 250 m;
+    im HVV-GTFS sind U- und S-Bahn getrennte Stationen), OSM amenity=university, Arbeitsplatzschwerpunkte (98-%-Quantil),
+    Zusammenfassen ab 500 m, 4 nächste Punkte bis 15 km plus Innenstadt. Ohne Zentren (Entscheidung 2026-11-06).
+  - C-NET-03 Soll-Widerstand je cat_final aus `routing_impedance.factors`; C-NET-04 Nachfragebonus bis −30 %;
+    C-NET-05 Bonus amtliches Radnetz × 0,8, Bestand = amtlich, übrige Status = geplant (Entscheidung 2026-11-06).
+  - C-NET-06 RSV-Läufe (Lücken bis 500 m); C-NET-07 Maschen mit Barrieren und Ausschlussflächen; C-NET-08 Verdichtung
+    (Kernbereich 0,5, 40 Runden, Teilungsroute ≥ 50 m); C-NET-09 Anbindung Schulen/Nahversorgung ab 150 m;
+    C-NET-10 P-ATT-03 (Läufe ab 300 m, ≤ 60 m an der Hauptstraße); C-NET-11 Kontinuität (200 m); C-NET-12 ERSCHL;
+    C-NET-13 Vergleichspuffer 20 m.
+- Schema config/schema/cycling_model.py: `network_design` mit Prüfung der Regel-IDs, Faktorschlüssel, Bonusbereiche und
+  Statuslisten.
+- pipeline/lib/gtfs.py: `rapid_transit_stations` liefert zusätzlich `route_types`/`n_route_types` je Station.
+- pipeline/lib/overrides.py: Prüfung und Anwendung von overrides/cycle_network_overrides.csv.
+- Neu: pipeline/c03_cycle_network.py, pipeline/lib/cycle_network.py; Ausgaben data/interim/cycle_network.parquet,
+  cycle_routes.parquet, cycle_mesh_gaps.parquet, reports/cycle_network.md (+ drei Karten).
+

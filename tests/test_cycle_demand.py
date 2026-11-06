@@ -200,13 +200,14 @@ def test_jobs_floor_area_excludes_and_counts_storeys():
 
 def test_rapid_transit_stations_group_platforms(tmp_path):
     from pipeline.lib.gtfs import rapid_transit_stations
-    (tmp_path / "routes.txt").write_text("route_id,route_type\nu,402\nbus,3\n")
-    (tmp_path / "trips.txt").write_text("route_id,trip_id\nu,t1\nbus,t2\n")
-    (tmp_path / "stop_times.txt").write_text("trip_id,stop_id\nt1,p1\nt1,p2\nt1,s3\nt2,b1\n")
+    (tmp_path / "routes.txt").write_text("route_id,route_type\nu,402\ns,109\nbus,3\n")
+    (tmp_path / "trips.txt").write_text("route_id,trip_id\nu,t1\nbus,t2\ns,t3\n")
+    (tmp_path / "stop_times.txt").write_text("trip_id,stop_id\nt1,p1\nt1,p2\nt1,s3\nt2,b1\nt3,p2\n")
     (tmp_path / "stops.txt").write_text(
         "stop_id,stop_name,stop_lat,stop_lon,parent_station\n"
         "st1,Station A,53.55,10.0,\np1,A Gleis 1,53.55,10.0,st1\np2,A Gleis 2,53.55,10.0,st1\n"
         "s3,Halt B,53.56,10.01,\nb1,Bus,53.57,10.02,\n")
     st = rapid_transit_stations(tmp_path, P.rapid_transit_route_types)
     assert sorted(st["station_id"]) == ["s3", "st1"]
+    assert st.set_index("station_id")["n_route_types"].to_dict() == {"s3": 1, "st1": 2}   # U + S at station A
     assert st.crs.to_epsg() == 25832

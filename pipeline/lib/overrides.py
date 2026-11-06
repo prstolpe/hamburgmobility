@@ -99,6 +99,57 @@ def apply(segments: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def validate_cycle_network(df: pd.DataFrame, all_ids: Iterable[str]) -> None:
+    """Raise OverrideError listing all problems of overrides/cycle_network_overrides.csv (prompts/16).
+    all_ids = every edge_id of the current cycle graph."""
+    from config.schema.cycling_model import CYCLE_CATEGORIES
+
+    if list(df.columns) != CYCLE_NETWORK_COLUMNS:
+        raise OverrideError(f"cycle_network_overrides.csv: Spalten müssen genau {', '.join(CYCLE_NETWORK_COLUMNS)} sein "
+                            f"(gefunden: {', '.join(map(str, df.columns))})")
+    known = set(all_ids)
+    errors = []
+    counts = df["edge_id"].value_counts()
+    for i, r in enumerate(df.itertuples(index=False), start=2):
+        where = f"Zeile {i} ({r.edge_id or 'ohne edge_id'})"
+        if _blank(r.edge_id):
+            errors.append(f"{where}: edge_id fehlt")
+        elif r.edge_id not in known:
+            errors.append(f"{where}: edge_id verwaist – im aktuellen Radgraphen nicht vorhanden; Korrektur prüfen")
+        if not _blank(r.edge_id) and counts.get(r.edge_id, 0) > 1:
+            errors.append(f"{where}: edge_id doppelt")
+        if r.cycle_cat_final not in CYCLE_CATEGORIES:
+            errors.append(f"{where}: ungültige Kategorie {r.cycle_cat_final!r} (erlaubt: {', '.join(sorted(CYCLE_CATEGORIES))})")
+        if _blank(r.reason):
+            errors.append(f"{where}: Begründung fehlt (Spalte reason)")
+        if _blank(r.author):
+            errors.append(f"{where}: author fehlt")
+        if not _is_iso_date(r.date):
+            errors.append(f"{where}: Datum {r.date!r} nicht im Format JJJJ-MM-TT")
+        if r.review_status not in REVIEW_STATUS:
+            errors.append(f"{where}: review_status {r.review_status!r} ungültig (erlaubt: {', '.join(REVIEW_STATUS)})")
+    if errors:
+        raise OverrideError("cycle_network_overrides.csv ungültig:\n  " + "\n  ".join(errors))
+
+
+def apply_cycle_network(edges: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
+    """Copy of edges with cycle_cat_final, cycle_cat_source and cycle_override_*; cycle_cat_proposed unchanged."""
+    out = edges.copy()
+    approved = df[df["review_status"] == APPLIED_STATUS].set_index("edge_id")
+    hit = out["edge_id"].isin(approved.index)
+    out["cycle_cat_final"] = out["cycle_cat_proposed"]
+    out["cycle_cat_source"] = "proposed"
+    for col in ("reason", "author", "date", "source"):
+        out[f"cycle_override_{col}"] = None
+    if hit.any():
+        ids = out.loc[hit, "edge_id"]
+        out.loc[hit, "cycle_cat_final"] = ids.map(approved["cycle_cat_final"]).to_numpy()
+        out.loc[hit, "cycle_cat_source"] = "override"
+        for col in ("reason", "author", "date", "source"):
+            out.loc[hit, f"cycle_override_{col}"] = ids.map(approved[col]).to_numpy()
+    return out
+
+
 def template_csv(segment_ids: list[str], segments: pd.DataFrame, author: str, today: str) -> str:
     """CSV rows for new overrides: cat_final = cat_proposed, review_status = draft, reason empty
     (a person has to fill it in; validate() rejects empty reasons)."""

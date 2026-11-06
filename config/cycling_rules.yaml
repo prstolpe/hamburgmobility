@@ -4,8 +4,8 @@
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 # Werte mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen.
 meta:
-  version: 0.2.0
-  date: 2026-11-05
+  version: 0.3.0
+  date: 2026-11-06
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
 
@@ -231,6 +231,91 @@ demand_model:
       high_ratio_band: [0.5, 2.0]
       border_m: 2000
       low_flow_day: 50
+      status: draft
+
+# ---------------------------------------------------------------
+# Netzentwurf (prompts/16, c03_cycle_network.py) – alle neuen Werte Annahmen, vor Gebrauch fachlich prüfen.
+# Schwellen der Hierarchie stehen in cycle_categories (RSV-Auslöser, Mindestlänge, Maschenweiten) und
+# principles (P-ATT-03, P-DIR-01, P-COH-03); hier nur, was der Entwurf zusätzlich braucht.
+# ---------------------------------------------------------------
+network_design:
+  source_type: assumption
+  rules:
+    - id: C-NET-01
+      description: 'Korridorpunkte: Innenstadt, Schnellbahn-Umsteigeknoten, Hochschulen, Arbeitsplatzschwerpunkte; Punkte näher als merge_m werden zusammengefasst. Bezirks- und Stadtteilzentren fehlen (Quelle centres ohne Endpunkt, Entscheidung 2026-11-06: ohne Zentren rechnen)'
+      innenstadt: {label: Rathausmarkt, lat: 53.5503, lon: 9.9925}
+      hub_min_modes: 2
+      hub_radius_m: 250
+      hub_note: 'Umsteigeknoten = Station, an der zusammen mit den Stationen im Umkreis hub_radius_m mindestens hub_min_modes verschiedene route_type halten (U-Bahn, S-Bahn, AKN/Regionalbahn; Typen aus C-DEM-02). Im HVV-GTFS sind U- und S-Bahn am selben Ort getrennte Stationen (geprüft 2026-11-06: nur 4 Stationen mit zwei Typen, mit 250 m Umkreis 27 Namen, u. a. Hbf, Altona, Barmbek, Berliner Tor, Harburg, Bergedorf, Wandsbeker Chaussee). Zwei Linien allein reichen nicht, weil sich S-Bahn-Linien Gleise teilen'
+      university_amenity: [university]
+      university_note: 'OSM amenity=college (70 Objekte) enthält Volkshochschulen und Akademien; nur university'
+      job_cluster_quantile: 0.98
+      job_cluster_note: 'Zonen aus C-DEM-01 mit Geschossfläche Nichtwohnen (C-DEM-03) über diesem Quantil aller Zonen mit Arbeitsplätzen'
+      merge_m: 500
+      todo: 'centres: Hamburger Zentrenkonzept (sources.yaml centres, url null) ergänzen, sobald ein Endpunkt bekannt ist'
+      status: draft
+    - id: C-NET-02
+      description: 'Korridorpaare: jeder Punkt mit seinen k_nearest nächsten Punkten (Luftlinie bis max_pair_km) und jeder Punkt mit der Innenstadt'
+      k_nearest: 4
+      max_pair_km: 15
+      status: draft
+    - id: C-NET-03
+      description: 'Soll-Widerstand: Länge x Faktor der regelkonformen Führung je cat_final (Annahme: die Route wird nach Trennungsmatrix ausgebaut, mit geschlossener Decke nach P-COM-02, daher ohne Zuschlag für unbefestigte Beläge) plus die Wartezeiten des Ist-Zustands; Kanten ohne cat_final und Fähren behalten den Ist-Widerstand'
+      soll_factors: {path: separated_track_or_cycle_street, SW: gow50_separated_track, GOW80: gow50_separated_track, GOW50: gow50_separated_track, GOW30: gow30_cycle_lane, ETW30: etw30_mixed, ETW_ERF: etw30_mixed, ETW60: etw30_mixed}
+      note: 'Faktoren aus routing_impedance.factors; keine neuen Zahlen. Netzentwurf ungerichtet (günstigere Richtung)'
+      status: draft
+    - id: C-NET-04
+      description: 'Bonus für Kanten mit hoher Nachfrage: Widerstand x (1 - max_reduction x min(cyc_calibrated / Bezugswert, 1)); Bezugswert = RSV demand_trigger_cyclists_weekday'
+      max_reduction: 0.3
+      status: draft
+    - id: C-NET-05
+      description: 'Bonus für Kanten des amtlichen Radnetzes (alle Status): Widerstand x multiplier, wenn mindestens min_overlap der Kantenlänge im Puffer match_buffer_m um das amtliche Radnetz liegt. Vergleich im Report: official_status = amtliches Netz, planned_status = geplant (Entscheidung 2026-11-06)'
+      multiplier: 0.8
+      match_buffer_m: 15
+      min_overlap: 0.5
+      official_status: [Bestand]
+      planned_status: [In Arbeit, Priorisierte Netzergänzungen/Netzverbesserungen, Netzbedeutende Abschnitte mit Verbesserungspotential]
+      status: draft
+    - id: C-NET-06
+      description: 'RSV: zusammenhängende Läufe eines Korridors mit cyc_calibrated >= RSV demand_trigger_cyclists_weekday; Lücken bis gap_max_m werden überbrückt; Läufe ab RSV min_route_length_km werden RSV, der übrige Korridor HAUPT'
+      gap_max_m: 500
+      status: draft
+    - id: C-NET-07
+      description: 'Maschen: Polygonisierung des Netzes einer Ebene (mit höheren Ebenen) zusammen mit Barrierelinien und der Landesgrenze; Größe = Seitenlänge des flächengleichen Quadrats der Masche ohne Ausschlussflächen. Maschen mit Mittelpunkt in ländlichen Stadtteilen (project.yaml rural_exclude) werden nicht geprüft'
+      barrier_lines: {railway: [rail, light_rail, subway], waterway: [river, canal]}
+      barrier_exclude_tunnel: true
+      exclude_areas: {natural: [water, wood], landuse: [forest, cemetery, reservoir, basin], leisure: [park, golf_course, nature_reserve], aeroway: [aerodrome]}
+      exclude_area_min_m2: 50000
+      simplify_m: 5
+      status: draft
+    - id: C-NET-08
+      description: 'Verdichtung: Masche größer als mesh_m.max der Ebene wird geteilt. Startkante = Kante mit der höchsten Nachfrage im Kernbereich der Masche (Abstand der Kantenmitte zum Außenrand >= seed_core_share x größter Abstand aller Kandidaten; teilt keine davon, die übrige Masche); von ihren Enden je der günstigste Soll-Weg (mit Bonus) innerhalb der Masche zu zwei verschiedenen Netzknoten am Rand; wiederholen bis keine Masche zu groß ist, keine Teilung möglich ist oder max_rounds erreicht ist'
+      seed_core_share: 0.5
+      seed_core_note: 'Kernbereich, damit die Teilung die Masche etwa halbiert; ohne ihn schneidet die Kante mit der höchsten Nachfrage oft nur einen schmalen Streifen am Rand ab (Lauf 2026-11-06: nach 40 Runden noch so viele zu große Maschen wie am Anfang). Gemessen als Tiefe (Abstand zum Außenrand), weil die Mitte konkaver Maschen außerhalb oder in Wald/Park liegen kann'
+      max_rounds: 40
+      min_split_route_m: 50
+      status: draft
+    - id: C-NET-09
+      description: 'BASIS-Anbindung: Schulen und Nahversorgung weiter als binding_radius_m vom BASIS-, HAUPT- oder RSV-Netz erhalten den günstigsten Soll-Weg vom nächsten Graphknoten zum Netz als BASIS'
+      binding_radius_m: 150
+      nahversorgung_shops: [supermarket, convenience, bakery, butcher, greengrocer, chemist]
+      status: draft
+    - id: C-NET-10
+      description: 'Parallelregel (P-ATT-03): Lauf einer RSV/HAUPT-Route ab min_run_m an Straßen mit DTV > P-ATT-03 dtv (auch begleitende Radwege, sidepath_of): günstigster Weg zwischen Anfang und Ende des Laufs über Kanten, deren Mitte im Puffer P-ATT-03 parallel_max_m liegt, mit möglichst wenig Länge an diesen Straßen (höchstens max_on_main_m zum Anschließen und Queren); wenn Länge Alternative / Länge Lauf <= P-DIR-01 der Kategorie, übernimmt die Alternative die Kategorie und die Hauptstraße wird BASIS'
+      min_run_m: 300
+      max_on_main_m: 60
+      max_on_main_note: 'Begleitende Radwege sind nur über die Hauptstraße (Querung, Knotenpunkt) mit den Nebenstraßen verbunden; ohne diese Länge findet die Regel fast nie eine Alternative (Lauf 2026-11-06: 8 von 395 Läufen)'
+      status: draft
+    - id: C-NET-11
+      description: 'Kontinuität (P-COH-04): niedrigere Läufe entlang einer Route zwischen zwei Läufen derselben höheren Kategorie bis max_gap_m werden angehoben (nicht bei Overrides und P-ATT-03); übrige Kategoriewechsel werden je Route gezählt und gemeldet'
+      max_gap_m: 200
+      status: draft
+    - id: C-NET-12
+      description: 'ERSCHL: alle übrigen Kanten des Radgraphen (auch außerhalb der Hauptkomponente)'
+      status: draft
+    - id: C-NET-13
+      description: 'Vergleich mit dem amtlichen Radnetz: Überdeckung = Länge im Puffer compare_buffer_m um das jeweils andere Netz'
+      compare_buffer_m: 20
       status: draft
 
 # ---------------------------------------------------------------

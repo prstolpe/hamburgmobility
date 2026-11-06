@@ -228,3 +228,37 @@ def test_rejects_demand_rule_missing(cyc):
 
 def test_rejects_new_section_without_source_type(cyc):
     _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["cycle_graph"].pop("source_type")), "source_type missing")
+
+
+# --- network_design (prompts/16) -------------------------------------------------------------
+
+
+def _net(d: dict, rule_id: str) -> dict:
+    return _by_id(d["network_design"]["rules"], rule_id)
+
+
+def test_network_rule_missing(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["network_design"]["rules"].pop()), "C-NET-13")
+
+
+def test_rejects_unknown_soll_factor(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03")["soll_factors"].update(GOW50="fast")),
+             "unknown factors")
+
+
+def test_rejects_unknown_soll_factor_key(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03")["soll_factors"].update(GOW99="etw30_mixed")),
+             "unknown soll_factors keys")
+
+
+def test_soll_factors_cover_all_categories(cyc):
+    assert set(_net(cyc, "C-NET-03")["soll_factors"]) == EXPECTED_CATEGORIES | {"path"}
+
+
+def test_rejects_official_and_planned_overlap(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-05")["planned_status"].append("Bestand")), "overlap")
+
+
+def test_rejects_bonus_out_of_range(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-04").update(max_reduction=1.5)), "max_reduction")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-05").update(multiplier=0)), "multiplier")

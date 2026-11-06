@@ -2,7 +2,8 @@
 
 Deep sections stay plain dicts; the cross-checks below validate provenance, ids, categories and
 facility names. Rule texts stay strings; later prompts (16–18) evaluate them. Prompt 15 adds cycle_graph,
-demand_model and routing_impedance.ist_mapping, whose condition names are fixed here.
+demand_model and routing_impedance.ist_mapping, whose condition names are fixed here; prompt 16 adds
+network_design (C-NET-01..13).
 """
 
 from datetime import date
@@ -31,6 +32,9 @@ ASSIGNMENT_METHODS = {"stochastic", "aon"}
 DESTINATION_TYPES = {"jobs_floor_area", "shops", "schools", "universities", "rapid_transit_stops"}
 GRAPH_RULE_IDS = {f"C-GRAPH-0{i}" for i in range(1, 7)}
 DEMAND_RULE_IDS = {f"C-DEM-0{i}" for i in range(1, 8)}
+NETWORK_RULE_IDS = {f"C-NET-{i:02d}" for i in range(1, 14)}
+# Keys of C-NET-03 soll_factors besides the road categories: own paths (kind = path).
+SOLL_FACTOR_EXTRA_KEYS = {"path"}
 
 
 class _Strict(BaseModel):
@@ -126,6 +130,28 @@ def _check_demand_model(section: dict) -> None:
         raise ValueError(f"demand_model C-DEM-07: high_ratio_band must be [min, max] with 0 < min < max")
 
 
+def _check_network_design(section: dict, impedance: dict) -> None:
+    rules = _rules_by_id(section, NETWORK_RULE_IDS, "network_design")
+    factors = set(impedance["factors"]) - DELAY_KEYS
+    soll = rules["C-NET-03"]["soll_factors"]
+    unknown_keys = set(soll) - EXPECTED_CATEGORIES - SOLL_FACTOR_EXTRA_KEYS
+    if unknown_keys:
+        raise ValueError(f"network_design C-NET-03: unknown soll_factors keys {sorted(unknown_keys)}")
+    bad = sorted(k for k, v in soll.items() if v not in factors)
+    if bad:
+        raise ValueError(f"network_design C-NET-03: soll_factors refer to unknown factors for {bad}")
+    if not 0 <= rules["C-NET-04"]["max_reduction"] < 1:
+        raise ValueError("network_design C-NET-04: max_reduction must be in [0, 1)")
+    c05 = rules["C-NET-05"]
+    if not 0 < c05["multiplier"] <= 1:
+        raise ValueError("network_design C-NET-05: multiplier must be in (0, 1]")
+    if set(c05["official_status"]) & set(c05["planned_status"]):
+        raise ValueError("network_design C-NET-05: official_status and planned_status overlap")
+    q = rules["C-NET-01"]["job_cluster_quantile"]
+    if not 0 < q < 1:
+        raise ValueError("network_design C-NET-01: job_cluster_quantile must be in (0, 1)")
+
+
 class CyclingRuleSet(_Strict):
     meta: Meta
     sources: dict[str, Source]
@@ -135,6 +161,7 @@ class CyclingRuleSet(_Strict):
     routing_impedance: dict[str, Any]
     cycle_graph: dict[str, Any]
     demand_model: dict[str, Any]
+    network_design: dict[str, Any]
     separation_matrix: dict[str, Any]
     cycle_street: dict[str, Any]
     demand: dict[str, Any]
@@ -169,4 +196,5 @@ class CyclingRuleSet(_Strict):
         _check_ist_mapping(self.routing_impedance)
         _rules_by_id(self.cycle_graph, GRAPH_RULE_IDS, "cycle_graph")
         _check_demand_model(self.demand_model)
+        _check_network_design(self.network_design, self.routing_impedance)
         return self
