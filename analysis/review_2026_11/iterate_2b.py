@@ -29,13 +29,25 @@ WT = ROOT.parent / f"SFP_wt_{NAME}"
 OUT = ROOT / "data/scenarios" / NAME
 
 
+CHAIN_AFTER_OVERRIDES = ["coherence", "discrepancy", "cycle-demand", "cycle-network", "cycle-principles",
+                         "cycle-facility", "cross-section-soll", "junctions"]
+
+
 def run(from_stage: str, seed: bool) -> None:
-    env = dict(os.environ, SEED_INTERIM="1" if seed else "0", WARM_CACHE="1" if seed else "0")
-    subprocess.run([str(ROOT / "analysis/review_2026_11/run_worktree.sh"), NAME, from_stage, "HEAD"], env=env,
-                   check=True)
-    log = (OUT / "run.log").read_text(encoding="utf-8")
-    if "Error" in log or "check(s) failed" in log:
-        raise RuntimeError(f"worktree run failed, see {OUT / 'run.log'}")
+    """Round 1: make rerun via run_worktree.sh. Later rounds: only the stages the conflicts need, without validate
+    and export (validate's base check flags 6 segments after category overrides, see 02b_konflikte.md)."""
+    if from_stage == "classify":
+        env = dict(os.environ, SEED_INTERIM="1" if seed else "0", WARM_CACHE="1" if seed else "0")
+        subprocess.run([str(ROOT / "analysis/review_2026_11/run_worktree.sh"), NAME, from_stage, "HEAD"], env=env,
+                       check=True)
+        log = (OUT / "run.log").read_text(encoding="utf-8")
+        if "Error" in log or "check(s) failed" in log:
+            raise RuntimeError(f"worktree run failed, see {OUT / 'run.log'}")
+        return
+    env = dict(os.environ, UV_NO_SYNC="1")
+    with open(OUT / f"run_{from_stage}.log", "a", encoding="utf-8") as fh:
+        subprocess.run(["make", "--no-print-directory", *CHAIN_AFTER_OVERRIDES], cwd=WT, env=env, check=True,
+                       stdout=fh, stderr=subprocess.STDOUT)
 
 
 def d5_proposals(interim: Path) -> pd.DataFrame:
@@ -60,22 +72,38 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--bus-gow", type=int, default=100)
     ap.add_argument("--max-rounds", type=int, default=3)
+    ap.add_argument("--resume", action="store_true",
+                    help="worktree already holds round 1 and the round-2 overrides with a finished cycling chain")
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     rounds = [{"round": 0, "state": "A (heute)", "conflicts": count(ROOT / "data/interim")}]
     # round 1: street rule
     if not WT.exists():
         subprocess.run(["git", "-C", str(ROOT), "worktree", "add", "--detach", str(WT), "HEAD"], check=True)
-    rules = WT / "config/rules.yaml"
-    rules.write_text(bus_rule(a.bus_gow)(rules.read_text(encoding="utf-8")), encoding="utf-8")
-    run("classify", seed=True)
     interim = WT / "data/interim"
-    prop = d5_proposals(interim)
-    rounds.append({"round": 1, "state": f"Busregel {a.bus_gow}", "conflicts": count(interim),
-                   "d5_new": len(prop), "d5_km": round(prop.length_m.sum() / 1000, 1)})
-    print(json.dumps(rounds[-1], ensure_ascii=False), flush=True)
     applied = set()
-    for rnd in range(2, a.max_rounds + 1):
+    start = 2
+    if a.resume:
+        r1 = json.loads((OUT / "round1.json").read_text(encoding="utf-8"))
+        rounds.append(r1)
+        ov = pd.read_csv(WT / "overrides/overrides.csv")
+        applied = set(ov.segment_id[ov.author == "review-2026-11-dryrun"])
+        prop = d5_proposals(interim)
+        rounds.append({"round": 2, "state": f"D5 übernommen ({len(applied)} Abschnitte)", "conflicts": count(interim),
+                       "d5_new": int((~prop.segment_id.isin(applied)).sum()),
+                       "d5_km": round(prop[~prop.segment_id.isin(applied)].length_m.sum() / 1000, 1)})
+        print(json.dumps(rounds[-1], ensure_ascii=False), flush=True)
+        start = 3
+    else:
+        rules = WT / "config/rules.yaml"
+        rules.write_text(bus_rule(a.bus_gow)(rules.read_text(encoding="utf-8")), encoding="utf-8")
+        run("classify", seed=True)
+        prop = d5_proposals(interim)
+        rounds.append({"round": 1, "state": f"Busregel {a.bus_gow}", "conflicts": count(interim),
+                       "d5_new": len(prop), "d5_km": round(prop.length_m.sum() / 1000, 1)})
+        (OUT / "round1.json").write_text(json.dumps(rounds[-1], ensure_ascii=False), encoding="utf-8")
+        print(json.dumps(rounds[-1], ensure_ascii=False), flush=True)
+    for rnd in range(start, a.max_rounds + 1):
         new = prop[~prop.segment_id.isin(applied)]
         if new.empty:
             rounds.append({"round": rnd, "state": "Abbruch: keine neuen D5-Vorschläge"})
