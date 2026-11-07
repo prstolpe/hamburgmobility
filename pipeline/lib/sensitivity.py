@@ -20,6 +20,7 @@ import pandas as pd
 from config.schema.rules_model import WIDTH_REF, RuleSet, Threshold
 from pipeline.lib import classify as cl
 from pipeline.lib import discrepancy as disc
+from pipeline.lib import parallel
 from pipeline.lib.features import weighted_score
 
 CONN = "conn_score"
@@ -167,11 +168,9 @@ def categories(df: pd.DataFrame, rules: RuleSet, post: Post | None = None) -> pd
 def one_at_a_time(df: pd.DataFrame, rules: RuleSet, params: list[Param], delta: float,
                   post: Post | None = None) -> pd.DataFrame:
     """V-SENS-01: categories with each parameter at base*(1-delta) ('<key>:-') and base*(1+delta) ('<key>:+')."""
-    out = {}
-    for p in params:
-        for sign, f in (("-", 1 - delta), ("+", 1 + delta)):
-            out[f"{p.key}:{sign}"] = categories(df, with_values(rules, {p.key: p.base * f}), post)
-    return pd.DataFrame(out, index=df.index)
+    variants = [(f"{p.key}:{sign}", {p.key: p.base * f}) for p in params for sign, f in (("-", 1 - delta), ("+", 1 + delta))]
+    cats = parallel.pmap(lambda i: categories(df, with_values(rules, variants[i][1]), post), len(variants))
+    return pd.DataFrame({name: c for (name, _), c in zip(variants, cats)}, index=df.index)
 
 
 def oat_changes(base: pd.Series, oat: pd.DataFrame) -> pd.Series:
@@ -196,12 +195,9 @@ def run_values(params: list[Param], factors: np.ndarray) -> dict[str, float]:
 def monte_carlo(df: pd.DataFrame, rules: RuleSet, params: list[Param], factors: np.ndarray,
                 progress: Callable[[int], None] | None = None, post: Post | None = None) -> pd.DataFrame:
     """V-SENS-02: one column of categories per run (columns 0..runs-1)."""
-    out = {}
-    for i, row in enumerate(factors):
-        out[i] = categories(df, with_values(rules, run_values(params, row)), post)
-        if progress:
-            progress(i)
-    return pd.DataFrame(out, index=df.index)
+    cats = parallel.pmap(lambda i: categories(df, with_values(rules, run_values(params, factors[i])), post), len(factors),
+                         progress=progress)
+    return pd.DataFrame(dict(enumerate(cats)), index=df.index)
 
 
 def change_summary(base: pd.Series, runs: pd.DataFrame, min_rate: float) -> pd.DataFrame:

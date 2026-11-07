@@ -202,3 +202,15 @@ def test_post_step_applied_after_cascade():
     assert oat["thresholds.conn_gow:+"].tolist() == ["ETW30", "GOW30"]
     runs = sens.monte_carlo(df, RULES, params, sens.sample_factors(3, 1, 0.2, 1), post=post)
     assert (runs.loc[1] == "GOW30").all()
+
+
+def test_parallel_runs_equal_serial_runs(monkeypatch):
+    # pipeline/lib/parallel.py: same output with 1 and several workers
+    df = frame({}, {"bus_trips_weekday_norm": 0.0}, {"bus_trips_weekday_norm": 0.5})
+    params = [p for p in sens.varied_parameters(RULES) if p.effect == "category"]
+    factors = sens.sample_factors(12, len(params), delta=0.2, seed=3)
+    monkeypatch.setenv("SFP_WORKERS", "1")
+    mc1, oat1 = sens.monte_carlo(df, RULES, params, factors), sens.one_at_a_time(df, RULES, params, 0.2)
+    monkeypatch.setenv("SFP_WORKERS", "4")
+    mc4, oat4 = sens.monte_carlo(df, RULES, params, factors), sens.one_at_a_time(df, RULES, params, 0.2)
+    assert mc1.equals(mc4) and oat1.equals(oat4)

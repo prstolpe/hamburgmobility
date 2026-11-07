@@ -1,6 +1,6 @@
 # Soll-Querschnitt: Fahrstreifen, Lage der Radanlagen, Raumaufteilung (Stufe c06)
 
-Erzeugt 2026-11-07T14:15:16+00:00 mit pipeline/c06_cross_section_soll.py · design_rules.yaml 0.5.0 · cycling_rules.yaml 0.7.0 · nicht amtlicher Entwurf. Regeln L-01…06, PL-01…06 und PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.
+Erzeugt 2026-11-07T14:25:01+00:00 mit pipeline/c06_cross_section_soll.py · design_rules.yaml 0.5.0 · cycling_rules.yaml 0.7.0 · nicht amtlicher Entwurf. Regeln L-01…06, PL-01…06 und PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.
 
 Verfügbare Breite = width_p10_m der Variante Verkehrsfläche (maßgeblich); die Variante Fassade zeigt das Potenzial inklusive Vorgärten. Das gewünschte Profil enthält Gehwege (Regelmaß), die Radanlage mit Sollbreite aus Prompt 18, ÖPNV, Fahrbahn, Trennstreifen, Bäume (GOW), Ladezone bei Geschäftsnutzung und Parken nur dort, wo OSM heute Parken zeigt (Entscheidung 2026-11-06). Passt es nicht, gilt die Kaskade D1, D2, Fallback, D3, D4, D5, D6, D7 (PRF-06).
 

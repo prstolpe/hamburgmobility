@@ -32,6 +32,7 @@ from pipeline.lib import cycle_demand as cd
 from pipeline.lib import cycling_validation as cv
 from pipeline.lib import facility as fa
 from pipeline.lib import junctions as jn
+from pipeline.lib import parallel
 from pipeline.lib import profile as pf
 from pipeline.lib import validation as val
 from pipeline.lib.area import read_districts, sample_by_district
@@ -253,24 +254,39 @@ def run_sensitivity(chain: Chain, raw_c: dict, raw_d: dict, cyc, des, delta: flo
     triggers = {"fac": [[] for _ in seg_ids], "lanes": [[] for _ in seg_ids], "junction": [[] for _ in node_ids]}
     rows, n_runs = [], 0
     share_param = "junctions.method.[J-M-02].dtv_share_entering.value"
-    for p in varied:
+    jobs = [(p, factor) for p in varied for factor in (1 - delta, 1 + delta)]
+
+    def run_job(i: int):
+        p, factor = jobs[i]
+        new = p.value * factor
+        try:
+            if p.file == "cycling":
+                cyc_v, des_v = CyclingRuleSet.model_validate(cv.with_value(raw_c, p.path, new)), des
+            else:
+                cyc_v, des_v = cyc, DesignRuleSet.model_validate(cv.with_value(raw_d, p.path, new))
+        except ValueError as exc:  # pydantic.ValidationError is a ValueError
+            return {"invalid": str(exc).splitlines()[0]}
+        res = chain.run(cyc_v, des_v, base, p.stage, factor if p.key == share_param else 1.0)
+        return {"fac": res["profile"]["facility"], "lanes": res["profile"]["lanes"], "fit": res["profile"]["fit"],
+                "junction": res["junction"]}
+
+    def progress(i: int):
+        if i % 2 == 1:
+            tick(f"sensitivity {i // 2 + 1}/{len(varied)}: {jobs[i][0].key}")
+
+    results = parallel.pmap(run_job, len(jobs), progress=progress)  # in job order: same report as a serial run
+    for k, p in enumerate(varied):
         row = {"param": p, "runs": {}}
-        for factor in (1 - delta, 1 + delta):
-            new = p.value * factor
-            try:
-                if p.file == "cycling":
-                    cyc_v, des_v = CyclingRuleSet.model_validate(cv.with_value(raw_c, p.path, new)), des
-                else:
-                    cyc_v, des_v = cyc, DesignRuleSet.model_validate(cv.with_value(raw_d, p.path, new))
-            except ValueError as exc:  # pydantic.ValidationError is a ValueError
-                row["runs"][factor] = {"invalid": str(exc).splitlines()[0]}
+        for j, factor in enumerate((1 - delta, 1 + delta)):
+            res = results[2 * k + j]
+            if "invalid" in res:
+                row["runs"][factor] = res
                 continue
-            res = chain.run(cyc_v, des_v, base, p.stage, factor if p.key == share_param else 1.0)
             n_runs += 1
             out = {}
-            for kind, b, r, w in (("fac", base["profile"]["facility"], res["profile"]["facility"], length),
-                                  ("lanes", base["profile"]["lanes"], res["profile"]["lanes"], length),
-                                  ("fit", base["profile"]["fit"], res["profile"]["fit"], length),
+            for kind, b, r, w in (("fac", base["profile"]["facility"], res["fac"], length),
+                                  ("lanes", base["profile"]["lanes"], res["lanes"], length),
+                                  ("fit", base["profile"]["fit"], res["fit"], length),
                                   ("junction", base["junction"], res["junction"], pd.Series(1.0, index=node_ids))):
                 out[kind] = cv.change_share(b, r, w)
                 if kind in counts:
@@ -282,7 +298,6 @@ def run_sensitivity(chain: Chain, raw_c: dict, raw_d: dict, cyc, des, delta: flo
                             triggers[kind][i].append(label)
             row["runs"][factor] = out
         rows.append(row)
-        tick(f"sensitivity {len(rows)}/{len(varied)}: {p.key}")
     return {"params": params, "varied": varied, "rows": rows, "n_runs": n_runs, "base": base, "counts": counts,
             "triggers": triggers}
 

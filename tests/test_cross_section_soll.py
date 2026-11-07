@@ -11,6 +11,7 @@ import geopandas as gpd
 import pytest
 import shapely
 
+from pipeline import c06_cross_section_soll as c06
 from pipeline.lib import gtfs
 from pipeline.lib import profile as pf
 from pipeline.lib.rules import load_cycling_rules, load_design_rules, load_rules
@@ -314,3 +315,37 @@ def test_shape_direction():
     shape = shapely.LineString([(0, 0), (100, 0)])
     segs = gpd.GeoSeries([shapely.LineString([(10, 1), (50, 1)]), shapely.LineString([(60, -1), (20, -1)])])
     assert list(gtfs.shape_direction(segs, shape)) == [1, -1]
+
+
+# --- bus matching: parallel and cache (pipeline/lib/parallel.py) -------------------------------------------
+
+
+def _bus_inputs():
+    from shapely.geometry import LineString
+    from pipeline.lib.conflate import MatchParams
+    segs = gpd.GeoSeries([LineString([(0, 0), (100, 0)]), LineString([(100, 0), (200, 0)]),
+                          LineString([(0, 50), (0, 150)])], crs="EPSG:25832")
+    shapes = [LineString([(-10, 1), (210, 1)]), LineString([(210, -1), (-10, -1)]), LineString([(1, 40), (1, 160)])]
+    return segs, shapes, MatchParams(buffer_m=15, max_angle_deg=20, min_overlap_share=0.6)
+
+
+def test_match_shapes_parallel_equals_serial(monkeypatch):
+    segs, shapes, mp_ = _bus_inputs()
+    monkeypatch.setenv("SFP_WORKERS", "1")
+    ser = c06.match_shapes(segs, shapes, mp_, 0.5)
+    monkeypatch.setenv("SFP_WORKERS", "3")
+    par = c06.match_shapes(segs, shapes, mp_, 0.5)
+    assert [(list(h), list(d)) for h, d in ser] == [(list(h), list(d)) for h, d in par]
+    assert list(ser[0][0]) == [0, 1] and list(ser[0][1]) == [1, 1]     # with the segments
+    assert list(ser[1][0]) == [0, 1] and list(ser[1][1]) == [-1, -1]   # against them
+    assert list(ser[2][0]) == [2]
+
+
+def test_transit_cache_key_changes_with_inputs():
+    segs, _, mp_ = _bus_inputs()
+    base = c06.transit_cache_key("feed.zip", 123, (3,), mp_, 0.5, segs)
+    assert base == c06.transit_cache_key("feed.zip", 123, (3,), mp_, 0.5, segs)
+    assert base != c06.transit_cache_key("feed.zip", 124, (3,), mp_, 0.5, segs)
+    assert base != c06.transit_cache_key("feed.zip", 123, (3, 700), mp_, 0.5, segs)
+    assert base != c06.transit_cache_key("feed.zip", 123, (3,), mp_, 0.6, segs)
+    assert base != c06.transit_cache_key("feed.zip", 123, (3,), mp_, 0.5, segs.iloc[:2])

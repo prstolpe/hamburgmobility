@@ -17,7 +17,7 @@ PIPELINE_TARGETS := fetch network conflate features crosssection classify cohere
 #   cycle-demand -> cycle-network -> cycle-principles -> cycle-facility -> cross-section-soll -> junctions
 #   -> export-cycling
 CYCLING_TARGETS := cycle-demand cycle-network cycle-principles cycle-facility cross-section-soll junctions export-cycling
-.PHONY: help install dirs test web web-test a11y basemap site-data override-template $(PIPELINE_TARGETS) $(CYCLING_TARGETS)
+.PHONY: help install dirs test web web-test a11y basemap site-data override-template rerun $(PIPELINE_TARGETS) $(CYCLING_TARGETS)
 
 # run_step(target, script): run pipeline/<script>.py if it exists, otherwise report that it is missing.
 define run_step
@@ -112,6 +112,22 @@ junctions: dirs ## Target junction type and cyclist treatment per node (prompt 2
 export-cycling: dirs ## Cycling validation (c08) and export incl. cycling layers (prompt 21) -> reports/validation_cycling.md
 	$(call run_step,export-cycling,c08_validate_cycling)
 	$(call run_step,export-cycling,s09_export)
+
+# rerun FROM=<street stage>: street stages from FROM to discrepancy, then validate alongside the cycling chain
+# (they share no outputs), then export-cycling. Workers per stage: SFP_WORKERS (default all cores, 1 = serial).
+STREET_CHAIN := network conflate features crosssection classify coherence discrepancy
+FROM ?= classify
+rerun: dirs ## Full rerun from FROM (default classify) to export; validate runs alongside the cycling chain
+	@run=0; for s in $(STREET_CHAIN); do \
+		if [ "$$s" = "$(FROM)" ]; then run=1; fi; \
+		if [ $$run = 1 ]; then $(MAKE) --no-print-directory $$s || exit 1; fi; \
+	done; \
+	if [ $$run = 0 ]; then echo "rerun: FROM=$(FROM) ist keine Straßenstufe ($(STREET_CHAIN))"; exit 1; fi
+	@$(MAKE) --no-print-directory validate > data/interim/validate.log 2>&1 & v=$$!; \
+	$(MAKE) --no-print-directory cycle-demand cycle-network cycle-principles cycle-facility cross-section-soll junctions; c=$$?; \
+	wait $$v; vs=$$?; cat data/interim/validate.log; \
+	if [ $$c -ne 0 ] || [ $$vs -ne 0 ]; then echo "rerun: Abbruch (Radnetz $$c, validate $$vs)"; exit 1; fi
+	@$(MAKE) --no-print-directory export-cycling
 
 test: ## Run tests (Python and website unit tests)
 	uv run pytest

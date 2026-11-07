@@ -67,3 +67,5 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
 ## Befehle
 make fetch | make network | make conflate | make features | make crosssection | make classify |
 make coherence | make discrepancy | make export | make web | make validate | make test
+make rerun FROM=<Stufe> – Neurechnung ab einer Straßenstufe bis zum Export (validate parallel zur Radnetzkette).
+Rechenkerne: SFP_WORKERS (Standard alle, 1 = seriell); Cache für den Bus-Abgleich in data/interim/cache.
