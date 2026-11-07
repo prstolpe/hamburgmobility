@@ -467,3 +467,11 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   Die Steckbriefe zeigten bisher „Lizenz in der Quelle nicht angegeben (wird geklärt)“; dtv_official und das Ist-Tempo
   stehen in Downloads und Steckbriefen, die Namensnennung ist daher nötig.
 - gtfs_hvv: Prüfung 2026-11-07, noch kein Feed für die Fahrplanperiode ab Dezember 2026.
+
+## rules.yaml 0.15.0, plain_language.yaml 0.4.3 – 2026-11-07: Tempo-30-Obergrenze zurückgenommen
+- Entscheidung prstolpe 2026-11-07: Das Umfeld (Schule/Kita, Publikumsnutzung, Querungsbedarf) hat Vorrang vor der
+  heutigen Verkehrsmenge. C-G30-01 wieder ohne DTV-Obergrenze, C-G50-02 und Schwelle gow30_max_dtv entfernt (wie 0.13.0).
+  GOW30 über dem CROW-Profil bleibt sichtbar über das Flag gow30_dtv_above_profile im Soll-Querschnitt (setzt weniger
+  Kfz-Verkehr voraus). Die Regel soll später verbessert werden.
+- Goldene Fälle: 28 erwartet jetzt GOW30 auch bei hohem DTV, Grenzfall 30 entfällt; dtv_official bleibt in den Fällen
+  (wird nicht mehr gelesen).

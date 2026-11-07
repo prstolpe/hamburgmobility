@@ -5,7 +5,7 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.4.2
+  version: 0.4.3
   date: 2026-11-07
 
 categories:
@@ -46,7 +46,6 @@ rules:
       - {when: "shop_frontage_share >= thresholds.frontage", text: "viele Gebäude mit Läden oder Publikumsverkehr: {shop_frontage_share|%} (ab {thresholds.frontage|%})"}
       - {when: "crossing_demand == high", text: "hoher Querungsbedarf"}
     failed:
-      - {when: "in_hvs and dtv_official > thresholds.gow30_max_dtv", text: "zu viel Verkehr für eine Stadtstraße 30: {dtv_official|.0f} Kfz/Tag (CROW-Profil bis {thresholds.gow30_max_dtv|.0f})"}
       - {text: "keine Schule oder Kita in der Nähe und wenig Publikumsverkehr"}
   C-G30-02:
     passed:
@@ -54,9 +53,6 @@ rules:
     failed:
       - {when: "separated_cycle_track_present", text: "baulicher Radweg vorhanden"}
       - {when: "width_p10_m >= required_width.GOW50", text: "Platz für einen baulichen Radweg: Straßenraum {width_p10_m|.1f} m (nötig {required_width.GOW50|.1f} m)"}
-  C-G50-02:
-    passed:
-      - {text: "Schule, Kita oder Läden in der Nähe, aber {dtv_official|.0f} Kfz/Tag – mehr als eine Stadtstraße 30 nach CROW trägt (bis {thresholds.gow30_max_dtv|.0f}); darum Stadtmagistrale mit baulichem Radweg. Abschnitt mit Tempo 30 vor Ort prüfen"}
   C-G50-01:
     passed:
       - {text: "kein Grund für Tempo 30 auf dieser Verbindungsstraße gefunden"}

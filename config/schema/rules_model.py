@@ -627,11 +627,6 @@ class RuleSet(_Strict):
                 raise ValueError(f"requirements: unknown category {cat!r}")
             self._check_requirement_group(reqs, f"requirements.{cat}", source_ids)
 
-        cap = {n: t for r in self.classification for n, t in r.thresholds.items()}.get("gow30_max_dtv")
-        wide = self.requirements.get("GOW30", {}).get("profiles", {}).get("wide", {}).get("max_dtv")
-        if cap is not None and wide is not None and float(cap.value) != float(wide):
-            raise ValueError("C-G30-01 gow30_max_dtv must equal requirements.GOW30.profiles.wide.max_dtv")
-
         for key, entry in self.required_width.items():
             path = f"required_width.{key}"
             is_component = key.endswith("_m")

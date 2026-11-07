@@ -1,6 +1,6 @@
 {
   "type": "FeatureCollection",
-  "name": "gow50_hvs_school_dtv_above_gow30",
+  "name": "gow30_hvs_school_high_dtv",
   "crs": {
     "type": "name",
     "properties": {
@@ -11,12 +11,12 @@
     {
       "type": "Feature",
       "properties": {
-        "case_id": "gow50_hvs_school_dtv_above_gow30",
-        "description": "HVS mit Radweg, Schule in 100 m, DTV über dem CROW-GOW30-Profil -> GOW50 (C-G50-02)",
-        "expected_category": "GOW50",
+        "case_id": "gow30_hvs_school_high_dtv",
+        "description": "HVS mit Radweg, Schule in 100 m, hohes DTV -> trotzdem GOW30 (Umfeld vor Verkehrsmenge, rules.yaml 0.15.0)",
+        "expected_category": "GOW30",
         "expected_rules": [
           "C-GOW-01",
-          "C-G50-02"
+          "C-G30-01"
         ],
         "boundary": null,
         "highway": "primary",

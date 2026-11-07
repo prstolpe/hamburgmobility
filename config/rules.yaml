@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.14.0
+  version: 0.15.0
   date: 2026-11-07
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -70,13 +70,12 @@ classification:
   - id: C-G30-01
     description: "GOW30-Auslöser a: Umfeld spricht für 30 (Schule, Leben, Querbarkeit)"
     applies_to: GOW
-    if: "(schools_or_kitas_within_m <= thresholds.sensitive_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high) and (not in_hvs or dtv_official <= thresholds.gow30_max_dtv)"
+    if: "schools_or_kitas_within_m <= thresholds.sensitive_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high"
     then: GOW30
     thresholds:
       sensitive_radius: {value: 150, unit: m, source_type: assumption}
       frontage:         {value: 0.4, unit: "Anteil Erdgeschoss mit Publikumsnutzung", source_type: assumption}
-      gow30_max_dtv:    {value: 10000, unit: "Kfz/24h", source: CROW_GOW30_2023, source_type: swov_crow, check: "gleich requirements.GOW30.profiles.wide.max_dtv (Schema prüft)"}
-    note: "Obergrenze gow30_max_dtv nur auf Hauptverkehrsstraßen (dort liegt immer eine Zählung vor); Entscheidung prstolpe 2026-11-07 (docs/open_questions.md, Prompt 08/19)."
+    note: "Umfeld vor heutiger Verkehrsmenge: keine DTV-Obergrenze (Obergrenze aus 0.14.0 zurückgenommen, Entscheidung prstolpe 2026-11-07). GOW30 über dem CROW-Profil zeigt der Soll-Querschnitt mit Flag gow30_dtv_above_profile (setzt weniger Kfz-Verkehr voraus)."
     source: [CROW_AFW30_2021, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
@@ -89,16 +88,6 @@ classification:
     source: [SWOV_FS_2023, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
-
-  - id: C-G50-02
-    description: "Umfeld spräche für 30, aber die Hauptverkehrsstraße trägt mehr Verkehr als das CROW-GOW30-Profil: GOW50, Tempo-30-Abschnitt vor Ort prüfen"
-    applies_to: GOW
-    if: "(schools_or_kitas_within_m <= thresholds.sensitive_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high) and in_hvs and dtv_official > thresholds.gow30_max_dtv"
-    then: GOW50
-    source: CROW_GOW30_2023
-    source_type: swov_crow
-    status: draft
-    note: "Entscheidung prstolpe 2026-11-07. Steht nach C-G30-02: Fehlt der Platz für einen baulichen Radweg, bleibt GOW30 (Flag gow30_dtv_above_profile im Soll-Querschnitt)."
 
   - id: C-G50-01
     applies_to: GOW

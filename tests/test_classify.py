@@ -11,11 +11,9 @@ from pydantic import ValidationError
 from config.schema.rules_model import RuleSet
 from pipeline.lib.classify import classify_segment
 from pipeline.lib.rules import DEFAULT_RULES_PATH, load_rules
-from pipeline.lib.rules import all_thresholds
 from pipeline.s05_classify import classification_inputs, classify_frame
 
 RULES = load_rules()
-RULES_THRESHOLDS = {n: t.value for n, t in all_thresholds(RULES).items()}
 
 # A plain urban street with all inputs present (no fallback-dependent outcome except the policy defaults).
 BASE = {
@@ -166,13 +164,10 @@ def test_policy_ids_must_not_clash(raw):
         RuleSet.model_validate(data)
 
 
-def test_gow30_cap_on_main_roads_only():
-    # rules.yaml 0.14.0: school trigger only up to gow30_max_dtv on HVS; above -> GOW50 via C-G50-02
-    cap = RULES_THRESHOLDS["gow30_max_dtv"]
+def test_traffic_volume_does_not_block_gow30():
+    # rules.yaml 0.15.0: local circumstances outrank today's traffic (cap of 0.14.0 withdrawn, decision prstolpe 2026-11-07)
     near_school = {**GOW, "schools_or_kitas_within_m": 50.0}
-    assert classify_segment({**near_school, "dtv_official": cap}, RULES)["cat_proposed"] == "GOW30"
-    above = classify_segment({**near_school, "dtv_official": cap + 1}, RULES)
-    assert above["cat_proposed"] == "GOW50" and step(above, "C-G50-02")["passed"]
-    # not a main road: no count, the cap does not apply
-    off_hvs = classify_segment({**near_school, "in_hvs": False, "dtv_official": None}, RULES)
-    assert off_hvs["cat_proposed"] == "GOW30"
+    for dtv in (8000.0, 40000.0, None):
+        r = classify_segment({**near_school, "dtv_official": dtv}, RULES)
+        assert r["cat_proposed"] == "GOW30"
+    assert "C-G50-02" not in {s.id for s in RULES.classification}

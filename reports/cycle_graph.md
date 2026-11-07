@@ -1,6 +1,6 @@
 # Radgraph (Stufe c01)
 
-Erzeugt 2026-11-07T13:06:24+00:00 mit pipeline/c01_cycle_graph.py · cycling_rules.yaml 0.7.0 · OSM-Auszug `data/raw/osm/hamburg_2026-10-28.osm.pbf` (SHA-256 700d2e2603a7…) · nicht amtlicher Entwurf
+Erzeugt 2026-11-07T13:56:07+00:00 mit pipeline/c01_cycle_graph.py · cycling_rules.yaml 0.7.0 · OSM-Auszug `data/raw/osm/hamburg_2026-10-28.osm.pbf` (SHA-256 700d2e2603a7…) · nicht amtlicher Entwurf
 
 ## Kennzahlen
 
@@ -10,7 +10,7 @@ Erzeugt 2026-11-07T13:06:24+00:00 mit pipeline/c01_cycle_graph.py · cycling_rul
 - Größte stark zusammenhängende Komponente: 6 217.7 km (96.7% der Länge)
 - Nur in einer Richtung befahrbar: 17 934 Kanten; in keiner Richtung (widersprüchliche oneway-Angaben der OSM-Wege einer Kante): 16 Kanten, 1 237 m
 - Eigenständige Wege mit Bezug zu einem Straßenabschnitt (sidepath_of, C-GRAPH-06): 8 096 von 21 638
-- Laufzeit: Lesen und Widerstand 22 s, Zusammenfassen 7 s
+- Laufzeit: Lesen und Widerstand 18 s, Zusammenfassen 7 s
 
 ## Länge nach Kantenart und Widerstandsregel
 

@@ -28,7 +28,8 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
 ## Konventionen
 - Python 3.12, uv, geopandas/shapely 2, pyogrio, DuckDB Spatial; Code, Namen und Konfiguration auf
   Englisch, Dokumentation und Reports auf Deutsch.
-- Rechnen immer in EPSG:25832; nur die Exportstufe transformiert nach EPSG:4326.
+- Rechnen immer in EPSG:25832; nur die Exportstufe transformiert nach EPSG:4326. Ausnahme: Prüfdateien in reports/
+  (GeoJSON zur Sichtprüfung) dürfen nach GeoJSON-Standard in EPSG:4326 vorliegen.
 - Zwischenergebnisse als GeoParquet in data/interim, Rohdaten in data/raw mit Quelle, Abrufdatum
   und Hash in data/manifest.json.
 - segment_id ist stabil (Hash aus sortierten OSM-Way-IDs und gerundeten Knotenkoordinaten).
@@ -49,6 +50,8 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
 ## Radnetz und Soll-Querschnitt
 - Erweiterung ab Prompt 14 (prompts/14_cycling_setup.md bis 21_web_validation_cycling.md):
   hierarchisches Radnetz nach den fünf Prinzipien, Führungsform/Breite, Soll-Querschnitt, Knotenpunkte.
+- Folgeaufträge (noch offen): prompts/22_target_scenario.md (Zielszenario statt heutiger Mengen),
+  prompts/23_junction_performance.md (Wartezeiten an Knotenpunkten Ist/Soll).
 - docs/guide_radnetz.md – Methodik mit Quellen. Bei Fachfragen zum Radnetz zuerst hier nachsehen.
 - config/cycling_rules.yaml – Radnetzkategorien, Prinzipien, Trennungsmatrix, Breiten.
 - config/design_rules.yaml – Fahrstreifen, Lage der Radanlagen, Raumaufteilung, Knotenpunkte.
