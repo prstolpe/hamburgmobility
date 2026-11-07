@@ -54,6 +54,8 @@ ASSUMPTIONS = {
     "external_edge_m": {"value": 300, "source_type": "assumption",
                         "note": "Endknoten gezählter Straßen höchstens so weit vom Netzrand: externe Zone"},
     "min_lanes": {"value": 1, "source_type": "assumption"},
+    "ext_search_m": {"value": 3000, "source_type": "assumption",
+                     "note": "nächste Zählstelle zu einem Netzende im Randbereich; weiter weg: keine externe Zone"},
     "peak_direction_share": {"value": 0.55, "source_type": "assumption",
                              "note": "Lastrichtung; steht nur in der Notiz zu C-FAC-03/L-02 (0,10 x 0,55)"},
 }
@@ -104,7 +106,9 @@ def load_network(r) -> pd.DataFrame:
     seg["speed_soll"] = soll_speed.fillna(seg.travel_speed_kmh)  # SW and uncategorised (buffer ring): Ist speed
     lanes_min = ASSUMPTIONS["min_lanes"]["value"]
     seg["lanes_ist"] = seg.lanes_per_dir_ist.fillna(lanes_min).clip(lower=lanes_min)
-    seg["lanes_soll"] = seg.lanes_per_dir_soll.fillna(seg.lanes_ist).clip(lower=lanes_min)
+    # Soll lanes are text: "shared" (mixed traffic, one lane per direction for capacity) or "1"/"2"
+    soll = pd.to_numeric(seg.lanes_per_dir_soll.replace({"shared": "1"}), errors="coerce")
+    seg["lanes_soll"] = soll.fillna(seg.lanes_ist).clip(lower=lanes_min)
     return seg
 
 
@@ -163,19 +167,26 @@ def attach(z: pd.DataFrame, xy: np.ndarray, allowed: np.ndarray) -> np.ndarray:
 
 
 def external_zones(seg: gpd.GeoDataFrame, xy: np.ndarray, u: np.ndarray, v: np.ndarray, edge_m: float) -> pd.DataFrame:
-    """End nodes (degree 1) of counted roads near the outer edge of the network."""
+    """Dead ends (degree 1) of main roads near the outer edge of the network (the clipped buffer ring).
+
+    Weight = DTV of the nearest counted segment (DTV 2019 only exists inside Hamburg), searched within
+    EXT_SEARCH_M; dead ends without a count nearby are dropped.
+    """
+    from scipy.spatial import cKDTree
+    from shapely.geometry import Point
     deg = np.bincount(np.concatenate([u, v]), minlength=len(xy))
     hull = seg.geometry.union_all().convex_hull.exterior
-    rows = []
-    for i, r in seg[seg.dtv_official.notna()].iterrows():
-        for n in (u[i], v[i]):
-            if deg[n] == 1:
-                from shapely.geometry import Point
-                if hull.distance(Point(xy[n])) <= edge_m:
-                    rows.append({"zone": f"ext_{n}", "node": n, "x": xy[n][0], "y": xy[n][1],
-                                 "dtv": float(r.dtv_official), "name": r["name"]})
-    e = pd.DataFrame(rows).drop_duplicates("node")
-    return e
+    main = seg.highway.isin(["motorway", "trunk", "primary", "secondary", "tertiary"]).to_numpy()
+    ends = sorted({n for i in np.flatnonzero(main) for n in (u[i], v[i]) if deg[n] == 1})
+    ends = [n for n in ends if hull.distance(Point(xy[n])) <= edge_m]
+    counted = seg[seg.dtv_official.notna()]
+    mids = np.array([g.interpolate(0.5, normalized=True).coords[0] for g in counted.geometry])
+    tree = cKDTree(mids)
+    dist, k = tree.query(xy[ends]) if ends else (np.array([]), np.array([], dtype=int))
+    rows = [{"zone": f"ext_{n}", "node": n, "x": xy[n][0], "y": xy[n][1],
+             "dtv": float(counted.dtv_official.iat[j]), "name": counted["name"].iat[j], "dist_m": float(d)}
+            for n, d, j in zip(ends, dist, k) if d <= ASSUMPTIONS["ext_search_m"]["value"]]
+    return pd.DataFrame(rows, columns=["zone", "node", "x", "y", "dtv", "name", "dist_m"])
 
 
 def run_assignment(n_nodes, tail, head, t0_min, cap_day, zones, zone_node, beta, scale, increments,
@@ -203,7 +214,8 @@ def run_assignment(n_nodes, tail, head, t0_min, cap_day, zones, zone_node, beta,
             w = np.where(np.isfinite(d_sec), attr * np.exp(-beta * d_sec / 60.0), 0.0)
             w[o] = 0.0  # no intrazonal trips on the network
             tot = w.sum()
-            return scale * share * weight * prod[o] * w / tot if tot > 0 else np.zeros_like(w)
+            k = scale[o] if np.ndim(scale) else scale
+            return k * share * weight * prod[o] * w / tot if tot > 0 else np.zeros_like(w)
 
         f = cd.assign_od(n_nodes, tl, hd, cost, zone_node[origins].tolist(), dest_nodes, od)
         flow += f[:len(tail)] + f[len(tail):]
@@ -263,14 +275,18 @@ def main() -> None:
     betas = [a.beta] if a.beta else ASSUMPTIONS["beta_per_min_grid"]["value"]
     best = None
     for beta in betas:
-        f1, _ = run_assignment(len(nodes), u, v, t_ist, cap_ist, zones, zone_node, beta, 1.0, [1.0],
-                               sample=a.origins_sample)
-        # least-squares scale on counted segments (uncongested first pass)
-        m = counted & (f1 > 0)
-        scale = float((f1[m] * seg.dtv_official.to_numpy()[m]).sum() / (f1[m] ** 2).sum())
+        # uncongested first pass, internal and external origins separately; two scales by non-negative LS
+        ext_mask = zones.external.to_numpy()
+        f_int, _ = run_assignment(len(nodes), u, v, t_ist, cap_ist, zones.assign(production=np.where(ext_mask, 0, zones.production)),
+                                  zone_node, beta, 1.0, [1.0], sample=a.origins_sample)
+        f_ext, _ = run_assignment(len(nodes), u, v, t_ist, cap_ist, zones.assign(production=np.where(ext_mask, zones.production, 0)),
+                                  zone_node, beta, 1.0, [1.0], sample=a.origins_sample)
+        from scipy.optimize import nnls
+        (s_int, s_ext), _ = nnls(np.column_stack([f_int[counted], f_ext[counted]]), seg.dtv_official.to_numpy()[counted])
+        scale = np.where(ext_mask, s_ext, s_int)
         f, t_fin = run_assignment(len(nodes), u, v, t_ist, cap_ist, zones, zone_node, beta, scale, inc,
                                   sample=a.origins_sample)
-        st = fit(seg, f) | {"beta": beta, "scale": round(scale, 1)}
+        st = fit(seg, f) | {"beta": beta, "scale_internal": round(float(s_int), 1), "scale_external": round(float(s_ext), 1)}
         calib.append(st)
         print("calibration", st, f"{time.time() - t_start:.0f}s", flush=True)
         if best is None or st["spearman"] > best[0]["spearman"]:
