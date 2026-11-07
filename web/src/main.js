@@ -1,7 +1,7 @@
 import "./style.css";
-import { LAYER_INFO, legendHtml, OVERLAY_INFO } from "./layers.js";
-import { profileHtml } from "./panel.js";
-import { downloadsHtml, imprintHtml, methodHtml, sourcesHtml } from "./pages.js";
+import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO } from "./layers.js";
+import { junctionHtml, profileHtml } from "./panel.js";
+import { downloadsHtml, imprintHtml, methodHtml, radnetzHtml, sourcesHtml } from "./pages.js";
 import { setupSearch } from "./search.js";
 import { parseHash, toHash } from "./state.js";
 import { renderDistrictChooser, renderTable } from "./table.js";
@@ -32,8 +32,10 @@ function setState(patch, { push = false } = {}) {
 // --- controls --------------------------------------------------------------------------------
 
 function controlsHtml() {
-  const layerRadios = Object.entries(LAYER_INFO).map(([k, v]) => `<label class="opt">
-    <input type="radio" name="layer" value="${k}" ${state.layer === k ? "checked" : ""}> ${esc(v.title)}</label>`).join("");
+  const radio = ([k, v]) => `<label class="opt">
+    <input type="radio" name="layer" value="${k}" ${state.layer === k ? "checked" : ""}> ${esc(v.title)}</label>`;
+  const layerRadios = Object.entries(LAYER_INFO).filter(([, v]) => !v.cycling).map(radio).join("");
+  const cyclingRadios = meta.cycling ? Object.entries(LAYER_INFO).filter(([, v]) => v.cycling).map(radio).join("") : "";
   const overlays = Object.entries(OVERLAY_INFO).map(([k, v]) => `<label class="opt">
     <input type="checkbox" name="ov" value="${k}" ${state.overlays.includes(k) ? "checked" : ""}> ${esc(v)}</label>`).join("");
   const cats = Object.entries(meta.categories).filter(([k]) => !meta.categories_present || meta.categories_present.includes(k)).map(([k, c]) => `<label class="opt">
@@ -41,7 +43,8 @@ function controlsHtml() {
   const dts = [...Object.keys(meta.discrepancy_types), "keine"].map((k) => `<label class="opt">
     <input type="checkbox" name="dt" value="${k}" ${state.dts.includes(k) ? "checked" : ""}> ${k === "keine" ? "keine Diskrepanz" : esc(k)}</label>`).join("");
   return `
-    <fieldset><legend>Ebene</legend>${layerRadios}</fieldset>
+    <fieldset><legend>Ebene: Straßenfunktion</legend>${layerRadios}</fieldset>
+    ${cyclingRadios ? `<fieldset><legend>Ebene: Radverkehr (Entwurf)</legend>${cyclingRadios}</fieldset>` : ""}
     <p class="muted" id="layer-text">${esc(LAYER_INFO[state.layer].text)}</p>
     <div id="legend" aria-live="polite">${legendHtml(state.layer, meta)}</div>
     <fieldset><legend>Zusätzlich anzeigen</legend>${overlays}</fieldset>
@@ -49,6 +52,7 @@ function controlsHtml() {
       <label for="f-bz">Bezirk</label>
       <select id="f-bz" name="bz"><option value="">alle</option>${meta.districts.map((b) =>
         `<option value="${esc(b)}" ${state.bz === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>
+      ${isCyclingLayer(state.layer) ? '<p class="muted">Bei Radverkehrs-Ebenen gilt nur der Bezirksfilter.</p>' : ""}
       <fieldset><legend>Soll-Kategorie</legend>${cats}</fieldset>
       <fieldset><legend>Diskrepanztyp</legend>${dts}</fieldset>
       <label for="f-pr">Priorität mindestens: <output id="f-pr-out">${state.prmin.toLocaleString("de-DE")}</output></label>
@@ -86,7 +90,7 @@ function renderControls() {
 
 // --- panel -----------------------------------------------------------------------------------
 
-async function openPanel(id) {
+async function openPanel(id, kind = "seg") {
   const panel = $("#panel");
   const body = $("#panel-body");
   lastFocus = document.activeElement;
@@ -94,10 +98,14 @@ async function openPanel(id) {
   document.body.classList.add("panel-open");
   body.innerHTML = "<p>Lade Steckbrief …</p>";
   try {
-    const p = await json(`segments/${id}.json`);
-    body.innerHTML = profileHtml(p, meta, location.href);
-    const street = idToStreet.get(id);
-    $("#panel-show").hidden = !street;
+    if (kind === "jct") {
+      body.innerHTML = junctionHtml(await json(`junctions/${id}.json`), meta, location.href);
+      $("#panel-show").hidden = true;
+    } else {
+      const p = await json(`segments/${id}.json`);
+      body.innerHTML = profileHtml(p, meta, location.href);
+      $("#panel-show").hidden = !idToStreet.get(id);
+    }
   } catch {
     body.innerHTML = "<p>Steckbrief nicht gefunden.</p>";
   }
@@ -126,7 +134,8 @@ async function render() {
     if (!mapView) {
       const { createMap } = await import("./map.js");
       mapView = createMap($("#map"), meta, state, {
-        onSelect: (id) => setState({ seg: id }),
+        onSelect: (id) => setState({ seg: id, jct: null }),
+        onSelectJunction: (id) => setState({ jct: id, seg: null }),
         onMove: (m) => { state = { ...state, map: m }; writeUrl(); },
       });
     } else {
@@ -152,6 +161,7 @@ async function render() {
     }
   }
   const pages = { methode: async () => methodHtml(meta, await (await fetch("changelog.md")).text()),
+    radnetz: async () => radnetzHtml(meta),
     downloads: async () => downloadsHtml(meta), quellen: () => sourcesHtml(meta), impressum: async () => imprintHtml(meta) };
   const sec = $(`[data-page="${state.page}"]`);
   if (pages[state.page] && !sec.dataset.loaded) {
@@ -159,8 +169,9 @@ async function render() {
     sec.dataset.loaded = "1";
   }
   const panelId = $("#panel").dataset.id;
-  if (state.seg && state.seg !== panelId) { $("#panel").dataset.id = state.seg; openPanel(state.seg); }
-  if (!state.seg && !$("#panel").hidden) { $("#panel").dataset.id = ""; closePanel(); }
+  const want = state.jct ? `jct:${state.jct}` : state.seg ? `seg:${state.seg}` : "";
+  if (want && want !== panelId) { $("#panel").dataset.id = want; openPanel(state.jct ?? state.seg, state.jct ? "jct" : "seg"); }
+  if (!want && !$("#panel").hidden) { $("#panel").dataset.id = ""; closePanel(); }
 }
 
 async function init() {
@@ -173,14 +184,14 @@ async function init() {
     setState({ page: "karte" }, { push: true });
     mapView?.fitBbox(s.bbox);
   });
-  $("#panel-close").onclick = () => setState({ seg: null });
+  $("#panel-close").onclick = () => setState({ seg: null, jct: null });
   $("#panel-show").onclick = () => {
     const s = idToStreet.get(state.seg);
     setState({ page: "karte" }, { push: true });
     if (s) setTimeout(() => mapView?.fitBbox(s.bbox), 50);
   };
   document.addEventListener("keydown", (ev) => {
-    if (ev.key === "Escape" && !$("#panel").hidden) setState({ seg: null });
+    if (ev.key === "Escape" && !$("#panel").hidden) setState({ seg: null, jct: null });
   });
   for (const a of document.querySelectorAll("nav.main a")) {
     a.addEventListener("click", (ev) => {

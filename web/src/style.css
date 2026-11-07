@@ -103,3 +103,10 @@ th[aria-sort="descending"] button::after { content: " ▼"; }
            border-radius: 12px 12px 0 0; box-shadow: 0 -4px 16px rgba(0,0,0,.2); }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* Cycling layers (prompt 21) */
+.controls .note, .prose .note { background: #fff4d6; border-left: 4px solid #b35900; padding: .4rem .6rem; }
+.controls fieldset + fieldset { margin-top: .5rem; }
+.sketch.xs svg { max-width: 100%; height: auto; }
+table.compact { font-size: .9rem; }
+table.compact td { text-align: right; }

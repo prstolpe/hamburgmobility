@@ -109,9 +109,9 @@ cross-section-soll: dirs ## Target cross section: lanes, placement, space alloca
 junctions: dirs ## Target junction type and cyclist treatment per node (prompt 20)
 	$(call run_step,junctions,c07_junctions)
 
-export-cycling: dirs ## Cycling validation and export of the cycling layers (prompt 21)
+export-cycling: dirs ## Cycling validation (c08) and export incl. cycling layers (prompt 21) -> reports/validation_cycling.md
 	$(call run_step,export-cycling,c08_validate_cycling)
-	@echo "export-cycling: Export der Radnetz-Ebenen folgt mit Prompt 21 (Erweiterung von pipeline/s09_export.py)"
+	$(call run_step,export-cycling,s09_export)
 
 test: ## Run tests (Python and website unit tests)
 	uv run pytest

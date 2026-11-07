@@ -9,6 +9,9 @@ from make validate) and writes data/out/:
   segments/{segment_id}.json  profile per segment (plain-text reasons from rule_trace)
   search.json, table.json, meta.json, district.geojson, licenses.md, changelog.md
   tiles/segments.pmtiles      tippecanoe, layers segments and facilities, zoom 10-16
+  cycling (prompt 21, if the cycling stages have run): tiles/cycling.pmtiles (layers cycle_network, cycle_segments,
+  cycle_official), tiles/junctions.pmtiles (junctions), junctions/{node_id}.json, a `cycling` block in every segment
+  profile, downloads cycle_segments.*, junctions.*, cycle_network.parquet, cycling_rules.yaml, design_rules.yaml
 plus reports/export.md. This is the only stage that transforms to EPSG:4326. Crashes only as counts.
 The run stops with exit code 1 if a check fails.
 """
@@ -26,11 +29,12 @@ import pandas as pd
 import yaml
 
 from pipeline.lib import export as ex
+from pipeline.lib import export_cycling as xc
 from pipeline.lib.area import area_label, read_districts, read_rural
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest
-from pipeline.lib.rules import load_rules
+from pipeline.lib.rules import load_cycling_rules, load_design_rules, load_rules
 from pipeline.s04_features import _fmt, _now
 from pipeline.s06_coherence import RULE_LABELS
 from pipeline.s08_discrepancy import reason_text
@@ -42,6 +46,12 @@ VALIDATION_PATH = REPO_ROOT / "data" / "interim" / "validation.parquet"
 OUT_DIR = REPO_ROOT / "data" / "out"
 TILES_TMP = REPO_ROOT / "data" / "interim" / "tiles"
 REPORT_PATH = REPO_ROOT / "reports" / "export.md"
+INTERIM = REPO_ROOT / "data" / "interim"
+CYCLING_PATHS = {"facility": INTERIM / "cycle_facility.parquet", "xs": INTERIM / "cross_section_soll.parquet",
+                 "junctions": INTERIM / "junctions.parquet", "network": INTERIM / "cycle_network.parquet",
+                 "principles": INTERIM / "cycle_principles.parquet",
+                 "official": REPO_ROOT / "data" / "raw" / "cycle_network_official__radnetz.parquet"}
+CYCLING_VALIDATION_PATH = INTERIM / "validation_cycling.parquet"
 PAGES_LIMIT_BYTES = 1_000_000_000  # GitHub Pages: published site at most 1 GB
 MIN_ZOOM, MAX_ZOOM = 10, 16
 SAMPLE_SIZE = 30
@@ -58,6 +68,8 @@ PROFILE_SOURCES = {
     "schools": "Schulen (OpenStreetMap)",
     "kitas": "Kitas (OpenStreetMap)",
     "cycle_network": "Radnetz (OpenStreetMap)",
+    "cycle_network_official": "Radnetz Hamburg (amtlich): Vergleich und Startbonus für das Soll-Radnetz",
+    "bike_counters": "Rad-Zählstellen: Kalibrierung des Radverkehrsmodells",
 }
 DOWNLOAD_TEXTS = {
     "segments.parquet": "Abschnitte mit allen Merkmalen (GeoParquet)",
@@ -66,6 +78,13 @@ DOWNLOAD_TEXTS = {
     "datenbeschreibung.md": "Datenbeschreibung: Bedeutung aller Spalten",
     "rules.yaml": "Regelwerk mit allen Schwellenwerten und Quellen",
     "overrides.csv": "Fachliche Korrekturen (Korrekturdatei)",
+    "cycle_segments.parquet": "Radnetz je Abschnitt: Führungsform, Breite, Fahrstreifen, Querschnitt (GeoParquet)",
+    "cycle_segments.geojson": "Radnetz je Abschnitt (GeoJSON)",
+    "junctions.parquet": "Knotenpunkte: Soll- und Ist-Typ, Radverkehrsführung (GeoParquet)",
+    "junctions.geojson": "Knotenpunkte (GeoJSON)",
+    "cycle_network.parquet": "Soll-Radnetz als Kanten des Radgraphen (GeoParquet)",
+    "cycling_rules.yaml": "Regelwerk Radnetz (Kategorien, Prinzipien, Trennungsmatrix, Breiten)",
+    "design_rules.yaml": "Regelwerk Querschnitt und Knotenpunkte",
 }
 FACILITY_LAYERS = {"schools": "data/raw/schools__osm.parquet", "kitas": "data/raw/kitas__osm.parquet"}
 
@@ -206,7 +225,7 @@ def write_json(path, data) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
-def data_description(texts: dict, ctx: dict) -> str:
+def data_description(texts: dict, ctx: dict, cycling: bool = False) -> str:
     lines = ["# Datenbeschreibung – Straßenfunktionsplan Hamburg (Entwurf, nicht amtlich)", "",
              f"Version {ctx['version']}, {ctx['pilot']}, {ctx['n']} Abschnitte. Dateien: segments.parquet "
              "(GeoParquet), segments.geojson, segments.csv (mit Mittelpunkt lon/lat), rules.yaml (Regelwerk), "
@@ -215,6 +234,16 @@ def data_description(texts: dict, ctx: dict) -> str:
              "Quellen- und Lizenzseite. Unfälle nur als Summen je Abschnitt.", "",
              "| Spalte | Bedeutung |", "| --- | --- |"]
     lines += [f"| {c} | {texts['columns'][c]} |" for c in [*ex.PUBLIC_COLUMNS, "geometry"]]
+    if cycling:
+        files = {"cycle_segments": "cycle_segments.parquet / .geojson", "junctions": "junctions.parquet / .geojson",
+                 "cycle_network": "cycle_network.parquet"}
+        lines += ["", "## Radnetz, Querschnitt und Knotenpunkte (Entwurf, nicht amtlich)", "",
+                  "Regelwerke: cycling_rules.yaml, design_rules.yaml. Lizenz: ODbL 1.0 (abgeleitet aus OpenStreetMap); "
+                  "Vergleich mit dem Radnetz Hamburg © FHH/BVM (dl-de/by-2.0). Radverkehrsstärken sind modelliert. "
+                  "Unfälle nur als Summen je Knotenpunkt."]
+        for key, title in files.items():
+            lines += ["", f"### {title}", "", "| Spalte | Bedeutung |", "| --- | --- |",
+                      *[f"| {c} | {d} |" for c, d in texts["cycling"]["columns"][key].items()]]
     return "\n".join(lines) + "\n"
 
 
@@ -227,19 +256,116 @@ def facilities_frame() -> gpd.GeoDataFrame:
     return gpd.GeoDataFrame(pd.concat(parts, ignore_index=True), crs=WORK_CRS).to_crs(ex.EXPORT_CRS)
 
 
-def build_tiles(tiles: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame, attribution: str) -> None:
+def run_tippecanoe(name: str, layers: dict[str, gpd.GeoDataFrame], attribution: str) -> None:
+    """One PMTiles file tiles/<name>.pmtiles with one layer per frame (zoom MIN_ZOOM-MAX_ZOOM, nothing dropped)."""
     if shutil.which("tippecanoe") is None:
         raise RuntimeError("tippecanoe fehlt (brew install tippecanoe)")
     TILES_TMP.mkdir(parents=True, exist_ok=True)
-    seg_path, fac_path = TILES_TMP / "segments.geojson", TILES_TMP / "facilities.geojson"
-    tiles.to_file(seg_path, driver="GeoJSON")
-    facilities.to_file(fac_path, driver="GeoJSON")
-    out = OUT_DIR / "tiles" / "segments.pmtiles"
+    out = OUT_DIR / "tiles" / f"{name}.pmtiles"
     out.parent.mkdir(parents=True, exist_ok=True)
     cmd = ["tippecanoe", "-o", str(out), "--force", f"-Z{MIN_ZOOM}", f"-z{MAX_ZOOM}", "-r1",
            "--no-feature-limit", "--no-tile-size-limit", "--no-simplification-of-shared-nodes",
-           "--attribution", attribution, "-L", f"segments:{seg_path}", "-L", f"facilities:{fac_path}", "--quiet"]
+           "--attribution", attribution, "--quiet"]
+    for layer, frame in layers.items():
+        path = TILES_TMP / f"{name}__{layer}.geojson"
+        frame.to_file(path, driver="GeoJSON")
+        cmd += ["-L", f"{layer}:{path}"]
     subprocess.run(cmd, check=True)
+
+
+def build_tiles(tiles: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame, attribution: str) -> None:
+    run_tippecanoe("segments", {"segments": tiles, "facilities": facilities}, attribution)
+
+
+# --- cycling (prompt 21) -------------------------------------------------------------------------
+
+
+def prepare_cycling(seg_ids: set, texts: dict) -> dict | None:
+    """Inputs, labels and per-segment profile blocks of the cycling layers; None if a cycling stage has not run."""
+    missing = [k for k, path in CYCLING_PATHS.items() if not path.exists()]
+    if missing:
+        print(f"export: cycling layers skipped, missing {', '.join(missing)} (make junctions / make fetch)", file=sys.stderr)
+        return None
+    cyc, des = load_cycling_rules(), load_design_rules()
+    labels = xc.Labels.from_rules(texts, cyc, des)
+    fac = gpd.read_parquet(CYCLING_PATHS["facility"])
+    xs = pd.read_parquet(CYCLING_PATHS["xs"])
+    j = gpd.read_parquet(CYCLING_PATHS["junctions"])
+    net = gpd.read_parquet(CYCLING_PATHS["network"], columns=[*texts["cycling"]["columns"]["cycle_network"]])
+    principles = pd.read_parquet(CYCLING_PATHS["principles"], columns=["level", "id", "category", "length_m",
+                                                                       *[f"{p}_{v}" for p in xc.PRINCIPLES for v in ("ist", "soll")],
+                                                                       "score_ist", "score_soll"])
+    official = gpd.read_parquet(CYCLING_PATHS["official"]).to_crs(WORK_CRS)
+    rob = {}
+    if CYCLING_VALIDATION_PATH.exists():
+        v = pd.read_parquet(CYCLING_VALIDATION_PATH)
+        rob = {(r["kind"], str(r["id"])): r for r in v.to_dict("records")}
+    else:
+        print("export: data/interim/validation_cycling.parquet missing; run `make export-cycling` (c08) first", file=sys.stderr)
+    scores = xc.principle_scores(principles, net)
+    x = xs.set_index("segment_id")
+    blocks = {}
+    for r in fac.itertuples(index=False):
+        if r.segment_id not in seg_ids:
+            continue
+        b = xc.segment_cycling_block(pd.Series(r._asdict()), x.loc[r.segment_id], scores.get(r.segment_id), labels)
+        b["robustness"] = xc.robustness(rob.get(("segment", r.segment_id)))
+        blocks[r.segment_id] = b
+    return {"cyc": cyc, "des": des, "labels": labels, "fac": fac, "xs": xs, "j": j, "net": net, "official": official,
+            "rob": rob, "blocks": blocks}
+
+
+def write_cycling_downloads(c: dict, dl, texts: dict) -> None:
+    cols = texts["cycling"]["columns"]
+    segs = c["fac"].merge(c["xs"].drop(columns=[k for k in ("name", "bezirk", "length_m", "cat_final", "geometry", "cycle_cat_final")
+                                                 if k in c["xs"].columns]), on="segment_id", how="left")
+    segs = gpd.GeoDataFrame(segs, geometry="geometry", crs=c["fac"].crs)
+    out = xc.download_frame(segs, cols["cycle_segments"])
+    out.to_parquet(dl / "cycle_segments.parquet", index=False)
+    out.to_file(dl / "cycle_segments.geojson", driver="GeoJSON")
+    jo = xc.download_frame(c["j"], cols["junctions"])
+    jo.to_parquet(dl / "junctions.parquet", index=False)
+    jo.to_file(dl / "junctions.geojson", driver="GeoJSON")
+    net = c["net"][c["net"]["cycle_cat_final"].isin(xc.CYCLE_CATS)]
+    xc.download_frame(net, cols["cycle_network"]).to_parquet(dl / "cycle_network.parquet", index=False)
+    shutil.copy(REPO_ROOT / "config" / "cycling_rules.yaml", dl / "cycling_rules.yaml")
+    shutil.copy(REPO_ROOT / "config" / "design_rules.yaml", dl / "design_rules.yaml")
+
+
+def write_junction_profiles(c: dict, version: str) -> int:
+    n = 0
+    for r in c["j"].itertuples(index=False):
+        row = pd.Series(r._asdict())
+        p = xc.junction_profile(row, c["labels"], version)
+        p["robustness"] = xc.robustness(c["rob"].get(("junction", p["id"])))
+        write_json(OUT_DIR / "junctions" / f"{p['id']}.json", p)
+        n += 1
+    return n
+
+
+def cycling_meta(c: dict) -> dict:
+    fac, j = c["fac"], c["j"]
+    km = fac.groupby("cycle_cat_final")["length_m"].sum() / 1000
+    gap_km = fac.groupby("facility_gap")["length_m"].sum() / 1000
+    rob_runs = next((int(r["n_runs"]) for r in c["rob"].values()), None)
+    rob_delta = next((float(r["delta"]) for r in c["rob"].values()), None)
+    return {**xc.cycling_meta(c["labels"]),
+            "tiles": {"cycling": "tiles/cycling.pmtiles", "junctions": "tiles/junctions.pmtiles"},
+            "cycling_rules_version": c["cyc"].meta.version, "design_rules_version": c["des"].meta.version,
+            "stats": {"km_by_category": {k: round(float(v), 1) for k, v in km.items()},
+                      "gap_km": {k: round(float(v), 1) for k, v in gap_km.items()},
+                      "n_junctions": len(j), "n_junctions_action": int(j["action_needed"].sum())},
+            "sensitivity": {"runs": rob_runs, "delta": rob_delta},
+            "official_attribution": "© Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (dl-de/by-2.0)"}
+
+
+def build_cycling_tiles(c: dict) -> None:
+    run_tippecanoe("cycling", {"cycle_network": xc.network_tile_frame(c["net"]),
+                               "cycle_segments": xc.segment_tile_frame(c["fac"], c["xs"]),
+                               "cycle_official": xc.official_tile_frame(c["official"])},
+                   "© OpenStreetMap-Beitragende; Radnetz Hamburg © FHH/BVM (dl-de/by-2.0); Radnetz-Entwurf (nicht amtlich)")
+    run_tippecanoe("junctions", {"junctions": xc.junction_tile_frame(c["j"])},
+                   "© OpenStreetMap-Beitragende; Knotenpunkte-Entwurf (nicht amtlich)")
 
 
 def run_checks(seg: gpd.GeoDataFrame, pub: gpd.GeoDataFrame, ctx: dict) -> list[dict]:
@@ -262,6 +388,18 @@ def run_checks(seg: gpd.GeoDataFrame, pub: gpd.GeoDataFrame, ctx: dict) -> list[
     n_profiles = len(list((OUT_DIR / "segments").glob("*.json")))
     add("Steckbrief je Abschnitt", n_profiles == len(pub), f"{n_profiles} Dateien")
     add("Begründung je Abschnitt", ctx["n_without_reason"] == 0, f"{ctx['n_without_reason']} ohne Klartext")
+    cy = ctx.get("cycling")
+    if cy is not None:
+        add("Steckbrief je Knotenpunkt", cy["n_junction_profiles"] == cy["n_junctions"], f"{cy['n_junction_profiles']} Dateien")
+        add("Radnetz-Block je Abschnitt", cy["n_blocks"] == len(pub), f"{cy['n_blocks']}/{len(pub)} Abschnitte")
+        add("Radnetz-Kacheln", all((OUT_DIR / "tiles" / f).exists() for f in ("cycling.pmtiles", "junctions.pmtiles")),
+            "tiles/cycling.pmtiles, tiles/junctions.pmtiles")
+        add("Radnetz-Robustheit aus c08 übernommen", cy["n_validation"] > 0, f"{cy['n_validation']} Einträge")
+        cyc_cols = set()
+        for f in ("cycle_segments.parquet", "junctions.parquet", "cycle_network.parquet"):
+            cyc_cols |= set(pd.read_parquet(OUT_DIR / "downloads" / f).columns)
+        add("Radnetz-Downloads ohne Rohspuren", not {c for c in cyc_cols if "trace" in c or c in forbidden},
+            "Spalten aus plain_language.yaml cycling.columns")
     sv = ctx["sens"]
     add("Robustheit aus make validate übernommen", sv["n_missing"] == 0 and sv["version_ok"],
         f"{len(pub) - sv['n_missing']}/{len(pub)} Abschnitte, rules.yaml {sv['rules_version'] or '–'}"
@@ -273,12 +411,15 @@ def write_report(pub, profiles_sample, checks, ctx) -> None:
     sizes = []
     for p in sorted(OUT_DIR.rglob("*")):
         rel = p.relative_to(OUT_DIR)
-        if p.is_file() and p.parent.name not in ("segments", "table") and rel.parts[:2] != ("basemap", "fonts"):
+        if p.is_file() and p.parent.name not in ("segments", "table", "junctions") and rel.parts[:2] != ("basemap", "fonts"):
             sizes.append((str(rel), p.stat().st_size))
     fonts = list((OUT_DIR / "basemap" / "fonts").rglob("*.pbf"))
     if fonts:
         sizes.append((f"basemap/fonts/ ({len(fonts)} Glyphen-Dateien)", sum(f.stat().st_size for f in fonts)))
     profile_bytes = sum(p.stat().st_size for p in (OUT_DIR / "segments").glob("*.json"))
+    jfiles = list((OUT_DIR / "junctions").glob("*.json"))
+    if jfiles:
+        sizes.append((f"junctions/ ({len(jfiles)} Knoten-Steckbriefe)", sum(f.stat().st_size for f in jfiles)))
     tables = list((OUT_DIR / "table").glob("*.json"))
     sizes.append((f"table/ ({len(tables)} Dateien, je Bezirk)", sum(t.stat().st_size for t in tables)))
     viewers = ctx["viewers"]
@@ -293,6 +434,10 @@ def write_report(pub, profiles_sample, checks, ctx) -> None:
              f"- Steckbriefe: {_fmt(len(pub))} Dateien, zusammen {profile_bytes / 1e6:.1f} MB",
              f"- Robustheit (make validate, {ctx['sens']['runs']} Läufe): {_fmt(int(pub['sens_uncertain'].fillna(False).sum()))} "
              f"Abschnitte „unsicher“ ({pub.loc[pub['sens_uncertain'].fillna(False).astype(bool), 'length_m'].sum() / 1000:.1f} km)", "",
+             *([f"- Radnetz (Prompt 21): {_fmt(ctx['cycling']['n_blocks'])} Abschnitte mit Radnetz-Block, "
+                 f"{_fmt(ctx['cycling']['n_junction_profiles'])} Knoten-Steckbriefe; Kacheln tiles/cycling.pmtiles und "
+                 "tiles/junctions.pmtiles werden erst geladen, wenn eine Radnetz-Ebene gewählt ist", ""]
+               if ctx.get("cycling") else ["- Radnetz-Ebenen: nicht exportiert (Radnetz-Stufen fehlen)", ""]),
              "| Bezirk | Abschnitte | km |", "| --- | ---: | ---: |",
              *[f"| {b} | {_fmt(len(g))} | {g['length_m'].sum() / 1000:.1f} |" for b, g in pub.groupby("bezirk")], "",
              "| Datei | Größe |", "| --- | ---: |",
@@ -338,7 +483,7 @@ def main() -> int:
            "sources": source_list(manifest, sources_yaml["sources"]), "viewers": load_viewers(), "sens": sens_ctx}
 
     if OUT_DIR.exists():
-        for sub in ("segments", "downloads", "tiles", "table"):
+        for sub in ("segments", "downloads", "tiles", "table", "junctions"):
             shutil.rmtree(OUT_DIR / sub, ignore_errors=True)
     dl = OUT_DIR / "downloads"
     dl.mkdir(parents=True, exist_ok=True)
@@ -350,13 +495,18 @@ def main() -> int:
     pub.drop(columns="geometry").assign(lon=mid.x.round(6), lat=mid.y.round(6)).to_csv(dl / "segments.csv", index=False)
     shutil.copy(REPO_ROOT / "config" / "rules.yaml", dl / "rules.yaml")
     shutil.copy(REPO_ROOT / "overrides" / "overrides.csv", dl / "overrides.csv")
-    (dl / "datenbeschreibung.md").write_text(data_description(texts, ctx), encoding="utf-8")
+    cyc = prepare_cycling(set(seg["segment_id"]), texts)
+    if cyc:
+        write_cycling_downloads(cyc, dl, texts)
+    (dl / "datenbeschreibung.md").write_text(data_description(texts, ctx, cycling=cyc is not None), encoding="utf-8")
 
     n_without_reason, sample_profiles = 0, []
     rnd = random.Random(SAMPLE_SEED)
     sample_idx = set(rnd.sample(range(len(seg)), min(SAMPLE_SIZE, len(seg))))
     for i, r in seg.iterrows():
         p = profile(r, ctx)
+        if cyc:
+            p["cycling"] = cyc["blocks"].get(p["id"])
         n_without_reason += not p["reasons"]
         write_json(OUT_DIR / "segments" / f"{p['id']}.json", p)
         if i in sample_idx:
@@ -403,6 +553,7 @@ def main() -> int:
                           for f in sorted(dl.iterdir()) if f.name in DOWNLOAD_TEXTS],
             "basemap": {k: {"title": v["title"], "license": v["license"], "attribution": v.get("attribution")}
                         for k, v in assets.items()}}
+    meta["cycling"] = cycling_meta(cyc) if cyc else None
     write_json(OUT_DIR / "meta.json", meta)
     shutil.copy(REPO_ROOT / "docs" / "licenses.md", OUT_DIR / "licenses.md")
     shutil.copy(REPO_ROOT / "CHANGELOG.md", OUT_DIR / "changelog.md")
@@ -410,9 +561,15 @@ def main() -> int:
     facilities = facilities_frame()
     try:
         build_tiles(ex.tile_frame(pub), facilities, "© OpenStreetMap-Beitragende; Straßenfunktionsplan (Entwurf)")
+        if cyc:
+            build_cycling_tiles(cyc)
     except (RuntimeError, subprocess.CalledProcessError) as exc:
         print(f"export: tiles failed: {exc}", file=sys.stderr)
         return 1
+    ctx["cycling"] = None
+    if cyc:
+        ctx["cycling"] = {"n_junction_profiles": write_junction_profiles(cyc, version), "n_junctions": len(cyc["j"]),
+                          "n_blocks": sum(b is not None for b in cyc["blocks"].values()), "n_validation": len(cyc["rob"])}
 
     ctx.update(n_without_reason=n_without_reason, n_search=len(search), n_facilities=len(facilities),
                site_bytes=sum(p.stat().st_size for p in OUT_DIR.rglob("*") if p.is_file()))

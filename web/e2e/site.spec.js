@@ -1,16 +1,23 @@
 // Smoke tests and accessibility check (axe-core) of the built site; scripts/a11y-report.mjs writes reports/web_accessibility.md.
-import { readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 const search = JSON.parse(readFileSync(new URL("../../data/out/search.json", import.meta.url)));
 const SEG = search.find((s) => s.name === "Hallerstraße")?.ids[0] ?? search[0].ids[0];
+const meta = JSON.parse(readFileSync(new URL("../../data/out/meta.json", import.meta.url)));
+const JCT = meta.cycling ? readdirSync(new URL("../../data/out/junctions/", import.meta.url)).sort()[0].replace(".json", "") : null;
+const CYCLING_LAYERS = { cnet: "Radnetz (Soll)", cfac: "Radanlagen (Soll)", cgap: "Radanlagen Soll/Ist", lanes: "Fahrstreifen Soll/Ist",
+  cfit: "Querschnitt passt?", jct: "Knotenpunkte", coff: "Radnetz Hamburg (amtlich)" };
 const PAGES = {
   "Karte": "#karte",
   "Karte mit Steckbrief": `#karte?seg=${SEG}`,
   "Tabelle (Bezirk wählen)": "#tabelle",
   "Tabelle": "#tabelle?bz=Eimsb%C3%BCttel",
   "Methode": "#methode",
+  "Radnetz": "#radnetz",
+  "Karte Radanlagen Soll/Ist": "#karte?layer=cgap",
+  "Karte Knotenpunkte mit Steckbrief": `#karte?layer=jct&jct=${JCT}&map=15/53.56/9.99`,
   "Downloads": "#downloads",
   "Quellen und Lizenzen": "#quellen",
   "Impressum": "#impressum",
@@ -74,8 +81,43 @@ test("search suggests streets and jumps to the map", async ({ page }) => {
   await expect(page).toHaveURL(/#karte/);
 });
 
+test("cycling layers switch without errors and show the draft note", async ({ page }) => {
+  test.skip(!meta.cycling, "no cycling layers in this export");
+  const errors = await ready(page, "#karte?map=14/53.57/9.97");
+  await page.waitForFunction(() => document.querySelector("#map canvas"));
+  for (const [key, label] of Object.entries(CYCLING_LAYERS)) {
+    await page.getByLabel(label, { exact: true }).check();
+    await expect(page).toHaveURL(new RegExp(`layer=${key}`));
+    await expect(page.locator("#legend .note")).toContainText("nicht amtlich");
+    await page.waitForTimeout(800);
+  }
+  await page.screenshot({ path: `test-results/karte-radnetz-${test.info().project.name}.png` });
+  expect(errors).toEqual([]);
+});
+
+test("segment profile shows the cycling section with the cross-section sketch", async ({ page }) => {
+  test.skip(!meta.cycling, "no cycling layers in this export");
+  await ready(page, `#karte?seg=${SEG}`);
+  const panel = page.locator("#panel");
+  await expect(panel.locator("#h-rad")).toBeVisible();
+  await expect(panel.locator("#h-rad")).toContainText("Radverkehr");
+});
+
+test("junction profile opens from the URL", async ({ page }) => {
+  test.skip(!meta.cycling, "no cycling layers in this export");
+  await ready(page, `#karte?layer=jct&jct=${JCT}`);
+  const panel = page.locator("#panel");
+  await expect(panel.locator("#h-jsoll")).toBeVisible();
+  await expect(panel).toContainText("nicht amtlich");
+  await page.screenshot({ path: `test-results/knoten-${test.info().project.name}.png` });
+  await page.keyboard.press("Escape");
+  await expect(page).not.toHaveURL(/jct=/);
+});
+
 test("tiles are served with HTTP range requests", async ({ request }) => {
-  for (const f of ["tiles/segments.pmtiles", "basemap/basemap.pmtiles"]) {
+  const files = ["tiles/segments.pmtiles", "basemap/basemap.pmtiles"];
+  if (meta.cycling) files.push(meta.cycling.tiles.cycling, meta.cycling.tiles.junctions);
+  for (const f of files) {
     const r = await request.get(`/${f}`, { headers: { Range: "bytes=0-126" } });
     expect(r.status(), f).toBe(206);
     expect((await r.body()).length).toBe(127);
@@ -85,7 +127,7 @@ test("tiles are served with HTTP range requests", async ({ request }) => {
 for (const [name, hash] of Object.entries(PAGES)) {
   test(`axe: ${name}`, async ({ page }) => {
     await ready(page, hash);
-    if (hash.includes("seg=")) await expect(page.locator("#panel-title")).toBeVisible();
+    if (hash.includes("seg=") || hash.includes("jct=")) await expect(page.locator("#panel-title")).toBeVisible();
     if (hash === "#tabelle") await expect(page.locator("#table-root button[data-bz]").first()).toBeVisible();
     if (hash.startsWith("#tabelle?")) await expect(page.locator("#table-root tbody tr").first()).toBeVisible();
     if (hash.startsWith("#karte")) await page.waitForTimeout(1500);

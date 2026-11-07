@@ -481,6 +481,7 @@ def confidence(res: ProfileResult, seg: SegmentInput) -> str:
 _COLOURS = {"sidewalk": "#d9d4c7", "cycle_track": "#c0392b", "cycle_lane": "#e06c5a", "buffer_cycle_carriageway": "#9aa39a",
             "buffer_to_parking": "#b8beb8", "tree_strip": "#5b8c3a", "parking_parallel": "#8e9aaf", "loading_zone": "#c9a227",
             "bus_lane": "#b03a8c", "carriageway": "#555b61", "median": "#7da35a", "shared_surface": "#a39a8a", "tram": "#6b5b95"}
+ELEMENT_COLOURS = _COLOURS  # public name for the website legend (pipeline/lib/export_cycling.py)
 _PX_PER_M = 22.0
 
 

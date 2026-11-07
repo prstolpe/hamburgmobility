@@ -396,3 +396,22 @@
 - Neu: pipeline/c06_cross_section_soll.py, pipeline/lib/profile.py, GTFS-Hilfen in pipeline/lib/gtfs.py
   (trip_start_hours, hourly_trips_per_shape, shape_direction); Ausgaben data/interim/cross_section_soll.parquet,
   reports/cross_section_soll.md, reports/profiles_sample/*.svg. Goldene Fälle Fahrstreifen/Busfahrstreifen ohne xfail.
+
+## config/plain_language.yaml 0.4.0 – 2026-11-07: Webseite und Validierung Radnetz (Prompt 21)
+- Keine Regeländerung (rules.yaml, cycling_rules.yaml, design_rules.yaml unverändert).
+- Neuer Abschnitt `cycling`: Klartexte für Radnetz-Ebenen, Steckbriefe (Abschnitt und Knoten), Legenden und die
+  Datenbeschreibung der neuen Downloads (`cycling.columns`).
+- Export (pipeline/s09_export.py, pipeline/lib/export_cycling.py): tiles/cycling.pmtiles (cycle_network,
+  cycle_segments, cycle_official) und tiles/junctions.pmtiles getrennt von segments.pmtiles, damit die Seite erst bei
+  Bedarf lädt; Radnetz-Block in jedem Abschnitts-Steckbrief (Kategorie, Führung, Breite mit DE- und NL-Wert, Lage,
+  Fahrstreifen, Soll-Profil, Abbaustufen, Prinzipien Ist/Soll, Robustheit); junctions/{node_id}.json; Downloads
+  cycle_segments.*, junctions.*, cycle_network.parquet, cycling_rules.yaml, design_rules.yaml.
+- Webseite: Ebenen „Radnetz (Soll)“, „Radanlagen (Soll)“, „Radanlagen Soll/Ist“, „Fahrstreifen Soll/Ist“,
+  „Querschnitt passt?“, „Knotenpunkte“, „Radnetz Hamburg (amtlich)“; Legenden mit Linienstil bzw. Symbolform;
+  Querschnitts-Skizze im Steckbrief; Knoten-Steckbrief; Methodenseite „Radnetz“; Hinweis „nicht amtlicher Entwurf“
+  auf allen neuen Ebenen. Die Radanlagen sind in zwei Ebenen geteilt (Soll; Soll/Ist), damit jede Legende lesbar bleibt.
+- Validierung pipeline/c08_validate_cycling.py → reports/validation_cycling.md, reports/validation_cycling_review.csv,
+  data/interim/validation_cycling.parquet: Vergleich mit dem amtlichen Radnetz je Bezirk, Modell vs. Zählstellen,
+  Sensitivität aller assumption-Werte ±delta (V-SENS-01) mit Neuberechnung der Stufen c05–c07 auf gespeicherten
+  Eingängen, Stand der Stichproben, offene Fragen und Grenzen. `make export-cycling` = c08 + Export.
+- pipeline/lib/profile.py: öffentlicher Name ELEMENT_COLOURS für die Legendenfarben (Werte unverändert).

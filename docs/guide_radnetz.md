@@ -128,6 +128,22 @@ pipeline/c05_facility.py je Straßenabschnitt, Regeln C-FAC-01…07 in `facility
   zu schmal (nur wo OSM eine Breite hat) [B].
 - Ergebnis, Matrix Straßen- × Radkategorie, Lückenliste und 30 Stichproben je Führungsform: reports/cycle_facility.md.
 
+### 3.5 Webseite und Validierung (Prompt 21, umgesetzt)
+
+- **Export** (pipeline/s09_export.py, pipeline/lib/export_cycling.py): eigene PMTiles je Themengruppe –
+  tiles/cycling.pmtiles (Soll-Radnetz, Abschnitte mit Führung/Breite/Fahrstreifen/Passung, amtliches Radnetz zum
+  Vergleich) und tiles/junctions.pmtiles –, die die Seite erst lädt, wenn eine Radverkehrs-Ebene gewählt ist. Jeder
+  Abschnitts-Steckbrief erhält einen Radnetz-Block, jeder Knotenpunkt einen eigenen Steckbrief; Texte aus
+  config/plain_language.yaml (`cycling`).
+- **Webseite:** Ebenen Radnetz (Soll), Radanlagen (Soll), Radanlagen Soll/Ist, Fahrstreifen Soll/Ist, Querschnitt
+  passt?, Knotenpunkte, Radnetz Hamburg (amtlich); Legenden mit Linienstil bzw. Symbolform; Methodenseite „Radnetz“
+  in einfacher Sprache [B].
+- **Validierung** (pipeline/c08_validate_cycling.py → reports/validation_cycling.md): Soll vs. amtliches Radnetz je
+  Bezirk, Modell vs. Zählstellen, Sensitivität aller assumption-Werte ±20 % (V-SENS-01) mit Neuberechnung von
+  Führungsform, Soll-Querschnitt und Knotentyp auf den gespeicherten Eingängen. Annahmen von Nachfragemodell,
+  Netzentwurf, Prinzipien und Knotenbildung werden nicht neu gerechnet (je Lauf neue Umlegung); der Bericht nennt sie
+  als Grenze [B]. Zählwerte sind keine unabhängige Prüfung, weil die Kalibrierung dieselben Zählstellen nutzt [B].
+
 ## 4. Führungsform, Breite, Lage
 
 Die Trennungsmatrix (`separation_matrix`) kombiniert Straßenkategorie und Radnetzkategorie:
