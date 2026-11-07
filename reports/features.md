@@ -1,12 +1,12 @@
 # Merkmalsbericht – Stufe 4
 
-Erzeugt: 2026-11-07T14:59:45+00:00 von `pipeline/s04_features.py`, rules.yaml 0.16.0. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.16.0. Nicht amtlicher Entwurf.
 
 ## Kennzahlen
 
 - Abschnitte gesamt (OSM-Auszug): 36 526; im Arbeitsgebiet (Hamburg (7 Bezirke) + 500 m): 34 702; davon mit Bezirk: 33 712
 - Normierung (S-FEAT-01): Perzentilrang über das ganze Arbeitsgebiet, also über ganz Hamburg (Entscheidung 2026-11-04), damit derselbe Abschnitt in jedem Bezirk gleich bewertet wird.
-- Betweenness: exakt (keine Stichprobe), ungerichtet, 34 375 Kfz-Abschnitte ganz Hamburgs, Laufzeit 55 s
+- Betweenness: exakt (keine Stichprobe), ungerichtet, 34 375 Kfz-Abschnitte ganz Hamburgs, Laufzeit 58 s
 - Reisezeit-Tempo im Arbeitsgebiet: official 81.8 %, osm 10.8 %, default 4.0 %, keins 3.4 %
 - Ist-Tempo: amtlich 81.8 %, OSM 10.8 %, unbekannt 7.4 %; Konflikt amtlich ≠ OSM: 1146 Abschnitte
 - GTFS: repräsentativer Werktag 2026-04-29, 1662 shapes, 0 Fahrten ohne shape

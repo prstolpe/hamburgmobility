@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 
 from pipeline.lib import gtfs
+from pipeline.lib import transit as tr
 from pipeline.lib.area import area_label, district_names, load_area_config, read_work_area, sample_by_district
 from pipeline.lib.betweenness import edge_betweenness
 from pipeline.lib.conflate import MatchParams, zone_share
@@ -242,10 +243,19 @@ def bus_features(area: gpd.GeoDataFrame, feed_path, params: FeatureParams, mp: M
     trips, without_shape = gtfs.trips_per_shape(feed, day, params.bus_route_types)
     shapes = gtfs.shapes_gdf(feed, trips.index)
     shapes = shapes[shapes.intersects(area.geometry.union_all().buffer(mp.buffer_m))]
-    total = pd.Series(0.0, index=area.index)
-    for shape_id, geom in shapes.geometry.items():
-        share = zone_share(area.geometry, gpd.GeoSeries([geom], crs=WORK_CRS), mp)
-        total[share >= min_share] += trips[shape_id]
+    key = tr.transit_cache_key(feed_path.name, feed_path.stat().st_size, params.bus_route_types, mp, min_share,
+                               area.geometry)
+    cache = tr.CACHE_DIR / f"bus_trips_weekday_{key}.npy"
+    if cache.exists():
+        values = np.load(cache)
+    else:
+        values = np.zeros(len(area))
+        for shape_id, (hit, _) in zip(shapes.index, tr.match_shapes(area.geometry, list(shapes.geometry.values), mp,
+                                                                      min_share)):
+            values[hit] += trips[shape_id]
+        tr.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        np.save(cache, values)
+    total = pd.Series(values, index=area.index)
     return total, {"status": "ok", "day": day.isoformat(), "trips_without_shape": without_shape,
                    "shapes": len(shapes)}
 
