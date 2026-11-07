@@ -19,7 +19,7 @@ import geopandas as gpd
 import pandas as pd
 
 from pipeline.lib.area import area_label, district_names, load_area_config, read_rural, read_work_area
-from pipeline.lib.conflate import QUALITIES, MatchParams, match_lines, parse_speed_kmh, resolve_speed, zone_share
+from pipeline.lib.conflate import QUALITIES, MatchParams, hvs_from_neighbours, match_lines, parse_speed_kmh, resolve_speed, zone_share
 from pipeline.lib.crs import WORK_CRS, to_work_crs
 from pipeline.lib.links import osm_map_link, osm_way_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest, sha256_file
@@ -98,10 +98,13 @@ def load_layers(manifest: dict) -> tuple[dict[str, gpd.GeoDataFrame], dict[str, 
 # --- attributes per source -------------------------------------------------------------------
 
 
+TEXT_VALUES: dict = {}  # S-CONF-03 text_values, set in main()
+
+
 def _speed_readings(row) -> dict:
     out = {}
     for d in DIRECTIONS:
-        out[d] = resolve_speed(_none(row.get(f"geschwindigkeit_{d}")), _none(row.get(f"sonderregelung_{d}")))
+        out[d] = resolve_speed(_none(row.get(f"geschwindigkeit_{d}")), _none(row.get(f"sonderregelung_{d}")), TEXT_VALUES)
     return out
 
 
@@ -199,6 +202,17 @@ def conflate(seg: gpd.GeoDataFrame, in_area: pd.Series, layers: dict, rules) -> 
         records.append(rec)
 
     attrs = pd.DataFrame(records, index=work.index)
+    excl = set(rules.network.rule("S-NET-04").include_highway)
+    first = attrs["in_hvs"].copy()
+    attrs["in_hvs"], attrs["in_hvs_source"] = hvs_from_neighbours(
+        work[["name", "node_u", "node_v", "highway"]].join(attrs[["hvs_match_quality", "in_hvs"]]), excl)
+    for idx in attrs.index[attrs["in_hvs"] != first]:  # trace shows the final S-CONF-04 decision
+        trace = json.loads(attrs.at[idx, "conflation_trace"])
+        for step in trace:
+            if step.get("rule") == "S-CONF-04":
+                step.update(in_hvs=bool(attrs.at[idx, "in_hvs"]), source=attrs.at[idx, "in_hvs_source"],
+                            excluded_highway=work.at[idx, "highway"] in excl)
+        attrs.at[idx, "conflation_trace"] = json.dumps(trace, ensure_ascii=False)
     out = seg.copy()
     out["conflated"] = in_area.values
     for col in attrs.columns:
@@ -228,7 +242,7 @@ def run_checks(seg_in: gpd.GeoDataFrame, out: gpd.GeoDataFrame, layers: dict) ->
     quality_ok = out.loc[inside, "match_quality"].isin(QUALITIES).all() and out.loc[~inside, "match_quality"].isna().all()
     checks.append({"name": "match_quality im Arbeitsgebiet gesetzt, außerhalb leer", "ok": bool(quality_ok),
                    "detail": f"{int(inside.sum())} im Arbeitsgebiet, {int((~inside).sum())} außerhalb"})
-    known = {parse_speed_kmh(v) for d in DIRECTIONS for v in layers["speed"][f"geschwindigkeit_{d}"]}
+    known = {parse_speed_kmh(v, TEXT_VALUES) for d in DIRECTIONS for v in layers["speed"][f"geschwindigkeit_{d}"]}
     known |= {resolve_speed(None, v).regular_kmh for d in DIRECTIONS for v in layers["speed"][f"sonderregelung_{d}"]}
     known -= {None}
     values = set(out["speed_official_kmh"].dropna().astype(int))
@@ -421,6 +435,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
 
 def main() -> int:
     rules = load_rules()
+    TEXT_VALUES.update(rules.conflation.rule("S-CONF-03").text_values)
     cfg = load_area_config()
     if not SEGMENTS_PATH.exists():
         print("conflate: data/interim/segments.parquet missing; run `make network` first", file=sys.stderr)

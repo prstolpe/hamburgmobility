@@ -1,13 +1,13 @@
 # Conflation amtlich ↔ OSM (Stufe 3)
 
-Erzeugt: 2026-11-04T21:30:18+00:00 von `pipeline/s03_conflate.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-07T14:42:56+00:00 von `pipeline/s03_conflate.py`. Nicht amtlicher Entwurf.
 
 ## Datengrundlage
 
 - Abschnitte: `data/interim/segments.parquet` (36 526 Abschnitte Hamburg)
 - Arbeitsgebiet: Hamburg (7 Bezirke) + 500 m; abgeglichen werden Abschnitte, die ganz darin liegen (34 702). Außerhalb bleibt `match_quality` leer.
 - Nicht bewertet (ländliche Stadtteile, config/project.yaml rural_exclude): 1 478 Abschnitte, 436.0 km – Bergedorf 317.1 km, Harburg 118.9 km
-- Regelwerk: config/rules.yaml 0.13.0
+- Regelwerk: config/rules.yaml 0.16.0
 
 | Schlüssel | Quelle / Ebene | Objekte | Abruf | Lizenz |
 | --- | --- | ---: | --- | --- |
@@ -31,7 +31,7 @@ Erzeugt: 2026-11-04T21:30:18+00:00 von `pipeline/s03_conflate.py`. Nicht amtlich
 - **S-CONF-01** (assumption, draft): Linienabgleich amtlich -> Abschnitt: Kandidaten im Puffer, Filter nach Richtungswinkel und Überdeckungsanteil, Zuordnung nach Hausdorff-Abstand; buffer_m = 15 m (assumption); max_angle_deg = 20 Grad (ungerichtet, 0-90) (assumption); min_overlap_share = 0.6 Anteil 0-1 (assumption)
 - **S-CONF-02** (assumption, draft): Zonen (Tempo 30, Tempo 20, verkehrsberuhigte Bereiche) über Längenanteil zuordnen; min_length_share = 0.5 Anteil 0-1 der Abschnittslänge (assumption)
 - **S-CONF-03** (hamburg, draft): Zeitlich begrenzte Regelungen (sonderregelung) getrennt speichern, nie als Regeltempo
-- **S-CONF-04** (hamburg, draft): in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist
+- **S-CONF-04** (hamburg, draft): in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist. Seit 0.16.0: partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist (in_hvs_source neighbour); Wege aus S-NET-04 (service, track) nie
 
 ## Trefferquote (Arbeitsgebiet, 34 702 Abschnitte)
 
@@ -81,14 +81,15 @@ Erzeugt: 2026-11-04T21:30:18+00:00 von `pipeline/s03_conflate.py`. Nicht amtlich
 
 ## Ist-Tempo – Hamburg (7 Bezirke)
 
-- Abschnitte mit amtlichem Regeltempo: 27 126 von 33 712
-- Übereinstimmung mit OSM-maxspeed (wo beide eine Zahl haben): 95.7 % (23 125 von 24 168)
+- Abschnitte mit amtlichem Regeltempo: 28 376 von 33 712
+- Übereinstimmung mit OSM-maxspeed (wo beide eine Zahl haben): 95.3 % (23 133 von 24 279)
 - Abschnitte mit zeitlich begrenzter Regelung (S-CONF-03, getrennt in `speed_conditional`): 1 035
 - Regeltempo mehrdeutig (`speed_official_ambiguous`): 103
-- Mehrere amtliche Tempi auf einem Abschnitt (`speed_official_conflict`): 434
+- Mehrere amtliche Tempi auf einem Abschnitt (`speed_official_conflict`): 470
 
 | Regeltempo amtlich | Abschnitte | km |
 | --- | ---: | ---: |
+| 7 km/h | 1 250 | 103.2 |
 | 10 km/h | 31 | 4.0 |
 | 15 km/h | 2 | 1.6 |
 | 20 km/h | 196 | 17.4 |
@@ -101,31 +102,31 @@ Erzeugt: 2026-11-04T21:30:18+00:00 von `pipeline/s03_conflate.py`. Nicht amtlich
 | 80 km/h | 69 | 39.7 |
 | 100 km/h | 37 | 14.0 |
 | 120 km/h | 9 | 10.4 |
-| ohne Zahl (z. B. 5-7 km/h, variabel) / keine Zuordnung | 6 586 | 569.6 |
+| ohne Zahl (z. B. 5-7 km/h, variabel) / keine Zuordnung | 5 336 | 466.3 |
 
 ## HVS (S-CONF-04) und Zonen (S-CONF-02) – Hamburg (7 Bezirke)
 
 | highway | Anzahl | in_hvs | Tempo-30-Zone | Tempo-20-Zone | verkehrsberuhigt |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | motorway | 125 | 0 | 0 | 0 | 0 |
-| motorway_link | 282 | 4 | 0 | 0 | 0 |
-| trunk | 74 | 43 | 0 | 0 | 0 |
-| trunk_link | 109 | 8 | 1 | 0 | 0 |
-| primary | 2 750 | 2 300 | 11 | 3 | 1 |
-| primary_link | 105 | 10 | 0 | 0 | 0 |
-| secondary | 3 806 | 3 025 | 25 | 0 | 1 |
-| secondary_link | 193 | 41 | 0 | 0 | 0 |
-| tertiary | 4 133 | 133 | 165 | 3 | 0 |
-| tertiary_link | 114 | 4 | 0 | 0 | 0 |
-| unclassified | 1 509 | 20 | 247 | 17 | 0 |
-| residential | 17 045 | 72 | 12 798 | 149 | 109 |
+| motorway_link | 282 | 5 | 0 | 0 | 0 |
+| trunk | 74 | 48 | 0 | 0 | 0 |
+| trunk_link | 109 | 10 | 1 | 0 | 0 |
+| primary | 2 750 | 2 435 | 11 | 3 | 1 |
+| primary_link | 105 | 11 | 0 | 0 | 0 |
+| secondary | 3 806 | 3 143 | 25 | 0 | 1 |
+| secondary_link | 193 | 44 | 0 | 0 | 0 |
+| tertiary | 4 133 | 137 | 165 | 3 | 0 |
+| tertiary_link | 114 | 6 | 0 | 0 | 0 |
+| unclassified | 1 509 | 24 | 247 | 17 | 0 |
+| residential | 17 045 | 78 | 12 798 | 149 | 109 |
 | living_street | 1 576 | 1 | 193 | 0 | 944 |
 | pedestrian | 702 | 4 | 32 | 4 | 0 |
-| service | 850 | 27 | 126 | 1 | 16 |
+| service | 850 | 0 | 126 | 1 | 16 |
 | track | 339 | 0 | 27 | 1 | 1 |
 
-- in_hvs gesamt: 5 692 Abschnitte, 668.9 km
-- in_hvs, aber OSM-highway residential/living_street/unclassified (prüfen): 93
+- in_hvs gesamt: 5 946 Abschnitte, 690.0 km
+- in_hvs, aber OSM-highway residential/living_street/unclassified (prüfen): 103
 
 ## Prüfungen
 
@@ -133,7 +134,7 @@ Erzeugt: 2026-11-04T21:30:18+00:00 von `pipeline/s03_conflate.py`. Nicht amtlich
 | --- | --- | --- |
 | segment_id unverändert und eindeutig | ok | 36526 Abschnitte |
 | match_quality im Arbeitsgebiet gesetzt, außerhalb leer | ok | 34702 im Arbeitsgebiet, 1824 außerhalb |
-| Ist-Tempo nur aus Werten der Quelle | ok | Werte [10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120] |
+| Ist-Tempo nur aus Werten der Quelle | ok | Werte [7, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 100, 120] |
 | Zeitlich begrenztes Tempo nie als Regeltempo (S-CONF-03) | ok | 0 Verstöße |
 
 ## Manuelle Stichprobe

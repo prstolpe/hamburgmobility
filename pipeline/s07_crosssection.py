@@ -26,6 +26,7 @@ from pipeline.lib.crosssection import (
     aggregate_widths,
     covered_extent,
     feasibility_class,
+    fill_from_neighbours,
     first_hit,
     make_transects,
     near_points,
@@ -143,6 +144,11 @@ def segment_widths(area: gpd.GeoDataFrame, t: gpd.GeoDataFrame, xs: XsParams, ru
     out["narrow_points_count"] = out["narrow_points"].map(lambda v: len(v) if isinstance(v, list) else 0)
     out["narrow_points"] = out["narrow_points"].map(lambda v: json.dumps(v if isinstance(v, list) else []))
     out["facade_narrow_points"] = out["facade_narrow_points"].map(lambda v: json.dumps(v if isinstance(v, list) else []))
+    keys = area[["name", "node_u", "node_v", "length_m"]].reset_index(drop=True)
+    for col in ("width_p10_m", "width_median_m", "width_min_m", "facade_width_p10_m", "facade_width_median_m"):
+        out[col], from_nb = fill_from_neighbours(keys.assign(**{col: out[col]}), col)  # S-XS-07
+        if col == "width_p10_m":
+            out["width_from_neighbour"] = from_nb
     for target, req in required_widths(rules).items():
         ratio = out["width_p10_m"] / req
         out[f"width_ratio_{target}"] = ratio
@@ -159,6 +165,7 @@ def _trace(r) -> str:
         {"id": "S-XS-02", "inputs": {"n_valid": v(r["width_n_valid"]), "share_centre_outside": v(r["share_centre_outside"]),
                                       "share_open": v(r["share_traffic_open"]), "p10_m": v(r["width_p10_m"])}},
         {"id": "S-XS-03", "inputs": {"n_valid": v(r["facade_n_valid"]), "p10_m": v(r["facade_width_p10_m"])}},
+        {"id": "S-XS-07", "inputs": {"width_from_neighbour": bool(r["width_from_neighbour"])}},
     ], ensure_ascii=False)
 
 

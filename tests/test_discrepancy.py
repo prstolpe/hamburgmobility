@@ -14,7 +14,8 @@ RULES = load_rules()
 # Design features all known and compliant for GOW50 (track, no lane, no parking, one lane per direction).
 GOW50_OK = {"separated_cycle_track_present": True, "cycle_lane_present": False, "centre_line": True,
             "parking_along_carriageway": False, "lanes_official_in": 1, "lanes_official_gegen": 1,
-            "bahnigkeit_official": 1, "speed_ist_kmh": 50, "dtv_official": 20000}
+            "bahnigkeit_official": 1, "speed_ist_kmh": 50, "dtv_official": 20000,
+            "parallel_cycle_route_present": False}
 
 
 def assess(cat, **values):
@@ -265,3 +266,11 @@ def test_street_summary_lists_bezirke():
         "crashes_ped_cyc": [0, 0], "crashes_severe_fatal": [0, 0],
     })
     assert street_summary(df, top_ids=set()).iloc[0]["bezirke"] == "Altona, Eimsbüttel"
+
+
+def test_gow50_without_track_but_parallel_route_is_no_violation():
+    # rules.yaml 0.16.0 (open question 65): D-DES-01 "Radweg oder Parallelroute" is checkable via S-FEAT-11
+    no_track = {**GOW50_OK, "separated_cycle_track_present": False}
+    assert "kein baulicher Radweg" in [c["label"] for c in assess("GOW50", **no_track)["disc_causes"]]
+    r = assess("GOW50", **{**no_track, "parallel_cycle_route_present": True})
+    assert "kein baulicher Radweg" not in [c["label"] for c in r["disc_causes"]] and r["disc_design"] == 0

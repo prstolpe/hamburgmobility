@@ -40,7 +40,7 @@ def _gs(*geoms) -> gpd.GeoSeries:
 
 def test_crosssection_rules_in_rules_yaml():
     rules = load_rules()
-    assert [r.id for r in rules.crosssection.rules] == [f"S-XS-{i:02d}" for i in range(1, 7)]
+    assert [r.id for r in rules.crosssection.rules] == [f"S-XS-{i:02d}" for i in range(1, 8)]  # S-XS-07 since rules.yaml 0.16.0
     assert set(rules.crosssection.rule("S-XS-02").alkis_nutzart) == {"Strassenverkehr", "Weg", "Platz"}
 
 
@@ -172,3 +172,25 @@ def test_feasibility_class_boundaries():
     assert feasibility_class(tight_min, classes) == "tight"
     assert feasibility_class(tight_min - 0.01, classes) == "does_not_fit"
     assert feasibility_class(float("nan"), classes) is None
+
+
+# --- width from neighbours of the same name (S-XS-07, rules.yaml 0.16.0, open question 39) -------------------
+
+
+def test_fill_width_from_same_name_neighbours():
+    import numpy as np
+    from pipeline.lib.crosssection import fill_from_neighbours
+    df = pd.DataFrame([
+        {"name": "A-Straße", "node_u": 1, "node_v": 2, "length_m": 200.0, "w": 14.0},
+        {"name": "A-Straße", "node_u": 2, "node_v": 3, "length_m": 15.0, "w": np.nan},   # short junction piece
+        {"name": "A-Straße", "node_u": 3, "node_v": 4, "length_m": 12.0, "w": np.nan},   # two hops away
+        {"name": "A-Straße", "node_u": 4, "node_v": 5, "length_m": 50.0, "w": 11.0},
+        {"name": "B-Weg", "node_u": 2, "node_v": 9, "length_m": 30.0, "w": np.nan},      # other name: stays empty
+        {"name": None, "node_u": 3, "node_v": 8, "length_m": 30.0, "w": np.nan},         # no name: stays empty
+    ])
+    filled, from_nb = fill_from_neighbours(df, "w")
+    assert filled.iloc[1] == 14.0                      # longest neighbour with a value
+    assert filled.iloc[2] == 11.0                      # direct neighbour with a value wins over two hops
+    assert np.isnan(filled.iloc[4]) and np.isnan(filled.iloc[5])
+    assert list(from_nb) == [False, True, True, False, False, False]
+    assert filled.iloc[0] == 14.0 and filled.iloc[3] == 11.0

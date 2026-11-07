@@ -3,7 +3,7 @@
 # status: draft | reviewed | approved (Pflicht bei jeder Regel mit id)
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.5.0
+  version: 0.6.0
   date: 2026-11-07
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
@@ -53,7 +53,7 @@ lanes:
       source_type: assumption
     - id: L-06
       status: draft
-      rule: 'Kein Fahrstreifenzuwachs gegenüber Ist ohne fachliche Freigabe (overrides)'
+      rule: 'Kein Fahrstreifenzuwachs gegenüber Ist ohne fachliche Freigabe (overrides/lane_overrides.csv seit 0.6.0; ein freigegebener Eintrag ersetzt L-02 bis L-06)'
       source_type: assumption
   lane_width_m:
     GOW50: {general: 3.25, with_bus: 3.50, source: RAST_06, source_type: assumption}

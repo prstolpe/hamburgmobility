@@ -349,3 +349,39 @@ def test_transit_cache_key_changes_with_inputs():
     assert base != c06.transit_cache_key("feed.zip", 123, (3, 700), mp_, 0.5, segs)
     assert base != c06.transit_cache_key("feed.zip", 123, (3,), mp_, 0.6, segs)
     assert base != c06.transit_cache_key("feed.zip", 123, (3,), mp_, 0.5, segs.iloc[:2])
+
+
+# --- lane overrides (overrides/lane_overrides.csv, design_rules.yaml 0.6.0, open question 129) ----------------
+
+
+def _lovr(**kw):
+    import pandas as pd
+    from pipeline.lib import overrides as ov
+    row = {"segment_id": "seg_a", "lanes_per_dir_final": "2", "bus_lane_final": "true", "reason": "Ortstermin",
+           "author": "x", "date": "2026-11-07", "source": "", "review_status": "approved", **kw}
+    return pd.DataFrame([row], columns=ov.LANE_COLUMNS)
+
+
+def test_lane_override_replaces_lane_rules():
+    r = pf.lanes_soll("GOW50", DTV_ONE, 0, 1, P, override=(2, True))
+    assert r.lanes == 2 and r.bus_lane and r.median
+    assert "L-OVR" in _ids(r.trace) and "L-06" not in _ids(r.trace)  # the expert decision is not capped
+    shared = pf.lanes_soll("GOW50", DTV_TWO, 0, 2, P, override=("shared", False))
+    assert shared.lanes == "shared" and not shared.median
+
+
+def test_lane_override_validation_and_apply():
+    import pytest as _pt
+    from pipeline.lib import overrides as ov
+    approved = ov.lane_overrides(_lovr(), ["seg_a", "seg_b"], P.max_lanes)
+    assert approved == {"seg_a": (2, True)}
+    assert ov.lane_overrides(_lovr(review_status="draft"), ["seg_a"], P.max_lanes) == {}
+    for kw, match in (({"segment_id": "seg_x"}, "verwaist"), ({"lanes_per_dir_final": "4"}, "lanes_per_dir_final"),
+                      ({"bus_lane_final": "vielleicht"}, "bus_lane_final"), ({"reason": ""}, "Begründung fehlt")):
+        with _pt.raises(ov.OverrideError, match=match):
+            ov.lane_overrides(_lovr(**kw), ["seg_a"], P.max_lanes)
+
+
+def test_lane_override_file_has_header():
+    from pipeline.lib import overrides as ov
+    assert list(ov.read_overrides(ov.LANE_OVERRIDES_PATH).columns) == ov.LANE_COLUMNS

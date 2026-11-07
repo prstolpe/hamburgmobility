@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="242" viewBox="0 0 450 242" font-family="sans-serif" font-size="10">
+<rect x="0" y="0" width="450" height="242" fill="#ffffff"/>
+<text x="16.0" y="18" font-size="13" font-weight="bold">Mary-Marcus-Kehre – Bergedorf</text>
+<text x="16.0" y="34" fill="#444">seg_2ad11cad361a65f3 · ETW_ERF · Rad ERSCHL · Mischverkehr · passt</text>
+<rect x="172.9" y="52.0" width="104.5" height="120.0" fill="#a39a8a" stroke="#ffffff" stroke-width="1" data-element="shared_surface" data-width-m="4.75"><title>Mischfläche 4,75 m</title></rect>
+<text x="225.2" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#222">Mischfläche 4,75</text>
+<text x="172.9" y="206.0" fill="#222">Soll-Bedarf 4,75 m</text>
+<line x1="172.9" y1="192.0" x2="277.4" y2="192.0" stroke="#222" stroke-width="2"/>
+<line x1="16.0" y1="218.0" x2="434.4" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
+<text x="16.0" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 19,02 m</text>
+</svg>

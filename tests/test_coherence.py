@@ -184,6 +184,20 @@ def test_n3_area_at_work_area_edge_is_incomplete(rules):
     assert len(inner_area) == 1 and not bool(inner_area.iloc[0]["complete"])
 
 
+def test_n3_railway_splits_area(rules):
+    # rules.yaml 0.16.0 (open question 52): railways and rivers bound areas like GOW lines
+    min_ha = rules.coherence_rule("N3").param("min_area_ha")
+    size = (min_ha * 1.5 * 10_000) ** 0.5      # one large area, two small halves
+    specs = _ring(size) + [("left", [(10, 10), (20, 20)], "ETW30"), ("right", [(size - 20, 10), (size - 10, 20)], "ETW30")]
+    rail = [LineString([(size / 2, -5), (size / 2, size + 5)])]
+    work_area = box(-1000, -1000, size + 1000, size + 1000)
+    _, no_rail = coh.n3_areas(make_segments(specs), rules, work_area=work_area, city_area=None)
+    areas, flags = coh.n3_areas(make_segments(specs), rules, work_area=work_area, city_area=None, barriers=rail)
+    assert no_rail == {}
+    assert flag_names(flags, "left") == flag_names(flags, "right") == {"N3_small_area"}
+    assert areas["small"].sum() == 2
+
+
 # --- N4 Schleichverkehr ----------------------------------------------------------------------
 
 
@@ -215,7 +229,9 @@ def test_n4_no_gow_path_is_counted_not_flagged(rules):
     specs = [("g1", [(0, 0), (500, 0)], "GOW50"), ("e", [(500, 0), (500, max_etw * 2)], "ETW30"),
              ("g2", [(500, max_etw * 2), (1000, max_etw * 2)], "GOW50")]
     flags, stats = coh.n4_shortcuts(graph(specs, rules), rules)
-    assert flags == {}
+    # rules.yaml 0.16.0 (open question 54): the ETW link is flagged as a gap in the GOW network, not as a shortcut
+    assert flag_names(flags, "e") == {"N4_gow_gap"} and flags["e"][0]["inputs"]["n_od_pairs"] == 4
+    assert "g1" not in flags and "g2" not in flags
     assert stats["flagged_pairs"] == 0 and stats["etw_only_pairs"] == 4
 
 

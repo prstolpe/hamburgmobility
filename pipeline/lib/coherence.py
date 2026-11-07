@@ -222,8 +222,9 @@ def _polygonal(geom):
     return shapely.union_all(parts) if parts else shapely.Polygon()
 
 
-def n3_areas(seg: gpd.GeoDataFrame, rules, work_area, city_area) -> tuple[gpd.GeoDataFrame, Flags]:
-    """Areas enclosed by GOW/SW lines (and the city boundary) inside the work area.
+def n3_areas(seg: gpd.GeoDataFrame, rules, work_area, city_area, barriers=()) -> tuple[gpd.GeoDataFrame, Flags]:
+    """Areas enclosed by GOW/SW lines, barrier lines (railways, rivers/canals; N3 barriers) and the city boundary
+    inside the work area.
 
     complete = the area does not reach the work-area edge inside the city; has_etw = at least one ETW segment
     has its midpoint inside (areas without are junction islands or green space, not Aufenthaltsbereiche);
@@ -236,6 +237,7 @@ def n3_areas(seg: gpd.GeoDataFrame, rules, work_area, city_area) -> tuple[gpd.Ge
     open_edge = region.boundary if city_area is None else region.boundary.difference(
         city_area.boundary.buffer(_SNAP_M * 10))
     lines = list(seg.loc[seg["cat"].isin(network), "geometry"].intersection(region)) + [region.boundary]
+    lines += [b.intersection(region) for b in barriers]
     polys = [p for p in polygonize(unary_union([ln for ln in lines if not ln.is_empty])) if region.covers(
         p.representative_point())]
     rows = []
@@ -313,7 +315,7 @@ def n4_shortcuts(g: nx.MultiGraph, rules) -> tuple[Flags, dict]:
     """N4: for every pair of nodes of the GOW/SW network, the time-shortest path at Soll speed is compared with
     the path restricted to GOW/SW; if the shortest path uses more than max_etw_m of ETW while a GOW/SW path
     exists, its ETW segments get N4_shortcut with the number of such OD pairs. Pairs without any GOW/SW path
-    are a network gap (see N1), not a shortcut; they are only counted."""
+    are a gap in the GOW network, not a shortcut: their ETW segments get N4_gow_gap with the number of pairs."""
     rule = rules.coherence_rule("N4")
     max_etw = rule.param("max_etw_m")
     restricted = set(rule.restricted_categories)
@@ -322,30 +324,39 @@ def n4_shortcuts(g: nx.MultiGraph, rules) -> tuple[Flags, dict]:
     od = sorted(n for n in gow_adj if gow_adj[n])
     rank = {n: i for i, n in enumerate(od)}
     pair_count: dict[str, int] = defaultdict(int)
+    gap_count: dict[str, int] = defaultdict(int)
     n_pairs = n_flagged = n_no_gow = 0
     detours = []
     for s in od:
         order, dist, etw_m, pred = _dijkstra(free_adj, s)
         _, gdist, _, _ = _dijkstra(gow_adj, s)
         below: dict = defaultdict(int)
+        below_gap: dict = defaultdict(int)
         for node in reversed(order):
             if node in rank and rank[node] > rank[s]:
                 n_pairs += 1
                 if etw_m[node] > max_etw:
                     if node not in gdist:
                         n_no_gow += 1
+                        below_gap[node] += 1
                     else:
                         n_flagged += 1
                         below[node] += 1
                         detours.append(gdist[node] / dist[node])
-            if node in pred and below[node]:
+            if node in pred and (below[node] or below_gap[node]):
                 parent, sid = pred[node]
                 below[parent] += below[node]
+                below_gap[parent] += below_gap[node]
                 if g.edges[parent, node, sid]["cat"] in set(rule.etw_categories):
                     pair_count[sid] += below[node]
+                    gap_count[sid] += below_gap[node]
     flags: Flags = {}
     for sid in sorted(pair_count):
-        _add(flags, sid, _flag("N4", "N4_shortcut", n_od_pairs=pair_count[sid], max_etw_m=max_etw))
+        if pair_count[sid]:
+            _add(flags, sid, _flag("N4", "N4_shortcut", n_od_pairs=pair_count[sid], max_etw_m=max_etw))
+    for sid in sorted(gap_count):
+        if gap_count[sid]:
+            _add(flags, sid, _flag("N4", "N4_gow_gap", n_od_pairs=gap_count[sid], max_etw_m=max_etw))
     detours.sort()
     stats = {"od_nodes": len(od), "od_pairs": n_pairs, "flagged_pairs": n_flagged, "etw_only_pairs": n_no_gow,
              "median_detour_factor": detours[len(detours) // 2] if detours else None}

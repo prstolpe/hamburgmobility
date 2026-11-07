@@ -59,7 +59,8 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
   source/source_type gelten auch für Einträge darunter; jede Regel mit id braucht status.
 - Auch hier gilt: keine Schwellen im Code; Regeländerungen mit neuer meta.version und CHANGELOG-Eintrag.
 - Korrekturebenen (nur review_status = approved wird übernommen):
-  overrides/cycle_network_overrides.csv (edge_id), overrides/junction_overrides.csv (node_id).
+  overrides/cycle_network_overrides.csv (edge_id), overrides/junction_overrides.csv (node_id),
+  overrides/lane_overrides.csv (segment_id, Fahrstreifen und Busfahrstreifen).
 - Pipeline-Skripte: pipeline/cNN_name.py; goldene Fälle in tests/golden/cycling/.
 - Make-Ziele: make cycle-demand | make cycle-network | make cycle-principles | make cycle-facility |
   make cross-section-soll | make junctions | make export-cycling

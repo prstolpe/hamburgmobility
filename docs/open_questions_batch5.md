@@ -4,7 +4,7 @@
 Claude Code: **belassen** (Umsetzung bleibt, Frage wird mit Begründung geschlossen), **ändern** (Regel/Code anpassen,
 neue Version, Neurechnung), **später** (geht in Prompt 22 oder 23 auf), **erledigt** (durch spätere Prompts beantwortet).
 
-## Ändern (11)
+## Ändern (11; davon 10 umgesetzt, 87 zurückgestellt)
 
 | Nr | Frage (kurz) | Empfehlung |
 |---|---|---|
@@ -17,7 +17,7 @@ neue Version, Neurechnung), **später** (geht in Prompt 22 oder 23 auf), **erled
 | 54 | N4: 73 000 OD-Paare nur über ETW | eigenes Flag gow_network_gap (Lücke im GOW-Netz); keine Schwelle |
 | 65 | D-DES-01 „Parallelroute“ nicht prüfbar | Parallelroute = eigenständiger Radweg oder amtliches Radnetz (Bestand) im Abstand P-ATT-03 parallel_max_m (200 m); vorhandener Wert |
 | 78 | parallele Nebenfahrbahnen als in_hvs | S-NET-04-Wege (service) nicht dem HVS zuordnen → Erschließung (DV: ventweg); 22 Abschnitte |
-| 87 | in_hvs im conn_score wirkt als Abzug | in_hvs aus conn_score nehmen (HVS greift schon über C-GOW-01); vorher Probelauf mit km-Wirkung zeigen |
+| 87 | in_hvs im conn_score wirkt als Abzug | **zurückgestellt (Fachplaner*in):** Probelauf ergibt +430 km GOW (289 km GOW30, 141 km GOW50); Entscheidung mit den Fachplaner-Fragen |
 | 129 | keine Override-Ebene für Fahrstreifen | overrides/lane_overrides.csv wie die übrigen Korrekturebenen (nur approved) |
 
 ## Später (5)

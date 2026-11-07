@@ -154,6 +154,17 @@ def test_parse_speed(text, expected):
     assert parse_speed_kmh(text) == expected
 
 
+def test_parse_speed_text_values_from_rules():
+    # rules.yaml 0.16.0 (open question 23): '5-7 km/h' (verkehrsberuhigt) = calculation value of ETW_ERF
+    from pipeline.lib.rules import load_rules
+    rules = load_rules()
+    tv = rules.conflation.rule("S-CONF-03").text_values
+    assert tv["5-7 km/h"] == rules.categories["ETW_ERF"].speed_kmh
+    assert parse_speed_kmh("5-7 km/h", tv) == rules.categories["ETW_ERF"].speed_kmh
+    assert parse_speed_kmh("Verkehrsbeeinflussungsanlage (variable Geschwindigkeitsbeg.)", tv) is None
+    assert resolve_speed("5-7 km/h", "keine Sonderregelung", tv).regular_kmh == rules.categories["ETW_ERF"].speed_kmh
+
+
 def test_no_rule_keeps_signed_speed():
     r = resolve_speed("50 km/h", "keine Sonderregelung")
     assert (r.regular_kmh, r.conditional_kmh, r.rule_text, r.ambiguous) == (50, None, None, False)
@@ -193,3 +204,34 @@ def test_unknown_rule_text_gives_unknown_regular_speed():
     r = resolve_speed("30 km/h", "Schulzeit irgendwas")
     assert r.regular_kmh is None
     assert r.ambiguous
+
+
+# --- in_hvs along the street name (S-CONF-04, rules.yaml 0.16.0, open questions 21 and 78) ----------------
+
+
+def test_hvs_from_neighbours_fills_partial_gaps_with_same_name():
+    import pandas as pd
+    from pipeline.lib.conflate import hvs_from_neighbours
+    df = pd.DataFrame([
+        # Kieler Straße: exact - partial - partial - exact; Nebenstraße partial with another name
+        {"name": "Kieler Straße", "node_u": 1, "node_v": 2, "highway": "primary", "hvs_match_quality": "exact", "in_hvs": True},
+        {"name": "Kieler Straße", "node_u": 2, "node_v": 3, "highway": "primary", "hvs_match_quality": "partial", "in_hvs": False},
+        {"name": "Kieler Straße", "node_u": 3, "node_v": 4, "highway": "primary", "hvs_match_quality": "partial", "in_hvs": False},
+        {"name": "Nebenweg", "node_u": 3, "node_v": 9, "highway": "residential", "hvs_match_quality": "partial", "in_hvs": False},
+        # partial without an exact neighbour of the same name stays out
+        {"name": "Insel", "node_u": 20, "node_v": 21, "highway": "secondary", "hvs_match_quality": "partial", "in_hvs": False},
+        # parallel service road with the main road's name never joins the HVS (S-NET-04 highways)
+        {"name": "Kieler Straße", "node_u": 4, "node_v": 5, "highway": "service", "hvs_match_quality": "partial", "in_hvs": False},
+    ])
+    in_hvs, source = hvs_from_neighbours(df, exclude_highways={"service", "track"})
+    assert list(in_hvs) == [True, True, True, False, False, False]
+    assert list(source) == ["exact", "neighbour", "neighbour", None, None, None]
+
+
+def test_hvs_exact_match_on_service_road_is_dropped():
+    import pandas as pd
+    from pipeline.lib.conflate import hvs_from_neighbours
+    df = pd.DataFrame([{"name": "Grindelallee", "node_u": 1, "node_v": 2, "highway": "service",
+                        "hvs_match_quality": "exact", "in_hvs": True}])
+    in_hvs, source = hvs_from_neighbours(df, exclude_highways={"service", "track"})
+    assert list(in_hvs) == [False] and list(source) == [None]

@@ -46,6 +46,8 @@ RULE_LABELS = {
     "N6": "Knotentyp Soll ≠ Ist",
     "N7": "Glättungsvorschlag",
 }
+# Flags with their own label (otherwise the label of their rule)
+FLAG_LABELS = {"N4_gow_gap": "Lücke im GOW-Netz (Verbindung nur über ETW)"}
 
 
 # --- inputs ----------------------------------------------------------------------------------
@@ -74,6 +76,18 @@ def read_osm_inputs(pbf, work_area) -> dict:
             "roundabout_ways": set() if rb is None else {int(i) for i in rb["id"]}}
 
 
+def n3_barriers(pbf, rules, work_area) -> list:
+    """N3 barrier lines (railways, rivers/canals) with the reader of the cycle network design (C-NET-07)."""
+    from types import SimpleNamespace
+
+    from pipeline.c03_cycle_network import read_barriers
+
+    n3 = rules.coherence_rule("N3")
+    p = SimpleNamespace(barrier_lines=n3.param("barrier_lines"), barrier_exclude_tunnel=n3.param("barrier_exclude_tunnel"),
+                        simplify_m=n3.param("barrier_simplify_m"))
+    return list(read_barriers(pbf, p, work_area))
+
+
 def area_edge_nodes(seg_all: pd.DataFrame) -> set:
     """Nodes where a classified segment meets a segment outside the work area."""
     inside = seg_all["conflated"].astype(bool)
@@ -97,7 +111,7 @@ def compute(inp: gpd.GeoDataFrame, rules, osm: dict, work_area) -> dict:
     g = coh.build_graph(seg, rules)
     n1, ends = coh.n1_dead_ends(g, rules, area_edge_nodes(inp), osm["city"].boundary)
     n2 = coh.n2_islands(g, rules)
-    areas, n3 = coh.n3_areas(seg, rules, work_area=work_area, city_area=osm["city"])
+    areas, n3 = coh.n3_areas(seg, rules, work_area=work_area, city_area=osm["city"], barriers=osm.get("barriers", ()))
     n4, n4_stats = coh.n4_shortcuts(g, rules)
     n5, n5_nodes = coh.n5_transitions(g, rules)
     points = gpd.GeoSeries({n: d["point"] for n, d in g.nodes(data=True)}, crs=WORK_CRS)
@@ -376,6 +390,7 @@ def main() -> int:
     work_area = read_work_area(cfg)
     print("coherence: reading OSM extract")
     osm = read_osm_inputs(REPO_ROOT / pbf["path"], work_area)
+    osm["barriers"] = n3_barriers(REPO_ROOT / pbf["path"], rules, work_area)
     print(f"coherence: {len(osm['signals'])} signals, {len(osm['tables'])} tables, "
           f"{len(osm['roundabout_ways'])} roundabout ways")
     res = compute(inp, rules, osm, work_area)

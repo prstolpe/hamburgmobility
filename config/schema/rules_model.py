@@ -302,6 +302,7 @@ class ConflationRule(_Strict):
     source: str | list[str] | None = None
     thresholds: dict[str, Threshold] = {}
     note: str | None = None
+    text_values: dict[str, float] = {}  # S-CONF-03: speed texts without a number -> calculation value
 
 
 class Conflation(_Strict):
@@ -327,6 +328,9 @@ class FeatureRule(_Strict):
     alkis_public_functions: list[str] = []
     alkis_ancillary_functions: list[str] = []
     route_types: list[int] = []
+    path_highways: list[str] = []      # S-FEAT-11
+    bicycle_allowed: list[str] = []    # S-FEAT-11
+    official_status: list[str] = []    # S-FEAT-11
     note: str | None = None
 
 

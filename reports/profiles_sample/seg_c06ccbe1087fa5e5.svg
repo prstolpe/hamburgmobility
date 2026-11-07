@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="242" viewBox="0 0 460 242" font-family="sans-serif" font-size="10">
+<rect x="0" y="0" width="460" height="242" fill="#ffffff"/>
+<text x="16.0" y="18" font-size="13" font-weight="bold">Binsbarg – Eimsbüttel</text>
+<text x="16.0" y="34" fill="#444">seg_c06ccbe1087fa5e5 · GOW50 · Rad none · Radweg je Seite · passt nach Abbau · Abbau D2|D3</text>
+<rect x="26.7" y="52.0" width="66.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="3.00"><title>Gehweg 3,00 m</title></rect>
+<text transform="translate(59.7,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 3,00</text>
+<rect x="92.7" y="52.0" width="44.0" height="120.0" fill="#c0392b" stroke="#ffffff" stroke-width="1" data-element="cycle_track" data-width-m="2.00"><title>Radweg 2,00 m</title></rect>
+<text transform="translate(114.7,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Radweg 2,00</text>
+<rect x="136.7" y="52.0" width="16.5" height="120.0" fill="#9aa39a" stroke="#ffffff" stroke-width="1" data-element="buffer_cycle_carriageway" data-width-m="0.75"><title>Trennstreifen 0,75 m</title></rect>
+<text transform="translate(145.0,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Trennstreifen 0,75</text>
+<rect x="153.2" y="52.0" width="154.0" height="120.0" fill="#555b61" stroke="#ffffff" stroke-width="1" data-element="carriageway" data-width-m="7.00"><title>Fahrbahn 7,00 m</title></rect>
+<text x="230.2" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Fahrbahn 7,00</text>
+<rect x="307.2" y="52.0" width="16.5" height="120.0" fill="#9aa39a" stroke="#ffffff" stroke-width="1" data-element="buffer_cycle_carriageway" data-width-m="0.75"><title>Trennstreifen 0,75 m</title></rect>
+<text transform="translate(315.5,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Trennstreifen 0,75</text>
+<rect x="323.7" y="52.0" width="44.0" height="120.0" fill="#c0392b" stroke="#ffffff" stroke-width="1" data-element="cycle_track" data-width-m="2.00"><title>Radweg 2,00 m</title></rect>
+<text transform="translate(345.7,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Radweg 2,00</text>
+<rect x="367.7" y="52.0" width="66.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="3.00"><title>Gehweg 3,00 m</title></rect>
+<text transform="translate(400.7,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 3,00</text>
+<text x="26.7" y="206.0" fill="#222">Soll-Bedarf 18,50 m</text>
+<line x1="26.7" y1="192.0" x2="433.7" y2="192.0" stroke="#222" stroke-width="2"/>
+<line x1="16.0" y1="218.0" x2="444.5" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
+<text x="16.0" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 19,48 m</text>
+</svg>

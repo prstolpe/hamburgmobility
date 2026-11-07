@@ -52,7 +52,7 @@ def _gs(*geoms) -> gpd.GeoSeries:
 def test_feature_rules_in_rules_yaml():
     rules = load_rules()
     ids = [r.id for r in rules.features.rules]
-    assert ids == [f"S-FEAT-{i:02d}" for i in range(1, 11)]
+    assert ids == [f"S-FEAT-{i:02d}" for i in range(1, 12)]  # S-FEAT-11 since rules.yaml 0.16.0
     assert rules.features.rule("S-FEAT-01").method == "percentile_rank"
     for rule in rules.features.rules:
         assert rule.status == "draft"
@@ -230,11 +230,12 @@ def test_public_function_lists_use_real_alkis_values(params):
     assert not params.alkis_public_functions & params.alkis_ancillary_functions
 
 
-def test_frontage_share_null_without_buildings(params):
+def test_frontage_share_zero_without_buildings(params):
+    # rules.yaml 0.16.0 (open question 45): no building in the buffer = no public use, not unknown
     seg = _gs(LineString([(0, 0), (100, 0)]))
     empty = gpd.GeoDataFrame({"shop": [], "amenity": []}, geometry=[], crs=CRS)
     share, n_total, _ = frontage_share(seg, empty, empty, params.frontage_buffer_m, params.amenity_excluded)
-    assert pd.isna(share.iloc[0]) and n_total.iloc[0] == 0
+    assert share.iloc[0] == 0.0 and n_total.iloc[0] == 0
 
 
 def test_nearest_distance():
@@ -339,3 +340,14 @@ def test_shapes_in_work_crs(feed):
     assert s1.geom_type == "LineString"
     xs = [c[0] for c in s1.coords]
     assert xs == sorted(xs)  # ordered by shape_pt_sequence
+
+
+def test_parallel_cycle_route_present():
+    # S-FEAT-11 (rules.yaml 0.16.0): own cycle path or official network running parallel within buffer_m
+    from pipeline.lib.conflate import MatchParams
+    from pipeline.lib.features import parallel_route_present
+    seg = _gs(LineString([(0, 0), (300, 0)]), LineString([(0, 1000), (300, 1000)]), LineString([(0, 2000), (0, 2300)]))
+    paths = _gs(LineString([(-50, 150), (350, 150)]),   # parallel 150 m away from the first segment
+                LineString([(-100, 2150), (200, 2150)]))  # crosses the third one at a right angle
+    mp_ = MatchParams(buffer_m=200, max_angle_deg=20, min_overlap_share=0.6)
+    assert list(parallel_route_present(seg, paths, mp_, min_share=0.5)) == [True, False, False]

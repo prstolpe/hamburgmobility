@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="362" height="242" viewBox="0 0 362 242" font-family="sans-serif" font-size="10">
+<rect x="0" y="0" width="362" height="242" fill="#ffffff"/>
+<text x="16.0" y="18" font-size="13" font-weight="bold">Hans-Sander-Straße – Hamburg-Mitte</text>
+<text x="16.0" y="34" fill="#444">seg_991b2777bbc66a56 · ETW_ERF · Rad HAUPT · Mischverkehr · passt</text>
+<rect x="57.1" y="52.0" width="44.0" height="120.0" fill="#8e9aaf" stroke="#ffffff" stroke-width="1" data-element="parking_parallel" data-width-m="2.00"><title>Parken 2,00 m</title></rect>
+<text transform="translate(79.1,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Parken 2,00</text>
+<rect x="101.1" y="52.0" width="104.5" height="120.0" fill="#a39a8a" stroke="#ffffff" stroke-width="1" data-element="shared_surface" data-width-m="4.75"><title>Mischfläche 4,75 m</title></rect>
+<text x="153.3" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#222">Mischfläche 4,75</text>
+<rect x="205.6" y="52.0" width="44.0" height="120.0" fill="#8e9aaf" stroke="#ffffff" stroke-width="1" data-element="parking_parallel" data-width-m="2.00"><title>Parken 2,00 m</title></rect>
+<text transform="translate(227.6,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Parken 2,00</text>
+<rect x="249.6" y="52.0" width="55.0" height="120.0" fill="#c9a227" stroke="#ffffff" stroke-width="1" data-element="loading_zone" data-width-m="2.50"><title>Ladezone 2,50 m</title></rect>
+<text transform="translate(277.1,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Ladezone 2,50</text>
+<text x="57.1" y="206.0" fill="#222">Soll-Bedarf 11,25 m</text>
+<line x1="57.1" y1="192.0" x2="304.6" y2="192.0" stroke="#222" stroke-width="2"/>
+<line x1="16.0" y1="218.0" x2="345.6" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
+<text x="16.0" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 14,98 m</text>
+</svg>

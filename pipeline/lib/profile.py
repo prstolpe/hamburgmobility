@@ -181,6 +181,7 @@ class SegmentInput:
     parking_sides: int
     business: bool
     tram: bool
+    lanes_override: tuple | None = None  # (lanes, bus_lane) from overrides/lane_overrides.csv (approved)
 
 
 # --- lanes L-01..L-06 ---------------------------------------------------------------------------------------
@@ -196,10 +197,17 @@ class LanesResult:
     trace: list = field(default_factory=list)
 
 
-def lanes_soll(cat, dtv, bus_peak_dir, lanes_ist_dir, p: ProfileParams) -> LanesResult:
-    """Car lanes per direction, bus lane and median (L-01..L-04, L-06, PRF-01)."""
+def lanes_soll(cat, dtv, bus_peak_dir, lanes_ist_dir, p: ProfileParams, override: tuple | None = None) -> LanesResult:
+    """Car lanes per direction, bus lane and median (L-01..L-04, L-06, PRF-01); an approved lane override
+    (overrides/lane_overrides.csv) replaces L-02..L-06."""
     default = p.default_lanes.get(cat) if isinstance(cat, str) else None
     res = LanesResult(default, False, False)
+    if override is not None and default is not None:
+        lanes, bus = override
+        res.lanes, res.bus_lane, res.median = lanes, bool(bus), lanes == 2
+        res.trace.append({"id": "L-OVR", "result": lanes, "values": {"bus_lane": bool(bus), "lanes_ist": _num(lanes_ist_dir),
+                                                                     "source": "overrides/lane_overrides.csv"}})
+        return res
     if default is None:
         res.trace.append({"id": "L-01", "result": None, "values": {"cat": cat, "note": "keine Fahrstreifen (SW oder ohne Kategorie)"}})
         return res
@@ -404,7 +412,7 @@ def _cycle_side(facility, p: ProfileParams):
 
 def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before: str | None = None) -> ProfileResult:
     """Soll profile, fit and degrade cascade of one segment (PRF-03..PRF-07)."""
-    lanes = lanes_soll(seg.cat, seg.dtv, seg.bus_peak_dir, seg.lanes_ist, p)
+    lanes = lanes_soll(seg.cat, seg.dtv, seg.bus_peak_dir, seg.lanes_ist, p, seg.lanes_override)
     flags = list(lanes.flags)
     trace = list(lanes.trace)
     available = _num(available)

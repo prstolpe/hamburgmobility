@@ -475,3 +475,18 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   Kfz-Verkehr voraus). Die Regel soll später verbessert werden.
 - Goldene Fälle: 28 erwartet jetzt GOW30 auch bei hohem DTV, Grenzfall 30 entfällt; dtv_official bleibt in den Fällen
   (wird nicht mehr gelesen).
+
+## rules.yaml 0.16.0, design_rules.yaml 0.6.0 – 2026-11-07: Stapel 5 (Sammelfreigabe prstolpe, docs/open_questions_batch5.md)
+- S-CONF-04: in_hvs auch bei match partial, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer
+  verbunden ist (in_hvs_source = neighbour); Wege aus S-NET-04 (service, track) nie HVS (parallele Nebenfahrbahnen).
+- S-CONF-03 text_values: „5-7 km/h“ (verkehrsberuhigt) = 7 km/h, der Rechenwert von ETW_ERF.
+- S-FEAT-05: ohne Gebäude im Puffer shop_frontage_share = 0 (vorher leer).
+- Neu S-FEAT-11 parallel_cycle_route_present (OSM-Radwege mit Radfreigabe und amtliches Radnetz Bestand, gleich gerichtet
+  im Puffer 200 m wie P-ATT-03); D-DES-01 GOW50 „Radweg oder Parallelroute“ damit prüfbar.
+- Neu S-XS-07: fehlende Breite vom angrenzenden Abschnitt gleichen Namens (Flag width_from_neighbour, in C-CONF-01 Fallback).
+- N3: Bahn und Flüsse/Kanäle (ohne Tunnel) begrenzen Aufenthaltsbereiche (Werte wie C-NET-07). N4: neues Flag
+  N4_gow_gap für ETW-Abschnitte auf Verbindungen ohne GOW/SW-Weg (Lücke im GOW-Netz).
+- design_rules.yaml L-06: Korrekturebene overrides/lane_overrides.csv (Fahrstreifen je Richtung, Busfahrstreifen; nur
+  approved), ersetzt L-02 bis L-06 für den Abschnitt (rule_trace L-OVR, Spalte lanes_source).
+- CLAUDE.md: Prüfdateien in reports/ dürfen EPSG:4326 sein.
+- Nicht umgesetzt (Probelauf, Entscheidung offen): in_hvs aus conn_score nehmen (+430 km GOW).

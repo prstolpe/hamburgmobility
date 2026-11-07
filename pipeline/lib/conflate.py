@@ -165,6 +165,41 @@ def zone_share(seg: gpd.GeoSeries, lines: gpd.GeoSeries, params: MatchParams) ->
     return _coverage(seg, lines, pairs, params.buffer_m)
 
 
+def hvs_from_neighbours(df: pd.DataFrame, exclude_highways: set) -> tuple[pd.Series, pd.Series]:
+    """S-CONF-04: in_hvs and its source per segment.
+
+    exact: matched exactly to the HVS lines. neighbour: matched partially and connected over segments of the same
+    street name (sharing a node) to an exactly matched one. Segments with a highway in exclude_highways
+    (S-NET-04 access roads, e.g. parallel service carriageways) never belong to the HVS.
+    df needs name, node_u, node_v, highway, hvs_match_quality, in_hvs."""
+    ok = ~df["highway"].isin(exclude_highways)
+    exact = df["in_hvs"].fillna(False).astype(bool) & ok
+    cand = ok & df["name"].notna() & (df["hvs_match_quality"] == "partial")
+    parent: dict = {}
+
+    def find(x):
+        while parent.setdefault(x, x) != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    use = df.index[(exact | cand) & df["name"].notna()]
+    for i in use:  # union segments with the same name over their end nodes
+        r = df.loc[i]
+        a, b = find(("seg", i)), None
+        for node in (r["node_u"], r["node_v"]):
+            b = find(("node", r["name"], node))
+            parent[b] = a
+            a = find(a)
+    seeded = {find(("seg", i)) for i in df.index[exact] if pd.notna(df.loc[i, "name"])}
+    use_set = set(use)
+    neighbour = pd.Series([bool(cand.loc[i]) and find(("seg", i)) in seeded if i in use_set else False for i in df.index],
+                          index=df.index)
+    in_hvs = exact | neighbour
+    source = pd.Series(np.where(exact, "exact", np.where(neighbour, "neighbour", None)), index=df.index, dtype="object")
+    return in_hvs, source
+
+
 # --- speeds (S-CONF-03) ----------------------------------------------------------------------
 
 _SPEED = re.compile(r"^\s*(\d+)\s*km/h\s*$")
@@ -173,10 +208,13 @@ _LEADING_SPEED = re.compile(r"^\s*(\d+)\s*km/h\s+\S")
 NO_RULE = "keine Sonderregelung"
 
 
-def parse_speed_kmh(text: str | None) -> int | None:
-    """'30 km/h' -> 30. Ranges ('5-7 km/h'), variable limits and other texts -> None."""
+def parse_speed_kmh(text: str | None, text_values: dict | None = None) -> int | None:
+    """'30 km/h' -> 30. Texts listed in text_values (S-CONF-03, e.g. '5-7 km/h') -> their value;
+    variable limits and other texts -> None."""
     if not isinstance(text, str):
         return None
+    if text_values and text.strip() in text_values:
+        return int(text_values[text.strip()])
     m = _SPEED.match(text)
     return int(m.group(1)) if m else None
 
@@ -189,13 +227,13 @@ class SpeedReading:
     ambiguous: bool
 
 
-def resolve_speed(speed_text: str | None, rule_text: str | None) -> SpeedReading:
+def resolve_speed(speed_text: str | None, rule_text: str | None, text_values: dict | None = None) -> SpeedReading:
     """Separate the regular speed from a time-limited rule; the time-limited speed is never regular.
 
     'sonst N km/h': regular = N, time-limited = signed speed if it differs.
     'N km/h <time window>': time-limited = N, regular = signed speed if it differs, else unknown.
     """
-    signed = parse_speed_kmh(speed_text)
+    signed = parse_speed_kmh(speed_text, text_values)
     if not isinstance(rule_text, str) or not rule_text.strip() or rule_text.strip() == NO_RULE:
         return SpeedReading(signed, None, None, False)
     if m := _SONST.search(rule_text):

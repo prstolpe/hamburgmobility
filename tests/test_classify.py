@@ -20,7 +20,7 @@ BASE = {
     "highway": "residential", "access_motor_only": False, "outside_builtup_area": False, "conn_score": 0.2,
     "conn_weight_available": 1.0, "in_hvs": False, "ist_verkehrsberuhigt": False, "pedestrian_zone": False,
     "override_school_street": False, "schools_or_kitas_within_m": 600.0, "shop_frontage_share": 0.1,
-    "crossing_demand": "low", "separated_cycle_track_present": True, "width_p10_m": 25.0, "dtv_official": None,
+    "crossing_demand": "low", "separated_cycle_track_present": True, "width_p10_m": 25.0, "dtv_official": None, "width_from_neighbour": False,
 }
 GOW = {**BASE, "highway": "primary", "conn_score": 0.9, "in_hvs": True, "dtv_official": 8000.0}  # HVS always has a count
 

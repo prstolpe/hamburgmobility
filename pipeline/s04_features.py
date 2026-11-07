@@ -35,6 +35,7 @@ from pipeline.lib.features import (
     ist_speed,
     majority,
     nearest_distance,
+    parallel_route_present,
     percentile_rank,
     travel_speed_kmh,
     way_design,
@@ -87,6 +88,7 @@ FEATURE_DOC = {
     "travel_speed_kmh": ("Tempo amtlich/OSM/Standard", "S-FEAT-02", "Gewicht der Betweenness"),
     "travel_speed_source": ("Tempo amtlich/OSM/Standard", "S-FEAT-02", "Herkunft von travel_speed_kmh"),
     "separated_cycle_track_present": ("OSM-Tags", "S-FEAT-10", "C-G30-02, requirements.*.cycling"),
+    "parallel_cycle_route_present": ("OSM-Radwege + amtliches Radnetz (Bestand)", "S-FEAT-11", "D-DES-01 (GOW50: Radweg oder Parallelroute)"),
     "cycle_lane_present": ("OSM-Tags", "S-FEAT-10", "requirements.*.cycle_lanes_allowed"),
     "lanes": ("OSM-Tags", "S-FEAT-10", "requirements.GOW50.median_if_lanes_per_dir_gte"),
     "centre_line": ("OSM-Tags", "S-FEAT-10", "requirements.GOW30.centre_line"),
@@ -166,6 +168,22 @@ def read_osm(pbf, work_area_wgs84) -> dict[str, gpd.GeoDataFrame]:
         calming = osm.get_data_by_custom_criteria(custom_filter={"traffic_calming": True}, **node_kw)
     out = {"ways": ways, "pois": pois, "crossings": crossings, "calming": calming}
     return {k: to_work_crs(v.reset_index(drop=True)) for k, v in out.items()}
+
+
+OFFICIAL_CYCLE_NETWORK_PATH = REPO_ROOT / "data" / "raw" / "cycle_network_official__radnetz.parquet"
+
+
+def cycle_route_lines(ways: gpd.GeoDataFrame, rule) -> gpd.GeoSeries:
+    """S-FEAT-11: OSM cycleways and paths with bicycle access, plus the official cycle network with official_status."""
+    hw = ways["highway"].astype(str)
+    bicycle = ways["bicycle"].astype(str) if "bicycle" in ways else pd.Series("", index=ways.index)
+    keep = (hw == "cycleway") | (hw.isin(rule.path_highways) & bicycle.isin(rule.bicycle_allowed))
+    parts = [ways.geometry[keep]]
+    if OFFICIAL_CYCLE_NETWORK_PATH.exists():
+        off = to_work_crs(gpd.read_parquet(OFFICIAL_CYCLE_NETWORK_PATH))
+        parts.append(off.geometry[off["status"].isin(rule.official_status)])
+    lines = pd.concat(parts, ignore_index=True)
+    return gpd.GeoSeries(lines, crs=ways.crs).explode(index_parts=False).reset_index(drop=True)
 
 
 def _way_tags(row) -> dict:
@@ -281,6 +299,12 @@ def compute(seg: gpd.GeoDataFrame, layers: dict, osm: dict, feed_path, rules) ->
     for c in DESIGN_COLUMNS:
         out.loc[in_area, c] = design[c]
     out.loc[in_area, "access_motor_only"] = area["highway"].isin(MOTORWAY_CLASSES) | design["motorroad"].fillna(False)
+    f11 = rules.features.rule("S-FEAT-11")
+    mp11 = MatchParams(buffer_m=f11.thresholds["buffer_m"].value, max_angle_deg=mp.max_angle_deg,
+                       min_overlap_share=mp.min_overlap_share)
+    routes = cycle_route_lines(osm["ways"], f11)
+    out.loc[in_area, "parallel_cycle_route_present"] = parallel_route_present(g, routes, mp11, min_share).to_numpy()
+    info["parallel_route_lines"] = len(routes)
     out.loc[in_area, "pedestrian_zone"] = area["highway"] == "pedestrian"
     for c in NULL_REASON:
         out[c] = None
@@ -316,7 +340,7 @@ def _typed(out: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     for c in ("speed_ist_kmh", "lanes", "crossings_count", "traffic_calming_count", "frontage_buildings",
               "frontage_public"):
         out[c] = pd.array([None if _none(v) is None else int(v) for v in out[c]], dtype="Int64")
-    for c in ("speed_sources_conflict", "in_cycle_network", "separated_cycle_track_present", "cycle_lane_present",
+    for c in ("speed_sources_conflict", "in_cycle_network", "separated_cycle_track_present", "parallel_cycle_route_present", "cycle_lane_present",
               "centre_line", "parking_on_carriageway", "parking_along_carriageway", "angle_parking",
               "access_motor_only", "pedestrian_zone"):
         if c not in out:

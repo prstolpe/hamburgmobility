@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="737" height="242" viewBox="0 0 737 242" font-family="sans-serif" font-size="10">
+<rect x="0" y="0" width="737" height="242" fill="#ffffff"/>
+<text x="16.0" y="18" font-size="13" font-weight="bold">Barmbeker Straße – Hamburg-Nord</text>
+<text x="16.0" y="34" fill="#444">seg_296f650955e81515 · GOW30 · Rad ERSCHL · Radfahrstreifen · passt</text>
+<rect x="64.2" y="52.0" width="66.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="3.00"><title>Gehweg 3,00 m</title></rect>
+<text transform="translate(97.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 3,00</text>
+<rect x="130.2" y="52.0" width="44.0" height="120.0" fill="#5b8c3a" stroke="#ffffff" stroke-width="1" data-element="tree_strip" data-width-m="2.00"><title>Baumstreifen 2,00 m</title></rect>
+<text transform="translate(152.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Baumstreifen 2,00</text>
+<rect x="174.2" y="52.0" width="44.0" height="120.0" fill="#e06c5a" stroke="#ffffff" stroke-width="1" data-element="cycle_lane" data-width-m="2.00"><title>Radfahrstreifen 2,00 m</title></rect>
+<text transform="translate(196.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Radfahrstreifen 2,00</text>
+<rect x="218.2" y="52.0" width="184.8" height="120.0" fill="#555b61" stroke="#ffffff" stroke-width="1" data-element="carriageway" data-width-m="8.40"><title>Fahrbahn 8,40 m</title></rect>
+<text x="310.6" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Fahrbahn 8,40</text>
+<rect x="403.0" y="52.0" width="44.0" height="120.0" fill="#e06c5a" stroke="#ffffff" stroke-width="1" data-element="cycle_lane" data-width-m="2.00"><title>Radfahrstreifen 2,00 m</title></rect>
+<text transform="translate(425.0,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Radfahrstreifen 2,00</text>
+<rect x="447.0" y="52.0" width="16.5" height="120.0" fill="#b8beb8" stroke="#ffffff" stroke-width="1" data-element="buffer_to_parking" data-width-m="0.75"><title>Sicherheitsraum 0,75 m</title></rect>
+<text transform="translate(455.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Sicherheitsraum 0,75</text>
+<rect x="463.5" y="52.0" width="44.0" height="120.0" fill="#8e9aaf" stroke="#ffffff" stroke-width="1" data-element="parking_parallel" data-width-m="2.00"><title>Parken 2,00 m</title></rect>
+<text transform="translate(485.5,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Parken 2,00</text>
+<rect x="507.5" y="52.0" width="55.0" height="120.0" fill="#c9a227" stroke="#ffffff" stroke-width="1" data-element="loading_zone" data-width-m="2.50"><title>Ladezone 2,50 m</title></rect>
+<text transform="translate(535.0,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Ladezone 2,50</text>
+<rect x="562.5" y="52.0" width="44.0" height="120.0" fill="#5b8c3a" stroke="#ffffff" stroke-width="1" data-element="tree_strip" data-width-m="2.00"><title>Baumstreifen 2,00 m</title></rect>
+<text transform="translate(584.5,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Baumstreifen 2,00</text>
+<rect x="606.5" y="52.0" width="66.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="3.00"><title>Gehweg 3,00 m</title></rect>
+<text transform="translate(639.5,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 3,00</text>
+<text x="64.2" y="206.0" fill="#222">Soll-Bedarf 27,65 m</text>
+<line x1="64.2" y1="192.0" x2="672.5" y2="192.0" stroke="#222" stroke-width="2"/>
+<line x1="16.0" y1="218.0" x2="720.6" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
+<text x="16.0" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 32,03 m</text>
+</svg>

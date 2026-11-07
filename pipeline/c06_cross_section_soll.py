@@ -24,6 +24,7 @@ from config.schema.cycling_model import NO_CYCLE_CATEGORY, CyclingRuleSet
 from config.schema.design_model import DesignRuleSet
 from pipeline.c04_principles import _gtfs_path, _links
 from pipeline.lib import gtfs, parallel
+from pipeline.lib import overrides as ov
 from pipeline.lib import profile as pf
 from pipeline.lib.area import sample_by_district
 from pipeline.lib.conflate import MatchParams, zone_share
@@ -185,7 +186,7 @@ def _num(v):
     return None if np.isnan(f) else f
 
 
-def segment_input(f, c, bus, tram, p: pf.ProfileParams) -> pf.SegmentInput:
+def segment_input(f, c, bus, tram, p: pf.ProfileParams, lanes_override: tuple | None = None) -> pf.SegmentInput:
     ist, oneway = pf.lanes_ist(f["lanes_official_in"], f["lanes_official_gegen"], f["bahnigkeit_official"], f["lanes"])
     return pf.SegmentInput(
         cat=_str_or_none(f["cat_final"]), cycle_cat=c["cycle_cat_final"] if isinstance(c["cycle_cat_final"], str) else NO_CYCLE_CATEGORY,
@@ -193,24 +194,27 @@ def segment_input(f, c, bus, tram, p: pf.ProfileParams) -> pf.SegmentInput:
         cycle_width=_num(c["cycle_width_soll_m"]), peak_dir=_num(c["cyc_peak_h_dir"]), peak_both=_num(c["cyc_peak_h"]),
         dtv=_num(f["dtv_official"]), bus_peak_dir=float(bus), lanes_ist=ist, oneway=oneway,
         parking_sides=pf.parking_sides(f["parking"], p), business=pf.is_business(f["shop_frontage_share"], p),
-        tram=bool(tram))
+        tram=bool(tram), lanes_override=lanes_override)
 
 
 def _lanes_str(v):
     return None if v is None else str(v)
 
 
-def classify(final: pd.DataFrame, fac: pd.DataFrame, bus: np.ndarray, tram: np.ndarray, p: pf.ProfileParams) -> pd.DataFrame:
+def classify(final: pd.DataFrame, fac: pd.DataFrame, bus: np.ndarray, tram: np.ndarray, p: pf.ProfileParams,
+             lane_ovr: dict | None = None) -> pd.DataFrame:
     rows = []
+    lane_ovr = lane_ovr or {}
     for (seg_id, f), b, t in zip(final.iterrows(), bus, tram):
         c = fac.loc[seg_id]
-        seg = segment_input(f, c, b, t, p)
+        seg = segment_input(f, c, b, t, p, lane_ovr.get(seg_id))
         res = pf.evaluate_profile(seg, f["width_p10_m"], p)
         facade = pf.evaluate_profile(seg, f["facade_width_p10_m"], p)
         trace = [*res.trace, {"id": "PRF-05", "variant": "facade", "result": facade.fit_class,
                               "values": {"available_m": facade.available_m, "steps": facade.degrade_steps_applied}}]
         rows.append({
             "segment_id": seg_id, "lanes_per_dir_soll": _lanes_str(res.lanes), "lanes_per_dir_ist": seg.lanes_ist,
+            "lanes_source": "override" if seg.lanes_override is not None else "proposed",
             "oneway": seg.oneway, "bus_peak_h_dir": float(b), "tram_present": bool(t), "bus_lane_soll": res.bus_lane,
             "median_soll": res.median, "cycle_facility_final": res.cycle_facility, "cycle_width_final_m": res.cycle_width_m,
             "cycle_side": res.cycle_side, "parking_sides_ist": seg.parking_sides, "business_use": seg.business,
@@ -415,7 +419,8 @@ def main() -> int:
         "cyc_peak_h_dir", "cyc_peak_h"]).set_index("segment_id")
     bus, tram, gtfs_info = bus_and_tram(final, design, rules)
     tick(f"GTFS peak hour per direction ({int((bus > 0).sum())} segments with buses)")
-    res = classify(final, fac, bus, tram, p)
+    lane_ovr = ov.lane_overrides(ov.read_overrides(ov.LANE_OVERRIDES_PATH), final.index, p.max_lanes)
+    res = classify(final, fac, bus, tram, p, lane_ovr)
     tick(f"{len(res)} profiles")
     out = final[["name", "bezirk", "length_m", "cat_final", "geometry"]].join(fac[["cycle_cat_final"]]).join(res)
     out = gpd.GeoDataFrame(out, geometry="geometry", crs=final.crs).reset_index()

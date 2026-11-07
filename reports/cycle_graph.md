@@ -1,6 +1,6 @@
 # Radgraph (Stufe c01)
 
-Erzeugt 2026-11-07T13:56:07+00:00 mit pipeline/c01_cycle_graph.py · cycling_rules.yaml 0.7.0 · OSM-Auszug `data/raw/osm/hamburg_2026-10-28.osm.pbf` (SHA-256 700d2e2603a7…) · nicht amtlicher Entwurf
+Erzeugt 2026-11-07T15:09:16+00:00 mit pipeline/c01_cycle_graph.py · cycling_rules.yaml 0.7.0 · OSM-Auszug `data/raw/osm/hamburg_2026-10-28.osm.pbf` (SHA-256 700d2e2603a7…) · nicht amtlicher Entwurf
 
 ## Kennzahlen
 
@@ -10,7 +10,7 @@ Erzeugt 2026-11-07T13:56:07+00:00 mit pipeline/c01_cycle_graph.py · cycling_rul
 - Größte stark zusammenhängende Komponente: 6 217.7 km (96.7% der Länge)
 - Nur in einer Richtung befahrbar: 17 934 Kanten; in keiner Richtung (widersprüchliche oneway-Angaben der OSM-Wege einer Kante): 16 Kanten, 1 237 m
 - Eigenständige Wege mit Bezug zu einem Straßenabschnitt (sidepath_of, C-GRAPH-06): 8 096 von 21 638
-- Laufzeit: Lesen und Widerstand 18 s, Zusammenfassen 7 s
+- Laufzeit: Lesen und Widerstand 33 s, Zusammenfassen 13 s
 
 ## Länge nach Kantenart und Widerstandsregel
 
@@ -21,10 +21,10 @@ Erzeugt 2026-11-07T13:56:07+00:00 mit pipeline/c01_cycle_graph.py · cycling_rul
 | path | C-IMP-02 | 1.10 | 1 756.6 | 27.3% |
 | road | C-IMP-01 | 1.01 | 25.4 | 0.4% |
 | road | C-IMP-03 | 1.11 | 403.7 | 6.3% |
-| road | C-IMP-04 | 1.07 | 2 483.6 | 38.6% |
+| road | C-IMP-04 | 1.07 | 2 488.1 | 38.7% |
 | road | C-IMP-05 | 1.25 | 3.6 | 0.1% |
-| road | C-IMP-06 | 1.25 | 46.3 | 0.7% |
-| road | C-IMP-07 | 1.54 | 1 663.7 | 25.9% |
+| road | C-IMP-06 | 1.25 | 46.4 | 0.7% |
+| road | C-IMP-07 | 1.54 | 1 659.0 | 25.8% |
 
 Regeln: config/cycling_rules.yaml (`routing_impedance.ist_mapping`, `cycle_graph`). Alle Werte sind Annahmen (status draft).
 

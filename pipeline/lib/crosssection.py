@@ -218,3 +218,34 @@ def feasibility_class(ratio: float, classes) -> str | None:
     if ratio >= classes["tight"].min:
         return "tight"
     return "does_not_fit"
+
+
+def fill_from_neighbours(df: pd.DataFrame, col: str) -> tuple[pd.Series, pd.Series]:
+    """S-XS-07: a segment without a value in col takes it from a neighbouring segment of the same street name
+    (sharing an end node); the longest such neighbour with a value wins. Repeated pass by pass, so short pieces
+    between two measured segments take the value of the nearer one. Segments without a name stay empty.
+    df needs name, node_u, node_v, length_m and col. Returns (filled values, filled_from_neighbour)."""
+    vals = df[col].astype("float64").to_numpy().copy()
+    named = df["name"].notna().to_numpy()
+    by_node: dict = {}
+    for pos, (name, u, v) in enumerate(zip(df["name"], df["node_u"], df["node_v"])):
+        if isinstance(name, str):
+            for node in (u, v):
+                by_node.setdefault((name, node), []).append(pos)
+    lengths = df["length_m"].to_numpy(dtype="float64")
+    filled = np.zeros(len(df), dtype=bool)
+    while True:
+        updates = {}
+        for pos in np.flatnonzero(np.isnan(vals) & named):
+            name = df["name"].iat[pos]
+            nbs = {q for node in (df["node_u"].iat[pos], df["node_v"].iat[pos]) for q in by_node.get((name, node), ())}
+            known = [q for q in nbs if q != pos and not np.isnan(vals[q])]
+            if known:
+                best = max(known, key=lambda q: (lengths[q], -q))
+                updates[pos] = vals[best]
+        if not updates:
+            break
+        for pos, v in updates.items():
+            vals[pos] = v
+            filled[pos] = True
+    return pd.Series(vals, index=df.index), pd.Series(filled, index=df.index)

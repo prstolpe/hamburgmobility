@@ -198,7 +198,7 @@ def frontage_share(seg: gpd.GeoSeries, buildings: gpd.GeoDataFrame, pois: gpd.Ge
     """S-FEAT-05: share of buildings in the buffer with public use (tag on the building or POI inside).
 
     Buildings flagged 'ancillary' (garages, sheds, ...) are left out. Returns (share, n_buildings, n_public);
-    share is NaN where no building is in the buffer.
+    share is 0 where no building is in the buffer (no public use; rules.yaml 0.16.0).
     """
     if "ancillary" in buildings:
         buildings = buildings[~buildings["ancillary"].fillna(False).to_numpy(dtype=bool)].reset_index(drop=True)
@@ -212,7 +212,7 @@ def frontage_share(seg: gpd.GeoSeries, buildings: gpd.GeoDataFrame, pois: gpd.Ge
     i_seg, i_b = _pairs(seg.buffer(buffer_m), buildings.geometry)
     n_total = np.bincount(i_seg, minlength=len(seg))
     n_public = np.bincount(i_seg, weights=public[i_b].astype(float), minlength=len(seg)).astype(int)
-    share = np.where(n_total > 0, n_public / np.maximum(n_total, 1), np.nan)
+    share = np.where(n_total > 0, n_public / np.maximum(n_total, 1), 0.0)
     return (pd.Series(share, index=seg.index), pd.Series(n_total, index=seg.index),
             pd.Series(n_public, index=seg.index))
 
@@ -330,3 +330,13 @@ def majority(values: list, weights: list[float]):
     if not totals:
         return None
     return max(totals.items(), key=lambda kv: kv[1])[0]
+
+
+def parallel_route_present(seg: gpd.GeoSeries, lines: gpd.GeoSeries, params, min_share: float) -> pd.Series:
+    """S-FEAT-11: True where at least min_share of the segment lies within params.buffer_m of a cycle route line
+    running in the same direction (zone_share of S-CONF-02 with the parallel buffer)."""
+    from pipeline.lib.conflate import zone_share
+
+    if lines is None or len(lines) == 0:
+        return pd.Series(False, index=seg.index)
+    return zone_share(seg, lines, params) >= min_share

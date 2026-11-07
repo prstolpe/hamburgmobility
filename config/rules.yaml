@@ -2,7 +2,7 @@
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
 # status: draft | reviewed | approved
 meta:
-  version: 0.15.0
+  version: 0.16.0
   date: 2026-11-07
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -132,6 +132,7 @@ classification_policy:
       schools_or_kitas_within_m: {note: "Schulen/Kitas aus OSM amenity=school/kindergarten statt amtlicher Quelle (sources.yaml fallback_osm)"}
       in_hvs: {note: "DTV-Linien HVS 2019 statt HVS-Karte 2023 (S-CONF-04)"}
       conn_score: {when: "conn_weight_available < 1.0", note: "Gewicht fehlender Merkmale umgelegt (scores.missing_value_policy)"}
+      width_p10_m: {when: "width_from_neighbour", note: "Breite vom Nachbarabschnitt gleichen Namens (S-XS-07)"}
     source_type: assumption
     status: draft
     note: >-
@@ -287,6 +288,7 @@ conflation:
         (max_angle_deg aus S-CONF-01), damit Querstraßen an Knoten nicht zählen. Anteil >= min_length_share: Zone gilt.
     - id: S-CONF-03
       description: "Zeitlich begrenzte Regelungen (sonderregelung) getrennt speichern, nie als Regeltempo"
+      text_values: {"5-7 km/h": 7}  # verkehrsberuhigt = Rechenwert von ETW_ERF (categories.ETW_ERF.speed_kmh); seit 0.16.0
       source: HH_TEMPO
       source_type: hamburg
       status: draft
@@ -295,7 +297,7 @@ conflation:
         Regeltempo das Feld geschwindigkeit, wenn es davon abweicht, sonst unbekannt. Mehrdeutige Fälle siehe
         docs/open_questions.md.
     - id: S-CONF-04
-      description: "in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist"
+      description: "in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist. Seit 0.16.0: partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist (in_hvs_source neighbour); Wege aus S-NET-04 (service, track) nie"
       source: HH_DTV_HVS_2019
       source_type: hamburg
       status: draft
@@ -369,7 +371,7 @@ features:
       status: draft
       note: "Zensus-Gitter liegt noch nicht in data/raw (Download-URL fehlt in sources.yaml); bis dahin null."
     - id: S-FEAT-05
-      description: "Anteil Erdgeschoss mit Publikumsnutzung = Anteil der ALKIS-Gebäude im Puffer mit Publikumsnutzung (Gebäudefunktion oder OSM-shop/amenity-Punkt im Gebäude); Nebengebäude zählen nicht"
+      description: "Anteil Erdgeschoss mit Publikumsnutzung = Anteil der ALKIS-Gebäude im Puffer mit Publikumsnutzung (Gebäudefunktion oder OSM-shop/amenity-Punkt im Gebäude); Nebengebäude zählen nicht; ohne Gebäude im Puffer 0 (keine Publikumsnutzung, seit 0.16.0, Entscheidung prstolpe 2026-11-07)"
       thresholds:
         buffer_m: {value: 20, unit: m, source_type: assumption}
       alkis_public_functions:
@@ -472,6 +474,17 @@ features:
       thresholds:
         node_snap_m: {value: 1, unit: m, source_type: assumption}
 
+    - id: S-FEAT-11
+      description: "parallel_cycle_route_present: mindestens min_length_share (S-CONF-02) des Abschnitts liegt im Puffer buffer_m einer gleich gerichteten Radroute (Winkel wie S-CONF-01): OSM highway=cycleway oder path_highways mit bicycle_allowed, dazu amtliches Radnetz mit official_status"
+      thresholds:
+        buffer_m: {value: 200, unit: m, source_type: assumption, check: "gleich cycling_rules.yaml P-ATT-03 parallel_max_m"}
+      path_highways: [path, footway, pedestrian, bridleway]
+      bicycle_allowed: ["yes", designated, permissive]
+      official_status: [Bestand]
+      source_type: assumption
+      status: draft
+      note: "Für D-DES-01 (GOW50: baulicher Radweg oder Parallelroute). Listen wie cycling_rules.yaml C-GRAPH-01 und C-NET-05. Entscheidung prstolpe 2026-11-07 (Stapel 5)."
+
 # ---------------------------------------------------------------
 # Querschnitt: Straßenraumbreite und Machbarkeit (pipeline/s07_crosssection.py, guide.md 4.3 a und c, prompts/07)
 # ---------------------------------------------------------------
@@ -523,6 +536,11 @@ crosssection:
       source_type: assumption
       status: draft
       note: "Bei Bereichen (GOW30_narrow 10,80-13,40 m) gilt die Untergrenze als erforderliche Breite (range_reference: min)."
+    - id: S-XS-07
+      description: "Abschnitt ohne Breite übernimmt sie vom angrenzenden Abschnitt gleichen Namens (gemeinsamer Endknoten; der längste mit Wert gewinnt; schrittweise, also vom nächstgelegenen). Flag width_from_neighbour; gilt in C-CONF-01 als Fallback-Quelle"
+      source_type: assumption
+      status: draft
+      note: "Entscheidung prstolpe 2026-11-07 (Stapel 5, open_questions Querschnitt): v. a. kurze Knotenstücke, deren Transekte alle verworfen werden. Ohne Namen bleibt die Breite leer."
 
 # ---------------------------------------------------------------
 # Netzkohärenz
@@ -557,10 +575,15 @@ coherence:
   - id: N3
     rule: "Aufenthaltsbereiche (von GOW/SW umschlossen) < min_area_ha markieren"
     min_area_ha: 25
+    barrier_lines: {railway: [rail, light_rail, subway], waterway: [river, canal]}
+    barrier_exclude_tunnel: true
+    barrier_simplify_m: 5
     source: SWOV_FS_2023
     source_type: assumption
     status: draft
     note: >-
+      Barrieren (Bahn, Flüsse/Kanäle, ohne Tunnel) begrenzen Flächen wie GOW/SW-Linien; gleiche Werte wie
+      cycling_rules.yaml C-NET-07 (Entscheidung prstolpe 2026-11-07, Stapel 5).
       Flächen aus GOW/SW-Linien und Stadtgrenze; Flächen am Rand des Arbeitsgebiets sind unvollständig und werden
       nicht markiert. Für „sehr lange Grenze im Verhältnis zur Fläche“ (guide.md 1.5) gibt es keine Schwelle;
       die Kompaktheit wird nur berichtet (docs/open_questions.md).
@@ -658,9 +681,9 @@ discrepancy:
     # hat (ohne `requirement`: bei jedem Wert, der dann in violated_if als `requirement` steht).
     # violated_if wird dreiwertig ausgewertet (pipeline/lib/expr.py); unbekannt -> disc_design_unknown.
     violations:
-      - {check: cycling, requirement: separated_mandatory_track_or_parallel_route, violated_if: "not separated_cycle_track_present",
+      - {check: cycling, requirement: separated_mandatory_track_or_parallel_route, violated_if: "not separated_cycle_track_present and not parallel_cycle_route_present",
          direction: sparse, label_de: "kein baulicher Radweg", source_type: assumption,
-         note: "Parallelroute ist nicht prüfbar; ein Abschnitt mit Parallelroute wird als Verstoß gezählt"}
+         note: "Parallelroute = eigenständiger Radweg oder amtliches Radnetz (Bestand) parallel im Abstand S-FEAT-11 buffer_m (seit 0.16.0)"}
       - {check: cycling, requirement: cycle_lanes_or_existing_track, violated_if: "not (cycle_lane_present or separated_cycle_track_present)",
          direction: sparse, label_de: "Radverkehr auf der Fahrbahn ohne Radfahrstreifen", source_type: assumption}
       - {check: cycling, requirement: mixed, violated_if: "separated_cycle_track_present",

@@ -23,6 +23,10 @@ CYCLE_NETWORK_OVERRIDES_PATH = REPO_ROOT / "overrides" / "cycle_network_override
 CYCLE_NETWORK_COLUMNS = ["edge_id", "cycle_cat_final", "reason", "author", "date", "source", "review_status"]
 JUNCTION_OVERRIDES_PATH = REPO_ROOT / "overrides" / "junction_overrides.csv"
 JUNCTION_COLUMNS = ["node_id", "junction_type_final", "reason", "author", "date", "source", "review_status"]
+# Lane corrections (design_rules.yaml L-06 "ohne fachliche Freigabe"; Stapel 5, 2026-11-07); applied in c06.
+LANE_OVERRIDES_PATH = REPO_ROOT / "overrides" / "lane_overrides.csv"
+LANE_COLUMNS = ["segment_id", "lanes_per_dir_final", "bus_lane_final", "reason", "author", "date", "source",
+                "review_status"]
 OVERRIDE_COLUMNS = ["cat_final", "cat_final_source", "override_reason", "override_author", "override_date",
                     "override_source"]
 
@@ -196,6 +200,44 @@ def apply_junctions(junctions: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
         out.loc[hit, "junction_type_source"] = "override"
         for col in ("reason", "author", "date", "source"):
             out.loc[hit, f"junction_override_{col}"] = ids.map(approved[col]).to_numpy()
+    return out
+
+
+def lane_overrides(df: pd.DataFrame, all_ids: Iterable[str], max_lanes: int) -> dict:
+    """Validate overrides/lane_overrides.csv and return {segment_id: (lanes, bus_lane)} of the approved rows.
+    lanes_per_dir_final: 1..max_lanes (design_rules L-02) or shared; bus_lane_final: true or false."""
+    if list(df.columns) != LANE_COLUMNS:
+        raise OverrideError(f"lane_overrides.csv: Spalten müssen genau {', '.join(LANE_COLUMNS)} sein "
+                            f"(gefunden: {', '.join(map(str, df.columns))})")
+    known = set(all_ids)
+    allowed = {str(i) for i in range(1, int(max_lanes) + 1)} | {"shared"}
+    errors, out = [], {}
+    counts = df["segment_id"].value_counts()
+    for i, r in enumerate(df.itertuples(index=False), start=2):
+        where = f"Zeile {i} ({r.segment_id or 'ohne segment_id'})"
+        if _blank(r.segment_id):
+            errors.append(f"{where}: segment_id fehlt")
+        elif r.segment_id not in known:
+            errors.append(f"{where}: segment_id verwaist – kein Abschnitt im aktuellen Netz; Korrektur prüfen")
+        if not _blank(r.segment_id) and counts.get(r.segment_id, 0) > 1:
+            errors.append(f"{where}: segment_id doppelt")
+        if str(r.lanes_per_dir_final).strip() not in allowed:
+            errors.append(f"{where}: lanes_per_dir_final {r.lanes_per_dir_final!r} ungültig (erlaubt: {', '.join(sorted(allowed))})")
+        if str(r.bus_lane_final).strip().lower() not in ("true", "false"):
+            errors.append(f"{where}: bus_lane_final {r.bus_lane_final!r} ungültig (erlaubt: true, false)")
+        if _blank(r.reason):
+            errors.append(f"{where}: Begründung fehlt (Spalte reason)")
+        if _blank(r.author):
+            errors.append(f"{where}: author fehlt")
+        if not _is_iso_date(r.date):
+            errors.append(f"{where}: Datum {r.date!r} nicht im Format JJJJ-MM-TT")
+        if r.review_status not in REVIEW_STATUS:
+            errors.append(f"{where}: review_status {r.review_status!r} ungültig (erlaubt: {', '.join(REVIEW_STATUS)})")
+        elif r.review_status == APPLIED_STATUS:
+            lanes = str(r.lanes_per_dir_final).strip()
+            out[r.segment_id] = (lanes if lanes == "shared" else int(lanes), str(r.bus_lane_final).strip().lower() == "true")
+    if errors:
+        raise OverrideError("lane_overrides.csv ungültig:\n  " + "\n  ".join(errors))
     return out
 
 

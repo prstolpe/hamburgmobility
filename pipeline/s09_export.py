@@ -36,7 +36,7 @@ from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, pano
 from pipeline.lib.manifest import REPO_ROOT, load_manifest
 from pipeline.lib.rules import load_cycling_rules, load_design_rules, load_rules
 from pipeline.s04_features import _fmt, _now
-from pipeline.s06_coherence import RULE_LABELS
+from pipeline.s06_coherence import FLAG_LABELS, RULE_LABELS
 from pipeline.s08_discrepancy import reason_text
 
 PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
@@ -177,7 +177,7 @@ def profile(r: pd.Series, ctx: dict) -> dict:
     causes = json.loads(r["disc_causes"]) if isinstance(r["disc_causes"], str) else []
     flags = []
     for e in json.loads(r["coherence_trace"]) if isinstance(r["coherence_trace"], str) else []:
-        label = RULE_LABELS.get(e["id"], e["id"])
+        label = FLAG_LABELS.get(e.get("flag"), RULE_LABELS.get(e["id"], e["id"]))
         if (e["id"], label) not in [(f["rule"], f["text"]) for f in flags]:
             flags.append({"rule": e["id"], "text": label})
     override = r.get("cat_final_source") == "override"
