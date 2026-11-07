@@ -2,8 +2,8 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.11
-  date: 2026-11-06
+  version: 0.1.12
+  date: 2026-11-07
   crs_work: EPSG:25832
 
 sources:
@@ -52,7 +52,9 @@ sources:
     collections_seen: [tempo20zonen, tempo30zonen, verkehrsberuhigte_bereiche, zulaessige_hoechstgeschwindigkeiten, zulaessige_hoechstgeschwindigkeiten_sonderregelung]  # /collections am 2026-10-28
     fetch: {collections: [tempo20zonen, tempo30zonen, verkehrsberuhigte_bereiche, zulaessige_hoechstgeschwindigkeiten, zulaessige_hoechstgeschwindigkeiten_sonderregelung]}
     format: GeoJSON
-    license: unknown  # TODO: Landing Page prüfen
+    license: dl-de/by-2.0  # 2026-11-07: Transparenzportal (zulaessige-hoechstgeschwindigkeiten-hamburg17); die OGC API nennt keine Lizenz
+    license_info: https://suche.transparenz.hamburg.de/dataset/zulaessige-hoechstgeschwindigkeiten-hamburg17
+    attribution: "Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM)"
     as_of: "Abruf 2026-10-27"
     purpose: [actual_speed]
     check_status: verified
@@ -65,7 +67,9 @@ sources:
     collections_seen: [verkehrsmengen_dtv_bab_2019, verkehrsmengen_dtv_hvs_2019, verkehrsmengen_dtvw_bab_2013, verkehrsmengen_dtvw_hvs_2014]  # /collections am 2026-10-28; neuester HVS-Jahrgang 2019
     fetch: {collections: [verkehrsmengen_dtv_hvs_2019, verkehrsmengen_dtv_bab_2019]}
     format: GeoJSON
-    license: unknown  # TODO
+    license: dl-de/by-2.0  # 2026-11-07: Transparenzportal (verkehrsmengen-auf-hauptverkehrsstrassen-in-hamburg45); die OGC API nennt keine Lizenz
+    license_info: https://suche.transparenz.hamburg.de/dataset/verkehrsmengen-auf-hauptverkehrsstrassen-in-hamburg45
+    attribution: "Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM)"
     purpose: [use_dimension, conn_score]
     check_status: verified
 
@@ -302,7 +306,7 @@ sources:
     purpose: [bus_network, bus_trips_weekday, rapid_transit_stops, tram, bus_per_peak_h]
     check_status: verified  # 2026-10-28: ZIP geladen, feed_info.txt gelesen
     fetch: {download: zip}
-    note: "Fahrplanperiode endet 2026-12-12; danach neuen Datensatz im Transparenzportal wählen und URL ersetzen."
+    note: "Fahrplanperiode endet 2026-12-12; danach neuen Datensatz im Transparenzportal wählen und URL ersetzen. 2026-11-07 geprüft: neuester Feed „Oktober 2026 bis Dezember 2026“ (Fpl_20261002, gültig bis 2026-12-13), noch keiner für die Periode ab Dezember."
 
   accidents:
     title: Unfallatlas der Statistischen Ämter

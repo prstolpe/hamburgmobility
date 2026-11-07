@@ -18,6 +18,7 @@
 | Zensus 2022, 100-m-Gitter | dl-de/by-2.0 | © Statistische Ämter des Bundes und der Länder, Zensus 2022 |
 | Radnetz Hamburg (WFS) | dl-de/by-2.0 | Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende |
 | Rad-Zählstellen (Infrarotdetektoren, SensorThings) | dl-de/by-2.0 | Freie und Hansestadt Hamburg |
+| Zulässige Höchstgeschwindigkeiten, Verkehrsmengen HVS 2019 (api.hamburg.de) | dl-de/by-2.0 (laut Transparenzportal; die API nennt keine Lizenz) | Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM) |
 | Weitere (api.hamburg.de u. a.) | je Landing Page prüfen | siehe config/sources.yaml |
 
 Unfalldaten werden nur aggregiert je Abschnitt bzw. je Knotenpunkt veröffentlicht.

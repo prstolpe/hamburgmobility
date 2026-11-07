@@ -1,0 +1,52 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow30_hvs_narrow_dtv_above_gow30",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow30_hvs_narrow_dtv_above_gow30",
+        "description": "HVS ohne Radweg und zu schmal, Schule in 100 m, DTV über dem Profil -> GOW30 über C-G30-02",
+        "expected_category": "GOW30",
+        "expected_rules": [
+          "C-GOW-01",
+          "C-G30-02"
+        ],
+        "boundary": null,
+        "highway": "primary",
+        "access_motor_only": false,
+        "outside_builtup_area": false,
+        "conn_score": 0.8,
+        "in_hvs": true,
+        "dtv_official": 20000.0,
+        "ist_verkehrsberuhigt": false,
+        "pedestrian_zone": false,
+        "override_school_street": false,
+        "schools_or_kitas_within_m": 100.0,
+        "shop_frontage_share": 0.1,
+        "crossing_demand": "low",
+        "separated_cycle_track_present": false,
+        "width_p10_m": 12.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            565200.0,
+            5938400.0
+          ],
+          [
+            565300.0,
+            5938400.0
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -11,18 +11,20 @@ from pydantic import ValidationError
 from config.schema.rules_model import RuleSet
 from pipeline.lib.classify import classify_segment
 from pipeline.lib.rules import DEFAULT_RULES_PATH, load_rules
+from pipeline.lib.rules import all_thresholds
 from pipeline.s05_classify import classification_inputs, classify_frame
 
 RULES = load_rules()
+RULES_THRESHOLDS = {n: t.value for n, t in all_thresholds(RULES).items()}
 
 # A plain urban street with all inputs present (no fallback-dependent outcome except the policy defaults).
 BASE = {
     "highway": "residential", "access_motor_only": False, "outside_builtup_area": False, "conn_score": 0.2,
     "conn_weight_available": 1.0, "in_hvs": False, "ist_verkehrsberuhigt": False, "pedestrian_zone": False,
     "override_school_street": False, "schools_or_kitas_within_m": 600.0, "shop_frontage_share": 0.1,
-    "crossing_demand": "low", "separated_cycle_track_present": True, "width_p10_m": 25.0,
+    "crossing_demand": "low", "separated_cycle_track_present": True, "width_p10_m": 25.0, "dtv_official": None,
 }
-GOW = {**BASE, "highway": "primary", "conn_score": 0.9, "in_hvs": True}
+GOW = {**BASE, "highway": "primary", "conn_score": 0.9, "in_hvs": True, "dtv_official": 8000.0}  # HVS always has a count
 
 
 def run(**changes):
@@ -162,3 +164,15 @@ def test_policy_ids_must_not_clash(raw):
     data["classification_policy"][0]["id"] = "C-SW-01"
     with pytest.raises(ValidationError, match="duplicate"):
         RuleSet.model_validate(data)
+
+
+def test_gow30_cap_on_main_roads_only():
+    # rules.yaml 0.14.0: school trigger only up to gow30_max_dtv on HVS; above -> GOW50 via C-G50-02
+    cap = RULES_THRESHOLDS["gow30_max_dtv"]
+    near_school = {**GOW, "schools_or_kitas_within_m": 50.0}
+    assert classify_segment({**near_school, "dtv_official": cap}, RULES)["cat_proposed"] == "GOW30"
+    above = classify_segment({**near_school, "dtv_official": cap + 1}, RULES)
+    assert above["cat_proposed"] == "GOW50" and step(above, "C-G50-02")["passed"]
+    # not a main road: no count, the cap does not apply
+    off_hvs = classify_segment({**near_school, "in_hvs": False, "dtv_official": None}, RULES)
+    assert off_hvs["cat_proposed"] == "GOW30"

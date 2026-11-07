@@ -3,7 +3,7 @@
 # status: draft | reviewed | approved (Pflicht bei jeder Regel mit id)
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.4.0
+  version: 0.5.0
   date: 2026-11-07
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
@@ -61,7 +61,7 @@ lanes:
     GOW50_bus_carriageway: {value: 7.00, source: CROW_GOW30_2023, source_type: swov_crow}
     GOW30_narrow_profile: {carriageway_range: [5.80, 8.40], max_dtv: 6000, source: CROW_GOW30_2023, source_type: swov_crow}
     GOW30_wide_profile: {carriageway_range: [8.40, 10.70], max_dtv: 10000, source: CROW_GOW30_2023, source_type: swov_crow}
-    ETW30_mixed: {value: 5.80, bus: 6.50, source: CROW_GOW30_2023, source_type: swov_crow}
+    ETW30_mixed: {value: 4.75, bus: 6.50, source: RAST_06, source_type: de_regelwerk, note: 'Begegnung Lkw/Pkw bei verminderter Geschwindigkeit (RASt 06 Bild 17), aus Erinnerung – am Original prüfen. Bis 0.4.0 5,80 m (untere Grenze CROW-GOW30-Profil, nicht für Erschließungsstraßen). Busroute 6,50 m unverändert. Entscheidung prstolpe 2026-11-07 (open_questions 131)'}
     median_min_m: {value: 2.00, source_type: assumption}
 
 # ---------------------------------------------------------------

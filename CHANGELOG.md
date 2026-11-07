@@ -443,3 +443,27 @@
 - J-M-06 `signal_assignment: nearest_junction`: jede Ampel zählt im Ist nur für den nächstgelegenen Knotenpunkt im Umkreis
   N6.signal_radius_m (vorher jeder Knotenpunkt im Umkreis; 1 169 Gehwegüberfahrten hatten Ist „LSA“).
 - Goldene Fälle j15 (J-12) und j16 (J-13).
+
+## rules.yaml 0.14.0, design_rules.yaml 0.5.0, cycling_rules.yaml 0.7.0, plain_language.yaml 0.4.2 – 2026-11-07: Stapel 3
+Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
+- rules.yaml C-G30-01: Auslöser Schule/Kita/Publikumsnutzung auf Hauptverkehrsstraßen nur bis `gow30_max_dtv`
+  10 000 Kfz/24h (CROW_GOW30_2023, gleich requirements.GOW30.profiles.wide.max_dtv; das Schema prüft die Gleichheit).
+  Neu C-G50-02 (nach C-G30-02): Umfeld spräche für 30, DTV darüber → GOW50 mit Hinweis „Tempo-30-Abschnitt vor Ort
+  prüfen“. Fehlt der Platz für einen baulichen Radweg, bleibt GOW30 über C-G30-02. Neues Eingangsmerkmal `dtv_official`
+  (auf Hauptverkehrsstraßen immer vorhanden); goldene Fälle um dtv_official ergänzt (HVS 8 000, sonst 2 000, beides unter
+  der Grenze), neue Fälle 28–30.
+- design_rules.yaml lane_width_m.ETW30_mixed 5,80 → 4,75 m (RASt 06 Bild 17, Begegnung Lkw/Pkw bei verminderter
+  Geschwindigkeit; aus Erinnerung, am Original prüfen). 5,80 m war die Untergrenze des CROW-GOW30-Profils. Bus 6,50 m bleibt.
+- cycling_rules.yaml C-FAC-04: eigene Trasse (own_path) erhält Sollbreite, Untergrenze und Vergleichswerte des
+  Zweirichtungsradwegs. Die Lücke bleibt für own_path „nicht bewertet“ (C-FAC-06 not_assessed_soll).
+- plain_language.yaml: Texte für C-G50-02 und den Grund „zu viel Verkehr für eine Stadtstraße 30“.
+- cycling_rules.yaml routing_impedance.factors.gow50_cycle_lane_or_mixed 2,0 → 1,5 (C-IMP-07, Hauptstraße ohne erfasste
+  Radanlage), an den Zählstellen kalibriert: Probelauf Spearman 0,53 → 0,56, mittlere Abweichung 154 % → 113 %. OSM-Prüfung:
+  83 km Straßen mit Radweg-Tag ohne nutzbare Kante im Radgraphen, davon 3 km im Umkreis 100 m der Zählstellen.
+
+## sources.yaml 0.1.12 – 2026-11-07: Lizenzen Tempo und Verkehrsmengen
+- speed_limits und traffic_volumes: Lizenz dl-de/by-2.0 laut Transparenzportal (die OGC API api.hamburg.de nennt keine),
+  Namensnennung „Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM)“, Link license_info.
+  Die Steckbriefe zeigten bisher „Lizenz in der Quelle nicht angegeben (wird geklärt)“; dtv_official und das Ist-Tempo
+  stehen in Downloads und Steckbriefen, die Namensnennung ist daher nötig.
+- gtfs_hvv: Prüfung 2026-11-07, noch kein Feed für die Fahrplanperiode ab Dezember 2026.

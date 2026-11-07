@@ -2,10 +2,10 @@
 <rect x="0" y="0" width="186" height="242" fill="#ffffff"/>
 <text x="16.0" y="18" font-size="13" font-weight="bold">Grootmoorweg – Wandsbek</text>
 <text x="16.0" y="34" fill="#444">seg_a2d1818f7d7b03ea · ETW_ERF · Rad ERSCHL · Mischverkehr · passt</text>
-<rect x="29.2" y="52.0" width="127.6" height="120.0" fill="#a39a8a" stroke="#ffffff" stroke-width="1" data-element="shared_surface" data-width-m="5.80"><title>Mischfläche 5,80 m</title></rect>
-<text x="93.0" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#222">Mischfläche 5,80</text>
-<text x="29.2" y="206.0" fill="#222">Soll-Bedarf 5,80 m</text>
-<line x1="29.2" y1="192.0" x2="156.8" y2="192.0" stroke="#222" stroke-width="2"/>
+<rect x="40.7" y="52.0" width="104.5" height="120.0" fill="#a39a8a" stroke="#ffffff" stroke-width="1" data-element="shared_surface" data-width-m="4.75"><title>Mischfläche 4,75 m</title></rect>
+<text x="93.0" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#222">Mischfläche 4,75</text>
+<text x="40.7" y="206.0" fill="#222">Soll-Bedarf 4,75 m</text>
+<line x1="40.7" y1="192.0" x2="145.2" y2="192.0" stroke="#222" stroke-width="2"/>
 <line x1="16.0" y1="218.0" x2="169.9" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
 <text x="16.0" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 7,00 m</text>
 </svg>

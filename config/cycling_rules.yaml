@@ -4,7 +4,7 @@
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 # Werte mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen.
 meta:
-  version: 0.6.0
+  version: 0.7.0
   date: 2026-11-07
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
@@ -160,7 +160,7 @@ principle_scoring:
     - id: C-PRI-08
       description: 'P-COM-01 Breite: Ist-Breite aus OSM (eigene Wege und begleitende Radwege: width, sonst est_width; Radweg oder Radfahrstreifen in der Straßenlinie: cycleway:width bzw. cycleway:both|right|left:width; Fahrradstraße: width der Fahrbahn) gegen widths_m.project_target der Ist-Führung und Radnetzkategorie plus intensity_upgrade (Spitzenstunde cyc_peak_h je Richtung bzw. beide Richtungen). Mischverkehr und Führungen ohne Sollbreite: nicht anwendbar; fehlende Breite = unbekannt. Soll = Sollbreite (Score 1)'
       required_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, own_path: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway}
-      own_path_note: 'eigene Radtrassen haben keine Sollbreite in widths_m (docs/open_questions.md); vorläufig wie Zweirichtungsradweg'
+      own_path_note: 'eigene Radtrassen wie Zweirichtungsradweg (Entscheidung prstolpe 2026-11-07, auch C-FAC-04)'
       status: draft
     - id: C-PRI-09
       description: 'P-COM-02 Belag: RSV/HAUPT Anteil der Länge mit geschlossener Decke (smooth_surfaces); BASIS/ERSCHL Anteil der Länge ohne unbefestigte oder grobe Beläge (routing_impedance.ist_mapping.unpaved_surfaces). OSM surface (Radweg in der Straßenlinie: cycleway:surface bzw. cycleway:both|right|left:surface, sonst surface der Straße); fehlender Belag = unbekannt. Soll: geschlossene Decke (Score 1)'
@@ -212,7 +212,10 @@ routing_impedance:
     separated_track_or_cycle_street: 1.0
     etw30_mixed: 1.05
     gow30_cycle_lane: 1.25
-    gow50_cycle_lane_or_mixed: 2.0
+    # 1.5 seit 0.7.0 (vorher 2.0), an den Zählstellen kalibriert (Entscheidung prstolpe 2026-11-07, open_questions Prompt 15):
+    # Probelauf 2026-11-05 Spearman 0,53 -> 0,56, mittlere Abweichung 154 % -> 113 %, innerhalb Faktor 2 41 % -> 52 %.
+    # OSM-Prüfung 2026-11-07: fehlende cycleway-Tags erklären die Abweichung nicht (3 km im Umkreis 100 m der Zählstellen).
+    gow50_cycle_lane_or_mixed: 1.5
     gow50_separated_track: 1.1
     unpaved_or_cobbles: 1.3
     signal_delay_s: 25
@@ -493,12 +496,13 @@ facility_assignment:
       dtv_missing_counts_as_met: true
       status: draft
     - id: C-FAC-04
-      description: 'Soll-Breite = widths_m.project_target der Führung und Radkategorie plus intensity_upgrade (oneway: cyc_peak_h je Richtung, twoway: beide Richtungen), nie unter der Untergrenze (floor). Mischverkehr und eigene Trasse ohne Sollbreite (own_path: docs/open_questions.md). Vergleichswerte für den Steckbrief: DE-Regelmaß und NL-Hauptnetz. Pfade relativ zu widths_m'
-      target_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway}
-      floor: {separated_oneway_both: de.separated_oneway.min, separated_twoway: de.separated_twoway.min, cycle_lane: gow30_cycle_lane.min}
+      description: 'Soll-Breite = widths_m.project_target der Führung und Radkategorie plus intensity_upgrade (oneway: cyc_peak_h je Richtung, twoway: beide Richtungen), nie unter der Untergrenze (floor). Mischverkehr ohne Sollbreite; eigene Trasse wie Zweirichtungsradweg (0.7.0). Vergleichswerte für den Steckbrief: DE-Regelmaß und NL-Hauptnetz. Pfade relativ zu widths_m'
+      target_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway, own_path: separated_twoway}
+      own_path_target_note: 'eigene Trasse wie Zweirichtungsradweg (Entscheidung prstolpe 2026-11-07, open_questions 108)'
+      floor: {separated_oneway_both: de.separated_oneway.min, separated_twoway: de.separated_twoway.min, cycle_lane: gow30_cycle_lane.min, own_path: de.separated_twoway.min}
       floor_note: 'ERA nennt für Radfahrstreifen keinen Mindestwert in widths_m.de; Untergrenze daher CROW gow30_cycle_lane.min'
-      de_reference: {separated_oneway_both: de.separated_oneway.standard, separated_twoway: de.separated_twoway.standard, cycle_lane: de.cycle_lane.standard}
-      nl_reference: {separated_oneway_both: nl.hoofdnet_oneway.standard, separated_twoway: nl.hoofdnet_twoway.standard, cycle_lane: nl.cycle_lane_hoofdnet.standard}
+      de_reference: {separated_oneway_both: de.separated_oneway.standard, separated_twoway: de.separated_twoway.standard, cycle_lane: de.cycle_lane.standard, own_path: de.separated_twoway.standard}
+      nl_reference: {separated_oneway_both: nl.hoofdnet_oneway.standard, separated_twoway: nl.hoofdnet_twoway.standard, cycle_lane: nl.cycle_lane_hoofdnet.standard, own_path: nl.hoofdnet_twoway.standard}
       status: draft
     - id: C-FAC-05
       description: 'Ist-Führung aus OSM je Abschnitt, erste zutreffende Klasse in Reihenfolge von ist_classes: cycle_street (fahrradstrasse_official oder OSM bicycle_road/cyclestreet = yes), track (cycleway*-Wert in track_values oder begleitender Radweg sidepath_of), lane (lane_values), shared_lane (shared_values), sonst no (auch ohne cycleway-Tag). Abbildung auf die Führungsnamen mit to_facility; begleitende Radwege auf beiden Straßenseiten -> separated_oneway_both, nur auf einer Seite und in beiden Richtungen befahrbar -> twoway_track_facility (Abweichung von C-PRI-02, das jeden in beiden Richtungen befahrbaren begleitenden Radweg als Zweirichtungsradweg zählt). Ist-Breite aus OSM wie C-PRI-08'

@@ -62,6 +62,7 @@ def test_referenced_features():
         "access_motor_only",
         "conn_score",
         "crossing_demand",
+        "dtv_official",  # rules.yaml 0.14.0: C-G30-01 cap, C-G50-02
         "highway",
         "in_hvs",
         "ist_verkehrsberuhigt",

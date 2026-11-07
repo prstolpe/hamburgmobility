@@ -53,7 +53,9 @@ def test_width_never_below_floor(out):
     for fac, floor in P.floor.items():
         w = out.loc[out["cycle_facility_soll"] == fac, "cycle_width_soll_m"].dropna()
         assert (w >= floor - 1e-9).all(), fac
-    assert out.loc[out["cycle_facility_soll"].isin(["mixed", "own_path"]), "cycle_width_soll_m"].isna().all()
+    assert out.loc[out["cycle_facility_soll"] == "mixed", "cycle_width_soll_m"].isna().all()
+    # cycling_rules.yaml 0.7.0: own paths get the two-way path width (open question 108)
+    assert out.loc[out["cycle_facility_soll"] == "own_path", "cycle_width_soll_m"].notna().all()
 
 
 def test_every_row_has_a_trace(out):

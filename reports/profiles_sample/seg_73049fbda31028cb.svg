@@ -1,15 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="270" height="242" viewBox="0 0 270 242" font-family="sans-serif" font-size="10">
-<rect x="0" y="0" width="270" height="242" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="246" height="242" viewBox="0 0 246 242" font-family="sans-serif" font-size="10">
+<rect x="0" y="0" width="246" height="242" fill="#ffffff"/>
 <text x="16.0" y="18" font-size="13" font-weight="bold">Birkenweg – Wandsbek</text>
 <text x="16.0" y="34" fill="#444">seg_73049fbda31028cb · ETW30 · Rad ERSCHL · Mischverkehr · passt nicht · Abbau D4|D6</text>
 <rect x="16.0" y="52.0" width="55.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="2.50"><title>Gehweg 2,50 m</title></rect>
 <text transform="translate(43.5,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 2,50</text>
-<rect x="71.0" y="52.0" width="127.6" height="120.0" fill="#555b61" stroke="#ffffff" stroke-width="1" data-element="carriageway" data-width-m="5.80"><title>Fahrbahn 5,80 m</title></rect>
-<text x="134.8" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Fahrbahn 5,80</text>
-<rect x="198.6" y="52.0" width="55.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="2.50"><title>Gehweg 2,50 m</title></rect>
-<text transform="translate(226.1,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 2,50</text>
-<text x="16.0" y="206.0" fill="#222">Soll-Bedarf 10,80 m</text>
-<line x1="16.0" y1="192.0" x2="253.6" y2="192.0" stroke="#222" stroke-width="2"/>
-<line x1="107.4" y1="218.0" x2="162.2" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
-<text x="107.4" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 2,49 m</text>
+<rect x="71.0" y="52.0" width="104.5" height="120.0" fill="#555b61" stroke="#ffffff" stroke-width="1" data-element="carriageway" data-width-m="4.75"><title>Fahrbahn 4,75 m</title></rect>
+<text x="123.2" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Fahrbahn 4,75</text>
+<rect x="175.5" y="52.0" width="55.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="2.50"><title>Gehweg 2,50 m</title></rect>
+<text transform="translate(203.0,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 2,50</text>
+<text x="16.0" y="206.0" fill="#222">Soll-Bedarf 9,75 m</text>
+<line x1="16.0" y1="192.0" x2="230.5" y2="192.0" stroke="#222" stroke-width="2"/>
+<line x1="95.8" y1="218.0" x2="150.7" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
+<text x="95.8" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 2,49 m</text>
 </svg>

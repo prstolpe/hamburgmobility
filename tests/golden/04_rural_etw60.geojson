@@ -23,6 +23,7 @@
         "outside_builtup_area": true,
         "conn_score": 0.3,
         "in_hvs": false,
+        "dtv_official": 2000.0,
         "ist_verkehrsberuhigt": false,
         "pedestrian_zone": false,
         "override_school_street": false,

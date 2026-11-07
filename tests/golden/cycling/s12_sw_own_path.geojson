@@ -20,7 +20,9 @@
         "bus_peak_h_dir": 0,
         "space_fits_preferred": true,
         "expected_facility": "own_path",
-        "expected_width_refs": [],
+        "expected_width_refs": [
+          "widths_m.project_target.separated_twoway.none"
+        ],
         "expected_lanes_per_direction": null,
         "expected_bus_lane": false,
         "expected_rules": [],

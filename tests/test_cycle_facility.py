@@ -127,10 +127,16 @@ def test_width_never_below_floor():
     assert w.width == pytest.approx(CYC.widths_m["de"]["separated_oneway"]["min"])
 
 
-def test_no_width_for_mixed_and_own_path():
-    for f in ("mixed", "own_path", None):
+def test_no_width_for_mixed():
+    for f in ("mixed", None):
         w = fa.target_width(f, "HAUPT", 0, 0, P)
         assert w.width is None
+
+
+def test_own_path_width_as_twoway_path():
+    # cycling_rules.yaml 0.7.0 (open question 108): own paths get the two-way cycle path widths
+    for cat in ("RSV", "HAUPT", "BASIS", "ERSCHL"):
+        assert fa.target_width("own_path", cat, 0, 0, P).width == pytest.approx(TARGET["separated_twoway"][cat])
 
 
 # --- C-FAC-05 Ist -----------------------------------------------------------------------------------------
