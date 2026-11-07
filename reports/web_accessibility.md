@@ -1,6 +1,6 @@
 # Barrierefreiheit der Webseite (axe-core)
 
-Erzeugt: 2026-11-07T12:46:50Z mit `npm --prefix web run a11y` (Playwright, axe-core 4.13.0, Regeln WCAG 2.0/2.1/2.2 A und AA) gegen `vite preview` mit den Daten aus data/out. Geräte: Desktop Chrome und Pixel 7 (emuliert).
+Erzeugt: 2026-11-07T13:32:58Z mit `npm --prefix web run a11y` (Playwright, axe-core 4.13.0, Regeln WCAG 2.0/2.1/2.2 A und AA) gegen `vite preview` mit den Daten aus data/out. Geräte: Desktop Chrome und Pixel 7 (emuliert).
 
 Ergebnis: **0 kritisch, 0 schwerwiegend, 0 mittel, 0 gering.**
 

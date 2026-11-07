@@ -114,8 +114,9 @@ def source_list(manifest: dict, sources: dict) -> list[dict]:
     out = []
     for sid, purpose in PROFILE_SOURCES.items():
         src, man = sources[sid], manifest["sources"].get(sid, {})
-        licence = man.get("license") or src.get("license")
-        if not licence or licence == "unknown":
+        known = [lic for lic in (man.get("license"), src.get("license")) if lic and lic != "unknown"]
+        licence = known[0] if known else None  # sources.yaml wins when the fetch recorded no licence
+        if not licence:
             licence = "Lizenz in der Quelle nicht angegeben (wird geklärt)"
         attribution = src.get("attribution") or ("© OpenStreetMap-Beitragende" if man.get("fallback") else None)
         out.append({"id": sid, "title": src["title"], "purpose": purpose,

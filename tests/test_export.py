@@ -185,3 +185,15 @@ def test_district_slug_is_ascii_and_stable():
     assert district_slug("Hamburg-Mitte") == "hamburg-mitte"
     assert district_slug("Wandsbek") == "wandsbek"
     assert district_slug("Groß Flottbek") == "gross-flottbek"
+
+
+def test_source_list_prefers_checked_licence_over_unknown_in_manifest():
+    # sources.yaml 0.1.12: licence checked in the Transparenzportal, manifest still says unknown from the fetch
+    from pipeline import s09_export as ex
+    sid = next(iter(ex.PROFILE_SOURCES))
+    sources = {sid: {"title": "T", "license": "dl-de/by-2.0", "attribution": "BVM"}}
+    manifest = {"sources": {sid: {"license": "unknown", "retrieved_at": "2026-10-27T00:00:00"}}}
+    for other in ex.PROFILE_SOURCES:
+        sources.setdefault(other, {"title": other})
+    row = next(r for r in ex.source_list(manifest, sources) if r["id"] == sid)
+    assert row["license"] == "dl-de/by-2.0" and row["attribution"] == "BVM"
