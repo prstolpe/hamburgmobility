@@ -121,12 +121,14 @@ def _cycle_cat(leg: dict) -> str:
     return c if c in CYCLE_RANK else NO_CYCLE_CATEGORY
 
 
-def category_pair(legs: list[dict], p: JunctionParams) -> tuple[tuple[str, str] | None, list[str]]:
-    """(through road, second road) after category_alias; flags category_alias, cycle_path_ignored, no_road_leg."""
+def category_pair(legs: list[dict], p: JunctionParams, alias: bool = True) -> tuple[tuple[str, str] | None, list[str]]:
+    """(through road, second road) after category_alias (alias=False: raw categories);
+    flags category_alias, cycle_path_ignored, no_road_leg."""
     flags = []
-    if any(leg["cat"] in p.alias for leg in legs):
+    if alias and any(leg["cat"] in p.alias for leg in legs):
         flags.append("category_alias")
-    roads = sorted((leg_cat(leg, p) for leg in legs if leg["cat"] != CYCLE_PATH and leg_cat(leg, p) in p.rank),
+    cat_of = (lambda leg: leg_cat(leg, p)) if alias else (lambda leg: leg["cat"])
+    roads = sorted((cat_of(leg) for leg in legs if leg["cat"] != CYCLE_PATH and cat_of(leg) in p.rank),
                    key=p.rank.__getitem__)
     has_path = any(leg["cat"] == CYCLE_PATH for leg in legs)
     if not roads:
@@ -205,10 +207,15 @@ def decide(props: dict, p: JunctionParams) -> dict:
     if pair is None:
         return out
     tram = values["tram_present"]
+    raw_pair = category_pair(legs, p, alias=False)[0] if "category_alias" in pflags else None
     conf = expr.HIGH
     for rid in p.order:
         row = p.rows[rid]
-        if not row_matches(row, pair, legs, tram, p):
+        if raw_pair is not None and row_matches(row, raw_pair, legs, tram, p):
+            flags.remove("category_alias")
+            out["pair"] = raw_pair
+            trace[0]["result"] = list(raw_pair)
+        elif not row_matches(row, pair, legs, tram, p):
             trace.append({"id": rid, "passed": False, "result": None, "values": {}})
             continue
         if row.same_as:

@@ -35,7 +35,7 @@ def test_value_domains(out):
     assert set(out["cycle_facility_ist"]) <= FACILITIES
     assert set(out["cycle_osm_ist"]) <= IST_CLASSES
     assert set(out["cycle_cat_final"]) <= CYCLE_CATEGORIES | {NO_CYCLE_CATEGORY}
-    assert set(out["facility_gap"]) <= {"missing", "wrong_type", "too_narrow", "none", "not_assessed"}
+    assert set(out["facility_gap"]) <= {"missing", "wrong_type", "partial", "too_narrow", "none", "not_assessed"}
 
 
 def test_soll_only_with_category(out):

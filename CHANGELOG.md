@@ -415,3 +415,31 @@
   Sensitivität aller assumption-Werte ±delta (V-SENS-01) mit Neuberechnung der Stufen c05–c07 auf gespeicherten
   Eingängen, Stand der Stichproben, offene Fragen und Grenzen. `make export-cycling` = c08 + Export.
 - pipeline/lib/profile.py: öffentlicher Name ELEMENT_COLOURS für die Legendenfarben (Werte unverändert).
+
+## cycling_rules.yaml 0.6.0, plain_language.yaml 0.4.1 – 2026-11-07: dichteabhängige Maschenweite; Radweg statt Fahrradstraße als Teilerfüllung
+- Entscheidung prstolpe 2026-11-07 (docs/open_questions.md, Prompt 16, Delfter Maschenweiten): C-NET-07 `density_scaling`.
+  Höchstweite je Masche = mesh_m.max × √(Referenzdichte / Einwohnerdichte der Masche), nie unter mesh_m.max; Maschen
+  ohne Einwohner werden nicht geteilt. Neue Annahme `reference_density_per_km2` 4 400 (Delft, am Original prüfen),
+  gilt für HAUPT und BASIS. Einwohner aus dem Zensus-2022-Gitter (bereits in sources.yaml). Probelauf: HAUPT 2 027 → 1 862 km,
+  RSV/HAUPT auf ETW30 1 250 → 1 148 km, zu große Maschen nach Verdichtung 836 → 444 (Wald, Hafen, Wasser fallen weg).
+  mesh_m-Werte unverändert. reports/cycle_network.md: Spalte „über mesh_m.max“ zusätzlich zur Höchstweite je Masche.
+- Entscheidung prstolpe 2026-11-07 (docs/open_questions.md, Prompt 18, „Soll Fahrradstraße, Ist baulicher Radweg auf
+  248 km“): Ein baulicher Radweg (beidseitig oder Zweirichtung) an einer ETW30-Hauptroute erfüllt die Soll-Fahrradstraße
+  teilweise. C-PRI-03 `partial.cycle_street` um separated_oneway_both und separated_twoway ergänzt (P-SAF-01 dort
+  partial_score statt 0).
+- C-FAC-06: neue Stufe `partial` zwischen missing und wrong_type: Ist erfüllt das Soll nicht, ist aber Teilerfüllung
+  (C-PRI-03 partial oder Fallback der Zelle). Betrifft auch Zweirichtungs- statt beidseitiger Radwege und Ist = Fallback;
+  beide waren bisher wrong_type mit gap_partial = true. Keine Schwelle geändert.
+- C-FAC-06 `category_check`: Flag `track_on_access_road` („Straßenkategorie prüfen“) bei Radweg an ETW30 mit
+  Soll-Fahrradstraße, weil ein Radweg auf eine verbindende Funktion der Straße hindeutet.
+- Webseite: Legende „Radanlagen Soll/Ist“ mit eigener Linie für „teilweise“; Klartexte in plain_language.yaml.
+
+## design_rules.yaml 0.4.0 – 2026-11-07: Knotenpunkte (Entscheidungen prstolpe, offene Fragen Prompt 20)
+- J-12 neu: eigenständiger Radweg des Radnetzes (RSV/HAUPT/BASIS) quert ETW30 → Radwegfurt mit Vorrang (wie J-08).
+  Vorher 412 Knotenpunkte ohne Zeile (`no_rule`); Radwege des Quartiersnetzes bleiben ohne Soll-Typ. Rechtslage prüfen.
+- J-03 (GOW30+GOW30) mit den DTV-Grenzen von J-01: einstreifiger Kreisverkehr bis roundabout_max_dtv, Turbokreisverkehr
+  bis turbo_max_dtv, darüber LSA (geschützte Kreuzung); ohne Platz weiter eingefärbte Vorfahrt (fallback). Keine neuen Werte.
+- J-13 neu: ETW30+ETW_ERF → Gehwegüberfahrt wie N6. J-M-04: Zeilen mit ETW_ERF prüfen das Paar vor category_alias.
+- J-M-06 `signal_assignment: nearest_junction`: jede Ampel zählt im Ist nur für den nächstgelegenen Knotenpunkt im Umkreis
+  N6.signal_radius_m (vorher jeder Knotenpunkt im Umkreis; 1 169 Gehwegüberfahrten hatten Ist „LSA“).
+- Goldene Fälle j15 (J-12) und j16 (J-13).

@@ -183,7 +183,28 @@ def test_gap_missing_cycle_street_is_partial():
 
 def test_gap_wrong_type_and_fallback():
     assert fa.facility_gap("separated_oneway_both", None, "lane", "cycle_lane", 2.0, 2.0, P) == ("wrong_type", False)
-    assert fa.facility_gap("separated_oneway_both", "cycle_lane", "lane", "cycle_lane", 2.0, 2.0, P) == ("wrong_type", True)
+    # Ist = fallback of the matrix cell is a partial fulfilment (C-FAC-06 stage partial)
+    assert fa.facility_gap("separated_oneway_both", "cycle_lane", "lane", "cycle_lane", 2.0, 2.0, P) == ("partial", True)
+
+
+def test_gap_partial_track_instead_of_cycle_street():
+    # cycling_rules.yaml 0.6.0: a cycle track on an ETW30 main route partly meets the cycle street (open question 125)
+    for ist in ("separated_oneway_both", "separated_twoway"):
+        assert ist in P.partial["cycle_street"]
+        assert fa.facility_gap("cycle_street", None, "track", ist, 2.0, 4.0, P) == ("partial", True)
+
+
+def test_gap_partial_twoway_instead_of_oneway():
+    assert fa.facility_gap("separated_oneway_both", None, "track", "separated_twoway", 3.0, 2.0, P) == ("partial", True)
+
+
+def test_category_check_flag_only_for_track_on_access_road_cycle_street():
+    cats = sorted(P.category_check["cat_final"])
+    assert fa.category_check(cats[0], "cycle_street", "track", P)
+    assert not fa.category_check(cats[0], "cycle_street", "no", P)
+    assert not fa.category_check(cats[0], "mixed", "track", P)
+    assert not fa.category_check("GOW50", "cycle_street", "track", P)
+    assert not fa.category_check(None, "cycle_street", "track", P)
 
 
 def test_gap_too_narrow_and_none():

@@ -3,8 +3,8 @@
 # status: draft | reviewed | approved (Pflicht bei jeder Regel mit id)
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.3.0
-  date: 2026-11-06
+  version: 0.4.0
+  date: 2026-11-07
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
 
@@ -188,13 +188,15 @@ junctions:
     rows:
       - {id: J-01, legs: 'GOW50+GOW50', if: 'entering_dtv_sum <= roundabout_max_dtv and space_radius_m >= roundabout_min_radius and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv and space_radius_m >= roundabout_min_radius', else_then: turbo_roundabout, otherwise: signal_protected, status: draft}
       - {id: J-02, legs: 'GOW50+GOW30', same_as: J-01, status: draft}
-      - {id: J-03, legs: 'GOW30+GOW30', then: roundabout_single_lane_cycle_priority, fallback: priority_flat_coloured, note: 'CROW: bevorzugt Kreisverkehr; sonst Vorfahrtknoten mit eingefärbter Kreuzungsfläche', status: draft}
+      - {id: J-03, legs: 'GOW30+GOW30', if: 'entering_dtv_sum <= roundabout_max_dtv and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv', else_then: turbo_roundabout, otherwise: signal_protected, fallback: priority_flat_coloured, note: 'CROW: bevorzugt Kreisverkehr; sonst Vorfahrtknoten mit eingefärbter Kreuzungsfläche. DTV-Grenzen wie J-01 (Entscheidung prstolpe 2026-11-07, open_questions 134); ohne Platz für den Kreisverkehr eingefärbte Vorfahrt (fallback)', status: draft}
       - {id: J-04, legs: 'GOW50+ETW30', then: continuous_footway_exit, fallback: priority_raised, note: 'Gehwegüberfahrt bzw. Vorfahrt GOW mit Plateau', status: draft}
       - {id: J-05, legs: 'GOW30+ETW30', then: continuous_footway_exit, fallback: priority_raised, source: CROW_GOW30_2023, status: draft}
       - {id: J-06, legs: 'ETW30+ETW30', then: equal_right_before_left, source: SWOV_ROT_2022, status: draft}
       - {id: J-07, legs: 'ETW30(cycle_street)+ETW30', then: priority_raised, note: 'Fahrradstraße hat Vorfahrt', source: NL_MUNI_CASTRICUM_2020, status: draft}
       - {id: J-08, legs: 'cycle_path+GOW30', then: cycle_crossing_priority, note: 'Radweg mit Vorrang, aufgepflastert, rot', status: draft}
       - {id: J-09, legs: 'cycle_path(RSV|HAUPT)+GOW50', if: 'entering_dtv_sum > grade_sep_min_dtv', then: grade_separated_cycle, otherwise: cycle_crossing_signal, note: 'Tunnel/Brücke bei hoher Belastung (DCE)', status: draft}
+      - {id: J-12, legs: 'cycle_path(RSV|HAUPT|BASIS)+ETW30', then: cycle_crossing_priority, note: 'eigenständiger Radweg des Radnetzes quert Erschließungsstraße: Radwegfurt mit Vorrang wie J-08 (Entscheidung prstolpe 2026-11-07, open_questions 133); Rechtslage (Vorrang selbständiger Radweg, StVO) prüfen', source: NL_MUNI_CASTRICUM_2020, status: draft}
+      - {id: J-13, legs: 'ETW30+ETW_ERF', then: continuous_footway_exit, note: 'Erschließungsstraße an Fußgängerzone bzw. verkehrsberuhigtem Bereich: Gehwegüberfahrt wie N6 (rules.yaml); prüft die Kategorie vor category_alias (Entscheidung prstolpe 2026-11-07, open_questions 135)', status: draft}
       - {id: J-10, legs: 'any+SW', then: grade_separated_cycle, status: draft}
       - {id: J-11, legs: 'any with tram', then: signal_protected, status: draft}
   thresholds:
@@ -245,7 +247,7 @@ junctions:
       search_radius_m: {value: 40, unit: m, source_type: assumption, note: 'doppelter roundabout_min_radius, damit ein Kreisverkehr um den Knoten Platz finden kann'}
       tolerance_m: {value: 0.5, unit: m, source_type: assumption, note: 'Rechengenauigkeit des einbeschriebenen Kreises'}
     - id: J-M-04
-      rule: 'Kategoriepaar wie N6 (rules.yaml): höchste Straßenkategorie (bis zu zwei ihrer Arme = durchgehender Zug) und höchste der übrigen Arme; Rang nach N6.category_rank. Bleibt neben dem Zug keine Straße, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Kategorien ohne eigene Zeile der Tabelle werden über category_alias abgebildet (Flag category_alias).'
+      rule: 'Kategoriepaar wie N6 (rules.yaml): höchste Straßenkategorie (bis zu zwei ihrer Arme = durchgehender Zug) und höchste der übrigen Arme; Rang nach N6.category_rank. Bleibt neben dem Zug keine Straße, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Zeilen mit ETW_ERF (J-13) prüfen das Paar vor category_alias, alle übrigen danach. Kategorien ohne eigene Zeile der Tabelle werden über category_alias abgebildet (Flag category_alias).'
       source: [SWOV_FS_2023]
       source_type: assumption
       status: draft
@@ -255,13 +257,15 @@ junctions:
       rule: 'Zeilen der Entscheidungstabelle in evaluation_order prüfen; die erste Zeile, deren legs passen, entscheidet. same_as übernimmt Bedingungen und Typen der genannten Zeile. Ist eine Bedingung wegen fehlender Werte unbekannt, gilt on_unknown (Flag condition_unknown, confidence low).'
       source_type: assumption
       status: draft
-      evaluation_order: [J-10, J-11, J-09, J-08, J-07, J-01, J-02, J-03, J-04, J-05, J-06]
+      evaluation_order: [J-10, J-11, J-09, J-08, J-12, J-07, J-13, J-01, J-02, J-03, J-04, J-05, J-06]
       on_unknown: then
       fallback_if: {types: [roundabout_single_lane_cycle_priority, roundabout_single_lane_cycle_yield, turbo_roundabout], condition: 'space_radius_m < roundabout_min_radius'}
       fallback_note: 'fallback einer Zeile gilt, wenn then ein Kreisverkehr ist und der Platz nicht reicht; sonst bleibt fallback als Alternative im rule_trace'
       note: 'on_unknown then = sicherster Typ der Zeile (Kreisverkehr) als Vorschlag, bis Werte vorliegen'
     - id: J-M-06
-      rule: 'junction_type_ist aus OSM: junction=roundabout/circular an einem Arm oder inneren Abschnitt -> roundabout; highway=traffic_signals im Umkreis N6.signal_radius_m eines Knotens -> signal (mit traffic_calming=table -> signal_plateau); nur table -> plateau; sonst none_mapped. Handlungsbedarf, wenn Ist nicht in ist_check[Soll].ok und nicht in not_checkable liegt.'
+      rule: 'junction_type_ist aus OSM: junction=roundabout/circular an einem Arm oder inneren Abschnitt -> roundabout; highway=traffic_signals im Umkreis N6.signal_radius_m eines Knotens -> signal (jede Ampel zählt nur für den nächstgelegenen Knotenpunkt, signal_assignment) (mit traffic_calming=table -> signal_plateau); nur table -> plateau; sonst none_mapped. Handlungsbedarf, wenn Ist nicht in ist_check[Soll].ok und nicht in not_checkable liegt.'
+      signal_assignment: nearest_junction
+      signal_assignment_note: 'Entscheidung prstolpe 2026-11-07 (open_questions 137): sonst erhalten Nebenknoten neben einer LSA-Kreuzung deren Ampel (1 169 Gehwegüberfahrten mit Ist LSA). any_within = alte Lesart'
       source_type: assumption
       status: draft
       ist_check:

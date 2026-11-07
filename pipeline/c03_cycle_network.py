@@ -96,6 +96,26 @@ def _tags(row) -> dict:
     return t if isinstance(t, dict) else {}
 
 
+def mesh_limits(p: cn.NetworkParams) -> dict[str, cn.MeshLimit]:
+    """Allowed mesh side per level (C-NET-07); density_scaling uses the Zensus 2022 100-m grid (cell centres)."""
+    out = {lvl: cn.MeshLimit(p.mesh_max_m[lvl]) for lvl in ("HAUPT", "BASIS")}
+    if p.mesh_ref_density is None or not p.mesh_density_levels:
+        return out
+    pop = gpd.read_parquet(RAW / "population_grid__100m.parquet").to_crs(WORK_CRS)
+    c = pop.geometry.centroid
+    xy, residents = np.c_[c.x, c.y], pop["population"].to_numpy(dtype="float64")
+    for lvl in p.mesh_density_levels:
+        out[lvl] = cn.MeshLimit(p.mesh_max_m[lvl], xy, residents, p.mesh_ref_density)
+    return out
+
+
+def _scaled(p: cn.NetworkParams, lvl: str) -> str:
+    if p.mesh_ref_density is None or lvl not in p.mesh_density_levels:
+        return ""
+    return (f" × √({_fmt(p.mesh_ref_density)} Einwohner/km² / Einwohnerdichte der Masche), nie darunter; Maschen ohne "
+            "Einwohner nicht (C-NET-07 density_scaling)")
+
+
 def read_barriers(pbf, p: cn.NetworkParams, area) -> np.ndarray:
     """C-NET-07 barrier lines (railway, waterway) from OSM, without tunnels, simplified, inside the area."""
     from pyrosm import OSM
@@ -343,14 +363,14 @@ def write_report(ctx: dict) -> None:
         f"und ≥ {p.rsv_min_length_m / 1000:.0f} km Länge; übrige Korridorkanten HAUPT.",
         f"5. **HAUPT-Verdichtung (C-NET-07/08):** Maschen des RSV+HAUPT-Netzes mit Barrieren (Bahn, Flüsse/Kanäle) und Landesgrenze; "
         f"Seite des flächengleichen Quadrats ohne Wasser, Wald, Parks, Friedhöfe, Flughafen (≥ {_fmt(p.exclude_area_min_m2 / 1e4)} ha); "
-        f"Maschen > {p.mesh_max_m['HAUPT']:.0f} m werden geteilt, ab der Kante mit der höchsten Nachfrage im Kernbereich "
+        f"Maschen > {p.mesh_max_m['HAUPT']:.0f} m{_scaled(p, 'HAUPT')} werden geteilt, ab der Kante mit der höchsten Nachfrage im Kernbereich "
         f"(Abstand zum Maschenrand ≥ {p.seed_core_share} × größter Abstand).",
         f"6. **Parallelregel (C-NET-10, P-ATT-03):** Läufe ≥ {p.patt_min_run_m:.0f} m an Straßen mit DTV > {_fmt(p.patt_dtv)}; "
         f"Alternative über Kanten im Puffer {p.patt_parallel_max_m:.0f} m, höchstens {p.patt_max_on_main_m:.0f} m an der Hauptstraße "
         f"(Anschluss/Querung), Umwegfaktor ≤ P-DIR-01 (RSV {p.detour_max['RSV']}, HAUPT {p.detour_max['HAUPT']}); "
         "die Hauptstraße bleibt BASIS. Danach zweite HAUPT-Verdichtung ohne diese Hauptstraßen.",
         f"7. **BASIS (C-NET-09/08):** Schulen und Nahversorgung ({', '.join(p.nahversorgung_shops)}) weiter als "
-        f"{p.binding_radius_m:.0f} m vom Netz angebunden; dann Maschen > {p.mesh_max_m['BASIS']:.0f} m geteilt.",
+        f"{p.binding_radius_m:.0f} m vom Netz angebunden; dann Maschen > {p.mesh_max_m['BASIS']:.0f} m{_scaled(p, 'BASIS')} geteilt.",
         f"8. **Kontinuität (C-NET-11):** niedrigere Läufe bis {p.continuity_max_gap_m:.0f} m zwischen zwei gleichen höheren Läufen angehoben.",
         "9. **ERSCHL (C-NET-12):** alle übrigen Kanten. **Overrides:** overrides/cycle_network_overrides.csv, nur approved.",
         "",
@@ -383,12 +403,13 @@ def write_report(ctx: dict) -> None:
               "Anteile je Bezirk (Kantenlänge):", ""]
     lines += district_breakdown(out, "cycle_cat_final", list(reversed(cn.CATEGORY_ORDER)))
     lines += ["", "### Maschenweite (P-COH-01)", "",
-              "| Ebene | Höchstweite m | Maschen geprüft | Median Seite m | 90-%-Quantil m | größte m | über Höchstweite | in ländl. Stadtteilen nicht geprüft |",
-              "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
+              "| Ebene | Höchstweite m | Maschen geprüft | Median Seite m | 90-%-Quantil m | größte m | über Höchstweite | "
+              "über mesh_m.max | in ländl. Stadtteilen nicht geprüft |",
+              "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
     for lvl in ("HAUPT", "BASIS"):
         s = ctx["mesh_stats"][lvl]
         lines.append(f"| {lvl} + höher | {p.mesh_max_m[lvl]:.0f} | {_fmt(s['n'])} | {_fmt(s['median'])} | {_fmt(s['p90'])} | {_fmt(s['max'])} | "
-                     f"{s['over']} | {s['skipped']} |")
+                     f"{s['over']} | {s['over_base']} | {s['skipped']} |")
     lines += ["", "Verdichtungsrunden:", "", "| Ebene | Runde | Maschen zu groß | neue Routen |", "| --- | ---: | ---: | ---: |"]
     for lvl, rounds in ctx["rounds"].items():
         for r in rounds:
@@ -586,8 +607,9 @@ def main() -> int:
     # C-NET-07/08 HAUPT
     barriers = read_barriers(pbf, p, hamburg)
     exclude = read_exclude_areas(pbf, p, hamburg)
+    limits = mesh_limits(p)
     ranks = edge_ranks(routes, n)
-    res_h1 = cn.densify(inp, ranks >= H, p.mesh_max_m["HAUPT"], barriers, hamburg, exclude, rural, p)
+    res_h1 = cn.densify(inp, ranks >= H, limits["HAUPT"], barriers, hamburg, exclude, rural, p)
     routes += [Route("mesh_haupt", r, np.full(len(r), H)) for r in res_h1.routes]
     print(f"cycle-network: HAUPT densify {len(res_h1.routes)} routes, {len(res_h1.gaps)} gaps ({time.perf_counter() - t_start:.0f} s)")
 
@@ -601,7 +623,7 @@ def main() -> int:
     patt_main, patt = parallel_rule(routes, inp, high, p, labels)
     ranks = edge_ranks(routes, n)
     patt_basis = patt_main & (ranks < H)
-    res_h2 = cn.densify(inp, ranks >= H, p.mesh_max_m["HAUPT"], barriers, hamburg, exclude, rural, p, blocked=patt_basis)
+    res_h2 = cn.densify(inp, ranks >= H, limits["HAUPT"], barriers, hamburg, exclude, rural, p, blocked=patt_basis)
     routes += [Route("mesh_haupt", r, np.full(len(r), H)) for r in res_h2.routes]
     ranks = edge_ranks(routes, n)
     ranks[patt_basis & (ranks < B)] = B
@@ -618,7 +640,7 @@ def main() -> int:
     routes += [Route("attach", r, np.full(len(r), B)) for r in attach]
     ranks = edge_ranks(routes, n)
     ranks[patt_basis & (ranks < B)] = B
-    res_b = cn.densify(inp, ranks >= B, p.mesh_max_m["BASIS"], barriers, hamburg, exclude, rural, p)
+    res_b = cn.densify(inp, ranks >= B, limits["BASIS"], barriers, hamburg, exclude, rural, p)
     routes += [Route("mesh_basis", r, np.full(len(r), B)) for r in res_b.routes]
     ranks = edge_ranks(routes, n)
     ranks[patt_basis & (ranks < B)] = B
@@ -719,8 +741,7 @@ def main() -> int:
     out["label"] = labels
 
     # gaps
-    gap_rows = [{**g, "level": "HAUPT", "max_m": p.mesh_max_m["HAUPT"]} for g in res_h2.gaps] + \
-               [{**g, "level": "BASIS", "max_m": p.mesh_max_m["BASIS"]} for g in res_b.gaps]
+    gap_rows = [{**g, "level": "HAUPT"} for g in res_h2.gaps] + [{**g, "level": "BASIS"} for g in res_b.gaps]
     gaps = gpd.GeoDataFrame(gap_rows, geometry="geometry", crs=WORK_CRS) if gap_rows else \
         gpd.GeoDataFrame({"side_m": [], "reason": [], "level": [], "max_m": []}, geometry=[], crs=WORK_CRS)
     if len(gaps):
@@ -738,10 +759,12 @@ def main() -> int:
         rural_f = shapely.within(shapely.point_on_surface(faces), rural)
         raw = np.sqrt(shapely.area(faces))
         side = cn.mesh_side(faces, exclude, only=raw > p.mesh_max_m[lvl])
+        over_f = side > cn.face_limits(faces, side, limits[lvl])
         chk = side[~rural_f] if len(faces) else np.array([np.nan])
         mesh_stats[lvl] = {"n": int((~rural_f).sum()), "median": float(np.nanmedian(chk)), "p90": float(np.nanquantile(chk, 0.9)),
-                           "max": float(np.nanmax(chk)), "over": int((chk > p.mesh_max_m[lvl]).sum()),
-                           "skipped": int(((side > p.mesh_max_m[lvl]) & rural_f).sum())}
+                           "max": float(np.nanmax(chk)), "over": int((over_f & ~rural_f).sum()),
+                           "over_base": int((chk > p.mesh_max_m[lvl]).sum()),
+                           "skipped": int((over_f & rural_f).sum())}
     comps = {c: components(inp, final_rank >= cn.RANK[c]) for c in ("RSV", "HAUPT", "BASIS")}
     hr_geoms = geoms[final_rank >= H]
     hr_zone = shapely.buffer(hr_geoms, p.coverage_m)

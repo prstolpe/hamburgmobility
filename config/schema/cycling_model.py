@@ -44,7 +44,7 @@ FACILITY_RULE_IDS = {f"C-FAC-0{i}" for i in range(1, 8)}
 IST_CLASSES = {"cycle_street", "track", "lane", "shared_lane", "no"}
 # Flags of pipeline/lib/facility.py that C-FAC-07 may name.
 FACILITY_FLAGS = {"dtv_unknown", "fallback_check_p19", "cycle_street_blocked", "mixed_over_s04", "no_target_width",
-                  "ist_width_unknown"}
+                  "ist_width_unknown", "track_on_access_road"}
 
 
 class _Strict(BaseModel):
@@ -150,6 +150,9 @@ def _check_network_design(section: dict, impedance: dict) -> None:
     bad = sorted(k for k, v in soll.items() if v not in factors)
     if bad:
         raise ValueError(f"network_design C-NET-03: soll_factors refer to unknown factors for {bad}")
+    ds = rules["C-NET-07"].get("density_scaling")
+    if ds is not None and (not set(ds["levels"]) <= {"HAUPT", "BASIS"} or ds["reference_density_per_km2"]["value"] <= 0):
+        raise ValueError("network_design C-NET-07: density_scaling needs levels HAUPT/BASIS and a positive reference density")
     if not 0 <= rules["C-NET-04"]["max_reduction"] < 1:
         raise ValueError("network_design C-NET-04: max_reduction must be in [0, 1)")
     c05 = rules["C-NET-05"]
@@ -250,6 +253,9 @@ def _check_facility_assignment(section: dict, widths: dict) -> None:
         raise ValueError("facility_assignment C-FAC-06: missing_classes must be Ist classes")
     if not set(c06["not_assessed_soll"]) <= FACILITIES:
         raise ValueError("facility_assignment C-FAC-06: not_assessed_soll must be facilities")
+    chk = c06["category_check"]
+    if not set(chk["soll"]) <= FACILITIES or not set(chk["ist_classes"]) <= IST_CLASSES or chk["flag"] not in FACILITY_FLAGS:
+        raise ValueError("facility_assignment C-FAC-06: category_check needs facilities, Ist classes and a known flag")
     unknown = set(rules["C-FAC-07"]["lowers_confidence"]) - FACILITY_FLAGS
     if unknown:
         raise ValueError(f"facility_assignment C-FAC-07: unknown flags {sorted(unknown)}")

@@ -5,7 +5,7 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.4.0
+  version: 0.4.1
   date: 2026-11-07
 
 categories:
@@ -186,6 +186,7 @@ cycling:
     none: "Ist passt zum Soll"
     missing: "Radanlage fehlt"
     wrong_type: "andere Radanlage als im Soll"
+    partial: "Radanlage erfüllt das Soll teilweise"
     too_narrow: "Radanlage zu schmal"
     not_assessed: "nicht bewertet"
   fit:
@@ -221,6 +222,7 @@ cycling:
     mixed_over_s04: "Mischverkehr bei zu viel Kfz-Verkehr – prüfen"
     no_target_width: "keine Sollbreite für diese Kombination"
     ist_width_unknown: "heutige Breite in OpenStreetMap nicht erfasst"
+    track_on_access_road: "Radweg an einer Erschließungsstraße – Straßenkategorie prüfen"
   profile_flags:
     width_unknown: "Straßenraumbreite nicht gemessen"
     no_profile_rules: "für diese Straßenkategorie kein Soll-Profil"
@@ -287,7 +289,7 @@ cycling:
       cycle_facility_soll: "Soll-Führungsform nach Trennungsmatrix (Prompt 18)"
       cycle_facility_final: "Soll-Führungsform nach Raumprüfung, ggf. Fallback (Prompt 19)"
       cycle_facility_ist: "Ist-Führungsform aus OpenStreetMap"
-      facility_gap: "Lücke Soll/Ist: none, missing, wrong_type, too_narrow, not_assessed"
+      facility_gap: "Lücke Soll/Ist: none, missing, partial, wrong_type, too_narrow, not_assessed"
       cycle_width_final_m: "Soll-Breite der Radanlage in Metern"
       cycle_width_de_m: "Vergleich: deutsches Regelmaß (ERA) in Metern"
       cycle_width_nl_m: "Vergleich: niederländisches Hauptnetz in Metern"

@@ -83,6 +83,9 @@ pipeline/c03_cycle_network.py, Regeln C-NET-01…13 in `network_design` (alle An
   Punkten und der Innenstadt verbunden. Bezirks- und Stadtteilzentren fehlen noch (kein Datensatz) [B].
 - **Hierarchie:** RSV auf Korridorläufen ab 2.000 Rad/Werktag und 5 km [F]; HAUPT und BASIS durch Teilen zu großer Maschen
   (Seite des flächengleichen Quadrats, Barrieren Bahn und Gewässer, ohne Wald-, Wasser- und Parkflächen) [B];
+  Höchstweite dichteabhängig: Delfter Wert, wo die Masche mindestens so dicht bewohnt ist wie Delft (Annahme
+  4.400 Einwohner/km²), sonst weiter, sodass je Masche gleich viele Einwohner liegen; Maschen ohne Einwohner werden
+  nicht geteilt (C-NET-07 density_scaling, cycling_rules.yaml 0.6.0);
   Schulen und Nahversorgung an das BASIS-Netz angebunden; ERSCHL für alle übrigen Kanten.
 - **P-ATT-03 und Kontinuität:** Parallelroute statt Hauptstraße, wenn sie im 200-m-Puffer den Umwegfaktor einhält;
   kurze Kategorielücken entlang einer Route werden geschlossen [B].

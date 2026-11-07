@@ -1,0 +1,55 @@
+{
+  "type": "FeatureCollection",
+  "name": "cycle_path_etw30_priority",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "cycle_path_etw30_priority",
+        "description": "Eigenständiger Radweg (HAUPT) x ETW30 -> Radwegfurt mit Vorrang (J-12, design_rules 0.4.0)",
+        "legs": [
+          {
+            "cat": "cycle_path",
+            "cycle_cat": "HAUPT",
+            "facility": "own_path"
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 1500,
+        "space_radius_m": 10,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "cycle_crossing_priority",
+        "expected_rules": [
+          "J-12"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-03"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          567400.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

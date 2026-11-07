@@ -51,6 +51,8 @@ class NetworkParams:
     rsv_min_length_m: float
     rsv_gap_max_m: float
     mesh_max_m: dict
+    mesh_ref_density: float | None     # residents per km² (C-NET-07 density_scaling), None = constant mesh
+    mesh_density_levels: tuple
     barrier_lines: dict
     barrier_exclude_tunnel: bool
     exclude_areas: dict
@@ -100,6 +102,9 @@ class NetworkParams:
             rsv_min_length_m=float(cats["RSV"]["min_route_length_km"]["value"]) * 1000,
             rsv_gap_max_m=float(r["C-NET-06"]["gap_max_m"]),
             mesh_max_m={c: float(cats[c]["mesh_m"]["range"][1]) for c in ("HAUPT", "BASIS")},
+            mesh_ref_density=(float(r["C-NET-07"]["density_scaling"]["reference_density_per_km2"]["value"])
+                              if "density_scaling" in r["C-NET-07"] else None),
+            mesh_density_levels=tuple(r["C-NET-07"].get("density_scaling", {}).get("levels", ())),
             barrier_lines={k: tuple(v) for k, v in r["C-NET-07"]["barrier_lines"].items()},
             barrier_exclude_tunnel=bool(r["C-NET-07"]["barrier_exclude_tunnel"]),
             exclude_areas={k: tuple(v) for k, v in r["C-NET-07"]["exclude_areas"].items()},
@@ -507,20 +512,58 @@ def _face_key(face) -> tuple:
     return round(shapely.area(face)), round(c.x), round(c.y)
 
 
+@dataclass
+class MeshLimit:
+    """Largest allowed mesh side (C-NET-07). Without a reference density it is mesh_m.max everywhere; with one,
+    mesh_m.max x sqrt(reference / residents per km² of the face), never below mesh_m.max (density_scaling)."""
+    base: float
+    pop_xy: np.ndarray | None = None
+    pop: np.ndarray | None = None
+    ref_density: float | None = None
+
+    def limits(self, faces: np.ndarray, sides: np.ndarray) -> np.ndarray:
+        out = np.full(len(faces), self.base, dtype="float64")
+        if self.ref_density is None or len(faces) == 0:
+            return out
+        residents = np.zeros(len(faces))
+        if self.pop is not None and len(self.pop):
+            fi, pi = shapely.STRtree(shapely.points(self.pop_xy)).query(np.asarray(faces, dtype=object), predicate="contains")
+            np.add.at(residents, fi, self.pop[pi])
+        density = residents / np.maximum(np.asarray(sides, dtype="float64") ** 2, 1.0) * 1e6
+        with np.errstate(divide="ignore"):
+            scaled = self.base * np.sqrt(self.ref_density / density)
+        return np.maximum(scaled, self.base)
+
+
+def as_limit(max_side) -> MeshLimit:
+    return max_side if isinstance(max_side, MeshLimit) else MeshLimit(float(max_side))
+
+
+def face_limits(faces, sides, max_side) -> np.ndarray:
+    """Allowed side per face; faces at or below mesh_m.max keep it (no density needed)."""
+    lim = as_limit(max_side)
+    out = np.full(len(faces), lim.base, dtype="float64")
+    cand = np.asarray(sides) > lim.base
+    if cand.any():
+        out[cand] = lim.limits(np.asarray(faces, dtype=object)[cand], np.asarray(sides)[cand])
+    return out
+
+
 def oversized_faces(inp: DesignInputs, net_mask, max_side, barriers, boundary, exclude, skip_area):
-    """Faces of the network with side > max_side (C-NET-07): (faces, sides) plus the number of faces skipped
-    because they lie in skip_area (rural districts)."""
+    """Faces of the network with side > their limit (C-NET-07; max_side is a number or a MeshLimit):
+    (faces, sides, skipped, limits); skipped = faces over the limit in skip_area (rural districts)."""
     faces = mesh_faces(inp.geom[net_mask], barriers, boundary)
     raw = np.sqrt(shapely.area(faces)) if len(faces) else np.array([])
-    cand = raw > max_side
+    cand = raw > as_limit(max_side).base
     side = mesh_side(faces, exclude, only=cand) if exclude is not None else raw
-    over = side > max_side
+    limit = face_limits(faces, side, max_side)
+    over = side > limit
     skipped = 0
     if skip_area is not None and over.any():
         rural = shapely.within(shapely.point_on_surface(faces), skip_area)
         skipped = int((over & rural).sum())
         over &= ~rural
-    return faces[over], side[over], skipped
+    return faces[over], side[over], skipped, limit[over]
 
 
 BOUNDARY_TOL_M = 0.5  # a network node lies on a face's outer ring within this distance (geometry, not a rule)
@@ -593,7 +636,7 @@ def densify(inp: DesignInputs, net_mask: np.ndarray, max_side: float, barriers, 
     res = DensifyResult(net)
     failed: dict[tuple, str] = {}
     for rnd in range(1, p.max_rounds + 1):
-        faces, _, _ = oversized_faces(inp, net, max_side, barriers, boundary, exclude, skip_area)
+        faces, _, _, _ = oversized_faces(inp, net, max_side, barriers, boundary, exclude, skip_area)
         if len(faces) == 0:
             break
         net_ids = inp.net_nodes(net)
@@ -616,9 +659,10 @@ def densify(inp: DesignInputs, net_mask: np.ndarray, max_side: float, barriers, 
         if added == 0:
             break
         net |= new
-    faces, sides, res.skipped_faces = oversized_faces(inp, net, max_side, barriers, boundary, exclude, skip_area)
-    for face, side in zip(faces, sides):
-        res.gaps.append({"geometry": face, "side_m": float(side), "reason": failed.get(_face_key(face), GAP_MAX_ROUNDS)})
+    faces, sides, res.skipped_faces, limits = oversized_faces(inp, net, max_side, barriers, boundary, exclude, skip_area)
+    for face, side, lim in zip(faces, sides, limits):
+        res.gaps.append({"geometry": face, "side_m": float(side), "max_m": float(lim),
+                         "reason": failed.get(_face_key(face), GAP_MAX_ROUNDS)})
     res.net_mask = net
     return res
 

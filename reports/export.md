@@ -1,6 +1,6 @@
 # Export – Stufe 9
 
-Erzeugt: 2026-11-07T09:50:02+00:00 von `pipeline/s09_export.py`, Version 0.13.0+2026-10-28. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-07T12:32:25+00:00 von `pipeline/s09_export.py`, Version 0.13.0+2026-10-28. Nicht amtlicher Entwurf.
 
 ## Prüfungen
 
@@ -14,10 +14,10 @@ Erzeugt: 2026-11-07T09:50:02+00:00 von `pipeline/s09_export.py`, Version 0.13.0+
 | keine Einzelunfälle oder Rohspuren | ok | Spalten aus PUBLIC_COLUMNS |
 | Steckbrief je Abschnitt | ok | 33712 Dateien |
 | Begründung je Abschnitt | ok | 0 ohne Klartext |
-| Steckbrief je Knotenpunkt | ok | 16285 Dateien |
+| Steckbrief je Knotenpunkt | ok | 16261 Dateien |
 | Radnetz-Block je Abschnitt | ok | 33712/33712 Abschnitte |
 | Radnetz-Kacheln | ok | tiles/cycling.pmtiles, tiles/junctions.pmtiles |
-| Radnetz-Robustheit aus c08 übernommen | ok | 52811 Einträge |
+| Radnetz-Robustheit aus c08 übernommen | ok | 52787 Einträge |
 | Radnetz-Downloads ohne Rohspuren | ok | Spalten aus plain_language.yaml cycling.columns |
 | Robustheit aus make validate übernommen | ok | 33712/33712 Abschnitte, rules.yaml 0.13.0 |
 
@@ -29,7 +29,7 @@ Erzeugt: 2026-11-07T09:50:02+00:00 von `pipeline/s09_export.py`, Version 0.13.0+
 - Steckbriefe: 33 712 Dateien, zusammen 221.8 MB
 - Robustheit (make validate, 500 Läufe): 2 124 Abschnitte „unsicher“ (223.9 km)
 
-- Radnetz (Prompt 21): 33 712 Abschnitte mit Radnetz-Block, 16 285 Knoten-Steckbriefe; Kacheln tiles/cycling.pmtiles und tiles/junctions.pmtiles werden erst geladen, wenn eine Radnetz-Ebene gewählt ist
+- Radnetz (Prompt 21): 33 712 Abschnitte mit Radnetz-Block, 16 261 Knoten-Steckbriefe; Kacheln tiles/cycling.pmtiles und tiles/junctions.pmtiles werden erst geladen, wenn eine Radnetz-Ebene gewählt ist
 
 | Bezirk | Abschnitte | km |
 | --- | ---: | ---: |
@@ -52,13 +52,13 @@ Erzeugt: 2026-11-07T09:50:02+00:00 von `pipeline/s09_export.py`, Version 0.13.0+
 | `data/out/changelog.md` | 0.04 MB |
 | `data/out/districts.geojson` | 0.19 MB |
 | `data/out/downloads/cycle_network.parquet` | 9.37 MB |
-| `data/out/downloads/cycle_segments.geojson` | 36.25 MB |
+| `data/out/downloads/cycle_segments.geojson` | 36.23 MB |
 | `data/out/downloads/cycle_segments.parquet` | 6.01 MB |
 | `data/out/downloads/cycling_rules.yaml` | 0.05 MB |
 | `data/out/downloads/datenbeschreibung.md` | 0.01 MB |
 | `data/out/downloads/design_rules.yaml` | 0.03 MB |
 | `data/out/downloads/junctions.geojson` | 12.62 MB |
-| `data/out/downloads/junctions.parquet` | 0.97 MB |
+| `data/out/downloads/junctions.parquet` | 0.96 MB |
 | `data/out/downloads/overrides.csv` | 0.00 MB |
 | `data/out/downloads/rules.yaml` | 0.05 MB |
 | `data/out/downloads/segments.csv` | 13.74 MB |
@@ -68,11 +68,11 @@ Erzeugt: 2026-11-07T09:50:02+00:00 von `pipeline/s09_export.py`, Version 0.13.0+
 | `data/out/meta.json` | 0.01 MB |
 | `data/out/rural_excluded.geojson` | 0.13 MB |
 | `data/out/search.json` | 1.67 MB |
-| `data/out/tiles/cycling.pmtiles` | 27.09 MB |
-| `data/out/tiles/junctions.pmtiles` | 3.11 MB |
+| `data/out/tiles/cycling.pmtiles` | 27.08 MB |
+| `data/out/tiles/junctions.pmtiles` | 3.10 MB |
 | `data/out/tiles/segments.pmtiles` | 13.53 MB |
 | `data/out/basemap/fonts/ (768 Glyphen-Dateien)` | 11.08 MB |
-| `data/out/junctions/ (16285 Knoten-Steckbriefe)` | 26.31 MB |
+| `data/out/junctions/ (16261 Knoten-Steckbriefe)` | 26.64 MB |
 | `data/out/table/ (7 Dateien, je Bezirk)` | 5.63 MB |
 
 ## Stichprobe (30 zufällige Steckbriefe, Seed 42)

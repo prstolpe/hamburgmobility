@@ -4,8 +4,8 @@
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 # Werte mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen.
 meta:
-  version: 0.5.0
-  date: 2026-11-06
+  version: 0.6.0
+  date: 2026-11-07
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
 
@@ -136,9 +136,9 @@ principle_scoring:
         own_path: [own_path]
       partial:
         separated_oneway_both: [separated_twoway]
-        cycle_street: [mixed]
+        cycle_street: [mixed, separated_oneway_both, separated_twoway]
         own_path: [separated_oneway_both, separated_twoway]
-      partial_note: 'Zweirichtungsradweg statt beidseitiger Einrichtungsradwege (S-03); Mischverkehr statt Fahrradstraße auf einer ETW30-Hauptroute; Radweg neben der Straße statt eigener Trasse (SW, RSV in Fußgängerzonen). Radfahrstreifen erfüllen Mischverkehr nicht (S-02)'
+      partial_note: 'Zweirichtungsradweg statt beidseitiger Einrichtungsradwege (S-03); Mischverkehr oder baulicher Radweg statt Fahrradstraße auf einer ETW30-Hauptroute (Radweg: Entscheidung prstolpe 2026-11-07, open_questions 125); Radweg neben der Straße statt eigener Trasse (SW, RSV in Fußgängerzonen). Radfahrstreifen erfüllen Mischverkehr nicht (S-02)'
       status: draft
     - id: C-PRI-04
       description: 'P-DIR-01 Umwegfaktor (Länge, ungerichtet, gleich für Ist und Soll): (a) je Route Länge der Route / kürzester Weg zwischen ihren Enden auf allen befahrbaren Kanten der Hauptkomponente; verzweigte Routen ohne Wert. (b) Netz: od_pairs_per_category zufällige OD-Paare je Kategorie (RSV, HAUPT, BASIS) zwischen Knoten des Netzes dieser Ebene mit höheren Ebenen, Luftlinie im Band cycle_categories.<Kategorie>.trip_length_km; Netzweg auf dieser Ebene / kürzester Weg auf allen befahrbaren Kanten'
@@ -388,6 +388,11 @@ network_design:
       exclude_areas: {natural: [water, wood], landuse: [forest, cemetery, reservoir, basin], leisure: [park, golf_course, nature_reserve], aeroway: [aerodrome]}
       exclude_area_min_m2: 50000
       simplify_m: 5
+      density_scaling:
+        rule: 'Höchstweite je Masche = mesh_m.max × sqrt(Referenzdichte / Einwohnerdichte der Masche), nie unter mesh_m.max; Einwohnerdichte = Einwohner (Zensus 2022, 100-m-Gitter, Zellmittelpunkt in der Masche) / Fläche ohne Ausschlussflächen. Gleich viele Einwohner je Masche wie in Delft; Maschen ohne Einwohner werden nicht geteilt'
+        reference_density_per_km2: {value: 4400, unit: 'Einwohner/km²', source_type: assumption, note: 'Delft, Herkunft der DCE-Maschenweiten: rund 104 000 Einwohner auf 24 km² (Gemeindefläche brutto); am Original (CBS) prüfen. Die Maschendichte ist netto (ohne Ausschlussflächen), daher eher zu dicht gerechnet'}
+        levels: [HAUPT, BASIS]
+        decision: 'Entscheidung prstolpe 2026-11-07: Delfter Maschenweite nur in der dichten Stadt (docs/open_questions.md, Prompt 16)'
       status: draft
     - id: C-NET-08
       description: 'Verdichtung: Masche größer als mesh_m.max der Ebene wird geteilt. Startkante = Kante mit der höchsten Nachfrage im Kernbereich der Masche (Abstand der Kantenmitte zum Außenrand >= seed_core_share x größter Abstand aller Kandidaten; teilt keine davon, die übrige Masche); von ihren Enden je der günstigste Soll-Weg (mit Bonus) innerhalb der Masche zu zwei verschiedenen Netzknoten am Rand; wiederholen bis keine Masche zu groß ist, keine Teilung möglich ist oder max_rounds erreicht ist'
@@ -506,9 +511,11 @@ facility_assignment:
       twoway_track_facility: separated_twoway
       status: draft
     - id: C-FAC-06
-      description: 'facility_gap, erste zutreffende Stufe: not_assessed (kein Soll oder Soll in not_assessed_soll), missing (Ist erfüllt das Soll nach C-PRI-03 satisfies nicht und Ist-Klasse in missing_classes), wrong_type (Ist erfüllt das Soll nicht), too_narrow (Ist-Breite bekannt und < Soll-Breite), sonst none. gap_partial = Ist ist Teilerfüllung (C-PRI-03 partial) oder fallback der Zelle'
+      description: 'facility_gap, erste zutreffende Stufe: not_assessed (kein Soll oder Soll in not_assessed_soll), missing (Ist erfüllt das Soll nach C-PRI-03 satisfies nicht und Ist-Klasse in missing_classes), partial (Ist ist Teilerfüllung nach C-PRI-03 partial oder fallback der Zelle), wrong_type (Ist erfüllt das Soll nicht), too_narrow (Ist-Breite bekannt und < Soll-Breite), sonst none. gap_partial = Ist ist Teilerfüllung (C-PRI-03 partial) oder fallback der Zelle'
       missing_classes: ['no', shared_lane]
       not_assessed_soll: [own_path]
+      category_check: {cat_final: [ETW30], soll: [cycle_street], ist_classes: [track], flag: track_on_access_road,
+        note: 'Baulicher Radweg an einer Erschließungsstraße mit Soll-Fahrradstraße deutet auf eine verbindende Funktion; Straßenkategorie prüfen (Entscheidung prstolpe 2026-11-07, open_questions 125)'}
       not_assessed_note: 'own_path = eigene Trasse abseits der Straße (SW, RSV statt Fußgängerzone); die Ist-Führung auf der Straße sagt darüber nichts'
       status: draft
     - id: C-FAC-07

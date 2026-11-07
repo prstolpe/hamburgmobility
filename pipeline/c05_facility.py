@@ -41,15 +41,16 @@ FACILITY_DE = {"separated_oneway_both": "Radweg je Seite", "separated_twoway": "
                "own_path": "eigene Trasse", None: "ohne Soll"}
 IST_DE = {"cycle_street": "Fahrradstraße", "track": "Radweg", "lane": "Rad-/Schutzstreifen",
           "shared_lane": "Sharrow/Busspur", "no": "keine Radanlage"}
-GAP_ORDER = ["missing", "wrong_type", "too_narrow", "none", "not_assessed"]
-GAP_DE = {"missing": "fehlt", "wrong_type": "falscher Typ", "too_narrow": "zu schmal", "none": "keine Lücke",
+GAP_ORDER = ["missing", "wrong_type", "partial", "too_narrow", "none", "not_assessed"]
+GAP_DE = {"missing": "fehlt", "wrong_type": "falscher Typ", "partial": "Teilerfüllung", "too_narrow": "zu schmal", "none": "keine Lücke",
           "not_assessed": "nicht bewertet"}
 FLAG_DE = {"dtv_unknown": "Kfz-Menge unbekannt – Bedingung vorläufig erfüllt (C-FAC-02/03)",
            "fallback_check_p19": "Fallback der Matrixzelle möglich – Raumprüfung in Prompt 19",
            "cycle_street_blocked": "Kfz-Menge reduzieren (Filter) oder Route verlegen (C-FAC-02)",
            "mixed_over_s04": "Mischverkehr über S-04 (Kfz/h zu hoch)",
            "no_target_width": "keine Sollbreite für Führung × Radkategorie",
-           "ist_width_unknown": "Ist-Breite unbekannt (OSM)"}
+           "ist_width_unknown": "Ist-Breite unbekannt (OSM)",
+           "track_on_access_road": "Radweg an Erschließungsstraße mit Soll-Fahrradstraße – Straßenkategorie prüfen (C-FAC-06)"}
 CAT_ORDER = ["SW", "GOW80", "GOW50", "GOW30", "ETW60", "ETW30", "ETW_ERF"]
 CYC_ORDER = ["RSV", "HAUPT", "BASIS", "ERSCHL", NO_CYCLE_CATEGORY]
 # OSM width keys (as C-PRI-08)
@@ -169,6 +170,8 @@ def classify(final: pd.DataFrame, inp: pd.DataFrame, p: fa.FacilityParams) -> pd
         flags = res["flags"]
         if res["cycle_width_m"] is not None and not np.isfinite(w_ist) and ist in p.satisfies.get(res["cycle_facility"], ()):
             flags.append("ist_width_unknown")
+        if fa.category_check(f["cat_final"], res["cycle_facility"], cls, p):
+            flags.append(p.category_check["flag"])
         gap, partial = fa.facility_gap(res["cycle_facility"], res["cycle_facility_fallback"], cls, ist, w_ist,
                                        res["cycle_width_m"], p)
         conf = fa.confidence(f["cat_final"], flags, p)
@@ -217,7 +220,7 @@ def write_report(out: gpd.GeoDataFrame, version: str, p: fa.FacilityParams) -> N
     net = out["cycle_cat_final"] != NO_CYCLE_CATEGORY
     flags = out["facility_flags"].fillna("")
     main = out["cycle_cat_final"].isin(["RSV", "HAUPT", "BASIS"])
-    gap = out["facility_gap"].isin(["missing", "wrong_type", "too_narrow"])
+    gap = out["facility_gap"].isin(["missing", "wrong_type", "partial", "too_narrow"])
     lines = [
         "# Führungsform und Breite der Radanlagen (Stufe c05)",
         "",
@@ -266,7 +269,7 @@ def write_report(out: gpd.GeoDataFrame, version: str, p: fa.FacilityParams) -> N
     lines += ["", f"Teilerfüllung (gap_partial: Ist = Teilerfüllung nach C-PRI-03 oder Fallback der Zelle): "
               f"{_fmt(km(out['gap_partial']), 1)} km.", ""]
 
-    gaps = out[out["facility_gap"].isin(["missing", "wrong_type", "too_narrow"]) & out["cycle_cat_final"].isin(["RSV", "HAUPT"])].copy()
+    gaps = out[out["facility_gap"].isin(["missing", "wrong_type", "partial", "too_narrow"]) & out["cycle_cat_final"].isin(["RSV", "HAUPT"])].copy()
     gaps["name"] = gaps["name"].fillna("(ohne Namen)")
     agg = (gaps.groupby(["name", "bezirk", "cycle_cat_final", "cat_final", "cycle_facility_soll", "cycle_facility_ist", "facility_gap"],
                         dropna=False)["length_m"].sum().sort_values(ascending=False).head(GAP_LIST_N))

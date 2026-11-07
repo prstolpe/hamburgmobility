@@ -444,3 +444,30 @@ def test_cycle_overrides_only_approved():
 def test_cycle_overrides_rejected(row, msg):
     with pytest.raises(ov.OverrideError, match=msg):
         ov.validate_cycle_network(_ovr([row]), ["ce_1"])
+
+
+# --- C-NET-07 density_scaling (open question 114, decision 2026-11-07) ----------------------------------------------
+
+
+def test_density_scaling_params_from_rules():
+    ds = next(r for r in CYC.network_design["rules"] if r["id"] == "C-NET-07")["density_scaling"]
+    assert P.mesh_ref_density == ds["reference_density_per_km2"]["value"]
+    assert set(P.mesh_density_levels) == set(ds["levels"]) <= {"HAUPT", "BASIS"}
+
+
+def test_mesh_limit_scales_with_residents_per_mesh():
+    base, ref = 600.0, 4000.0
+    face = box(0, 0, 1000, 1000)                      # 1 km²
+    def limit(residents):
+        pts = np.array([[500.0, 500.0]]) if residents else np.empty((0, 2))
+        lim = cn.MeshLimit(base, pts, np.array([residents] if residents else [], dtype=float), ref)
+        return float(lim.limits(np.array([face]), np.array([1000.0]))[0])
+    assert limit(ref) == pytest.approx(base)          # Delft density -> Delft mesh
+    assert limit(ref / 4) == pytest.approx(2 * base)  # quarter density -> double side (same residents per mesh)
+    assert limit(ref * 4) == pytest.approx(base)      # denser never below mesh_m.max
+    assert limit(0) == np.inf                         # no residents -> not split
+
+
+def test_mesh_limit_without_scaling_is_constant():
+    lim = cn.MeshLimit(600.0)
+    assert np.all(lim.limits(np.array([box(0, 0, 10, 10)]), np.array([10.0])) == 600.0)

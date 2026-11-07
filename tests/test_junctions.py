@@ -72,10 +72,49 @@ def test_gow30_roundabout_falls_back_without_space():
     assert r["junction_type_soll"] == "priority_flat_coloured"
 
 
-def test_gow30_roundabout_above_capacity_is_flagged():
-    r = jn.decide(props([leg("GOW30"), leg("GOW30")], entering_dtv_sum=T["roundabout_max_dtv"] + 1), P)
-    assert r["junction_type_soll"] == "roundabout_single_lane_cycle_priority"
-    assert "dtv_above_roundabout_max" in r["conflict_flags"]
+def test_gow30_pair_uses_j01_traffic_limits():
+    # design_rules.yaml 0.4.0 (open question 134): J-03 with the DTV limits of J-01
+    gow30 = [leg("GOW30"), leg("GOW30")]
+    assert jn.decide(props(gow30, entering_dtv_sum=T["roundabout_max_dtv"]), P)["junction_type_soll"] == \
+        "roundabout_single_lane_cycle_priority"
+    assert jn.decide(props(gow30, entering_dtv_sum=T["roundabout_max_dtv"] + 1), P)["junction_type_soll"] == "turbo_roundabout"
+    high = jn.decide(props(gow30, entering_dtv_sum=T["turbo_max_dtv"] + 1), P)
+    assert high["junction_type_soll"] == "signal_protected" and high["rule_id"] == "J-03"
+    assert "dtv_above_roundabout_max" not in high["conflict_flags"]
+
+
+def test_gow30_turbo_without_space_falls_back_to_coloured_priority():
+    small = T["roundabout_min_radius"] - 1
+    r = jn.decide(props([leg("GOW30"), leg("GOW30")], entering_dtv_sum=T["roundabout_max_dtv"] + 1, space_radius_m=small), P)
+    assert r["junction_type_soll"] == "priority_flat_coloured"
+
+
+def test_network_cycle_path_across_access_road_has_priority():
+    # open question 133: J-12
+    for cat in ("RSV", "HAUPT", "BASIS"):
+        r = jn.decide(props([leg("ETW30"), leg("ETW30"), leg("cycle_path", cat, "own_path")]), P)
+        assert r["junction_type_soll"] == "cycle_crossing_priority" and r["rule_id"] == "J-12"
+    r = jn.decide(props([leg("ETW30"), leg("ETW30"), leg("cycle_path", "ERSCHL", "own_path")]), P)
+    assert r["junction_type_soll"] is None and "no_rule" in r["conflict_flags"]
+
+
+def test_access_road_meets_pedestrian_zone_continuous_footway():
+    # open question 135: J-13 matches the raw category ETW_ERF before category_alias
+    r = jn.decide(props([leg("ETW30"), leg("ETW30"), leg("ETW_ERF")]), P)
+    assert r["junction_type_soll"] == "continuous_footway_exit" and r["rule_id"] == "J-13"
+    r = jn.decide(props([leg("ETW_ERF"), leg("ETW_ERF")]), P)
+    assert r["junction_type_soll"] == "equal_right_before_left"
+    r = jn.decide(props([leg("GOW50"), leg("GOW50"), leg("ETW_ERF")]), P)
+    assert r["junction_type_soll"] == "continuous_footway_exit" and r["rule_id"] == "J-04"
+
+
+def test_signal_counts_only_for_nearest_junction():
+    # open question 137: a traffic light within the radius of two junctions belongs to the nearer one
+    from shapely.geometry import MultiPoint
+    juncs = gpd.GeoSeries([MultiPoint([(0, 0)]), MultiPoint([(20, 0)]), MultiPoint([(500, 0)])])
+    sig = gpd.GeoSeries([Point(5, 0)])
+    assert list(c07.nearest_hit(juncs, sig, 30.0)) == [True, False, False]
+    assert list(c07.nearest_hit(juncs, gpd.GeoSeries([Point(300, 0)]), 30.0)) == [False, False, False]
 
 
 def test_cycle_path_basis_across_gow50_has_no_row():

@@ -66,6 +66,7 @@ export const FACILITY_STYLE = {
 export const GAP_STYLE = {
   missing: { color: "#CC3311", width: 4.5, dash: null },
   wrong_type: { color: "#B35900", width: 3.5, dash: [3, 1.5] },
+  partial: { color: "#0077BB", width: 3, dash: [1.5, 1] },
   too_narrow: { color: "#AA4499", width: 3.5, dash: [0.6, 1.4] },
   none: { color: "#117733", width: 2, dash: null },
 };

@@ -43,6 +43,7 @@ class FacilityParams:
     partial: dict
     missing_classes: frozenset
     not_assessed_soll: frozenset
+    category_check: dict           # C-FAC-06: cat_final, soll, ist_classes (sets) and flag
     lowers_confidence: frozenset
 
     @classmethod
@@ -78,6 +79,8 @@ class FacilityParams:
             partial={k: frozenset(v) for k, v in pri["C-PRI-03"]["partial"].items()},
             missing_classes=frozenset(c06["missing_classes"]),
             not_assessed_soll=frozenset(c06["not_assessed_soll"]),
+            category_check={**{k: frozenset(c06["category_check"][k]) for k in ("cat_final", "soll", "ist_classes")},
+                            "flag": c06["category_check"]["flag"]},
             lowers_confidence=frozenset(r["C-FAC-07"]["lowers_confidence"]),
         )
 
@@ -247,16 +250,24 @@ def sidepath_side(road_geoms, path_geoms, step_m: float = 1.0) -> np.ndarray:
 
 
 def facility_gap(soll, fallback, ist_cls, ist_fac, ist_width, soll_width, p: FacilityParams) -> tuple[str, bool]:
-    """(gap, partial): not_assessed | missing | wrong_type | too_narrow | none (C-FAC-06)."""
+    """(gap, partial): not_assessed | missing | partial | wrong_type | too_narrow | none (C-FAC-06)."""
     if not isinstance(soll, str) or soll in p.not_assessed_soll:
         return "not_assessed", False
     partial = ist_fac in p.partial.get(soll, ()) or (fallback is not None and ist_fac == fallback)
     if ist_fac not in p.satisfies.get(soll, ()):
-        return ("missing" if ist_cls in p.missing_classes else "wrong_type"), partial
+        if ist_cls in p.missing_classes:
+            return "missing", partial
+        return ("partial" if partial else "wrong_type"), partial
     w = _num(ist_width)
     if w is not None and soll_width is not None and w < soll_width:
         return "too_narrow", False
     return "none", False
+
+
+def category_check(cat_final, soll, ist_cls, p: FacilityParams) -> bool:
+    """C-FAC-06 category_check: cycle track on an access road whose Soll is a cycle street -> check the road category."""
+    c = p.category_check
+    return cat_final in c["cat_final"] and soll in c["soll"] and ist_cls in c["ist_classes"]
 
 
 def confidence(cat_final, flags, p: FacilityParams) -> str:

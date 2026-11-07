@@ -13,7 +13,7 @@ const META = {
     no_cycle_category: "nicht im Soll-Radnetz",
     facility: { separated_oneway_both: "Radweg beidseitig", separated_twoway: "Zweirichtungsradweg", cycle_lane: "Radfahrstreifen",
       cycle_street: "Fahrradstraße", mixed: "Mischverkehr", own_path: "eigene Trasse" },
-    gap: { none: "passt", missing: "fehlt", wrong_type: "anderer Typ", too_narrow: "zu schmal", not_assessed: "nicht bewertet" },
+    gap: { none: "passt", missing: "fehlt", wrong_type: "anderer Typ", partial: "teilweise", too_narrow: "zu schmal", not_assessed: "nicht bewertet" },
     fit: { fits: "passt", fits_after_degrade: "passt nach Abstrichen", does_not_fit: "passt nicht" },
     lanes: { shared: "Mischverkehr", fewer: "weniger", same: "gleich", more: "mehr", ist_unknown: "unbekannt" },
     junction_group: { roundabout: "Kreisverkehr", signal: "Ampel", priority: "Vorfahrt", continuous: "Gehweg", equal: "rechts vor links",

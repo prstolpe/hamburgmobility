@@ -76,7 +76,7 @@ FLAG_DE = {
     "cycle_path_ignored": "eigenständiger Radweg an einem Straßenknoten; Paar aus Straßen gebildet",
     "no_rule": "keine Zeile der Entscheidungstabelle passt",
     "no_cycle_crossing": "planfrei vorgeschlagen, aber keine Radroute quert den Stroomweg (Autobahnanschluss oder Route nur längs)",
-    "dtv_above_roundabout_max": "einstreifiger Kreisverkehr vorgeschlagen (J-03 ohne DTV-Bedingung), Zufluss über roundabout_max_dtv",
+    "dtv_above_roundabout_max": "einstreifiger Kreisverkehr vorgeschlagen, Zufluss über roundabout_max_dtv",
 }
 # N6 (rules.yaml) Soll types and the c07 types that fulfil them; only for the comparison in the report.
 N6_COMPATIBLE = {
@@ -280,6 +280,16 @@ def near_any(points: gpd.GeoSeries, features: gpd.GeoSeries, radius: float) -> n
     return hit
 
 
+def nearest_hit(points: gpd.GeoSeries, features: gpd.GeoSeries, radius: float) -> np.ndarray:
+    """Per junction geometry: is it the nearest junction (within radius) of at least one feature? (J-M-06 nearest_junction)"""
+    hit = np.zeros(len(points), dtype=bool)
+    if features is None or len(features) == 0 or len(points) == 0:
+        return hit
+    _, j_idx = shapely.STRtree(points.to_numpy()).query_nearest(features.to_numpy(), max_distance=radius)
+    hit[np.unique(j_idx)] = True
+    return hit
+
+
 def crash_counts(geoms: gpd.GeoSeries, crashes: gpd.GeoDataFrame, radius: float) -> pd.DataFrame:
     """Cyclist crashes per junction (nearest junction within radius); counts only (J-M-07)."""
     cyc = crashes[crashes["cyclist"].astype(bool)]
@@ -389,7 +399,7 @@ def write_report(out: gpd.GeoDataFrame, n6: pd.DataFrame, ctx: dict) -> None:
         "5. **Entscheidung (J-M-05):** Zeilen in der Reihenfolge " + ", ".join(ctx["order"]) + "; erste passende gilt. "
         "Unbekannte Bedingung → Typ der Zeile (Kreisverkehr bzw. erste Wahl), Flag condition_unknown.",
         "6. **Ist (J-M-06):** OSM junction=roundabout an einem Arm oder inneren Abschnitt, highway=traffic_signals und "
-        f"traffic_calming=table im Umkreis {ctx['signal_radius']:g} m eines Netzknotens.",
+        f"traffic_calming=table im Umkreis {ctx['signal_radius']:g} m eines Netzknotens; jede Ampel zählt nur für den nächstgelegenen Knotenpunkt.",
         "", "## Anzahl je Soll-Typ", "",
         "| Soll-Typ | Knotenpunkte | davon Handlungsbedarf | davon Radnetz (RSV/HAUPT/BASIS) | Regeln |",
         "| --- | ---: | ---: | ---: | --- |"]
@@ -573,7 +583,8 @@ def main() -> int:
     j["roundabout_ist"] = [bool(set(legs[r]["internal"]) & rb_segments or {leg["id"] for leg in legs[r]["legs"]} & rb_segments)
                            for r in roots]
     signals = to_work_crs(gpd.read_parquet(SIGNALS_PATH)).geometry
-    j["signal_present_ist"] = near_any(member_geoms, signals, signal_radius)
+    assign = design.junctions.method_rule("J-M-06").get("signal_assignment", "any_within")
+    j["signal_present_ist"] = (nearest_hit if assign == "nearest_junction" else near_any)(member_geoms, signals, signal_radius)
     j["plateau_ist"] = near_any(member_geoms, osm["tables"], signal_radius)
     alk = gpd.read_parquet(ALKIS_PATH, columns=["nutzart", "geometry"])
     alk = to_work_crs(alk[alk["nutzart"].isin(rules.crosssection.rule("S-XS-02").alkis_nutzart)])
