@@ -52,10 +52,10 @@ ASSUMPTIONS = {
     "evaporation": {"value": [0.0, 0.10, 0.20], "source_type": "assumption",
                     "source": "Cairns, Atkins, Goodwin (2002), Disappearing traffic? – als Quelle zu prüfen"},
     "external_edge_m": {"value": 300, "source_type": "assumption",
-                        "note": "Endknoten gezählter Straßen höchstens so weit vom Netzrand: externe Zone"},
+                        "note": "gezählte Abschnitte höchstens so weit von der Landesgrenze: Einfahrpunkt"},
     "min_lanes": {"value": 1, "source_type": "assumption"},
-    "ext_search_m": {"value": 3000, "source_type": "assumption",
-                     "note": "nächste Zählstelle zu einem Netzende im Randbereich; weiter weg: keine externe Zone"},
+    "ext_cluster_m": {"value": 150, "source_type": "assumption",
+                      "note": "Einfahrpunkte näher als dies gelten als ein Querschnitt (Richtungsfahrbahnen)"},
     "peak_direction_share": {"value": 0.55, "source_type": "assumption",
                              "note": "Lastrichtung; steht nur in der Notiz zu C-FAC-03/L-02 (0,10 x 0,55)"},
 }
@@ -167,26 +167,36 @@ def attach(z: pd.DataFrame, xy: np.ndarray, allowed: np.ndarray) -> np.ndarray:
 
 
 def external_zones(seg: gpd.GeoDataFrame, xy: np.ndarray, u: np.ndarray, v: np.ndarray, edge_m: float) -> pd.DataFrame:
-    """Dead ends (degree 1) of main roads near the outer edge of the network (the clipped buffer ring).
+    """Entry points where counted roads (DTV 2019) cross the Hamburg boundary.
 
-    Weight = DTV of the nearest counted segment (DTV 2019 only exists inside Hamburg), searched within
-    EXT_SEARCH_M; dead ends without a count nearby are dropped.
+    For every counted segment within edge_m of the boundary the end node closer to the boundary is the entry point;
+    entry points within EXT_CLUSTER_M are merged (dual carriageways carry the cross-section DTV on both
+    carriageways, so the maximum is used, not the sum).
     """
+    from scipy.sparse.csgraph import connected_components
     from scipy.spatial import cKDTree
     from shapely.geometry import Point
-    deg = np.bincount(np.concatenate([u, v]), minlength=len(xy))
-    hull = seg.geometry.union_all().convex_hull.exterior
-    main = seg.highway.isin(["motorway", "trunk", "primary", "secondary", "tertiary"]).to_numpy()
-    ends = sorted({n for i in np.flatnonzero(main) for n in (u[i], v[i]) if deg[n] == 1})
-    ends = [n for n in ends if hull.distance(Point(xy[n])) <= edge_m]
-    counted = seg[seg.dtv_official.notna()]
-    mids = np.array([g.interpolate(0.5, normalized=True).coords[0] for g in counted.geometry])
-    tree = cKDTree(mids)
-    dist, k = tree.query(xy[ends]) if ends else (np.array([]), np.array([], dtype=int))
-    rows = [{"zone": f"ext_{n}", "node": n, "x": xy[n][0], "y": xy[n][1],
-             "dtv": float(counted.dtv_official.iat[j]), "name": counted["name"].iat[j], "dist_m": float(d)}
-            for n, d, j in zip(ends, dist, k) if d <= ASSUMPTIONS["ext_search_m"]["value"]]
-    return pd.DataFrame(rows, columns=["zone", "node", "x", "y", "dtv", "name", "dist_m"])
+    area = gpd.read_parquet(RAW / "work_area.parquet").to_crs(seg.crs)
+    boundary = area.union_all().boundary
+    c = seg[seg.dtv_official.notna()]
+    near = c.geometry.distance(boundary) <= edge_m
+    rows = []
+    for i in c.index[near]:
+        n = min((u[i], v[i]), key=lambda k: boundary.distance(Point(xy[k])))
+        rows.append({"node": n, "x": xy[n][0], "y": xy[n][1], "dtv": float(c.at[i, "dtv_official"]),
+                     "name": c.at[i, "name"]})
+    e = pd.DataFrame(rows, columns=["node", "x", "y", "dtv", "name"])
+    if e.empty:
+        return e.assign(zone=[])
+    pairs = cKDTree(e[["x", "y"]].to_numpy()).query_pairs(ASSUMPTIONS["ext_cluster_m"]["value"], output_type="ndarray")
+    from scipy.sparse import coo_matrix
+    m = coo_matrix((np.ones(len(pairs)), (pairs[:, 0], pairs[:, 1])), shape=(len(e), len(e))) if len(pairs) else \
+        coo_matrix((len(e), len(e)))
+    _, lab = connected_components(m, directed=False)
+    e["cluster"] = lab
+    e = e.sort_values("dtv", ascending=False).drop_duplicates("cluster")
+    e["zone"] = "ext_" + e.node.astype(str)
+    return e.reset_index(drop=True)
 
 
 def run_assignment(n_nodes, tail, head, t0_min, cap_day, zones, zone_node, beta, scale, increments,
