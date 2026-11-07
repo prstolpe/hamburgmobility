@@ -31,8 +31,8 @@ Entwurf, nicht amtlich. Grundlage: `01_bestand.md`, `02a_strassen.md`, `02b_konf
   begründbarste ist eine Busregel (330 km werden GOW).
 
 **Empfehlung in einem Satz:** erst Stichproben organisieren (E1), dann Funktion zuerst mit Kennzeichnung „weniger
-Verkehr nötig“ (E2 = C), Busregel (E3) und Rückkopplung Querschnitt → Kategorie (E4); die Oberfläche nach dem Konzept
-aus Phase 3 (E13).
+Verkehr nötig“ (E2 = C), Busregel (E3) und Rückkopplung Querschnitt → Kategorie (E4); dazu ein neuer Steckbrief mit
+Kurzantwort zuerst (E13).
 
 ## Entscheidungen
 
@@ -52,8 +52,8 @@ Priorisiert nach Nutzen/Aufwand. „Wirkung“ aus Trockenläufen bzw. Szenariol
 | E10 | Amtliches Radnetz | mittel | klein | als Mindestnetz BASIS |
 | E11 | Haltestellen und Einbahnstraßen im Profil | mittel | mittel | prüfbar machen (Flags) |
 | E12 | Umwegprüfung auf Maschenrouten | klein | klein | über OD-Paare messen |
-| E13 | Oberflächenkonzept | hoch | groß | siehe `03_oberflaeche.md` |
-| E14 | Export- und Formalia-Aufräumen | klein | klein | sofort |
+| E13 | Oberflächenkonzept | hoch | groß | neuer Steckbrief sofort, dann Themen-Gerüst (A) |
+| E14 | Export, Formalia, Bedienfehler der Seite | mittel | klein | sofort |
 | E15 | Varianten auf der Seite zeigen | mittel | mittel | B als zweite Ansicht, nach E2 |
 
 ---
@@ -191,7 +191,37 @@ Netz) als prüfbare Flags.
 
 ### E13 Oberflächenkonzept
 
-Siehe `03_oberflaeche.md` (Phase 3, eigene Sitzung). OBERFLAECHE_PLATZHALTER
+**Frage:** Wie soll die Seite aufgebaut sein, damit Laien und Fachleute ihre Fragen beantworten?
+
+Befund aus Phase 3:
+- **Steckbrief zu lang:** Median 538 Wörter; „Was soll sich ändern?“ erst nach rund 1 490 px.
+- **Unübersichtliches Bedienfeld:** 13 Ebenen, 4 Overlays und 11 Filter in einem Panel; Rot hat 10 Bedeutungen.
+- **Steckbrief widerspricht sich:** 188 km mit „passt“ (Straßenprofil) gegenüber „passt nicht“ (Radprofil), 129 km
+  „keine Radanlage“ gegenüber vorhandener Radanlage.
+- **Technisch solide:** axe-core 0 Verstöße.
+
+Drei klickbare Prototypen auf Eimsbüttel-Daten (`prototypes/`).
+
+| Option | Wirkung | Aufwand |
+|---|---|---|
+| a) nichts tun (nur Fehlerkorrekturen aus E14) | Aufgaben bleiben langsam (z. B. T2 rund 83 s, 4–5 Scrolls) | 0 |
+| b) neuer Steckbrief „Kurzantwort zuerst“ (134–196 Wörter), Widersprüche auflösen, Farbpalette bereinigen | T2 ohne Scrollen; ein Profil, eine Machbarkeit | 3–4 Personentage + Datenentscheidung |
+| c) b + Konzept A „Themen statt Ebenen“ als Gerüst (Straßenfunktion, Radnetz, Handlungsbedarf, Kreuzungen, Datenqualität; Netzlücken und Ranglisten) | T3–T5 mit 1 Klick | groß |
+| d) c + Konzept B als Vergleichsmodus (Szenarien, E15) + Konzept C als Startseite mit Bezirkskennzahlen | vollständig | sehr groß, gestaffelt |
+
+**Empfehlung: b sofort, c als nächstes Paket, d gestaffelt.**
+- Der Steckbrief ist der größte Hebel und unabhängig vom Gerüst.
+- **Vorher zu entscheiden:** welche Machbarkeit gilt, das Radprofil (c06) oder das Straßenprofil (s07). Vorschlag: c06
+  ersetzt s07 im Steckbrief, weil es Radnetz und Fahrstreifen kennt. Außerdem die Quelle für das Ist der Radanlage:
+  c05 (OSM inkl. begleitender Wege) statt s04.
+- Rot nur für „passt nicht/fehlt“ verwenden, nicht für GOW50 und das Hauptradnetz; `#B35900` ersetzen
+  (Deuteranopie, ΔE 0,3).
+
+**Abhängigkeiten:** E2 (Kennzeichnung „Reduktion nötig“ im Steckbrief), E15 (Szenarien = Konzept B), E9 (Lage im Profil).
+
+Hinweis zu Zahlen: `03_oberflaeche.md` nennt für den Wechsel 0.14.0 → heute 367 km. Darin sind 44 km aus Stapel 5
+enthalten; der Wechsel selbst umfasst 358 km über C-G50-02, davon 324 km in beiden Ständen getrennt einer Kategorie
+zugeordnet (`01_bestand.md`, Abschnitt 3).
 
 ### E14 Export und Formalia
 
@@ -199,6 +229,10 @@ Siehe `03_oberflaeche.md` (Phase 3, eigene Sitzung). OBERFLAECHE_PLATZHALTER
   Die heutigen Kacheln zeigen `/Users/raphael/...`.
 - **Formalia:** Gruppe B der offenen Fragen (5 Punkte: Einheiten, status-Freitext, Feldnamen in guide.md) freigeben.
 - **`docs/source_policy.md`:** fehlt; anlegen oder den Verweis im Prompt streichen.
+- **Bedienfehler der Seite** (Phase 3, je unter 1 Stunde):
+  - `.table-wrap { position: relative; }`: Der Steckbrief aus der Tabelle ist auf dem Smartphone heute nicht schließbar.
+  - Die Suche öffnet den Steckbrief, und das Bedienfeld klappt auf dem Smartphone danach zu.
+  - `search.json` (586 KB, 41 % der Startdaten mobil) erst bei Bedarf laden.
 
 **Empfehlung:** sofort, kein fachlicher Wert ändert sich.
 
@@ -227,3 +261,4 @@ Siehe `03_oberflaeche.md` (Phase 3, eigene Sitzung). OBERFLAECHE_PLATZHALTER
 | 11 | Einbahn-/Abbiegeinformation für einen gerichteten Graphen | E2 (D), Prompt 22 | Modellgüte |
 | 12 | Wie stark darf der Radnetzumfang wachsen (heute rund 1 940 km RSV/HAUPT)? | E10 | Abwägung |
 | 13 | Soll die Seite Modellwerte (Szenario D) zeigen dürfen? | E15 | Kalibrierung mäßig |
+| 14 | Welche Machbarkeit gilt im Steckbrief: Radprofil (c06) oder Straßenprofil (s07)? Welche Quelle für das Ist der Radanlage? | E13 | 188 km bzw. 129 km widersprüchliche Aussagen |

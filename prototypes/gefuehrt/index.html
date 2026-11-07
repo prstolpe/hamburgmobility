@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geführter Einstieg</title>
+  <link rel="stylesheet" href="/shared/base.css">
+  <style>
+    .g-page { flex: 1; overflow: auto; }
+    .g-wrap { max-width: 52rem; margin: 0 auto; padding: 1rem; }
+    .g-steps { display: flex; gap: .4rem; margin: .2rem 0 1rem; list-style: none; padding: 0; font-size: .88rem; }
+    .g-steps li { flex: 1; border-top: 4px solid var(--line); padding-top: .3rem; color: var(--muted); }
+    .g-steps li[aria-current="step"] { border-color: var(--accent); color: var(--fg); font-weight: 700; }
+    .g-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin: 1rem 0; }
+    .g-card { background: var(--soft); border-radius: 8px; padding: .8rem; }
+    .g-card b { display: block; font-size: 1.05rem; margin-bottom: .2rem; }
+    .g-card .n { display: inline-grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; margin-bottom: .3rem; }
+    .g-nav { display: flex; gap: .6rem; align-items: center; margin-top: 1.2rem; flex-wrap: wrap; }
+    .btn { min-height: 44px; padding: .45rem 1.1rem; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent); color: #fff; }
+    .btn.secondary { background: #fff; color: var(--accent); }
+    .btn.link { border: none; background: none; color: var(--accent); text-decoration: underline; padding: .2rem; }
+    .g-types { list-style: none; padding: 0; }
+    .g-types li { display: grid; grid-template-columns: 40px 1fr; gap: .6rem; padding: .5rem 0; border-bottom: 1px solid var(--line); align-items: center; }
+    .g-types svg { background: #cfcfcf; border-radius: 2px; }
+    .g-bz { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .g-bz button { min-height: 40px; }
+    .g-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin: .8rem 0; }
+    .g-kpi { border: 1px solid var(--line); border-radius: 8px; padding: .6rem .7rem; }
+    .g-kpi b { display: block; font-size: 1.6rem; line-height: 1.1; }
+    .g-kpi span { color: var(--muted); font-size: .88rem; }
+    .g-stack { display: flex; height: 26px; border-radius: 4px; overflow: hidden; gap: 2px; background: #fff; }
+    .g-stack div { height: 100%; }
+    .g-stack-labels { display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: .85rem; margin: .35rem 0 0; padding: 0; list-style: none; }
+    .g-stack-labels i { display: inline-block; width: .8rem; height: .8rem; border-radius: 2px; margin-right: .3rem; vertical-align: -1px; }
+    table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+    th, td { text-align: left; padding: .3rem .4rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .bar { height: 10px; background: #8a96a3; border-radius: 0 4px 4px 0; min-width: 2px; }
+    tr.focus td { font-weight: 700; } tr.focus .bar { background: var(--accent); }
+    .g-two { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    .g-list { padding-left: 1.2rem; } .g-list li { margin: .25rem 0; }
+    .g-list button { background: none; border: none; color: var(--accent); text-decoration: underline; padding: 0; text-align: left; min-height: 28px; }
+    .g-mapview { flex: 1; display: none; position: relative; min-height: 0; flex-direction: column; }
+    .g-mapview.on { display: flex; }
+    .g-mapbar { display: flex; gap: .5rem; align-items: center; padding: .35rem .6rem; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    .g-mapbar [aria-pressed="true"] { background: var(--accent); color: #fff; }
+    .g-mapbar button { min-height: 38px; border: 1px solid var(--accent); color: var(--accent); background: #fff; border-radius: 4px; padding: .2rem .7rem; }
+    .g-legend { position: absolute; left: .6rem; bottom: 1.6rem; z-index: 3; background: rgba(255,255,255,.95); border: 1px solid var(--line); border-radius: 6px; padding: .3rem .6rem; max-width: 20rem; }
+    .g-sheet { position: absolute; right: 0; top: 0; bottom: 0; width: min(28rem, 100%); z-index: 5; border-left: 1px solid var(--line); box-shadow: -4px 0 16px rgba(0,0,0,.12); }
+    @media (max-width: 760px) {
+      .g-cards, .g-two { grid-template-columns: 1fr; }
+      .g-kpis { grid-template-columns: 1fr 1fr; }
+      .g-kpi b { font-size: 1.3rem; }
+      .g-sheet { top: auto; left: 0; width: 100%; max-height: 75%; border-radius: 12px 12px 0 0; }
+      .g-legend { max-width: calc(100% - 1.2rem); }
+    }
+  </style>
+</head>
+<body>
+  <div class="proto-bar"><strong>Prototyp C</strong> Geführter Einstieg · Entwurf, nicht amtlich · Daten: Export 0.16.0 · <a href="/">alle Prototypen</a></div>
+  <div class="g-page" id="page"><div class="g-wrap" id="wrap"></div></div>
+  <div class="g-mapview" id="mapview">
+    <div class="g-mapbar" id="mapbar"></div>
+    <div class="map" id="map"></div>
+    <div class="g-legend" id="legend"></div>
+    <aside class="sheet g-sheet" id="sheet" hidden tabindex="-1"><button class="sheet-close" id="close">Schließen ✕</button><div class="sb" id="sheet-body"></div></aside>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

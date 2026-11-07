@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Themen statt Ebenen</title>
+  <link rel="stylesheet" href="/shared/base.css">
+  <link rel="stylesheet" href="./themen.css">
+</head>
+<body>
+  <div class="proto-bar"><strong>Prototyp A</strong> Themen statt Ebenen · Entwurf, nicht amtlich · Bezirk Eimsbüttel · <a href="/">alle Prototypen</a></div>
+  <header class="t-head">
+    <p class="t-title">Straßenfunktionsplan <span class="muted">Entwurf</span></p>
+    <nav class="t-tabs" aria-label="Themen" role="tablist" id="tabs"></nav>
+  </header>
+  <div class="t-body">
+    <aside class="t-side" id="side" aria-live="polite"></aside>
+    <div class="map" id="map"></div>
+    <aside class="sheet t-sheet" id="sheet" hidden tabindex="-1"><button class="sheet-close" id="close">Schließen ✕</button><div class="sb" id="sheet-body"></div></aside>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

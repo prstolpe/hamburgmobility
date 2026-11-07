@@ -17,8 +17,8 @@ eine Anmerkung eintragen. Leer = nicht entschieden; „nichts tun“ ist immer m
 | E10 | Amtliches Radnetz | a nichts · b Mindestnetz BASIS (Bestand + Planung) · c nur Bestand | b | | |
 | E11 | Haltestellen, Einbahnstraßen | a nichts · b prüfbare Flags | b | | |
 | E12 | Umwegprüfung Maschenrouten | a nichts · b über OD-Paare | b | | |
-| E13 | Oberflächenkonzept | siehe 03_oberflaeche.md | siehe dort | | |
-| E14 | Export und Formalia | a nichts · b sofort | b | | |
+| E13 | Oberflächenkonzept | a nichts · b neuer Steckbrief + Widersprüche + Farben · c b + Themen-Gerüst (A) · d c + Vergleichsmodus (B) + Startseite (C) | b sofort, c danach | | |
+| E14 | Export, Formalia, Bedienfehler | a nichts · b sofort | b | | |
 | E15 | Varianten auf der Seite | a nichts · b B als zweite Ansicht · c + D-Varianten | b nach E2 | | |
 
 ## Vorgeschlagene Umsetzungsreihenfolge (Pakete)
@@ -27,16 +27,16 @@ Jedes Paket = ein Prompt bzw. ein Commit-Stapel mit neuer meta.version und CHANG
 
 | Paket | Inhalt | Voraussetzung | Neurechnung | grob |
 |---|---|---|---|---|
-| P0 Sofort | E14 (Kachel-Metadaten, Formalia, source_policy) | — | Export | 1 h |
+| P0 Sofort | E14 (Kachel-Metadaten, Formalia, source_policy, drei Bedienfehler der Seite) | — | Export + Web | ½ Tag |
 | P1 Prüfen | E1 b: Prüflisten ausfüllen (Werkzeug: Liste mit Links, Spalten reviewer/assessment) | — | keine | 10 h Prüfzeit |
 | P2 Straßenregeln | E2 (C: Reduktionszahl + Steckbrieftext), E3, E7, E8 | E1 b für die Schwellen wünschenswert | ab classify (≈ 18 min) | 1 Tag |
 | P3 Rückkopplung | E4, E5, E12 | P2 | ab coherence, zweiter Durchlauf | 1 Tag |
 | P4 Knoten-Eingangsdaten | E6 | — | ab junctions | ½ Tag |
 | P5 Radanlagen | E9, E10, E11 | P2 | ab cycle-network | 1–2 Tage |
-| P6 Oberfläche | E13, E15 | P2 (Kennzeichnung), Phase-3-Konzept | Export + Web | nach Konzept |
+| P6 Oberfläche | E13 b (Steckbrief, Profil-Widersprüche, Farben), danach E13 c und E15 | P2 (Kennzeichnung); Entscheidung Machbarkeit c06/s07 | Export + Web | 3–4 Tage für b |
 | danach | Prompt 22 (Zielszenario, gerichtete Umlegung auf Basis Szenario D) und Prompt 23 | P2, P3 | — | — |
 
 ## Vor einer Entscheidung zu klären
 
-Siehe `optionen.md`, Abschnitt „Offene Fragen, die vor einer Entscheidung beantwortet sein müssen“ (13 Punkte); die
+Siehe `optionen.md`, Abschnitt „Offene Fragen, die vor einer Entscheidung beantwortet sein müssen“ (14 Punkte); die
 dringlichsten: CROW-Profil mit Radweg (E2), Quelle für die Busregel (E3), Prüfer für die Stichproben (E1).
