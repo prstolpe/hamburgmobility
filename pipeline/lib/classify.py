@@ -4,6 +4,8 @@ Order = priority: the first top-level rule whose condition is surely true decide
 names a group (GOW) continues with the rules `applies_to: <group>`: all trigger rules are checked
 (for the trace), the first one that passes wins, the rule `no C-…-* passed` is the fallback.
 Missing values and confidence follow classification_policy (C-MISS-01, C-CONF-01).
+A default with status inactive (crossing_demand, F25) replaces every value: the condition part reading it is
+switched off. Features in C-CONF-01 global_caveats (F14) never lower confidence: they are the same for all segments.
 A rule with status inactive (no data basis, e.g. C-RUR-01) is not evaluated: it never fires, does not lower
 confidence and appears in rule_trace only as {id, passed: false, result: null, status: inactive}.
 """
@@ -36,6 +38,8 @@ class Policy:
     defaults: dict[str, Any]
     fallback: dict[str, Any]       # feature -> AST of `when` or None (always)
     near_threshold: float
+    inactive_defaults: frozenset = frozenset()  # defaults with status inactive: replace every value (F25)
+    global_caveats: frozenset = frozenset()     # never a fallback for confidence (F14)
 
 
 def _compile_then(text: str, groups: set[str]) -> tuple[str, Any]:
@@ -61,13 +65,15 @@ def compile_rules(rules: RuleSet) -> tuple[list[CompiledRule], Policy]:
         then_kind, then = _compile_then(r.then, set(CATEGORY_GROUPS))
         compiled.append(CompiledRule(r.id, kind, cond, then_kind, then, r.applies_to, r.status != INACTIVE))
 
-    defaults, fallback, near = {}, {}, None
+    defaults, fallback, near, inactive, caveats = {}, {}, None, set(), set()
     for p in rules.classification_policy:
         defaults.update({k: d.value for k, d in p.defaults.items()})
+        inactive |= {k for k, d in p.defaults.items() if d.status == INACTIVE}
         fallback.update({k: (expr.parse(f.when) if f.when else None) for k, f in p.fallback_inputs.items()})
+        caveats |= set(p.global_caveats)
         if "near_threshold" in p.thresholds:
             near = p.thresholds["near_threshold"].value
-    return compiled, Policy(defaults, fallback, near)
+    return compiled, Policy(defaults, fallback, near, frozenset(inactive), frozenset(caveats))
 
 
 def _ref_resolver(rules: RuleSet):
@@ -117,15 +123,21 @@ def _evaluate(node, ctx: Context) -> Result:
 
 
 def _prepare(features: dict, policy: Policy, resolve) -> tuple[dict, set[str], list[str]]:
-    """Apply C-MISS-01 defaults and find the fallback inputs (C-CONF-01)."""
+    """Apply C-MISS-01 defaults and find the fallback inputs (C-CONF-01).
+
+    An inactive default replaces any value (F25); global caveats are never fallbacks (F14)."""
     values = {k: expr.clean_value(v) for k, v in features.items()}
     defaulted = []
     for name, default in policy.defaults.items():
-        if values.get(name) is None:
+        if name in policy.inactive_defaults:
+            values[name] = default
+        elif values.get(name) is None:
             values[name] = default
             defaulted.append(name)
-    fallback = set(defaulted)
+    fallback = set(defaulted) - policy.global_caveats - policy.inactive_defaults
     for name, when in policy.fallback.items():
+        if name in policy.global_caveats:
+            continue
         if when is None:
             fallback.add(name)
             continue

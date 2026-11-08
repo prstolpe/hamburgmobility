@@ -28,10 +28,11 @@
         "ist_verkehrsberuhigt": false,
         "pedestrian_zone": false,
         "override_school_street": false,
-        "schools_or_kitas_within_m": 600.0,
+        "school_or_kita_access_m": 600.0,
         "shop_frontage_share": 0.5,
         "crossing_demand": "low",
         "separated_cycle_track_present": true,
+        "bus_route": false,
         "width_p10_m": 20.0
       },
       "geometry": {

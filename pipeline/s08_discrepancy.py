@@ -42,7 +42,8 @@ SAMPLE_SEED = 42
 FIXED_INPUTS = ["speed_ist_kmh", "dtv_official", "separated_cycle_track_present", "lanes_official_in",
                 "lanes_official_gegen"]
 DIMENSIONS = {"disc_speed": "Tempo", "disc_design": "Gestaltung", "disc_use": "Nutzung"}
-RESULT_COLUMNS = ["disc_speed", "disc_design", "disc_use", "disc_max", "disc_type", "disc_causes",
+RESULT_COLUMNS = ["disc_speed", "disc_design", "disc_use", "disc_max", "disc_type", "disc_causes", "gow50_anbaufrei",
+                  "disc_speed_hint",
                   "disc_design_unknown", *acc.AGG_COLUMNS, "crash_weighted_per_km", "crash_years", "crash_norm",
                   "school_kita_near", "risk", "risk_weight_available", "priority", "disc_trace"]
 
@@ -54,6 +55,8 @@ def discrepancy_inputs(rules) -> list[str]:
     cols = set(FIXED_INPUTS)
     for v in rules.discrepancy.design.violations:
         cols |= expr.features_in(expr.parse(v.violated_if))
+    if rules.discrepancy.speed.anbaufrei_hint is not None:
+        cols.add(rules.discrepancy.speed.anbaufrei_hint.feature)
     return sorted(cols - {"requirement", "lanes_per_dir_max"})
 
 
@@ -179,6 +182,8 @@ def reason_text(r: pd.Series, rules) -> str:
     cat = rules.categories[r["cat_final"]]
     soll = "Schrittgeschwindigkeit" if r["cat_final"] == "ETW_ERF" else f"{cat.speed_kmh}" if cat.speed_kmh else None
     parts = [f"Soll {cat.label_de}"]
+    if isinstance(r.get("disc_speed_hint"), str):
+        parts.append(f"anbaufrei: heute {r['speed_ist_kmh']:.0f} km/h, Tempo 50 fachlich prüfen (Hinweis statt Diskrepanz)")
     for c in json.loads(r["disc_causes"]):
         if c["dimension"] == "speed":
             parts.append(f"heute {c['inputs']['speed_ist_kmh']:.0f} km/h (Soll {soll})")
@@ -358,7 +363,11 @@ def write_report(area: gpd.GeoDataFrame, pilot: gpd.GeoDataFrame, checks: list[d
         f"- Mit Diskrepanz (Stärke > 0): {_fmt((area['disc_max'] > 0).sum())} Abschnitte, "
         f"{_km(area.loc[area['disc_max'] > 0, 'length_m'].sum())} km "
         f"({_pct(area.loc[area['disc_max'] > 0, 'length_m'].sum() / area['length_m'].sum())} der Länge).",
-        f"- Nicht prüfbar (keine Dimension entscheidbar): {_fmt(area['disc_max'].isna().sum())} Abschnitte.", "",
+        f"- Nicht prüfbar (keine Dimension entscheidbar): {_fmt(area['disc_max'].isna().sum())} Abschnitte.",
+        f"- Anbaufreie GOW50 (Flag gow50_anbaufrei, S-FEAT-12, F23): {_fmt(area['gow50_anbaufrei'].astype(bool).sum())} "
+        f"Abschnitte ({_km(area.loc[area['gow50_anbaufrei'].astype(bool), 'length_m'].sum())} km), davon "
+        f"{_fmt(area['disc_speed_hint'].notna().sum())} mit Hinweis statt Tempo-Stärke (Ist ab "
+        f"{d.speed.anbaufrei_hint.min_ist_kmh:g} km/h, D-SPD-01 anbaufrei_hint).", "",
         "### Stärke je Dimension (Abschnitte im Arbeitsgebiet)", "",
         "| Dimension | Regel | 0 | 1 | 2 | 3 | nicht prüfbar |", "| --- | --- | ---: | ---: | ---: | ---: | ---: |"]
     for col, label in DIMENSIONS.items():

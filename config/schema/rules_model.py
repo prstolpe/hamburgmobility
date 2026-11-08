@@ -151,6 +151,9 @@ class ClassificationRule(_Strict):
 
 class MissingDefault(_Strict):
     value: bool | str
+    # inactive (F25): the condition part reading this feature is switched off; the default replaces every value,
+    # does not lower confidence and does not count as covered
+    status: Status | None = None
     note: str | None = None
 
 
@@ -169,6 +172,9 @@ class PolicyRule(_Strict):
     thresholds: dict[str, Threshold] = {}
     defaults: dict[str, MissingDefault] = {}
     fallback_inputs: dict[str, FallbackInput] = {}
+    # F14: defaults/fallbacks that apply to all segments alike; they do not lower confidence (listed once instead)
+    global_caveats: list[str] = []
+    global_caveats_note: str | None = None
     note: str | None = None
 
 
@@ -391,6 +397,18 @@ class SpeedLevel(_Strict):
     check: str | None = None
 
 
+class SpeedHint(_Strict):
+    """D-SPD-01 anbaufrei_hint (F23): hint instead of a severity for these categories with the feature true."""
+    categories: list[str] = Field(min_length=1)
+    feature: str
+    flag: str
+    min_ist_kmh: float
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    note: str | None = None
+
+
 class DiscrepancySpeed(_Strict):
     id: str = Field(pattern=r"^D-[A-Z]+-\d{2}$")
     rule: str
@@ -399,6 +417,7 @@ class DiscrepancySpeed(_Strict):
     source: str | list[str]
     source_type: SourceType
     status: Status
+    anbaufrei_hint: SpeedHint | None = None
     note: str | None = None
 
 
@@ -672,6 +691,12 @@ class RuleSet(_Strict):
             unknown = sorted(set(r.locked_categories) - cats)
             if unknown:
                 raise ValueError(f"harmonisation.rules[{r.id}].locked_categories: unknown {unknown}")
+        for p in self.classification_policy:
+            known = {k for q in self.classification_policy for k in (*q.defaults, *q.fallback_inputs)}
+            unknown = sorted(set(p.global_caveats) - known)
+            if unknown:
+                raise ValueError(f"classification_policy[{p.id}].global_caveats: neither a default nor a fallback input: "
+                                 f"{unknown}")
         self._check_discrepancy(source_ids, cats)
         for rule in self.crosssection.rules:
             unknown_targets = [t for t in rule.targets if t not in self.required_width]
@@ -699,6 +724,13 @@ class RuleSet(_Strict):
             raise ValueError("discrepancy.speed.levels: min_excess_kmh must ascend with severity")
         if [lv.factor for lv in d.use.levels] != sorted(lv.factor for lv in d.use.levels):
             raise ValueError("discrepancy.use.levels: factor must ascend with severity")
+        if d.speed.anbaufrei_hint is not None:
+            hint = d.speed.anbaufrei_hint
+            _check_provenance(hint.model_dump(include={"source", "source_type"}), "discrepancy.speed.anbaufrei_hint",
+                              source_ids)
+            unknown = sorted(set(hint.categories) - cats)
+            if unknown:
+                raise ValueError(f"discrepancy.speed.anbaufrei_hint.categories: unknown {unknown}")
         for i, v in enumerate(d.design.violations):
             path = f"discrepancy.design.violations[{i}]"
             _check_provenance(v.model_dump(include={"source", "source_type"}), path, source_ids)

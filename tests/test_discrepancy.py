@@ -44,6 +44,25 @@ def test_speed_not_checked(ist, soll):
     assert step["result"] is None and step["rule"] == "D-SPD-01"
 
 
+def test_anbaufrei_gow50_gets_hint_instead_of_speed_severity():
+    """F23 (Q4 a): GOW50 with anbaufrei and Ist >= min_ist_kmh -> severity 0 and hint gow50_anbaufrei."""
+    hint = RULES.discrepancy.speed.anbaufrei_hint
+    r = assess("GOW50", **{**GOW50_OK, "speed_ist_kmh": hint.min_ist_kmh, "anbaufrei": True})
+    assert r["disc_speed"] == 0 and r["disc_speed_hint"] == "gow50_anbaufrei" and r["gow50_anbaufrei"] is True
+    step = r["disc_trace"][0]
+    assert step["hint"] == "gow50_anbaufrei" and step["severity_without_hint"] >= 1
+    assert not any(c["dimension"] == "speed" for c in r["disc_causes"])
+    # below min_ist_kmh (e.g. 55) the severity stays; not anbaufrei -> severity as before
+    assert assess("GOW50", **{**GOW50_OK, "speed_ist_kmh": hint.min_ist_kmh - 5, "anbaufrei": True})["disc_speed"] >= 1
+    plain = assess("GOW50", **{**GOW50_OK, "speed_ist_kmh": hint.min_ist_kmh, "anbaufrei": False})
+    assert plain["disc_speed"] >= 1 and plain["disc_speed_hint"] is None and plain["gow50_anbaufrei"] is False
+
+
+def test_anbaufrei_flag_only_for_gow50():
+    r = assess("GOW30", **{**GOW50_OK, "speed_ist_kmh": 60, "anbaufrei": True})
+    assert r["gow50_anbaufrei"] is False and r["disc_speed"] == 3
+
+
 def test_sw_has_no_speed_or_design_check():
     r = assess("SW", speed_ist_kmh=100, separated_cycle_track_present=False)
     assert r["disc_speed"] is None and r["disc_design"] is None and r["disc_use"] is None

@@ -60,6 +60,7 @@ def test_referenced_features():
     # update this list and the golden cases together.
     assert referenced_features(load_rules()) == {
         "access_motor_only",
+        "bus_route",
         "conn_score",
         "crossing_demand",
         "highway",
@@ -68,8 +69,7 @@ def test_referenced_features():
         "outside_builtup_area",
         "override_school_street",
         "pedestrian_zone",
-        "schools_or_kitas_within_m",
-        "separated_cycle_track_present",
+        "school_or_kita_access_m",
         "shop_frontage_share",
         "width_p10_m",
     }
@@ -300,3 +300,68 @@ def test_categories_and_weights_have_provenance():
     assert rules.scores["conn_score"].source_type == "assumption"
     assert rules.scores["place_score"].source_type == "assumption"
     assert rules.priority.source_type == "assumption"
+
+
+# --- review 2026-11, package P1 (F05, F14, F25, F23) ----------------------------------------
+
+
+def test_required_width_value_equals_formula():
+    """Invariant V-INV-06 (F05): every required_width entry with a formula has value == evaluated formula
+    (paths into design_rules.yaml D. and cycling_rules.yaml C.)."""
+    from pipeline.lib.rules import load_cycling_rules, load_design_rules, required_width_formula_mismatches
+
+    rules = load_rules()
+    assert {k for k, e in rules.required_width.items() if e.formula} >= {"GOW50", "GOW50_bus", "ETW30"}
+    assert required_width_formula_mismatches(rules, load_cycling_rules(), load_design_rules()) == []
+
+
+def test_required_width_formula_mismatch_is_reported():
+    from pipeline.lib.rules import load_cycling_rules, load_design_rules, required_width_formula_mismatches
+
+    rules = load_rules()
+    widths = {**rules.required_width, "GOW50": rules.required_width["GOW50"].model_copy(update={"value": 16.5})}
+    bad = rules.model_copy(update={"required_width": widths})
+    assert required_width_formula_mismatches(bad, load_cycling_rules(), load_design_rules()) == [
+        "required_width.GOW50 = 16.5, formula = 17"]
+
+
+def test_width_formula_rejects_unknown_path_and_code():
+    from pipeline.lib.rules import evaluate_width_formula, load_cycling_rules, load_design_rules
+
+    c, d = load_cycling_rules(), load_design_rules()
+    with pytest.raises(KeyError):
+        evaluate_width_formula("2*D.cross_section_allocation.elements_min_m.nothing", c, d)
+    with pytest.raises(ValueError):
+        evaluate_width_formula("__import__('os')", c, d)
+
+
+def test_global_caveats_must_be_defaults_or_fallbacks(raw):
+    data = copy.deepcopy(raw)
+    conf = next(p for p in data["classification_policy"] if p["id"] == "C-CONF-01")
+    conf["global_caveats"] = [*conf["global_caveats"], "no_such_feature"]
+    with pytest.raises(ValidationError, match="global_caveats"):
+        RuleSet.model_validate(data)
+
+
+def test_crossing_demand_default_is_inactive():
+    """F25 (Q2 b): the crossing_demand part of C-G30-01 is switched off until place_score is calibrated."""
+    rules = load_rules()
+    miss = next(p for p in rules.classification_policy if p.id == "C-MISS-01")
+    assert miss.defaults["crossing_demand"].status == "inactive"
+    assert "keiner Regel" in rules.scores["place_score"].note
+
+
+def test_conn_score_without_in_hvs():
+    """F13 (Q3 b): in_hvs only as its own trigger in C-GOW-01, not in conn_score."""
+    rules = load_rules()
+    assert "in_hvs" not in rules.scores["conn_score"].weights
+    assert "in_hvs" in next(r for r in rules.classification if r.id == "C-GOW-01").if_
+
+
+def test_gow50_cycling_requirement_without_mandatory_use():
+    """F22: Benutzungspflicht is an order, not a design feature; D-DES-01 uses the same value."""
+    rules = load_rules()
+    value = rules.requirements["GOW50"]["cycling"]["value"]
+    assert value == "separated_track_or_parallel_route"
+    assert value in {v.requirement for v in rules.discrepancy.design.violations if v.check == "cycling"}
+

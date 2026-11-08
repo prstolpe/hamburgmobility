@@ -27,8 +27,8 @@ def resolve(ref):
     ("{s|%}", {"s": 0.5}, "50 %"),
     ("{h}", {"h": "primary"}, "primary"),
     ("{b|yesno}", {"b": True}, "ja"),
-    ("nötig {required_width.GOW50|.1f} m", {}, "nötig 16,5 m"),
-    ("ab {thresholds.conn_gow|.2f}", {}, "ab 0,60"),
+    ("nötig {required_width.GOW50|.1f} m", {}, "nötig 17,0 m"),
+    ("ab {thresholds.conn_gow|.2f}", {}, "ab 0,87"),
     ("{w|.1f}", {"w": None}, "unbekannt"),
 ])
 def test_render(template, values, expected):
@@ -50,29 +50,38 @@ def _step(rule_id, passed, **inputs):
 def test_reason_c_g30_02_names_widths():
     trace = [_step("C-SW-01", False, highway="primary", access_motor_only=False),
              _step("C-GOW-01", True, conn_score=0.88, in_hvs=True),
-             _step("C-G30-01", False, schools_or_kitas_within_m=400.0, shop_frontage_share=0.1,
+             _step("C-G30-01", False, school_or_kita_access_m=400.0, shop_frontage_share=0.1,
                    crossing_demand="not_assessed"),
-             _step("C-G30-02", True, separated_cycle_track_present=False, width_p10_m=14.2)]
+             _step("C-G30-02", True, bus_route=False, width_p10_m=14.2)]
     reasons = ex.rule_reasons(trace, RULES, TEXTS)
     assert [r["rule"] for r in reasons] == ["C-GOW-01", "C-G30-01", "C-G30-02"]  # failed C-SW-01 has no text
     assert reasons[0]["text"] == ("Hauptverkehrsstraße der BVM; hohe Verbindungsfunktion: Verbindungswert 0,88 "
-                                  "(ab 0,60)")
-    assert reasons[2]["text"] == ("kein baulicher Radweg, und für einen fehlt der Platz: Straßenraum 14,2 m, "
-                                  "nötig 16,5 m")
+                                  "(ab 0,87)")
+    assert reasons[2]["text"] == ("für einen ausreichenden baulichen Radweg fehlt der Platz: Straßenraum 14,2 m, "
+                                  "nötig 17,0 m")
     assert reasons[2]["passed"] is True and reasons[1]["passed"] is False
 
 
+def test_reason_c_g30_02_bus_route_names_bus_width():
+    trace = [_step("C-G30-02", True, bus_route=True, width_p10_m=17.2)]
+    assert ex.rule_reasons(trace, RULES, TEXTS)[0]["text"] == (
+        "für einen ausreichenden baulichen Radweg neben der Busfahrbahn fehlt der Platz: Straßenraum 17,2 m, nötig 17,5 m")
+
+
 def test_reason_only_true_fragments():
-    trace = [_step("C-G30-01", True, schools_or_kitas_within_m=43.6, shop_frontage_share=0.5,
+    trace = [_step("C-G30-01", True, school_or_kita_access_m=23.6, shop_frontage_share=0.5,
                    crossing_demand="not_assessed")]
     text = ex.rule_reasons(trace, RULES, TEXTS)[0]["text"]
-    assert text.startswith("Schule oder Kita in 44 m (bis 150 m); viele Gebäude mit Läden oder Publikumsverkehr: 50 %")
+    assert text.startswith("Schule oder Kita direkt an der Straße: Grundstück 24 m entfernt (bis 50 m); "
+                           "viele Gebäude mit Läden oder Publikumsverkehr: 50 %")
     assert "Querungsbedarf" not in text
 
 
 def test_reason_unknown_fragment_left_out():
-    trace = [_step("C-G30-02", False, separated_cycle_track_present=True, width_p10_m=None)]
-    assert ex.rule_reasons(trace, RULES, TEXTS)[0]["text"] == "baulicher Radweg vorhanden"
+    trace = [_step("C-G30-02", False, bus_route=None, width_p10_m=18.0),
+             _step("C-G30-02", False, bus_route=False, width_p10_m=18.0)]
+    reasons = ex.rule_reasons(trace, RULES, TEXTS)
+    assert reasons[0]["text"] == "Platz für einen baulichen Radweg: Straßenraum 18,0 m (nötig 17,0 m)"
 
 
 def test_every_cascade_rule_has_a_text():
@@ -132,14 +141,14 @@ def test_search_index_groups_named_streets():
 
 def test_sensitivity_info_uncertain():
     info = ex.sensitivity_info({"sens_change_rate": 0.42, "sens_uncertain": True, "sens_alt_category": "GOW30",
-                                "sens_oat_changes": '["thresholds.conn_gow:-", "conn_score.in_hvs:-"]'},
+                                "sens_oat_changes": '["thresholds.conn_gow:-", "conn_score.bus_trips_weekday_norm:-"]'},
                                RULES, TEXTS, runs=500, delta=0.2)
     assert info["uncertain"] is True and info["change_rate"] == pytest.approx(0.42)
     assert info["alternative"] == "GOW30"
     assert "42 %" in info["text"] and "500" in info["text"] and RULES.categories["GOW30"].label_de in info["text"]
     assert info["uncertain_text"]
     assert info["oat_intro"].endswith(":") and "20 %" in info["oat_intro"]
-    assert info["triggers"] == ["Schwelle für den Verbindungswert niedriger", "Gewicht Hauptverkehrsstraße niedriger"]
+    assert info["triggers"] == ["Schwelle für den Verbindungswert niedriger", "Gewicht der Busfahrten niedriger"]
 
 
 def test_sensitivity_info_stable_and_missing():
@@ -197,3 +206,13 @@ def test_source_list_prefers_checked_licence_over_unknown_in_manifest():
         sources.setdefault(other, {"title": other})
     row = next(r for r in ex.source_list(manifest, sources) if r["id"] == sid)
     assert row["license"] == "dl-de/by-2.0" and row["attribution"] == "BVM"
+
+
+def test_hints_and_global_caveats():
+    """F23: gow50_anbaufrei shows a hint in the profile; F14: global caveats are listed once (method page)."""
+    assert ex.hints({"gow50_anbaufrei": True}, TEXTS) == [TEXTS["hints"]["gow50_anbaufrei"]]
+    assert ex.hints({"gow50_anbaufrei": False}, TEXTS) == [] and ex.hints({}, TEXTS) == []
+    caveats = ex.global_caveats(RULES, TEXTS)
+    assert caveats["intro"] and TEXTS["features"]["in_hvs"] in caveats["items"]
+    assert len(caveats["items"]) == len(RULES.classification_policy[1].global_caveats)
+

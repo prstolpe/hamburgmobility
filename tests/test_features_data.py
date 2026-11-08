@@ -29,8 +29,20 @@ def test_columns(out):
                 "schools_or_kitas_within_m", "separated_cycle_track_present", "cycle_lane_present", "lanes",
                 "centre_line", "parking", "crossings_count", "traffic_calming_count", "surface", "speed_ist_kmh",
                 "speed_sources_conflict", "access_motor_only", "pedestrian_zone", "in_cycle_network",
-                "feature_trace"} | set(NORMS)
+                "feature_trace", "school_or_kita_access_m", "bus_peak_h_dir", "bus_route", "anbaufrei_share",
+                "anbaufrei"} | set(NORMS)
     assert expected <= set(out.columns)
+
+
+def test_p1_features(out):
+    """Review 2026-11 P1: access distance = school distance (F07); bus_route from bus_peak_h_dir (F06); anbaufrei (F23)."""
+    area = out[out["conflated"]]
+    a, b = area["school_or_kita_access_m"], area["schools_or_kitas_within_m"]
+    assert ((a == b) | (a.isna() & b.isna())).all()
+    assert area["bus_route"].notna().all() and area["anbaufrei"].notna().all()
+    assert (area.loc[area["bus_route"].astype(bool), "bus_trips_weekday"] > 0).all()
+    s = area["anbaufrei_share"]
+    assert ((s >= 0) & (s <= 1)).all()
 
 
 @pytest.mark.parametrize("col", NORMS + ["conn_score", "place_score"])

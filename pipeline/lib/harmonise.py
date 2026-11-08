@@ -4,7 +4,8 @@ A street (stroke, pipeline/lib/coherence.py: strokes) is split into runs of equa
 (< min_run_m from coherence N2) are adjusted in four steps per pass, repeated until nothing changes:
   1. ETW30 run between two GOW runs -> GOW (lower Soll speed of the two neighbours).
   2. GOW run between two ETW30 runs -> ETW30.
-  3. GOW50 run between two GOW30 runs, or at the end of the street next to GOW30 -> GOW30.
+  3. GOW50 run between two GOW30 runs (gap closing: shorter than gap_close_m, F07), or at the end of the street
+     next to GOW30 (shorter than min_run_m) -> GOW30.
   4. GOW30 run between GOW50 runs (or at the end next to GOW50) stays GOW30 and is extended into the
      neighbouring GOW50 segments, shorter neighbour first, until it reaches min_run_m.
 Locked categories (SW, ETW_ERF, rural) and locked segments (approved overrides) are never changed.
@@ -34,6 +35,7 @@ def harmonise(strokes: list[list[str]], cats: dict[str, str], lengths: dict[str,
     """New category per segment id and, per changed segment, the list of steps applied."""
     rule = rules.harmonisation.rule(RULE_ID)
     min_run = rules.coherence_rule(rule.min_run_from).param("min_run_m")
+    gap_close = rule.thresholds["gap_close_m"].value if "gap_close_m" in rule.thresholds else min_run
     locked_cats = set(rule.locked_categories)
     locked = set(locked or ())
     speed = {c: (v.speed_kmh if v.speed_kmh is not None else 999) for c, v in rules.categories.items()}
@@ -76,13 +78,16 @@ def harmonise(strokes: list[list[str]], cats: dict[str, str], lengths: dict[str,
             if k == "GOW" and runs[i - 1][0] == ETW and runs[i + 1][0] == ETW and length(sids) < min_run and free(sids):
                 change(sids, ETW, 2, length(sids), [ETW, ETW], pass_no)
                 changed = True
-        # step 3: GOW50 island between GOW30 runs, or at the end next to GOW30
+        # step 3: GOW50 gap between GOW30 runs (< gap_close_m), or at the end next to GOW30 (< min_run_m)
         runs = _runs(stroke, lambda s: cur[s])
         for i, (k, sids) in enumerate(runs):
-            if k != "GOW50" or length(sids) >= min_run or not free(sids):
+            if k != "GOW50" or not free(sids):
                 continue
             left = runs[i - 1][0] if i > 0 else None
             right = runs[i + 1][0] if i < len(runs) - 1 else None
+            limit = gap_close if (left, right) == ("GOW30", "GOW30") else min_run
+            if length(sids) >= limit:
+                continue
             if (left, right) in {("GOW30", "GOW30"), ("GOW30", None), (None, "GOW30")}:
                 change(sids, "GOW30", 3, length(sids), [left, right], pass_no)
                 changed = True

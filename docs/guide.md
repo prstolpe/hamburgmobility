@@ -209,7 +209,7 @@ Die Pipeline ist eine Kette aus neun Python-Stufen, die über GeoParquet-Dateien
 - *Ist-Tempo:* amtliche Daten zuerst, OSM `maxspeed` als Rückfall; Konflikt beider Quellen wird als Unsicherheit gespeichert.
 - *Ist-Gestaltung:* Radführung (`cycleway*`), Mittelmarkierung (`lane_markings`, Fahrstreifen), Parken (`parking:*`), Belag (WFS Deckschicht, OSM `surface`), Querungen (`crossing`), Ampeln, Plateaus (`traffic_calming`).
 
-**5. Regelbasierte Soll-Kategorie (`s05_classify.py`).** Eine Entscheidungskaskade liest `rules.yaml` (Anhang A): erst Ausschlüsse (SW, Außerorts), dann Verbindungs-Score gegen Schwellen, dann die beiden GOW30-Auslöser nach CROW (Umfeld spricht für 30; 50 ist nicht sicher gestaltbar), dann ETW30/ETW-ERF. Jede Regel liefert `(rule_id, passed, inputs)`. Ergebnis: `cat_proposed`, `cat_confidence` (hoch/mittel/niedrig je nach Datenlage und Abstand zur Schwelle), `rule_trace`.
+**5. Regelbasierte Soll-Kategorie (`s05_classify.py`).** Eine Entscheidungskaskade liest `rules.yaml` (Anhang A): erst Ausschlüsse (SW, Außerorts), dann Verbindungs-Score gegen Schwellen, dann die beiden GOW30-Auslöser nach CROW (Umfeld spricht für 30; 50 ist nicht sicher gestaltbar), dann ETW30/ETW-ERF. Jede Regel liefert `(rule_id, passed, inputs)`. Ergebnis: `cat_proposed`, `cat_confidence` (hoch/mittel/niedrig je nach Datenlage und Abstand zur Schwelle), `rule_trace`. Seit rules.yaml 0.18.0 (Review 2026-11): Auslöser a fragt nach einer Schule oder Kita mit Grundstück höchstens `access_radius` (50 m) vom Abschnitt (StVO § 45 (9) „unmittelbarer Bereich“, F07), Auslöser b nur noch nach dem Raum für einen ausreichenden Radweg (mit Busroute `required_width.GOW50_bus`, F06); `in_hvs` zählt nur als eigener Auslöser, nicht im Verbindungsscore (F13). Defaults und Ersatzquellen, die für alle Abschnitte gleich gelten (`global_caveats` in C-CONF-01: Ortsgrenze, Schulstraße, Querungsbedarf, HVS aus den DTV-Linien, Schulen/Kitas aus OSM), senken die confidence nicht mehr; sie stehen einmal im Bericht und auf der Methodenseite (F14). Der Teil `crossing_demand` von Auslöser a ist stillgelegt (status inactive, F25). Die Harmonisierung (H-STR-01) schließt GOW50-Lücken unter `gap_close_m` (500 m) zwischen zwei GOW30-Läufen (Lückenschluss nach StVO-Novelle 2024, Fassung prüfen). Anbaufreie Abschnitte (S-FEAT-12) bleiben GOW50 und tragen das Flag `gow50_anbaufrei` (Hinweis im Steckbrief und in D-SPD-01, F23).
 
 **6. Netzkohärenz (`s06_coherence.py`).** Die Regeln N1–N6 laufen auf dem Graphen der vorgeschlagenen Kategorien. Verstöße werden nicht automatisch „repariert“, sondern als `flags` gespeichert; eine optionale Glättung (z. B. kurze ETW-Lücke zwischen zwei GOW50) erscheint als Vorschlag mit eigener Regel-ID.
 
@@ -265,12 +265,19 @@ Die Mindestbreiten sind aus belegten Einzelmaßen zusammengesetzt; die Summen si
 
 | Soll-Profil | Zusammensetzung | Erforderliche Breite |
 | --- | --- | --- |
-| GOW50, 2 Fahrstreifen, ohne Parken | 2 × 2,50 Gehweg + 2 × 2,00 Radweg + 2 × 0,50 Trennstreifen + 6,50 Fahrbahn | ≈ 16,50 m |
-| GOW50 mit Bus (CROW 7,00 m) | wie oben, Fahrbahn 7,00 | ≈ 17,00 m |
+| GOW50, 2 Fahrstreifen, ohne Parken | 2 × 2,50 Gehweg + 2 × 2,00 Radweg + 2 × 0,75 Trennstreifen + 6,50 Fahrbahn | 17,00 m |
+| GOW50 mit Bus (CROW 7,00 m) | wie oben, Fahrbahn 7,00 | 17,50 m |
 | GOW50 mit Baumstreifen/Lieferzone beidseitig | + 2 × 2,00 und Trennstreifen 0,75 statt 0,50 | ≈ 21,50 m |
 | GOW30 schmal (bis 6.000 Kfz/Tag) | 2 × 2,50 Gehweg + 5,80–8,40 Fahrbahn inkl. Radstreifen | 10,80–13,40 m |
 | GOW30 breit (bis 10.000 Kfz/Tag) | 2 × 2,50 Gehweg + 8,40–10,70 Fahrbahn | 13,40–15,70 m |
-| ETW30 Mischverkehr | 2 × 2,50 Gehweg + 5,80 Fahrbahn (+ 2,00 Parken einseitig) | 10,80 (12,80) m |
+| ETW30 Mischverkehr | 2 × 2,50 Gehweg + 4,75 Fahrbahn (+ 2,00 Parken einseitig) | 9,75 (11,75) m |
+
+Seit rules.yaml 0.18.0 (Review 2026-11, F05) gibt es nur eine Machbarkeitsrechnung: `required_width.GOW50`,
+`GOW50_bus` und `ETW30` sind das Mindestprofil aus design_rules.yaml (Gehweg `elements_min_m.sidewalk.min`,
+Trennstreifen `buffer_cycle_carriageway`, Fahrbahn `lane_width_m`) mit dem ERA-Regelmaß des Radwegs aus
+cycling_rules.yaml (`widths_m.de.separated_oneway.standard`). Jeder Eintrag nennt seine Pfade in `formula`; ein Test
+rechnet sie nach (Invariante V-INV-06). Die Klassifikation fragt damit, ob ein sicherer Radweg überhaupt möglich ist;
+der Soll-Querschnitt (c06) startet mit Regelmaßen und baut bis D4 auf dieses Mindestprofil ab.
 
 Alle Werte gehören als Annahmen mit Quellenbezug in `rules.yaml` und werden von einer Verkehrsplaner\*in vor dem ersten Lauf geprüft. Die Fahrbahnbreite 6,50 m für zwei Fahrstreifen mit Begegnungsverkehr Lkw/Bus ist aus der Erinnerung an RASt 06 übernommen und am Original zu verifizieren \[Annahme\].
 
@@ -326,7 +333,7 @@ Beim Anklicken öffnet ein Seitenpanel (mobil: Bottom Sheet) mit:
 
 - Straßenname, Bezirk, Abschnitts-ID, Länge
 - **Soll-Kategorie** mit Klartext („Stadtstraße 30 – verbindet Quartiere, Radverkehr auf Radstreifen“) und ggf. Hinweis „fachlich korrigiert: Begründung …“
-- **Begründung:** gegriffene Regeln in verständlicher Sprache mit Werten, z. B. „Kein getrennter Radweg möglich: Straßenraum 14,2 m, nötig 16,5 m (Regel C-G30-02)“
+- **Begründung:** gegriffene Regeln in verständlicher Sprache mit Werten, z. B. „Für einen ausreichenden baulichen Radweg fehlt der Platz: Straßenraum 14,2 m, nötig 17,0 m (Regel C-G30-02)“
 - Ist-Zustand: Tempo, Radführung, Busfahrten, DTV (falls vorhanden)
 - Querschnitt: Median/Engstelle, Machbarkeitsklasse, kleine Skizze der Soll-Aufteilung
 - Diskrepanz und Priorität
@@ -560,25 +567,25 @@ classification:
     if: 'conn_score >= thresholds.conn_gow or in_hvs'
     then: 'GOW (weiter mit C-G30-*)'
     thresholds:
-      conn_gow: {value: 0.6, unit: 'score 0-1', source_type: assumption, check: 'Sensitivität ±20 %, Abgleich HVS'}
+      conn_gow: {value: 0.87, unit: 'score 0-1', source_type: assumption, check: 'seit 0.18.0 ohne in_hvs im Score neu kalibriert (F13)'}
     source: [SWOV_FS_2023, HH_HVS_2023]
     source_type: swov_crow
     status: draft
   - id: C-G30-01
-    description: 'GOW30-Auslöser a: Umfeld spricht für 30 (Schule, Leben, Querbarkeit)'
+    description: 'GOW30-Auslöser a: Umfeld spricht für 30 (Schule/Kita am Abschnitt, Leben, Querbarkeit)'
     applies_to: GOW
-    if: 'schools_or_kitas_within_m <= thresholds.sensitive_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high'
+    if: 'school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high'
     then: GOW30
     thresholds:
-      sensitive_radius: {value: 150, unit: m, source_type: assumption}
+      access_radius: {value: 50, unit: m, source_type: assumption}  # seit 0.18.0 statt sensitive_radius 150 m (F07); crossing_demand stillgelegt (F25)
       frontage:         {value: 0.4, unit: 'Anteil Erdgeschoss mit Publikumsnutzung', source_type: assumption}
     source: [CROW_AFW30_2021, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
   - id: C-G30-02
-    description: 'GOW30-Auslöser b: 50 nicht sicher gestaltbar (kein getrennter Radweg möglich)'
+    description: 'GOW30-Auslöser b: 50 nicht sicher gestaltbar (kein ausreichender getrennter Radweg möglich)'
     applies_to: GOW
-    if: 'not separated_cycle_track_present and width_p10_m < required_width.GOW50'
+    if: '(not bus_route and width_p10_m < required_width.GOW50) or (bus_route and width_p10_m < required_width.GOW50_bus)'  # seit 0.18.0 (F06)
     then: GOW30
     source: [SWOV_FS_2023, CROW_GOW30_2023]
     source_type: swov_crow
@@ -600,13 +607,12 @@ classification:
 # Verbindungs- und Aufenthaltsscore (gewichtete Summe normierter Merkmale)
 scores:
   conn_score:
-    weights:  # source_type: assumption (Sensitivitätsanalyse)
-      betweenness_norm: 0.35
-      in_hvs: 0.25
-      bus_trips_weekday_norm: 0.20
-      dtv_norm: 0.20
+    weights:  # source_type: assumption (Sensitivitätsanalyse); seit 0.18.0 ohne in_hvs (F13)
+      betweenness_norm: 0.45
+      bus_trips_weekday_norm: 0.30
+      dtv_norm: 0.25
     missing_value_policy: 'Gewicht auf übrige Merkmale umlegen, confidence herabsetzen'
-  place_score:
+  place_score:  # derzeit von keiner Regel gelesen (F25)
     weights:
       building_density_norm: 0.3
       population_100m_norm: 0.3
@@ -616,7 +622,7 @@ scores:
 # Anforderungen je Kategorie (für Diskrepanz und Machbarkeit)
 requirements:
   GOW50:
-    cycling: {value: separated_mandatory_track_or_parallel_route, source: CROW_GOW30_2023, source_type: swov_crow}
+    cycling: {value: separated_track_or_parallel_route, source: CROW_GOW30_2023, source_type: swov_crow}  # Benutzungspflicht ist eine Anordnung, nicht Gegenstand des Plans (F22)
     cycle_lanes_allowed: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
     cycle_track_width_m: {value: 2.00, source: ERA_2010, source_type: de_regelwerk}
     buffer_to_parking_m: {value: 0.75, min: 0.50, source: ERA_2010, source_type: de_regelwerk}
@@ -649,13 +655,12 @@ requirements:
 
 # Erforderliche Straßenraumbreite (Grenze zu Grenze) – Summen aus Einzelmaßen
 required_width:
-  sidewalk_m: {value: 2.50, source: RAST_06, source_type: de_regelwerk, status: 'am Original prüfen'}
-  carriageway_2lane_m: {value: 6.50, source: RAST_06, source_type: assumption, status: 'aus Erinnerung, am Original prüfen'}
-  GOW50: {value: 16.50, formula: '2*sidewalk + 2*cycle_track + 2*0.50 + carriageway_2lane', source_type: assumption}
-  GOW50_bus: {value: 17.00, source_type: assumption}
+  # seit 0.18.0 (F05): Mindestprofil aus design_rules (D.) und cycling_rules (C.), value = formula (V-INV-06)
+  GOW50: {value: 17.00, formula: '2*D…sidewalk.min + 2*C.widths_m.de.separated_oneway.standard + 2*D…buffer_cycle_carriageway + D…GOW50_2x1_carriageway.value', source_type: assumption}
+  GOW50_bus: {value: 17.50, formula: 'wie GOW50 mit D…GOW50_bus_carriageway.value', source_type: assumption}
   GOW30_narrow: {range: [10.80, 13.40], source_type: assumption}
   GOW30_wide: {range: [13.40, 15.70], source_type: assumption}
-  ETW30: {value: 10.80, source_type: assumption}
+  ETW30: {value: 9.75, formula: '2*D…sidewalk.min + D…ETW30_mixed.value', source_type: assumption}
 
 feasibility_classes:  # width_ratio = width_p10 / required_width; halboffen [min, max)
   fits: {min: 1.00, source_type: assumption}
@@ -702,7 +707,7 @@ priority:
     school_kita_within_150m: 0.2
 ```
 
-**Prüfhinweise:** Die Schwellen `conn_gow`, `sensitive_radius`, `frontage`, N2–N4 und alle Gewichte sind Annahmen; sie werden über die Sensitivitätsanalyse (Teil 7) und den HVS-Abgleich kalibriert und erst danach auf `status: reviewed` gesetzt. Die Logik `C-G30-01`/`C-G30-02` folgt den beiden GOW30-Auslösern des CROW-Afwegingskaders \[F\].
+**Prüfhinweise:** Die Schwellen `conn_gow`, `access_radius`, `frontage`, N2–N4 und alle Gewichte sind Annahmen; sie werden über die Sensitivitätsanalyse (Teil 7) und den HVS-Abgleich kalibriert und erst danach auf `status: reviewed` gesetzt. Die Logik `C-G30-01`/`C-G30-02` folgt den beiden GOW30-Auslösern des CROW-Afwegingskaders \[F\].
 
 ## Anhang B – Datenliste
 

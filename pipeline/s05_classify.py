@@ -169,7 +169,12 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         f"- Klassifiziert: {_fmt(len(area))} Abschnitte im Arbeitsgebiet ({_km(total_km)} km), davon {_fmt(len(pilot))} in "
         f"{pilot_name} ({_km(pilot['length_m'].sum())} km). Abschnitte außerhalb des Arbeitsgebiets bleiben leer.",
         f"- Defaults aus C-MISS-01 genutzt: " + ", ".join(
-            f"{k} {_pct(v)}" for k, v in ctx["defaults_share"].items()) + " der Abschnitte im Arbeitsgebiet.", "",
+            f"{k} {_pct(v)}" for k, v in ctx["defaults_share"].items()) + " der Abschnitte im Arbeitsgebiet.",
+        "- Stillgelegt (C-MISS-01 status inactive, zählt nicht als abgedeckt): " + (", ".join(
+            k for p in rules.classification_policy for k, d in p.defaults.items() if d.status == "inactive") or "keine")
+        + ". Der zugehörige Teil der Bedingung greift nie.",
+        "- Globale Vorbehalte (C-CONF-01 global_caveats, gelten für alle Abschnitte gleich und senken confidence nicht): "
+        + ", ".join(n for p in rules.classification_policy for n in p.global_caveats) + ".", "",
         "### km je Kategorie", "",
         f"| Kategorie | Bezeichnung | {pilot_name} km | Anteil | Arbeitsgebiet km | Anteil | Abschnitte (Arbeitsgebiet) |",
         "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
@@ -207,8 +212,10 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
                   f"{k} = {d.value}" for p in rules.classification_policy for k, d in p.defaults.items()) + ".",
               "- **confidence (C-CONF-01):** niedrig, wenn ein entscheidender Wert fehlt oder innerhalb ±10 % einer Schwelle liegt; "
               "mittel bei Fallback-Quellen (" + ", ".join(
-                  p_name for p in rules.classification_policy for p_name in p.fallback_inputs) + ") und Defaults; sonst hoch. "
-              "Es zählen nur Werte, die das Ergebnis bestimmt haben.",
+                  p_name for p in rules.classification_policy for p_name in p.fallback_inputs
+                  if p_name not in p.global_caveats) + ") und Defaults; sonst hoch. "
+              "Es zählen nur Werte, die das Ergebnis bestimmt haben. Defaults und Fallbacks, die für alle Abschnitte gleich "
+              "gelten (global_caveats, F14), senken confidence nicht; sie stehen einmal oben unter Kennzahlen.",
               "- `rule_trace` (JSON) enthält je geprüfter Regel id, passed, result (true/false/null), inputs, confidence und Gründe; "
               "`rule_path` die gegriffenen Regeln.",
               f"- HVS = `in_hvs` (DTV-Linien 2019, S-CONF-04). Bezirksstraße = keine HVS und keine Autobahn "
@@ -306,7 +313,7 @@ def main() -> int:
 
     result = classify_frame(inp[in_area], rules)
     out = inp.join(result)
-    defaults = {k for p in rules.classification_policy for k in p.defaults}
+    defaults = {k for p in rules.classification_policy for k, d in p.defaults.items() if d.status != "inactive"}
     defaults_share = {k: float(inp.loc[in_area, k].isna().mean()) for k in sorted(defaults)}
 
     golden = golden_results(rules)

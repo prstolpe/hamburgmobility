@@ -100,7 +100,9 @@ def write_report(out: gpd.GeoDataFrame, res: dict, rules, districts: list[str], 
     lines = ["# Harmonisierung je Straßenzug – Stufe 5b", "",
              f"Erzeugt: {_now()} von `pipeline/s05b_harmonise.py`, rules.yaml {rules.meta.version}. Nicht amtlicher Entwurf.", "",
              f"Regel H-STR-01: kurze Läufe unter {min_run:g} m (N2) auf einem Straßenzug werden angeglichen; bei 50 gegen 30 "
-             "gewinnt das niedrigere Tempo. Straßenzug wie N2 (Knoten mit Grad 2 laufen weiter, an Kreuzungen der "
+             "gewinnt das niedrigere Tempo. Lückenschluss: ein GOW50-Lauf zwischen zwei GOW30-Läufen wird GOW30, wenn er "
+             f"kürzer als gap_close_m = {rules.harmonisation.rule('H-STR-01').thresholds['gap_close_m'].value:g} m ist "
+             "(F07, StVO-Novelle 2024, Fassung prüfen). Straßenzug wie N2 (Knoten mit Grad 2 laufen weiter, an Kreuzungen der "
              "gegenseitig beste Partner mit höchstens 30° Richtungsänderung).", "",
              "## Prüfungen", "", "| Prüfung | Ergebnis | Detail |", "| --- | --- | --- |",
              *[f"| {c['name']} | {'ok' if c['ok'] else 'FEHLER'} | {c['detail']} |" for c in checks], "",

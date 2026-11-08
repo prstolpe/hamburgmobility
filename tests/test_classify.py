@@ -21,8 +21,8 @@ RULES_RURAL = with_rules_activated(RULES, {"C-RUR-01"})
 BASE = {
     "highway": "residential", "access_motor_only": False, "outside_builtup_area": False, "conn_score": 0.2,
     "conn_weight_available": 1.0, "in_hvs": False, "ist_verkehrsberuhigt": False, "pedestrian_zone": False,
-    "override_school_street": False, "schools_or_kitas_within_m": 600.0, "shop_frontage_share": 0.1,
-    "crossing_demand": "low", "separated_cycle_track_present": True, "width_p10_m": 25.0, "dtv_official": None, "width_from_neighbour": False,
+    "override_school_street": False, "school_or_kita_access_m": 600.0, "shop_frontage_share": 0.1,
+    "crossing_demand": "low", "bus_route": False, "width_p10_m": 25.0, "dtv_official": None, "width_from_neighbour": False,
 }
 GOW = {**BASE, "highway": "primary", "conn_score": 0.9, "in_hvs": True, "dtv_official": 8000.0}  # HVS always has a count
 
@@ -44,19 +44,47 @@ def test_result_shape():
         assert {"id", "passed", "result", "inputs", "confidence"} <= set(s)
 
 
-def test_in_hvs_fallback_makes_etw30_medium():
+def test_global_caveat_in_hvs_does_not_lower_confidence():
+    """F14: in_hvs (DTV lines 2019 instead of the HVS map) applies to all segments alike -> no fallback reason."""
     r = run()
-    assert r["confidence"] == "mittel"
-    assert "fallback:in_hvs" in r["confidence_reasons"]
+    assert r["confidence"] == "hoch"
+    assert "fallback:in_hvs" not in r["confidence_reasons"]
 
 
 def test_defaults_for_missing_policy_inputs():
     r = run(outside_builtup_area=None, override_school_street=None, crossing_demand=None)
     assert r["cat_proposed"] == "ETW30"
-    assert set(r["defaults_used"]) == {"outside_builtup_area", "override_school_street", "crossing_demand"}
+    # crossing_demand is an inactive default (F25): always set, not counted as a default use
+    assert set(r["defaults_used"]) == {"outside_builtup_area", "override_school_street"}
     assert step(r, "C-ERF-01")["inputs"]["override_school_street"] is False
-    assert "fallback:override_school_street" in r["confidence_reasons"]
-    assert r["confidence"] == "mittel"
+    # F14: structural defaults are global caveats and do not lower confidence
+    assert "fallback:override_school_street" not in r["confidence_reasons"]
+    assert r["confidence"] == "hoch"
+
+
+def test_non_global_fallback_still_lowers_confidence():
+    """F14 keeps the per-segment fallbacks: width from the neighbour (S-XS-07) decides C-G30-02 -> mittel."""
+    r = classify_segment({**GOW, "width_p10_m": 12.0, "width_from_neighbour": True}, RULES)
+    assert r["cat_proposed"] == "GOW30"
+    assert "fallback:width_p10_m" in r["confidence_reasons"] and r["confidence"] == "mittel"
+
+
+def test_inactive_default_crossing_demand_never_fires():
+    """F25: crossing_demand is inactive (status inactive in C-MISS-01): even an input 'high' does not trigger C-G30-01."""
+    r = classify_segment({**GOW, "crossing_demand": "high"}, RULES)
+    assert r["cat_proposed"] == "GOW50"
+    assert step(r, "C-G30-01")["passed"] is False
+    assert "crossing_demand" not in r["defaults_used"]
+    assert not any("crossing_demand" in x for x in r["confidence_reasons"])
+
+
+def test_school_or_kita_access_radius_boundary():
+    """F07 / G04: Kita site 50 m from the segment -> GOW30 (C-G30-01); 51 m -> continues with C-G30-02."""
+    r50 = classify_segment({**GOW, "school_or_kita_access_m": 50.0}, RULES)
+    assert r50["cat_proposed"] == "GOW30" and step(r50, "C-G30-01")["passed"]
+    r51 = classify_segment({**GOW, "school_or_kita_access_m": 51.0}, RULES)
+    assert r51["cat_proposed"] == "GOW50" and step(r51, "C-G30-01")["result"] is False
+    assert step(r51, "C-G30-02")["result"] is False
 
 
 def test_inactive_rule_is_not_evaluated():
@@ -69,10 +97,10 @@ def test_inactive_rule_is_not_evaluated():
     assert "fallback:outside_builtup_area" not in r["confidence_reasons"]
 
 
-def test_activated_rural_rule_uses_default_as_fallback():
+def test_activated_rural_rule_uses_default_without_lowering_confidence():
     r = classify_segment({**BASE, "outside_builtup_area": None}, RULES_RURAL)
     assert step(r, "C-RUR-01")["inputs"]["outside_builtup_area"] is False
-    assert "fallback:outside_builtup_area" in r["confidence_reasons"]
+    assert "fallback:outside_builtup_area" not in r["confidence_reasons"]  # global caveat (F14)
 
 
 def test_default_is_not_used_when_value_present():
@@ -84,7 +112,7 @@ def test_default_is_not_used_when_value_present():
 def test_inactive_group_member_is_skipped():
     cls = [r.model_copy(update={"status": "inactive"}) if r.id == "C-G30-01" else r for r in RULES.classification]
     rules = RULES.model_copy(update={"classification": cls})
-    r = classify_segment({**GOW, "schools_or_kitas_within_m": 50.0}, rules)
+    r = classify_segment({**GOW, "school_or_kita_access_m": 20.0}, rules)
     assert r["cat_proposed"] == "GOW50"
     assert step(r, "C-G30-01")["status"] == "inactive"
 
@@ -99,22 +127,31 @@ def test_missing_trigger_input_gives_gow50_low():
 
 
 def test_missing_input_does_not_matter_when_other_part_is_true():
-    r = classify_segment({**GOW, "shop_frontage_share": None, "schools_or_kitas_within_m": 50.0}, RULES)
+    r = classify_segment({**GOW, "shop_frontage_share": None, "school_or_kita_access_m": 20.0}, RULES)
     assert r["cat_proposed"] == "GOW30"
     assert "fehlt:shop_frontage_share" not in r["confidence_reasons"]
 
 
-def test_missing_width_without_track_gives_unknown_g30_02():
-    r = classify_segment({**GOW, "separated_cycle_track_present": False, "width_p10_m": None}, RULES)
+def test_missing_width_gives_unknown_g30_02():
+    r = classify_segment({**GOW, "width_p10_m": None}, RULES)
     assert step(r, "C-G30-02")["result"] is None
     assert r["cat_proposed"] == "GOW50" and r["confidence"] == "niedrig"
 
 
-def test_missing_width_with_track_is_still_false():
-    # not track = False decides the and; width does not matter.
-    r = classify_segment({**GOW, "width_p10_m": None}, RULES)
-    assert step(r, "C-G30-02")["result"] is False
-    assert "fehlt:width_p10_m" not in r["confidence_reasons"]
+def test_existing_track_does_not_count():
+    """F06 / G03: a (narrow) existing track no longer makes 50 'safe'; only the space decides."""
+    r = classify_segment({**GOW, "separated_cycle_track_present": True, "width_p10_m": 15.0}, RULES)
+    assert r["cat_proposed"] == "GOW30" and step(r, "C-G30-02")["passed"]
+    assert "separated_cycle_track_present" not in step(r, "C-G30-02")["inputs"]
+
+
+def test_bus_route_needs_gow50_bus_width():
+    """F06: with a bus route the GOW50 profile needs required_width.GOW50_bus (17.50 m) instead of GOW50 (17.00 m)."""
+    gow50, gow50_bus = RULES.required_width["GOW50"].value, RULES.required_width["GOW50_bus"].value
+    assert gow50_bus > gow50
+    width = (gow50 + gow50_bus) / 2
+    assert classify_segment({**GOW, "width_p10_m": width, "bus_route": False}, RULES)["cat_proposed"] == "GOW50"
+    assert classify_segment({**GOW, "width_p10_m": width, "bus_route": True}, RULES)["cat_proposed"] == "GOW30"
 
 
 def test_missing_conn_score_in_rural_then_uses_else_branch_low():
@@ -135,7 +172,7 @@ def test_motorway_is_high_confidence():
 
 
 def test_trace_lists_all_gow_triggers_and_rule_path():
-    r = classify_segment({**GOW, "schools_or_kitas_within_m": 50.0, "separated_cycle_track_present": False,
+    r = classify_segment({**GOW, "school_or_kita_access_m": 20.0, "separated_cycle_track_present": False,
                           "width_p10_m": 10.0}, RULES)
     passed = [s["id"] for s in r["rule_trace"] if s["passed"]]
     assert passed == ["C-GOW-01", "C-G30-01", "C-G30-02"]
@@ -192,7 +229,7 @@ def test_policy_ids_must_not_clash(raw):
 
 def test_traffic_volume_does_not_block_gow30():
     # rules.yaml 0.15.0: local circumstances outrank today's traffic (cap of 0.14.0 withdrawn, decision prstolpe 2026-11-07)
-    near_school = {**GOW, "schools_or_kitas_within_m": 50.0}
+    near_school = {**GOW, "school_or_kita_access_m": 20.0}
     for dtv in (8000.0, 40000.0, None):
         r = classify_segment({**near_school, "dtv_official": dtv}, RULES)
         assert r["cat_proposed"] == "GOW30"

@@ -1,6 +1,6 @@
 {
   "type": "FeatureCollection",
-  "name": "gow30_crossing_demand_high",
+  "name": "gow30_hvs_school_access_30m",
   "crs": {
     "type": "name",
     "properties": {
@@ -11,8 +11,8 @@
     {
       "type": "Feature",
       "properties": {
-        "case_id": "gow30_crossing_demand_high",
-        "description": "HVS mit Radweg, hoher Querungsbedarf",
+        "case_id": "gow30_hvs_school_access_30m",
+        "description": "HVS mit Radweg, Grundstück einer Schule 30 m vom Abschnitt (C-G30-01, access_radius; bis 0.17.0: Schule in 100 m im Umkreis 150 m)",
         "expected_category": "GOW30",
         "expected_rules": [
           "C-GOW-01",
@@ -28,21 +28,22 @@
         "ist_verkehrsberuhigt": false,
         "pedestrian_zone": false,
         "override_school_street": false,
-        "schools_or_kitas_within_m": 600.0,
+        "school_or_kita_access_m": 30.0,
         "shop_frontage_share": 0.1,
-        "crossing_demand": "high",
+        "crossing_demand": "low",
         "separated_cycle_track_present": true,
+        "bus_route": false,
         "width_p10_m": 20.0
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [
-            565000.0,
+            564600.0,
             5938000.0
           ],
           [
-            565100.0,
+            564700.0,
             5938000.0
           ]
         ]

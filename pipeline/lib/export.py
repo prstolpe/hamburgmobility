@@ -29,7 +29,8 @@ PUBLIC_COLUMNS = [
     "sens_change_rate", "sens_uncertain", "rule_path",
     "speed_ist_kmh", "speed_ist_source", "in_hvs", "dtv_official", "bus_trips_weekday", "in_cycle_network",
     "separated_cycle_track_present", "cycle_lane_present", "centre_line", "parking_along_carriageway",
-    "conn_score", "place_score", "schools_or_kitas_within_m", "population_100m", "shop_frontage_share",
+    "conn_score", "place_score", "schools_or_kitas_within_m", "school_or_kita_access_m", "bus_route",
+    "population_100m", "shop_frontage_share", "anbaufrei", "gow50_anbaufrei",
     "width_median_m", "width_p10_m", "feasibility_GOW50", "feasibility_GOW30_narrow", "feasibility_ETW30",
     "flags",
     "disc_speed", "disc_design", "disc_use", "disc_max", "disc_type",
@@ -126,6 +127,19 @@ def confidence_info(level: str, reasons: list[str], texts: dict) -> dict:
         template = c["reasons"].get(kind)
         lines.append(template.format(feature=label) if template else r)
     return {"level": level, "summary": c.get(level, ""), "reasons": lines}
+
+
+def global_caveats(rules: RuleSet, texts: dict) -> dict:
+    """F14: C-CONF-01 global_caveats in plain text, shown once on the method page instead of in every profile."""
+    names = list(dict.fromkeys(n for p in rules.classification_policy for n in p.global_caveats))
+    return {"intro": texts["confidence"].get("global_caveats_intro", ""),
+            "items": [texts["features"].get(n, n) for n in names]}
+
+
+def hints(values: dict, texts: dict) -> list[str]:
+    """Hints for the profile (section Soll-Kategorie): every flag in texts.hints whose column is true (F23)."""
+    return [text for flag, text in (texts.get("hints") or {}).items()
+            if not expr.is_missing(values.get(flag)) and bool(values.get(flag))]
 
 
 def sensitivity_info(values: dict, rules: RuleSet, texts: dict, runs: int, delta: float) -> dict:

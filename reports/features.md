@@ -1,12 +1,12 @@
 # Merkmalsbericht – Stufe 4
 
-Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.16.0. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-08T14:03:17+00:00 von `pipeline/s04_features.py`, rules.yaml 0.18.0. Nicht amtlicher Entwurf.
 
 ## Kennzahlen
 
 - Abschnitte gesamt (OSM-Auszug): 36 526; im Arbeitsgebiet (Hamburg (7 Bezirke) + 500 m): 34 702; davon mit Bezirk: 33 712
 - Normierung (S-FEAT-01): Perzentilrang über das ganze Arbeitsgebiet, also über ganz Hamburg (Entscheidung 2026-11-04), damit derselbe Abschnitt in jedem Bezirk gleich bewertet wird.
-- Betweenness: exakt (keine Stichprobe), ungerichtet, 34 375 Kfz-Abschnitte ganz Hamburgs, Laufzeit 58 s
+- Betweenness: exakt (keine Stichprobe), ungerichtet, 34 375 Kfz-Abschnitte ganz Hamburgs, Laufzeit 55 s
 - Reisezeit-Tempo im Arbeitsgebiet: official 81.8 %, osm 10.8 %, default 4.0 %, keins 3.4 %
 - Ist-Tempo: amtlich 81.8 %, OSM 10.8 %, unbekannt 7.4 %; Konflikt amtlich ≠ OSM: 1146 Abschnitte
 - GTFS: repräsentativer Werktag 2026-04-29, 1662 shapes, 0 Fahrten ohne shape
@@ -25,12 +25,14 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 
 ## Methode
 
-- **Normierung (S-FEAT-01):** Perzentilrang über alle Abschnitte im Arbeitsgebiet mit bekanntem Wert, (Rang − 1) / (n − 1); gleiche Werte erhalten den kleinsten Rang ihrer Gruppe (rules.yaml 0.5.0), damit der kleinste Wert – z. B. 0 Busfahrten – auf 0 fällt. 1 = größter Wert. `in_hvs` geht als 0/1 ein, `shop_frontage_share` unverändert. `sensitive_facilities_norm` ist der Perzentilrang der negativen Entfernung (nah = hoch). Die Normierung hängt vom Arbeitsgebiet ab; bei Ausweitung auf ganz Hamburg ändern sich die Werte.
+- **Normierung (S-FEAT-01):** Perzentilrang über alle Abschnitte im Arbeitsgebiet mit bekanntem Wert, (Rang − 1) / (n − 1); gleiche Werte erhalten den kleinsten Rang ihrer Gruppe (rules.yaml 0.5.0), damit der kleinste Wert – z. B. 0 Busfahrten – auf 0 fällt. 1 = größter Wert. `in_hvs` geht seit rules.yaml 0.18.0 nicht mehr in conn_score ein (F13), `shop_frontage_share` unverändert. `sensitive_facilities_norm` ist der Perzentilrang der negativen Entfernung (nah = hoch). Die Normierung hängt vom Arbeitsgebiet ab; bei Ausweitung auf ganz Hamburg ändern sich die Werte.
 - **Fehlende Werte:** bleiben null. conn_score und place_score legen das Gewicht fehlender Merkmale anteilig auf die übrigen um (missing_value_policy); `conn_weight_available`/`place_weight_available` zeigen, welcher Gewichtsanteil Werte hatte. Die Herabstufung der confidence folgt in Prompt 08.
 - **Betweenness (S-FEAT-02):** Reisezeit = Länge / Tempo (amtlich → OSM maxspeed → Standardwert je Klasse). Ohne pedestrian, service, track. Mehrere OSM-Werte je Abschnitt (z. B. „50 / 30“) gelten als unbekannt.
 - **Gebäudedichte (S-FEAT-03):** Grundfläche der oberirdischen ALKIS-Gebäude (gebnutzbez Gebaeude) im 50-m-Puffer / Pufferfläche.
 - **Publikumsnutzung (S-FEAT-05):** Anteil der ALKIS-Gebäude im 20-m-Puffer mit Publikumsnutzung: Gebäudefunktion aus der Liste in rules.yaml (36 Werte) oder OSM-shop/amenity-Punkt im Gebäude (ohne Stadtmöblierung). Nebengebäude (17 Funktionen, z. B. Garage, Gartenhaus) zählen nicht. Schulen und Kitas gehen über S-FEAT-06 ein, nicht hier. Das Geschoss wird nicht geprüft.
-- **Radnetz, Busfahrten (S-FEAT-07/08):** Längenanteil wie S-CONF-02 (Puffer, Winkel, Mindestanteil).
+- **Radnetz, Busfahrten (S-FEAT-07/08):** Längenanteil wie S-CONF-02 (Puffer, Winkel, Mindestanteil). `bus_peak_h_dir` = Busse in der stärksten Stunde der stärkeren Richtung (PRF-02, wie c06); `bus_route` = bus_peak_h_dir ≥ S-FEAT-08 bus_route_min_peak_h_dir (C-G30-02, F06).
+- **Schule/Kita am Abschnitt (S-FEAT-06):** `school_or_kita_access_m` = Abstand zur Fläche der nächsten Einrichtung aus OSM, bei Punkten zum Punkt (Näherung für das Grundstück; C-G30-01, F07).
+- **anbaufrei (S-FEAT-12):** Längenanteil ohne ALKIS-Gebäude und ohne Einmündung (Knoten mit Grad ≥ 3) im Puffer; `anbaufrei` ab min_share (F23).
 - **Ist-Gestaltung (S-FEAT-10):** Mehrheitswert über die Ways des Abschnitts (Gewicht: Länge im 1-m-Puffer). Kein Tag = unbekannt (null), nicht „nein“. Querungen und Verkehrsberuhigung: OSM-Knoten höchstens 1 m vom Abschnitt. `access_motor_only`: motorway/motorway_link oder motorroad=yes (sonst nein, weil motorroad nur positiv erfasst wird).
 
 ## Nullwertanteil je Merkmal (Arbeitsgebiet)
@@ -39,9 +41,11 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | --- | --- | --- | --- | ---: | ---: |
 | `betweenness` | OSM-Netz + Tempo | S-FEAT-02 | Rohwert für betweenness_norm | 5.6 % | 5.6 % |
 | `betweenness_norm` | OSM-Netz + Tempo | S-FEAT-01/02 | scores.conn_score | 5.6 % | 5.6 % |
-| `in_hvs` | DTV-Linien HVS 2019 | S-CONF-04 | C-GOW-01, scores.conn_score | 0.0 % | 0.0 % |
+| `in_hvs` | DTV-Linien HVS 2019 | S-CONF-04 | C-GOW-01 | 0.0 % | 0.0 % |
 | `bus_trips_weekday` | GTFS HVV | S-FEAT-08 | Rohwert für bus_trips_weekday_norm | 0.0 % | 0.0 % |
 | `bus_trips_weekday_norm` | GTFS HVV | S-FEAT-01/08 | scores.conn_score | 0.0 % | 0.0 % |
+| `bus_peak_h_dir` | GTFS HVV | S-FEAT-08 (PRF-02) | Rohwert für bus_route | 0.0 % | 0.0 % |
+| `bus_route` | GTFS HVV | S-FEAT-08 | C-G30-02 (required_width.GOW50_bus) | 0.0 % | 0.0 % |
 | `dtv_official` | DTV-Linien HVS 2019 | S-CONF-01 | discrepancy.use, Rohwert für dtv_norm | 83.2 % | 82.7 % |
 | `dtv_norm` | DTV-Linien HVS 2019 | S-FEAT-01 | scores.conn_score | 83.2 % | 82.7 % |
 | `conn_score` | abgeleitet | scores.conn_score | C-RUR-01, C-GOW-01 | 0.0 % | 0.0 % |
@@ -52,7 +56,8 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | `population_100m_norm` | Zensus 2022 Gitter | S-FEAT-01/04 | scores.place_score | 0.0 % | 0.0 % |
 | `shop_frontage_share` | ALKIS-Gebäudefunktion + OSM shop/amenity | S-FEAT-05 | C-G30-01, scores.place_score (frontage_share) | 0.0 % | 0.0 % |
 | `frontage_buildings` | ALKIS-Gebäude | S-FEAT-05 | Nenner von shop_frontage_share (Nachvollziehbarkeit) | 0.0 % | 0.0 % |
-| `schools_or_kitas_within_m` | OSM Schulen/Kitas | S-FEAT-06 | C-G30-01, priority.school_kita_within_150m | 0.0 % | 0.0 % |
+| `schools_or_kitas_within_m` | OSM Schulen/Kitas | S-FEAT-06 | priority.school_kita_within_150m, Rohwert für sensitive_facilities_norm | 0.0 % | 0.0 % |
+| `school_or_kita_access_m` | OSM Schulen/Kitas | S-FEAT-06 | C-G30-01 (access_radius) | 0.0 % | 0.0 % |
 | `sensitive_facilities_norm` | OSM Schulen/Kitas | S-FEAT-01/06 | scores.place_score | 0.0 % | 0.0 % |
 | `place_score` | abgeleitet | scores.place_score | Prompt 08/10 (Funktionskonflikt, Diskrepanz) | 0.0 % | 0.0 % |
 | `place_weight_available` | abgeleitet | scores.place_score | missing_value_policy | 0.0 % | 0.0 % |
@@ -76,8 +81,10 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | `surface` | OSM-Tags | S-FEAT-10 | Erkennbarkeit (guide.md 1.2) | 4.0 % | 3.5 % |
 | `access_motor_only` | OSM-Tags | S-FEAT-10 | C-SW-01 | 0.0 % | 0.0 % |
 | `pedestrian_zone` | OSM-Tags | S-FEAT-10 | C-ERF-01 | 0.0 % | 0.0 % |
+| `anbaufrei_share` | ALKIS-Gebäude + OSM-Netz | S-FEAT-12 | Rohwert für anbaufrei | 0.0 % | 0.0 % |
+| `anbaufrei` | ALKIS-Gebäude + OSM-Netz | S-FEAT-12 | D-SPD-01 anbaufrei_hint, Flag gow50_anbaufrei | 0.0 % | 0.0 % |
 | `outside_builtup_area` | keine Quelle | – | C-RUR-01 (keine Datenquelle für die Ortsgrenze (docs/open_questions.md)) | 100.0 % | 100.0 % |
-| `crossing_demand` | nicht definiert | – | C-G30-01 (in rules.yaml nicht definiert (docs/open_questions.md)) | 100.0 % | 100.0 % |
+| `crossing_demand` | stillgelegt (C-MISS-01 status inactive) | – | C-G30-01 (Teil stillgelegt, F25) (stillgelegt bis zur Kalibrierung von place_score (C-MISS-01 status inactive, F25)) | 100.0 % | 100.0 % |
 | `override_school_street` | overrides.csv (Prompt 09) | – | C-ERF-01 (kommt aus overrides/overrides.csv (Prompt 09)) | 100.0 % | 100.0 % |
 | `width_p10_m` | Querschnitt (Prompt 07) | – | C-G30-02 (kommt aus dem Querschnitt (Prompt 07)) | 100.0 % | 100.0 % |
 
@@ -85,14 +92,14 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 
 | Bezirk | Abschnitte | km | conn_score (Median) | place_score (Median) | Ist-Tempo null | Gebäudedichte null | lanes (OSM) null |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Altona | 4 886 | 620.5 | 0.23 | 0.46 | 5.4 % | 0.0 % | 61.5 % |
-| Bergedorf | 1 957 | 209.3 | 0.23 | 0.47 | 13.3 % | 0.0 % | 70.0 % |
-| Eimsbüttel | 4 004 | 470.4 | 0.25 | 0.51 | 5.2 % | 0.0 % | 53.5 % |
-| Hamburg-Mitte | 6 839 | 881.3 | 0.27 | 0.43 | 8.5 % | 0.0 % | 47.6 % |
-| Hamburg-Nord | 5 136 | 563.3 | 0.26 | 0.53 | 4.5 % | 0.0 % | 52.5 % |
-| Harburg | 3 348 | 465.2 | 0.21 | 0.40 | 10.4 % | 0.0 % | 59.5 % |
-| Wandsbek | 7 542 | 1 030.4 | 0.23 | 0.41 | 5.0 % | 0.0 % | 62.9 % |
-| **gesamt** | 33 712 | 4 240.4 | 0.24 | 0.45 | 6.7 % | 0.0 % | 57.0 % |
+| Altona | 4 886 | 620.5 | 0.32 | 0.46 | 5.4 % | 0.0 % | 61.5 % |
+| Bergedorf | 1 957 | 209.3 | 0.32 | 0.47 | 13.3 % | 0.0 % | 70.0 % |
+| Eimsbüttel | 4 004 | 470.4 | 0.34 | 0.51 | 5.2 % | 0.0 % | 53.5 % |
+| Hamburg-Mitte | 6 839 | 881.3 | 0.36 | 0.43 | 8.5 % | 0.0 % | 47.6 % |
+| Hamburg-Nord | 5 136 | 563.3 | 0.36 | 0.53 | 4.5 % | 0.0 % | 52.5 % |
+| Harburg | 3 348 | 465.2 | 0.28 | 0.40 | 10.4 % | 0.0 % | 59.5 % |
+| Wandsbek | 7 542 | 1 030.4 | 0.32 | 0.41 | 5.0 % | 0.0 % | 62.9 % |
+| **gesamt** | 33 712 | 4 240.4 | 0.33 | 0.45 | 6.7 % | 0.0 % | 57.0 % |
 
 ## Nullwertanteil je Datenquelle
 
@@ -100,20 +107,21 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | --- | --- | --- | ---: |
 | OSM-Netz + Tempo | – | `betweenness`, `betweenness_norm` | 5.6 % |
 | DTV-Linien HVS 2019 | ok | `in_hvs`, `dtv_official`, `dtv_norm` | 55.5 % |
-| GTFS HVV | ok | `bus_trips_weekday`, `bus_trips_weekday_norm` | 0.0 % |
+| GTFS HVV | ok | `bus_trips_weekday`, `bus_trips_weekday_norm`, `bus_peak_h_dir`, `bus_route` | 0.0 % |
 | abgeleitet | – | `conn_score`, `conn_weight_available`, `place_score`, `place_weight_available` | 0.0 % |
 | ALKIS-Gebäude | ok | `building_density`, `building_density_norm`, `frontage_buildings` | 0.0 % |
 | Zensus 2022 Gitter | ok | `population_100m`, `population_100m_norm` | 0.0 % |
 | ALKIS-Gebäudefunktion + OSM shop/amenity | – | `shop_frontage_share` | 0.0 % |
-| OSM Schulen/Kitas | fallback | `schools_or_kitas_within_m`, `sensitive_facilities_norm` | 0.0 % |
+| OSM Schulen/Kitas | fallback | `schools_or_kitas_within_m`, `school_or_kita_access_m`, `sensitive_facilities_norm` | 0.0 % |
 | OSM Radnetz Hamburg | fallback | `in_cycle_network` | 0.0 % |
 | Tempo amtlich/OSM | ok | `speed_ist_kmh`, `speed_ist_source`, `speed_sources_conflict` | 4.9 % |
 | Tempo amtlich/OSM/Standard | – | `travel_speed_kmh`, `travel_speed_source` | 3.4 % |
 | OSM-Tags | – | `separated_cycle_track_present`, `cycle_lane_present`, `lanes`, `centre_line`, `parking`, `parking_on_carriageway`, `parking_along_carriageway`, `angle_parking`, `surface`, `access_motor_only`, `pedestrian_zone` | 45.4 % |
 | OSM-Radwege + amtliches Radnetz (Bestand) | – | `parallel_cycle_route_present` | 0.0 % |
 | OSM-Knoten | – | `crossings_count`, `traffic_calming_count` | 0.0 % |
+| ALKIS-Gebäude + OSM-Netz | – | `anbaufrei_share`, `anbaufrei` | 0.0 % |
 | keine Quelle | – | `outside_builtup_area` | 100.0 % |
-| nicht definiert | – | `crossing_demand` | 100.0 % |
+| stillgelegt (C-MISS-01 status inactive) | – | `crossing_demand` | 100.0 % |
 | overrides.csv (Prompt 09) | – | `override_school_street` | 100.0 % |
 | Querschnitt (Prompt 07) | – | `width_p10_m` | 100.0 % |
 
@@ -258,16 +266,16 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 
 | von | bis | Anzahl | |
 | ---: | ---: | ---: | --- |
-| 0 | 0.0995 | 8062 | ██████████████████████████████ |
-| 0.0995 | 0.199 | 6708 | █████████████████████████ |
-| 0.199 | 0.299 | 6158 | ███████████████████████ |
-| 0.299 | 0.398 | 2800 | ██████████ |
-| 0.398 | 0.498 | 1824 | ███████ |
-| 0.498 | 0.597 | 3031 | ███████████ |
-| 0.597 | 0.697 | 1853 | ███████ |
-| 0.697 | 0.796 | 1671 | ██████ |
-| 0.796 | 0.896 | 1527 | ██████ |
-| 0.896 | 0.995 | 1068 | ████ |
+| 0 | 0.1 | 6568 | ██████████████████████████████ |
+| 0.1 | 0.2 | 5747 | ██████████████████████████ |
+| 0.2 | 0.3 | 3772 | █████████████████ |
+| 0.3 | 0.4 | 4638 | █████████████████████ |
+| 0.4 | 0.5 | 3145 | ██████████████ |
+| 0.5 | 0.6 | 1781 | ████████ |
+| 0.6 | 0.7 | 2148 | ██████████ |
+| 0.7 | 0.8 | 2880 | █████████████ |
+| 0.8 | 0.9 | 2913 | █████████████ |
+| 0.9 | 1 | 1110 | █████ |
 
 ### `place_score`
 
@@ -288,16 +296,16 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 
 | von | bis | Anzahl | |
 | ---: | ---: | ---: | --- |
-| 0.45 | 0.505 | 1916 | ██ |
-| 0.505 | 0.56 | 0 |  |
-| 0.56 | 0.615 | 0 |  |
-| 0.615 | 0.67 | 31 |  |
-| 0.67 | 0.725 | 0 |  |
-| 0.725 | 0.78 | 0 |  |
-| 0.78 | 0.835 | 26957 | ██████████████████████████████ |
-| 0.835 | 0.89 | 0 |  |
-| 0.89 | 0.945 | 0 |  |
-| 0.945 | 1 | 5798 | ██████ |
+| 0.3 | 0.37 | 1916 | ██ |
+| 0.37 | 0.44 | 0 |  |
+| 0.44 | 0.51 | 0 |  |
+| 0.51 | 0.58 | 31 |  |
+| 0.58 | 0.65 | 0 |  |
+| 0.65 | 0.72 | 0 |  |
+| 0.72 | 0.79 | 26957 | ██████████████████████████████ |
+| 0.79 | 0.86 | 0 |  |
+| 0.86 | 0.93 | 0 |  |
+| 0.93 | 1 | 5798 | ██████ |
 
 ### Kategoriale Merkmale
 
@@ -320,22 +328,22 @@ Erzeugt: 2026-11-07T15:37:12+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 
 | highway | Abschnitte | conn_score | place_score |
 | --- | ---: | ---: | ---: |
-| living_street | 1633 | 0.11 | 0.43 |
-| motorway | 130 | 0.53 | 0.12 |
-| motorway_link | 285 | 0.31 | 0.09 |
+| living_street | 1633 | 0.15 | 0.43 |
+| motorway | 130 | 0.68 | 0.12 |
+| motorway_link | 285 | 0.42 | 0.09 |
 | pedestrian | 705 | 0.00 | 0.69 |
-| primary | 2777 | 0.83 | 0.43 |
-| primary_link | 106 | 0.28 | 0.38 |
-| residential | 17571 | 0.17 | 0.47 |
-| secondary | 3878 | 0.71 | 0.41 |
-| secondary_link | 198 | 0.36 | 0.29 |
+| primary | 2777 | 0.81 | 0.43 |
+| primary_link | 106 | 0.39 | 0.38 |
+| residential | 17571 | 0.23 | 0.47 |
+| secondary | 3878 | 0.67 | 0.41 |
+| secondary_link | 198 | 0.46 | 0.29 |
 | service | 890 | 0.00 | 0.31 |
-| tertiary | 4303 | 0.51 | 0.46 |
-| tertiary_link | 115 | 0.32 | 0.32 |
+| tertiary | 4303 | 0.73 | 0.46 |
+| tertiary_link | 115 | 0.46 | 0.32 |
 | track | 352 | 0.00 | 0.10 |
-| trunk | 76 | 0.70 | 0.16 |
-| trunk_link | 113 | 0.34 | 0.14 |
-| unclassified | 1570 | 0.21 | 0.21 |
+| trunk | 76 | 0.69 | 0.16 |
+| trunk_link | 113 | 0.47 | 0.14 |
+| unclassified | 1570 | 0.30 | 0.21 |
 
 ## Stichprobe (30 zufällige Abschnitte in Hamburg (7 Bezirke), nach Bezirk geschichtet, Seed 42)
 
@@ -343,36 +351,36 @@ Links auf OSM-Karte und OSM-Way. Orthophoto- und Panoramax-Links folgen, sobald 
 
 | segment_id | Bezirk | Name | highway | conn | place | betw. | HVS | Tempo | Radweg | Front. | Schule/Kita m | Karte | Way |
 | --- | --- | --- | --- | ---: | ---: | ---: | --- | ---: | --- | ---: | ---: | --- | --- |
-| `seg_0b429570fa26ebba` | Altona | Blankeneser Landstraße | secondary | 0.77 | 0.56 | 0.85 | ja | 50 | nein | 0.50 | 90 | [Karte](https://www.openstreetmap.org/?mlat=53.565854&mlon=9.799288#map=18/53.565854/9.799288) | [Way](https://www.openstreetmap.org/way/4347380) |
-| `seg_30696dcbf7bc7a04` | Altona | Stresemannstraße | primary | 0.72 | 0.55 | 0.39 | ja | 50 | ja | 0.25 | 250 | [Karte](https://www.openstreetmap.org/?mlat=53.563539&mlon=9.941936#map=18/53.563539/9.941936) | [Way](https://www.openstreetmap.org/way/936598996) |
-| `seg_69ef3a0b69aab218` | Altona | Augustenpassage | residential | 0.07 | 0.91 | 0.16 | nein | 30 | nein | 0.64 | 3 | [Karte](https://www.openstreetmap.org/?mlat=53.559088&mlon=9.965603#map=18/53.559088/9.965603) | [Way](https://www.openstreetmap.org/way/618750343) |
-| `seg_76cb381fe708c1fa` | Altona | Babenwischenweg | unclassified | 0.20 | 0.03 | 0.46 | nein | 30 | nein | 0.00 | 1962 | [Karte](https://www.openstreetmap.org/?mlat=53.609687&mlon=9.763284#map=18/53.609687/9.763284) | [Way](https://www.openstreetmap.org/way/139864005) |
-| `seg_264144b18b9fcea1` | Bergedorf | Agnes-Wolffson-Straße | living_street | 0.20 | 0.50 | 0.46 | nein | 7 | – | 0.00 | 132 | [Karte](https://www.openstreetmap.org/?mlat=53.485344&mlon=10.179786#map=18/53.485344/10.179786) | [Way](https://www.openstreetmap.org/way/547484929) |
-| `seg_3da7e9d4c44d23c5` | Bergedorf | Bergedorfer Straße | primary | 0.96 | 0.17 | 1.00 | ja | 70 | nein | 0.00 | 378 | [Karte](https://www.openstreetmap.org/?mlat=53.521662&mlon=10.148217#map=18/53.521662/10.148217) | [Way](https://www.openstreetmap.org/way/229835361) |
-| `seg_1abf10d7274d8422` | Eimsbüttel | Rahweg | residential | 0.20 | 0.30 | 0.45 | nein | 30 | nein | 0.05 | 887 | [Karte](https://www.openstreetmap.org/?mlat=53.641256&mlon=9.977482#map=18/53.641256/9.977482) | [Way](https://www.openstreetmap.org/way/148170157) |
-| `seg_b14dd9d1cd005339` | Eimsbüttel | Herulerweg | unclassified | 0.03 | 0.07 | 0.07 | nein | 50 | ja | 0.00 | 806 | [Karte](https://www.openstreetmap.org/?mlat=53.650258&mlon=9.949240#map=18/53.650258/9.949240) | [Way](https://www.openstreetmap.org/way/25739516) |
-| `seg_c232d0e509b97fa5` | Eimsbüttel | Burgwedelkamp | residential | 0.51 | 0.24 | 0.70 | nein | 50 | – | 0.00 | 402 | [Karte](https://www.openstreetmap.org/?mlat=53.641930&mlon=9.911588#map=18/53.641930/9.911588) | [Way](https://www.openstreetmap.org/way/4089419) |
-| `seg_c330d48355534e10` | Eimsbüttel | Hohe Weide | residential | 0.17 | 0.71 | 0.39 | nein | 30 | nein | 0.07 | 18 | [Karte](https://www.openstreetmap.org/?mlat=53.576150&mlon=9.973005#map=18/53.576150/9.973005) | [Way](https://www.openstreetmap.org/way/137037866) |
-| `seg_08e2ef58517bf643` | Hamburg-Mitte | Bürgerweide | primary | 0.45 | 0.42 | 0.21 | ja | 50 | ja | 0.00 | 114 | [Karte](https://www.openstreetmap.org/?mlat=53.559557&mlon=10.038893#map=18/53.559557/10.038893) | [Way](https://www.openstreetmap.org/way/1116978247) |
-| `seg_09aed50abf56bb66` | Hamburg-Mitte | Billstieg | living_street | 0.11 | 0.50 | 0.24 | nein | 50 | – | 0.00 | 86 | [Karte](https://www.openstreetmap.org/?mlat=53.534394&mlon=10.110004#map=18/53.534394/10.110004) | [Way](https://www.openstreetmap.org/way/25581052) |
-| `seg_196a8094aa248d80` | Hamburg-Mitte | Lietbargredder | residential | 0.04 | 0.72 | 0.08 | nein | 30 | – | 0.17 | 38 | [Karte](https://www.openstreetmap.org/?mlat=53.527304&mlon=10.152096#map=18/53.527304/10.152096) | [Way](https://www.openstreetmap.org/way/23044175) |
-| `seg_7fda4452d37b8c74` | Hamburg-Mitte | Neßdeich | tertiary | 0.64 | 0.37 | 0.94 | nein | 50 | ja | 0.00 | 248 | [Karte](https://www.openstreetmap.org/?mlat=53.534354&mlon=9.861437#map=18/53.534354/9.861437) | [Way](https://www.openstreetmap.org/way/582276139) |
-| `seg_a63abe1685a892ba` | Hamburg-Mitte | Riedweg | residential | 0.11 | 0.58 | 0.24 | nein | 30 | – | 0.10 | 76 | [Karte](https://www.openstreetmap.org/?mlat=53.547382&mlon=10.096196#map=18/53.547382/10.096196) | [Way](https://www.openstreetmap.org/way/22604799) |
-| `seg_b3afd578702025a0` | Hamburg-Mitte | Dratelnstraße | secondary | 0.57 | 0.61 | 0.88 | nein | 50 | nein | 0.67 | 28 | [Karte](https://www.openstreetmap.org/?mlat=53.500583&mlon=10.001670#map=18/53.500583/10.001670) | [Way](https://www.openstreetmap.org/way/1321676828) |
-| `seg_25faecf475c757b5` | Hamburg-Nord | Wakendorfer Weg | residential | 0.34 | 0.42 | 0.78 | nein | 30 | nein | 0.00 | 531 | [Karte](https://www.openstreetmap.org/?mlat=53.677874&mlon=10.035990#map=18/53.677874/10.035990) | [Way](https://www.openstreetmap.org/way/4339201) |
-| `seg_5a4f9205e401376b` | Hamburg-Nord | Am Schulwald | tertiary | 0.05 | 0.10 | 0.12 | nein | 50 | ja | 0.00 | 445 | [Karte](https://www.openstreetmap.org/?mlat=53.649806&mlon=10.025809#map=18/53.649806/10.025809) | [Way](https://www.openstreetmap.org/way/27217205) |
-| `seg_6037ec807e38fc1e` | Hamburg-Nord | Husumer Straße | residential | 0.07 | 0.75 | 0.17 | nein | 30 | nein | 0.20 | 43 | [Karte](https://www.openstreetmap.org/?mlat=53.586805&mlon=9.978740#map=18/53.586805/9.978740) | [Way](https://www.openstreetmap.org/way/5229056) |
-| `seg_ce1e34eab5f15ff9` | Hamburg-Nord | Biedermannplatz | secondary | 0.86 | 0.47 | 0.86 | ja | 50 | ja | 0.00 | 110 | [Karte](https://www.openstreetmap.org/?mlat=53.581917&mlon=10.032758#map=18/53.581917/10.032758) | [Way](https://www.openstreetmap.org/way/53207254) |
+| `seg_0b429570fa26ebba` | Altona | Blankeneser Landstraße | secondary | 0.71 | 0.56 | 0.85 | ja | 50 | nein | 0.50 | 90 | [Karte](https://www.openstreetmap.org/?mlat=53.565854&mlon=9.799288#map=18/53.565854/9.799288) | [Way](https://www.openstreetmap.org/way/4347380) |
+| `seg_30696dcbf7bc7a04` | Altona | Stresemannstraße | primary | 0.64 | 0.55 | 0.39 | ja | 50 | ja | 0.25 | 250 | [Karte](https://www.openstreetmap.org/?mlat=53.563539&mlon=9.941936#map=18/53.563539/9.941936) | [Way](https://www.openstreetmap.org/way/936598996) |
+| `seg_69ef3a0b69aab218` | Altona | Augustenpassage | residential | 0.09 | 0.91 | 0.16 | nein | 30 | nein | 0.64 | 3 | [Karte](https://www.openstreetmap.org/?mlat=53.559088&mlon=9.965603#map=18/53.559088/9.965603) | [Way](https://www.openstreetmap.org/way/618750343) |
+| `seg_76cb381fe708c1fa` | Altona | Babenwischenweg | unclassified | 0.27 | 0.03 | 0.46 | nein | 30 | nein | 0.00 | 1962 | [Karte](https://www.openstreetmap.org/?mlat=53.609687&mlon=9.763284#map=18/53.609687/9.763284) | [Way](https://www.openstreetmap.org/way/139864005) |
+| `seg_264144b18b9fcea1` | Bergedorf | Agnes-Wolffson-Straße | living_street | 0.27 | 0.50 | 0.46 | nein | 7 | – | 0.00 | 132 | [Karte](https://www.openstreetmap.org/?mlat=53.485344&mlon=10.179786#map=18/53.485344/10.179786) | [Way](https://www.openstreetmap.org/way/547484929) |
+| `seg_3da7e9d4c44d23c5` | Bergedorf | Bergedorfer Straße | primary | 0.95 | 0.17 | 1.00 | ja | 70 | nein | 0.00 | 378 | [Karte](https://www.openstreetmap.org/?mlat=53.521662&mlon=10.148217#map=18/53.521662/10.148217) | [Way](https://www.openstreetmap.org/way/229835361) |
+| `seg_1abf10d7274d8422` | Eimsbüttel | Rahweg | residential | 0.27 | 0.30 | 0.45 | nein | 30 | nein | 0.05 | 887 | [Karte](https://www.openstreetmap.org/?mlat=53.641256&mlon=9.977482#map=18/53.641256/9.977482) | [Way](https://www.openstreetmap.org/way/148170157) |
+| `seg_b14dd9d1cd005339` | Eimsbüttel | Herulerweg | unclassified | 0.04 | 0.07 | 0.07 | nein | 50 | ja | 0.00 | 806 | [Karte](https://www.openstreetmap.org/?mlat=53.650258&mlon=9.949240#map=18/53.650258/9.949240) | [Way](https://www.openstreetmap.org/way/25739516) |
+| `seg_c232d0e509b97fa5` | Eimsbüttel | Burgwedelkamp | residential | 0.74 | 0.24 | 0.70 | nein | 50 | – | 0.00 | 402 | [Karte](https://www.openstreetmap.org/?mlat=53.641930&mlon=9.911588#map=18/53.641930/9.911588) | [Way](https://www.openstreetmap.org/way/4089419) |
+| `seg_c330d48355534e10` | Eimsbüttel | Hohe Weide | residential | 0.23 | 0.71 | 0.39 | nein | 30 | nein | 0.07 | 18 | [Karte](https://www.openstreetmap.org/?mlat=53.576150&mlon=9.973005#map=18/53.576150/9.973005) | [Way](https://www.openstreetmap.org/way/137037866) |
+| `seg_08e2ef58517bf643` | Hamburg-Mitte | Bürgerweide | primary | 0.25 | 0.42 | 0.21 | ja | 50 | ja | 0.00 | 114 | [Karte](https://www.openstreetmap.org/?mlat=53.559557&mlon=10.038893#map=18/53.559557/10.038893) | [Way](https://www.openstreetmap.org/way/1116978247) |
+| `seg_09aed50abf56bb66` | Hamburg-Mitte | Billstieg | living_street | 0.15 | 0.50 | 0.24 | nein | 50 | – | 0.00 | 86 | [Karte](https://www.openstreetmap.org/?mlat=53.534394&mlon=10.110004#map=18/53.534394/10.110004) | [Way](https://www.openstreetmap.org/way/25581052) |
+| `seg_196a8094aa248d80` | Hamburg-Mitte | Lietbargredder | residential | 0.05 | 0.72 | 0.08 | nein | 30 | – | 0.17 | 38 | [Karte](https://www.openstreetmap.org/?mlat=53.527304&mlon=10.152096#map=18/53.527304/10.152096) | [Way](https://www.openstreetmap.org/way/23044175) |
+| `seg_7fda4452d37b8c74` | Hamburg-Mitte | Neßdeich | tertiary | 0.93 | 0.37 | 0.94 | nein | 50 | ja | 0.00 | 248 | [Karte](https://www.openstreetmap.org/?mlat=53.534354&mlon=9.861437#map=18/53.534354/9.861437) | [Way](https://www.openstreetmap.org/way/582276139) |
+| `seg_a63abe1685a892ba` | Hamburg-Mitte | Riedweg | residential | 0.15 | 0.58 | 0.24 | nein | 30 | – | 0.10 | 76 | [Karte](https://www.openstreetmap.org/?mlat=53.547382&mlon=10.096196#map=18/53.547382/10.096196) | [Way](https://www.openstreetmap.org/way/22604799) |
+| `seg_b3afd578702025a0` | Hamburg-Mitte | Dratelnstraße | secondary | 0.82 | 0.61 | 0.88 | nein | 50 | nein | 0.67 | 28 | [Karte](https://www.openstreetmap.org/?mlat=53.500583&mlon=10.001670#map=18/53.500583/10.001670) | [Way](https://www.openstreetmap.org/way/1321676828) |
+| `seg_25faecf475c757b5` | Hamburg-Nord | Wakendorfer Weg | residential | 0.47 | 0.42 | 0.78 | nein | 30 | nein | 0.00 | 531 | [Karte](https://www.openstreetmap.org/?mlat=53.677874&mlon=10.035990#map=18/53.677874/10.035990) | [Way](https://www.openstreetmap.org/way/4339201) |
+| `seg_5a4f9205e401376b` | Hamburg-Nord | Am Schulwald | tertiary | 0.07 | 0.10 | 0.12 | nein | 50 | ja | 0.00 | 445 | [Karte](https://www.openstreetmap.org/?mlat=53.649806&mlon=10.025809#map=18/53.649806/10.025809) | [Way](https://www.openstreetmap.org/way/27217205) |
+| `seg_6037ec807e38fc1e` | Hamburg-Nord | Husumer Straße | residential | 0.10 | 0.75 | 0.17 | nein | 30 | nein | 0.20 | 43 | [Karte](https://www.openstreetmap.org/?mlat=53.586805&mlon=9.978740#map=18/53.586805/9.978740) | [Way](https://www.openstreetmap.org/way/5229056) |
+| `seg_ce1e34eab5f15ff9` | Hamburg-Nord | Biedermannplatz | secondary | 0.81 | 0.47 | 0.86 | ja | 50 | ja | 0.00 | 110 | [Karte](https://www.openstreetmap.org/?mlat=53.581917&mlon=10.032758#map=18/53.581917/10.032758) | [Way](https://www.openstreetmap.org/way/53207254) |
 | `seg_f684a9657aacf796` | Hamburg-Nord | Sperlingweg | track | 0.00 | 0.13 | – | nein | – | nein | 0.00 | 312 | [Karte](https://www.openstreetmap.org/?mlat=53.613888&mlon=9.967951#map=18/53.613888/9.967951) | [Way](https://www.openstreetmap.org/way/1283331826) |
-| `seg_0a1aee1745190a87` | Harburg | Marmstorfer Schützenweg | living_street | 0.03 | 0.29 | 0.06 | nein | 7 | – | 0.00 | 300 | [Karte](https://www.openstreetmap.org/?mlat=53.434846&mlon=9.970139#map=18/53.434846/9.970139) | [Way](https://www.openstreetmap.org/way/893156160) |
+| `seg_0a1aee1745190a87` | Harburg | Marmstorfer Schützenweg | living_street | 0.04 | 0.29 | 0.06 | nein | 7 | – | 0.00 | 300 | [Karte](https://www.openstreetmap.org/?mlat=53.434846&mlon=9.970139#map=18/53.434846/9.970139) | [Way](https://www.openstreetmap.org/way/893156160) |
 | `seg_3e6907faa3bbdc4b` | Harburg | Lorenz-von-Ehren-Weg | track | 0.00 | 0.04 | – | nein | – | – | 0.00 | 1941 | [Karte](https://www.openstreetmap.org/?mlat=53.432430&mlon=9.917560#map=18/53.432430/9.917560) | [Way](https://www.openstreetmap.org/way/900889335) |
-| `seg_b2737ecffbf1238b` | Harburg | Dradenauer Deichweg | secondary | 0.45 | 0.00 | 0.11 | ja | 50 | nein | 0.00 | 1446 | [Karte](https://www.openstreetmap.org/?mlat=53.515172&mlon=9.896514#map=18/53.515172/9.896514) | [Way](https://www.openstreetmap.org/way/340295899) |
+| `seg_b2737ecffbf1238b` | Harburg | Dradenauer Deichweg | secondary | 0.30 | 0.00 | 0.11 | ja | 50 | nein | 0.00 | 1446 | [Karte](https://www.openstreetmap.org/?mlat=53.515172&mlon=9.896514#map=18/53.515172/9.896514) | [Way](https://www.openstreetmap.org/way/340295899) |
 | `seg_3cd4166bef71ff70` | Wandsbek | Helmut-Steidl-Platz | pedestrian | 0.00 | 0.68 | – | nein | – | – | 1.00 | 224 | [Karte](https://www.openstreetmap.org/?mlat=53.604519&mlon=10.154917#map=18/53.604519/10.154917) | [Way](https://www.openstreetmap.org/way/10630855) |
-| `seg_75f47c8b84607bca` | Wandsbek | Farmsener Landstraße | secondary | 0.64 | 0.49 | 0.57 | ja | 30 | nein | 0.50 | 60 | [Karte](https://www.openstreetmap.org/?mlat=53.650162&mlon=10.161503#map=18/53.650162/10.161503) | [Way](https://www.openstreetmap.org/way/550871424) |
-| `seg_99601bd306a75add` | Wandsbek | Nordlandweg | tertiary | 0.56 | 0.51 | 0.80 | nein | 50 | nein | 0.00 | 20 | [Karte](https://www.openstreetmap.org/?mlat=53.627439&mlon=10.163299#map=18/53.627439/10.163299) | [Way](https://www.openstreetmap.org/way/4265354) |
-| `seg_b4dd5703096504be` | Wandsbek | Falkenhorst | residential | 0.03 | 0.30 | 0.07 | nein | 30 | nein | 0.00 | 233 | [Karte](https://www.openstreetmap.org/?mlat=53.625645&mlon=10.128023#map=18/53.625645/10.128023) | [Way](https://www.openstreetmap.org/way/18490229) |
-| `seg_c342eec71151ce48` | Wandsbek | August-Krogmann-Straße | secondary | 0.80 | 0.40 | 0.97 | ja | 50 | – | 0.14 | 142 | [Karte](https://www.openstreetmap.org/?mlat=53.617401&mlon=10.113166#map=18/53.617401/10.113166) | [Way](https://www.openstreetmap.org/way/816627212) |
-| `seg_c76090a05eee85f2` | Wandsbek | Stadtbahnstraße | primary | 0.96 | 0.65 | 0.97 | ja | 50 | nein | 1.00 | 55 | [Karte](https://www.openstreetmap.org/?mlat=53.653563&mlon=10.106468#map=18/53.653563/10.106468) | [Way](https://www.openstreetmap.org/way/464187409) |
+| `seg_75f47c8b84607bca` | Wandsbek | Farmsener Landstraße | secondary | 0.53 | 0.49 | 0.57 | ja | 30 | nein | 0.50 | 60 | [Karte](https://www.openstreetmap.org/?mlat=53.650162&mlon=10.161503#map=18/53.650162/10.161503) | [Way](https://www.openstreetmap.org/way/550871424) |
+| `seg_99601bd306a75add` | Wandsbek | Nordlandweg | tertiary | 0.82 | 0.51 | 0.80 | nein | 50 | nein | 0.00 | 20 | [Karte](https://www.openstreetmap.org/?mlat=53.627439&mlon=10.163299#map=18/53.627439/10.163299) | [Way](https://www.openstreetmap.org/way/4265354) |
+| `seg_b4dd5703096504be` | Wandsbek | Falkenhorst | residential | 0.04 | 0.30 | 0.07 | nein | 30 | nein | 0.00 | 233 | [Karte](https://www.openstreetmap.org/?mlat=53.625645&mlon=10.128023#map=18/53.625645/10.128023) | [Way](https://www.openstreetmap.org/way/18490229) |
+| `seg_c342eec71151ce48` | Wandsbek | August-Krogmann-Straße | secondary | 0.74 | 0.40 | 0.97 | ja | 50 | – | 0.14 | 142 | [Karte](https://www.openstreetmap.org/?mlat=53.617401&mlon=10.113166#map=18/53.617401/10.113166) | [Way](https://www.openstreetmap.org/way/816627212) |
+| `seg_c76090a05eee85f2` | Wandsbek | Stadtbahnstraße | primary | 0.94 | 0.65 | 0.97 | ja | 50 | nein | 1.00 | 55 | [Karte](https://www.openstreetmap.org/?mlat=53.653563&mlon=10.106468#map=18/53.653563/10.106468) | [Way](https://www.openstreetmap.org/way/464187409) |
 
 ## Lizenz
 

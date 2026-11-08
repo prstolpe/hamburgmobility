@@ -518,3 +518,46 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
 - Herkunft ergänzt: `categories.*` mit source/source_type (speed_kmh; ETW_ERF 7 km/h als assumption),
   `scores.conn_score`, `scores.place_score` und `priority` (formula, risk_weights) mit `source_type: assumption` als
   Schlüssel statt YAML-Kommentar. Gewichte unverändert.
+
+## rules.yaml 0.18.0, plain_language.yaml 0.5.0 – 2026-11-08: Review 2026-11, Paket P1 (Klassifikation)
+- F05: Eine Machbarkeitsrechnung. `required_width.GOW50` 17,00 m, `GOW50_bus` 17,50 m, `ETW30` 9,75 m (vorher 16,50 /
+  17,00 / 10,80) als Mindestprofil aus design_rules (Gehweg min 2,50, Trennstreifen 0,75, Fahrbahn 6,50 / 7,00 / 4,75)
+  plus ERA-Radweg 2,00 aus cycling_rules; `formula` nennt die Pfade (D./C.) und ergibt genau diese Werte. Neuer Test
+  „value = formula“ (Invariante V-INV-06, `required_width_formula_mismatches`). Einzelmaße `sidewalk_m` und
+  `carriageway_2lane_m` entfallen (doppelt zu design_rules). Goldene Fälle 26/27 = G02 (16,99 → GOW30, 17,00 → GOW50).
+- F06: C-G30-02 nur über den Raum: `(not bus_route and width_p10_m < GOW50) or (bus_route and width_p10_m < GOW50_bus)`;
+  ein vorhandener Radweg zählt nicht mehr. `bus_route` = Busse je Spitzenstunde und Richtung (PRF-02, gleiche Rechnung
+  wie c06, Funktion `transit_peak` nach pipeline/lib/transit.py verschoben) ≥ S-FEAT-08 `bus_route_min_peak_h_dir` 1;
+  neue Merkmale `bus_peak_h_dir`, `bus_route` in s04. Flag `existing_track_below_floor` in c05 (`facility_flags`), wenn
+  die Ist-Breite des Radwegs bekannt ist und unter C-FAC-04 floor liegt. Goldener Fall 18 = G03 (Bestandsradweg 1,20 m,
+  15,0 m → GOW30), neue Fälle 31/32 (Busroute an der Grenze 17,50 m).
+- F07 (Q2 b): C-G30-01 liest `school_or_kita_access_m <= access_radius` (50 m, assumption) statt
+  `schools_or_kitas_within_m <= sensitive_radius` (150 m). Näherung: Abstand zur OSM-Fläche bzw. zum OSM-Punkt
+  (S-FEAT-06, docs/open_questions.md); `schools_or_kitas_within_m` bleibt für place_score und P-RISK-01
+  (school_kita_radius_m 150 m). H-STR-01: `gap_close_m` 500 m (de_regelwerk, Quelle STVO_2024, Fassung prüfen):
+  GOW50-Lauf zwischen zwei GOW30-Läufen unter 500 m wird GOW30 (umgesetzt in Schritt 3, siehe Notiz H-STR-01).
+  Goldene Fälle 13, 22/23 (= G04: 50 m → GOW30, 51 m → weiter mit C-G30-02), 28 angepasst.
+- F13 (Q3 b): `in_hvs` aus `conn_score` (Gewichte 0,45/0,30/0,25 statt 0,35/0,25/0,20/0,20). conn_gow neu kalibriert
+  von 0,6 auf 0,87. Methode: Bezugsgröße = km der Abschnitte im Arbeitsgebiet mit `in_hvs = false`, die die Kaskade zu
+  GOW50/GOW30 macht (`cat_proposed` in classified.parquet, vor H-STR-01); Stand 0.17.0: 78,0 km (= 0.16.0). Mit den
+  neuen Gewichten aus den Normwerten in features.parquet nachgerechnet (bei 0,6: 507,9 km, die +430 km des Probelaufs);
+  gewählt ist der zweistellige Wert mit der kleinsten Abweichung: 0,87 → 82,6 km (0,88 → 67,8 km). Kontrolllauf der
+  Kaskade: 82,6 km, davon 76,9 km auch vorher GOW (5,7 km neu, 1,2 km entfallen). GOW gesamt (Kaskade) 746,5 → 751,0 km.
+  Goldene Fälle 05/06 und 20/21 auf 0,87/0,86, 03 und 17 auf conn_score 0,95.
+- F14: C-CONF-01 `global_caveats` [outside_builtup_area, override_school_street, crossing_demand, in_hvs,
+  school_or_kita_access_m]: senken confidence nicht mehr, stehen einmal im Klassifikationsbericht und auf der
+  Methodenseite (meta.json `global_caveats`). confidence (Längenanteil) hoch/mittel/niedrig 7,0/86,7/6,3 % →
+  19,7/73,3/6,9 %; „mittel“ kommt jetzt fast nur aus `fallback:conn_score` (DTV fehlt außerhalb der HVS, Gewicht umgelegt).
+- F22: `requirements.GOW50.cycling` = `separated_track_or_parallel_route` (Benutzungspflicht ist eine Anordnung, nicht
+  Gegenstand des Plans); D-DES-01 `requirement` gleich umbenannt, Logik unverändert.
+- F23 (Q4 a): neues Merkmal S-FEAT-12 `anbaufrei` (Längenanteil ohne ALKIS-Gebäude und Einmündung im Puffer 30 m
+  ≥ 0,8; Spalten `anbaufrei_share`, `anbaufrei`). Flag `gow50_anbaufrei` (s08) im Steckbrief (`hints`) und in D-SPD-01
+  (`anbaufrei_hint`: Ist ≥ 60 km/h → Stärke 0 und Hinweis statt Tempo-Stärke). Keine neue Kategorie.
+- F25 (Q2 b): C-MISS-01 `crossing_demand` mit `status: inactive` (Schema `MissingDefault.status`): Wert immer
+  not_assessed, senkt confidence nicht, zählt im Bericht als stillgelegt. `place_score` Notiz „derzeit von keiner Regel
+  gelesen“. Goldener Fall 15 heißt jetzt 15_crossing_demand_high_inactive und erwartet GOW50 (Eingabe high greift nicht).
+- Ergebnis (Lauf features → discrepancy): Kaskade GOW50 272,3 → 342,5 km, GOW30 474,1 → 408,5 km, ETW30 3 333,4 →
+  3 328,8 km; HVS-km als GOW30 61,0 % → 51,2 %. Nach Harmonisierung und Korrekturen (cat_final) GOW50 223,2 → 242,4 km,
+  GOW30 527,6 → 513,5 km, ETW30 3 329,4 → 3 324,3 km, HVS-km als GOW30 67,6 % → 64,6 % (Lückenschluss 500 m).
+  1 346 Abschnitte (150,7 km) ändern die Kaskaden-Kategorie, 1 075 (133,5 km) cat_final. 25 anbaufreie GOW50
+  (17,9 km), davon 13 mit Hinweis statt Tempo-Stärke.

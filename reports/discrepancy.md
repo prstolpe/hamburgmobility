@@ -1,6 +1,6 @@
 # Diskrepanz und Priorisierung – Stufe 8
 
-Erzeugt: 2026-11-08T13:31:17+00:00 von `pipeline/s08_discrepancy.py`, rules.yaml 0.17.0. Nicht amtlicher Entwurf. Top 30: `reports/priority_top30.md`.
+Erzeugt: 2026-11-08T14:12:13+00:00 von `pipeline/s08_discrepancy.py`, rules.yaml 0.18.0. Nicht amtlicher Entwurf. Top 30: `reports/priority_top30.md`.
 
 ## Prüfungen
 
@@ -16,16 +16,17 @@ Erzeugt: 2026-11-08T13:31:17+00:00 von `pipeline/s08_discrepancy.py`, rules.yaml
 ## Kennzahlen
 
 - Bewertet: 34 702 Abschnitte im Arbeitsgebiet (4387.3 km), davon 33 712 in Hamburg (7 Bezirke) (4240.4 km); Grundlage cat_final.
-- Mit Diskrepanz (Stärke > 0): 14 207 Abschnitte, 1587.4 km (36.2 % der Länge).
+- Mit Diskrepanz (Stärke > 0): 14 098 Abschnitte, 1578.6 km (36.0 % der Länge).
 - Nicht prüfbar (keine Dimension entscheidbar): 2 380 Abschnitte.
+- Anbaufreie GOW50 (Flag gow50_anbaufrei, S-FEAT-12, F23): 25 Abschnitte (17.9 km), davon 13 mit Hinweis statt Tempo-Stärke (Ist ab 60 km/h, D-SPD-01 anbaufrei_hint).
 
 ### Stärke je Dimension (Abschnitte im Arbeitsgebiet)
 
 | Dimension | Regel | 0 | 1 | 2 | 3 | nicht prüfbar |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Tempo | D-SPD-01 | 18952 | 208 | 12386 | 186 | 2970 |
-| Gestaltung | D-DES-01 | 17107 | 4835 | 170 | 10 | 12580 |
-| Nutzung | D-USE-01 | 3190 | 288 | 235 | 423 | 30566 |
+| Tempo | D-SPD-01 | 19242 | 175 | 12101 | 214 | 2970 |
+| Gestaltung | D-DES-01 | 16972 | 4936 | 196 | 18 | 12580 |
+| Nutzung | D-USE-01 | 3049 | 288 | 222 | 394 | 30749 |
 
 ### Gestaltung: Häufigkeit der Verstöße und unbekannte Prüfungen
 
@@ -33,14 +34,14 @@ Fehlende OSM-Tags gelten als unbekannt, nicht als Verstoß (S-FEAT-10).
 
 | Soll | Prüfung | Verstoß | kein Verstoß | unbekannt | Anteil unbekannt |
 | --- | --- | ---: | ---: | ---: | ---: |
-| GOW50 | cycling: kein baulicher Radweg | 124 | 1576 | 44 | 2.5 % |
-| GOW50 | cycle_lanes_allowed: Radfahr- oder Schutzstreifen | 120 | 1496 | 128 | 7.3 % |
-| GOW50 | parking_along_carriageway: Parken längs der Fahrbahn | 57 | 713 | 974 | 55.8 % |
-| GOW50 | median_if_lanes_per_dir_gte: mehrere Fahrstreifen je Richtung ohne Mitteltrennung | 657 | 980 | 107 | 6.1 % |
-| GOW30 | cycling: Radverkehr auf der Fahrbahn ohne Radfahrstreifen | 647 | 4429 | 111 | 2.1 % |
-| GOW30 | centre_line: Mittelmarkierung | 19 | 132 | 5036 | 97.1 % |
-| ETW30 | cycling: baulicher Radweg statt Mischverkehr | 2696 | 12439 | 10391 | 40.7 % |
-| ETW30 | cycle_lanes_allowed: Radfahr- oder Schutzstreifen | 885 | 14250 | 10391 | 40.7 % |
+| GOW50 | cycling: kein baulicher Radweg | 144 | 1803 | 38 | 1.9 % |
+| GOW50 | cycle_lanes_allowed: Radfahr- oder Schutzstreifen | 160 | 1697 | 128 | 6.4 % |
+| GOW50 | parking_along_carriageway: Parken längs der Fahrbahn | 69 | 862 | 1054 | 53.1 % |
+| GOW50 | median_if_lanes_per_dir_gte: mehrere Fahrstreifen je Richtung ohne Mitteltrennung | 792 | 1070 | 123 | 6.2 % |
+| GOW30 | cycling: Radverkehr auf der Fahrbahn ohne Radfahrstreifen | 643 | 4235 | 125 | 2.5 % |
+| GOW30 | centre_line: Mittelmarkierung | 25 | 141 | 4837 | 96.7 % |
+| ETW30 | cycling: baulicher Radweg statt Mischverkehr | 2675 | 12417 | 10377 | 40.7 % |
+| ETW30 | cycle_lanes_allowed: Radfahr- oder Schutzstreifen | 874 | 14218 | 10377 | 40.7 % |
 | ETW_ERF | cycling: baulicher Radweg statt Mischverkehr | 0 | 161 | 1614 | 90.9 % |
 
 Nutzung (D-USE-01): DTV bekannt für 5 829 von 34 702 Abschnitten (nur Hauptverkehrsstraßen, Stand 2019); geprüft nur für Kategorien mit max_dtv (GOW30).
@@ -50,24 +51,24 @@ Nutzung (D-USE-01): DTV bekannt für 5 829 von 34 702 Abschnitten (nur Hauptverk
 | Soll | D1 | D2 | D3 | keine | nicht prüfbar | Summe |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | SW | 0 (0.0 km) | 0 (0.0 km) | 0 (0.0 km) | 0 (0.0 km) | 470 (189.2 km) | 470 (189.2 km) |
-| GOW50 | 142 (25.5 km) | 737 (78.4 km) | 92 (21.8 km) | 772 (97.3 km) | 1 (0.1 km) | 1744 (223.2 km) |
-| GOW30 | 4464 (438.9 km) | 37 (3.8 km) | 610 (75.3 km) | 76 (9.6 km) | 0 (0.0 km) | 5187 (527.6 km) |
-| ETW30 | 8065 (939.9 km) | 0 (0.0 km) | 0 (0.0 km) | 16135 (2228.9 km) | 1326 (160.7 km) | 25526 (3329.4 km) |
+| GOW50 | 115 (16.6 km) | 915 (108.0 km) | 78 (12.2 km) | 876 (105.6 km) | 1 (0.1 km) | 1985 (242.4 km) |
+| GOW30 | 4267 (424.9 km) | 42 (4.5 km) | 601 (73.0 km) | 89 (11.0 km) | 4 (0.1 km) | 5003 (513.5 km) |
+| ETW30 | 8020 (935.7 km) | 0 (0.0 km) | 0 (0.0 km) | 16127 (2227.9 km) | 1322 (160.6 km) | 25469 (3324.3 km) |
 | ETW_ERF | 60 (3.7 km) | 0 (0.0 km) | 0 (0.0 km) | 1132 (89.3 km) | 583 (25.0 km) | 1775 (118.0 km) |
-| **alle** | 12731 (1407.9 km) | 774 (82.3 km) | 702 (97.2 km) | 18115 (2425.0 km) | 2380 (375.0 km) | 34702 (4387.3 km) |
+| **alle** | 12462 (1381.0 km) | 957 (112.5 km) | 679 (85.1 km) | 18224 (2433.7 km) | 2380 (375.0 km) | 34702 (4387.3 km) |
 
 ### Diskrepanztypen je Bezirk (km-Anteile; – = keine Diskrepanz oder nicht prüfbar)
 
 | Bezirk | Abschnitte | km | D1 | D2 | D3 | – |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Altona | 4 886 | 620.5 | 25 % | 2 % | 3 % | 70 % |
+| Altona | 4 886 | 620.5 | 24 % | 3 % | 3 % | 70 % |
 | Bergedorf | 1 957 | 209.3 | 25 % | 2 % | 2 % | 71 % |
-| Eimsbüttel | 4 004 | 470.4 | 33 % | 2 % | 1 % | 64 % |
-| Hamburg-Mitte | 6 839 | 881.3 | 41 % | 3 % | 4 % | 53 % |
-| Hamburg-Nord | 5 136 | 563.3 | 36 % | 2 % | 2 % | 61 % |
-| Harburg | 3 348 | 465.2 | 27 % | 2 % | 3 % | 68 % |
+| Eimsbüttel | 4 004 | 470.4 | 32 % | 2 % | 1 % | 65 % |
+| Hamburg-Mitte | 6 839 | 881.3 | 41 % | 4 % | 3 % | 53 % |
+| Hamburg-Nord | 5 136 | 563.3 | 34 % | 2 % | 2 % | 62 % |
+| Harburg | 3 348 | 465.2 | 26 % | 2 % | 3 % | 69 % |
 | Wandsbek | 7 542 | 1 030.4 | 31 % | 2 % | 1 % | 66 % |
-| **gesamt** | 33 712 | 4 240.4 | 32 % | 2 % | 2 % | 64 % |
+| **gesamt** | 33 712 | 4 240.4 | 32 % | 3 % | 2 % | 64 % |
 
 ## Unfälle (Unfallatlas)
 
@@ -99,7 +100,7 @@ Nutzung (D-USE-01): DTV bekannt für 5 829 von 34 702 Abschnitten (nur Hauptverk
 | `seg_cb51be3f5bfa9f8c` | Eimsbüttel | Wietersheim / Hörgensweg | ETW30 | – | 0/0/– | 0.00 | Soll Quartiersstraße, 2 Unfälle mit Radbeteiligung 2021–2025, Schule/Kita in 45 m | [Orthophoto](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559477,5941868]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.622227/9.899255) · [OSM](https://www.openstreetmap.org/way/970384364) |
 | `seg_cc2dd24560798679` | Eimsbüttel | Bayernweg | ETW30 | – | 0/0/– | 0.00 | Soll Quartiersstraße, keine Unfälle mit Fuß-/Radbeteiligung 2021–2025 | [Orthophoto](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564864,5943825]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.639179/9.981087) · [OSM](https://www.openstreetmap.org/way/1459903218) |
 | `seg_09e3f78d54235afd` | Hamburg-Mitte | Norderkirchenweg | ETW30 | – | 0/–/– | 0.00 | Soll Quartiersstraße, keine Unfälle mit Fuß-/Radbeteiligung 2021–2025 | [Orthophoto](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[557233,5931748]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.531529/9.863471) · [OSM](https://www.openstreetmap.org/way/4265785) |
-| `seg_0aae7f75e01d651d` | Hamburg-Mitte | Neßdeich | GOW50 | – | 0/0/– | 0.00 | Soll Stadtmagistrale, keine Unfälle mit Fuß-/Radbeteiligung 2021–2025 | [Orthophoto](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[556540,5932205]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.535706/9.853106) · [OSM](https://www.openstreetmap.org/way/834615551) |
+| `seg_0aae7f75e01d651d` | Hamburg-Mitte | Neßdeich | GOW30 | D1 | 2/0/– | 0.16 | Soll Stadtstraße 30, heute 50 km/h (Soll 30), keine Unfälle mit Fuß-/Radbeteiligung 2021–2025 | [Orthophoto](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[556540,5932205]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.535706/9.853106) · [OSM](https://www.openstreetmap.org/way/834615551) |
 | `seg_1bc631cc660cccc0` | Hamburg-Mitte | Großer Grasbrook | ETW30 | D1 | 2/0/– | 0.56 | Soll Quartiersstraße, heute 50 km/h (Soll 30), keine Unfälle mit Fuß-/Radbeteiligung 2021–2025, Schule/Kita in 105 m | [Orthophoto](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565868,5932803]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.539993/9.993945) · [OSM](https://www.openstreetmap.org/way/1524097911) |
 | `seg_8c2239d3c701fabd` | Hamburg-Mitte | Kreetslag | ETW30 | D1 | 2/1/– | 0.08 | Soll Quartiersstraße, heute 50 km/h (Soll 30), baulicher Radweg statt Mischverkehr, keine Unfälle mit Fuß-/Radbeteiligung 2021–2025 | [Orthophoto](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[556144,5932334]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.536910/9.847149) · [OSM](https://www.openstreetmap.org/way/261158800) |
 | `seg_b5729186206591a9` | Hamburg-Mitte | Blostwiete | ETW30 | – | 0/0/– | 0.00 | Soll Quartiersstraße, keine Unfälle mit Fuß-/Radbeteiligung 2021–2025, Schule/Kita in 8 m | [Orthophoto](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572253,5933689]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.547118/10.090479) · [OSM](https://www.openstreetmap.org/way/151772500) |

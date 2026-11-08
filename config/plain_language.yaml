@@ -5,8 +5,8 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.4.3
-  date: 2026-11-07
+  version: 0.5.0
+  date: 2026-11-08
 
 categories:
   SW: "Schnellverkehrsstraße – anbaufrei, nur für Kraftfahrzeuge; Fuß- und Radverkehr getrennt geführt"
@@ -42,17 +42,17 @@ rules:
       - {text: "geringe Verbindungsfunktion: Verbindungswert {conn_score|.2f} (unter {thresholds.conn_gow|.2f}), keine Hauptverkehrsstraße"}
   C-G30-01:
     passed:
-      - {when: "schools_or_kitas_within_m <= thresholds.sensitive_radius", text: "Schule oder Kita in {schools_or_kitas_within_m|.0f} m (bis {thresholds.sensitive_radius|.0f} m)"}
+      - {when: "school_or_kita_access_m <= thresholds.access_radius", text: "Schule oder Kita direkt an der Straße: Grundstück {school_or_kita_access_m|.0f} m entfernt (bis {thresholds.access_radius|.0f} m)"}
       - {when: "shop_frontage_share >= thresholds.frontage", text: "viele Gebäude mit Läden oder Publikumsverkehr: {shop_frontage_share|%} (ab {thresholds.frontage|%})"}
-      - {when: "crossing_demand == high", text: "hoher Querungsbedarf"}
     failed:
-      - {text: "keine Schule oder Kita in der Nähe und wenig Publikumsverkehr"}
+      - {text: "keine Schule oder Kita direkt an der Straße und wenig Publikumsverkehr"}
   C-G30-02:
     passed:
-      - {text: "kein baulicher Radweg, und für einen fehlt der Platz: Straßenraum {width_p10_m|.1f} m, nötig {required_width.GOW50|.1f} m"}
+      - {when: "not bus_route", text: "für einen ausreichenden baulichen Radweg fehlt der Platz: Straßenraum {width_p10_m|.1f} m, nötig {required_width.GOW50|.1f} m"}
+      - {when: "bus_route", text: "für einen ausreichenden baulichen Radweg neben der Busfahrbahn fehlt der Platz: Straßenraum {width_p10_m|.1f} m, nötig {required_width.GOW50_bus|.1f} m"}
     failed:
-      - {when: "separated_cycle_track_present", text: "baulicher Radweg vorhanden"}
-      - {when: "width_p10_m >= required_width.GOW50", text: "Platz für einen baulichen Radweg: Straßenraum {width_p10_m|.1f} m (nötig {required_width.GOW50|.1f} m)"}
+      - {when: "not bus_route and width_p10_m >= required_width.GOW50", text: "Platz für einen baulichen Radweg: Straßenraum {width_p10_m|.1f} m (nötig {required_width.GOW50|.1f} m)"}
+      - {when: "bus_route and width_p10_m >= required_width.GOW50_bus", text: "Platz für einen baulichen Radweg neben der Busfahrbahn: Straßenraum {width_p10_m|.1f} m (nötig {required_width.GOW50_bus|.1f} m)"}
   C-G50-01:
     passed:
       - {text: "kein Grund für Tempo 30 auf dieser Verbindungsstraße gefunden"}
@@ -64,10 +64,11 @@ rules:
 features:
   outside_builtup_area: "Lage inner-/außerorts (keine Datenquelle, Standardwert innerorts)"
   override_school_street: "Schulstraße (nur über Korrekturen, Standardwert nein)"
-  crossing_demand: "Querungsbedarf (nicht erhoben)"
+  crossing_demand: "Querungsbedarf (stillgelegt, nicht erhoben)"
   in_hvs: "Hauptverkehrsstraße (Verkehrsmengenkarte 2019 statt HVS-Karte 2023)"
   conn_score: "Verbindungswert (nicht alle Merkmale bekannt)"
-  schools_or_kitas_within_m: "Entfernung Schule/Kita (aus OpenStreetMap statt amtlich)"
+  school_or_kita_access_m: "Abstand zum Grundstück einer Schule/Kita (aus OpenStreetMap statt amtlich)"
+  bus_route: "Busroute (Busse je Spitzenstunde und Richtung, HVV-Fahrplan)"
   shop_frontage_share: "Anteil Gebäude mit Publikumsverkehr"
   width_p10_m: "Straßenraumbreite"
   separated_cycle_track_present: "baulicher Radweg"
@@ -76,6 +77,8 @@ confidence:
   hoch: "Alle entscheidenden Werte stammen aus Primärquellen und liegen nicht nahe an einer Schwelle."
   mittel: "Mindestens ein entscheidender Wert stammt aus einer Ersatzquelle oder ist ein Standardwert."
   niedrig: "Ein entscheidender Wert fehlt oder liegt nahe an einer Schwelle."
+  # F14: Vorbehalte, die für alle Abschnitte gleich gelten (C-CONF-01 global_caveats); einmal auf der Methodenseite
+  global_caveats_intro: "Diese Vorbehalte gelten für alle Abschnitte gleich und senken die Ampel darum nicht:"
   reasons:
     fallback: "{feature}: Ersatzquelle oder Standardwert"
     fehlt: "{feature}: fehlt"
@@ -92,11 +95,11 @@ sensitivity:
   direction: {"-": "niedriger", "+": "höher"}
   params:
     thresholds.conn_gow: "Schwelle für den Verbindungswert"
-    thresholds.sensitive_radius: "Abstand zu Schule oder Kita"
+    thresholds.access_radius: "Abstand zum Grundstück einer Schule oder Kita"
     thresholds.frontage: "Anteil Gebäude mit Publikumsverkehr"
     required_width.GOW50: "nötige Straßenraumbreite für eine Stadtmagistrale"
+    required_width.GOW50_bus: "nötige Straßenraumbreite für eine Stadtmagistrale mit Bus"
     conn_score.betweenness_norm: "Gewicht der Netzbedeutung"
-    conn_score.in_hvs: "Gewicht Hauptverkehrsstraße"
     conn_score.bus_trips_weekday_norm: "Gewicht der Busfahrten"
     conn_score.dtv_norm: "Gewicht der Verkehrsmenge"
 
@@ -104,6 +107,10 @@ feasibility:
   fits: "passt"
   tight: "knapp"
   does_not_fit: "passt nicht"
+
+# Hinweise im Steckbrief (Abschnitt Soll-Kategorie), Schlüssel = Flag
+hints:
+  gow50_anbaufrei: "Anbaufreie Stadtmagistrale: kaum Gebäude und Einmündungen an der Straße. Sie bleibt eine Stadtmagistrale (keine eigene Kategorie); ein heutiges Tempo über 50 ist hier fachlich zu prüfen und zählt nicht als Diskrepanz."
 
 speed_source:
   official: "amtlich (Zulässige Höchstgeschwindigkeiten)"
@@ -141,6 +148,10 @@ columns:
   conn_score: "Verbindungswert 0–1"
   place_score: "Aufenthaltswert 0–1"
   schools_or_kitas_within_m: "Entfernung zur nächsten Schule oder Kita in Metern (OSM)"
+  school_or_kita_access_m: "Abstand zum Grundstück der nächsten Schule oder Kita in Metern (OSM, Fläche oder Punkt; C-G30-01)"
+  bus_route: "Busroute: mindestens ein Bus je Spitzenstunde und Richtung (HVV-Fahrplan, C-G30-02)"
+  anbaufrei: "anbaufrei: Abschnitt größtenteils ohne Gebäude und Einmündungen im 30-m-Umkreis (S-FEAT-12)"
+  gow50_anbaufrei: "anbaufreie Stadtmagistrale (Hinweis, keine eigene Kategorie)"
   population_100m: "Einwohner im 100-m-Umkreis (Zensus 2022)"
   shop_frontage_share: "Anteil der Gebäude im 20-m-Umkreis mit Publikumsverkehr"
   width_median_m: "Straßenraumbreite (Median) in Metern"
@@ -223,6 +234,7 @@ cycling:
     no_target_width: "keine Sollbreite für diese Kombination"
     ist_width_unknown: "heutige Breite in OpenStreetMap nicht erfasst"
     track_on_access_road: "Radweg an einer Erschließungsstraße – Straßenkategorie prüfen"
+    existing_track_below_floor: "heutiger Radweg schmaler als die Untergrenze – zählt nicht als sicherer Radweg (C-G30-02)"
   profile_flags:
     width_unknown: "Straßenraumbreite nicht gemessen"
     no_profile_rules: "für diese Straßenkategorie kein Soll-Profil"

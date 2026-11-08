@@ -7,7 +7,7 @@
 #   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
 #   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.17.0
+  version: 0.18.0
   date: 2026-11-08
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -25,6 +25,7 @@ sources:
   RIN_2008: {title: "Richtlinien für integrierte Netzgestaltung (FGSV)", date: 2008, url: null}
   HH_HVS_2023: {title: "Hauptverkehrsstraßen Hamburg, Karte Stand Sept. 2023 (BVM)", date: 2023-09, url: "https://www.hamburg.de/politik-und-verwaltung/behoerden/bvm/hauptverkehrsstrassen-193350"}
   HH_DTV_HVS_2019: {title: "Verkehrsmengen auf Hauptverkehrsstraßen in Hamburg, Collection verkehrsmengen_dtv_hvs_2019 (BVM)", date: 2019, url: "https://api.hamburg.de/datasets/v1/verkehrsmengen"}
+  STVO_2024: {title: "Straßenverkehrs-Ordnung (StVO), § 45 Abs. 9, Fassung nach der Novelle 2024 (Fassung prüfen)", date: 2024, url: null}
   HH_TEMPO: {title: "Zulässige Höchstgeschwindigkeiten Hamburg (OGC API)", date: 2026-10-28, url: "https://api.hamburg.de/datasets/v1/zulaessige_hoechstgeschwindigkeiten"}
 
 # Kategorien nach Duurzaam Veilig; speed_kmh = Soll-Tempo der Kategorie (Herkunft je Kategorie, seit 0.17.0)
@@ -72,29 +73,48 @@ classification:
     if: "conn_score >= thresholds.conn_gow or in_hvs"
     then: "GOW (weiter mit C-G30-*)"
     thresholds:
-      conn_gow: {value: 0.6, unit: "score 0-1", source_type: assumption, check: "Sensitivität ±20 %, Abgleich HVS"}
+      conn_gow: {value: 0.87, unit: "score 0-1", source_type: assumption, check: "Sensitivität ±20 %, Abgleich HVS; Stichprobe nach der Neukalibrierung (F13)"}
+    note: >-
+      in_hvs wirkt nur noch als eigener Auslöser, nicht mehr im conn_score (F13, Entscheidung Q3 b 2026-11-08).
+      conn_gow 0,87 ist neu kalibriert (vorher 0,6 mit in_hvs im Score): gewählt ist der zweistellige Wert, bei dem die
+      km der Abschnitte ohne HVS, die die Kaskade zu GOW macht (cat_proposed GOW50/GOW30, in_hvs false, Arbeitsgebiet),
+      dem Lauf 0.17.0 (= 0.16.0) am nächsten kommen: 78,0 km vorher, 82,6 km mit 0,87 (0,88: 67,8 km). Rechnung mit den
+      Normwerten aus features.parquet, danach Kontrolllauf der Kaskade; Ergebnis im CHANGELOG 0.18.0.
     source: [SWOV_FS_2023, HH_HVS_2023]
     source_type: swov_crow
     status: draft
 
   - id: C-G30-01
-    description: "GOW30-Auslöser a: Umfeld spricht für 30 (Schule, Leben, Querbarkeit)"
+    description: "GOW30-Auslöser a: Umfeld spricht für 30 (Schule/Kita am Abschnitt, Leben, Querbarkeit)"
     applies_to: GOW
-    if: "schools_or_kitas_within_m <= thresholds.sensitive_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high"
+    if: "school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high"
     then: GOW30
     thresholds:
-      sensitive_radius: {value: 150, unit: m, source_type: assumption}
+      access_radius: {value: 50, unit: m, source_type: assumption,
+                      check: "Abstand Grundstück der Einrichtung (allgemeinbildende Schule, Kita) zum Abschnitt; StVO § 45 (9) S. 4 Nr. 6 'unmittelbarer Bereich' (Wortlaut am Original prüfen); 50 m ist eigene Setzung (F07, Q2 b)"}
       frontage:         {value: 0.4, unit: "Anteil Erdgeschoss mit Publikumsnutzung", source_type: assumption}
-    note: "Umfeld vor heutiger Verkehrsmenge: keine DTV-Obergrenze (Obergrenze aus 0.14.0 zurückgenommen, Entscheidung prstolpe 2026-11-07). GOW30 über dem CROW-Profil zeigt der Soll-Querschnitt mit Flag gow30_dtv_above_profile (setzt weniger Kfz-Verkehr voraus)."
+    note: >-
+      Umfeld vor heutiger Verkehrsmenge: keine DTV-Obergrenze (Obergrenze aus 0.14.0 zurückgenommen, Entscheidung
+      prstolpe 2026-11-07). GOW30 über dem CROW-Profil zeigt der Soll-Querschnitt mit Flag gow30_dtv_above_profile
+      (setzt weniger Kfz-Verkehr voraus). Seit 0.18.0 (F07, Entscheidung Q2 b 2026-11-08) löst nur eine Schule oder Kita
+      mit Grundstück höchstens access_radius vom Abschnitt aus (vorher jede im Umkreis sensitive_radius 150 m); die
+      150 m gelten nur noch für die Priorität (P-RISK-01 school_kita_radius_m). Näherung: Schulen und Kitas kommen aus
+      OSM (Fläche oder Punkt); gemessen wird der Abstand zur Fläche, bei Punkten zum Punkt (S-FEAT-06,
+      docs/open_questions.md). Der Teil crossing_demand ist stillgelegt (C-MISS-01, status inactive, F25).
     source: [CROW_AFW30_2021, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
 
   - id: C-G30-02
-    description: "GOW30-Auslöser b: 50 nicht sicher gestaltbar (kein getrennter Radweg möglich)"
+    description: "GOW30-Auslöser b: 50 nicht sicher gestaltbar (kein ausreichender getrennter Radweg möglich)"
     applies_to: GOW
-    if: "not separated_cycle_track_present and width_p10_m < required_width.GOW50"
+    if: "(not bus_route and width_p10_m < required_width.GOW50) or (bus_route and width_p10_m < required_width.GOW50_bus)"
     then: GOW30
+    note: >-
+      Seit 0.18.0 (F06): nur über den Raum. Ein vorhandener Radweg zählt nicht (CROW-Auslöser b fragt, ob ein
+      ausreichender Radweg realisierbar ist). bus_route = Busse je Spitzenstunde und Richtung nach PRF-02 >=
+      S-FEAT-08 bus_route_min_peak_h_dir (s04). Flag existing_track_below_floor (c05), wenn die Ist-Breite des Radwegs
+      bekannt ist und unter der Untergrenze C-FAC-04 floor liegt.
     source: [SWOV_FS_2023, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
@@ -126,10 +146,11 @@ classification_policy:
     defaults:
       outside_builtup_area: {value: false, note: "Keine Datenquelle: Die Ortstafeln in OSM schließen kein ländliches Gebiet ab (Prüfung 2026-11-04). Ländliche Stadtteile werden darum nicht klassifiziert (config/project.yaml, rural_exclude); im übrigen Arbeitsgebiet gilt innerorts"}
       override_school_street: {value: false, note: "Leer heißt: keine Schulstraße in overrides/overrides.csv eingetragen"}
-      crossing_demand: {value: not_assessed, note: "Querungsbedarf ist nicht definiert; not_assessed zählt als nicht high"}
+      crossing_demand: {value: not_assessed, status: inactive,
+                        note: "Q2 b (2026-11-08): place_score als Auslöser erst nach Kalibrierung an den E1-Stichproben prüfen. Stillgelegt (F25): der Wert ist immer not_assessed (zählt als nicht high), auch wenn eine Eingabe vorliegt; senkt confidence nicht und zählt in Berichten nicht als abgedeckt"}
     source_type: assumption
     status: draft
-    note: "Entscheidung Projektteam 2026-10-28. Defaults gelten nur für fehlende Werte und zählen als Fallback-Quelle (C-CONF-01)."
+    note: "Entscheidung Projektteam 2026-10-28. Defaults gelten nur für fehlende Werte und zählen als Fallback-Quelle (C-CONF-01), außer sie stehen in C-CONF-01 global_caveats. Ein Default mit status inactive ersetzt jeden Wert (stillgelegter Teil einer Bedingung)."
 
   - id: C-CONF-01
     description: >-
@@ -139,10 +160,14 @@ classification_policy:
     thresholds:
       near_threshold: {value: 0.10, unit: "Anteil der Schwelle (±)", source_type: assumption}
     fallback_inputs:
-      schools_or_kitas_within_m: {note: "Schulen/Kitas aus OSM amenity=school/kindergarten statt amtlicher Quelle (sources.yaml fallback_osm)"}
+      school_or_kita_access_m: {note: "Schulen/Kitas aus OSM amenity=school/kindergarten statt amtlicher Quelle (sources.yaml fallback_osm)"}
       in_hvs: {note: "DTV-Linien HVS 2019 statt HVS-Karte 2023 (S-CONF-04)"}
       conn_score: {when: "conn_weight_available < 1.0", note: "Gewicht fehlender Merkmale umgelegt (scores.missing_value_policy)"}
       width_p10_m: {when: "width_from_neighbour", note: "Breite vom Nachbarabschnitt gleichen Namens (S-XS-07)"}
+    global_caveats: [outside_builtup_area, override_school_street, crossing_demand, in_hvs, school_or_kita_access_m]
+    global_caveats_note: >-
+      Defaults und Fallbacks, die für alle Abschnitte gleich gelten, senken confidence nicht; sie stehen einmal im
+      Klassifikationsbericht und auf der Methodenseite (F14, seit 0.18.0)
     source_type: assumption
     status: draft
     note: >-
@@ -155,15 +180,18 @@ classification_policy:
 scores:
   conn_score:
     source_type: assumption
-    note: "Gewichte sind Setzungen; Prüfung über die Sensitivitätsanalyse (V-SENS-01)"
+    note: >-
+      Gewichte sind Setzungen; Prüfung über die Sensitivitätsanalyse (V-SENS-01). Seit 0.18.0 ohne in_hvs (vorher
+      0,35/0,25/0,20/0,20; F13, Q3 b): in_hvs nur noch als eigener Auslöser in C-GOW-01; Gewichte anteilig umgelegt,
+      conn_gow neu kalibriert (C-GOW-01 note)
     weights:
-      betweenness_norm: 0.35
-      in_hvs: 0.25
-      bus_trips_weekday_norm: 0.20
-      dtv_norm: 0.20
+      betweenness_norm: 0.45
+      bus_trips_weekday_norm: 0.30
+      dtv_norm: 0.25
     missing_value_policy: "Gewicht auf übrige Merkmale umlegen, confidence herabsetzen"
   place_score:
     source_type: assumption
+    note: "derzeit von keiner Regel gelesen; Kandidat für crossing_demand (F25 Option a, zurückgestellt bis zur Kalibrierung an den E1-Stichproben)"
     weights:
       building_density_norm: 0.3
       population_100m_norm: 0.3
@@ -177,7 +205,8 @@ scores:
 # tests/test_rules_schema.py prüft, dass die Werte übereinstimmen (F32, seit 0.17.0).
 requirements:
   GOW50:
-    cycling: {value: separated_mandatory_track_or_parallel_route, source: CROW_GOW30_2023, source_type: swov_crow}
+    cycling: {value: separated_track_or_parallel_route, source: CROW_GOW30_2023, source_type: swov_crow,
+              note: "Benutzungspflicht ist eine Anordnung (§ 45 Abs. 9 StVO, VwV zu § 2 Abs. 4), nicht Gegenstand des Plans (F22, seit 0.18.0)"}
     cycle_lanes_allowed: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
     cycle_track_width_m: {value: 2.00, source: ERA_2010, source_type: de_regelwerk, ref: {value: cycling_rules.widths_m.de.separated_oneway.standard}}
     buffer_to_parking_m: {value: 0.75, min: 0.50, source: ERA_2010, source_type: de_regelwerk, ref: {value: cycling_rules.widths_m.de.buffer_to_parking.standard, min: cycling_rules.widths_m.de.buffer_to_parking.min}}
@@ -208,15 +237,20 @@ requirements:
   ETW_ERF:
     cycling: {value: mixed, source: SWOV_FS_2023, source_type: swov_crow}
 
-# Erforderliche Straßenraumbreite (Grenze zu Grenze) – Summen aus Einzelmaßen
+# Erforderliche Straßenraumbreite (Grenze zu Grenze) – Summen aus Einzelmaßen.
+# Seit 0.18.0 (F05) eine Machbarkeitsrechnung: GOW50/GOW50_bus/ETW30 sind das Mindestprofil aus design_rules.yaml (D.)
+# mit dem ERA-Regelmaß des Radwegs aus cycling_rules.yaml (C.); `formula` nennt die Pfade, tests/test_rules_schema.py
+# rechnet sie nach (value = formula, Invariante V-INV-06). Die Einzelmaße sidewalk_m und carriageway_2lane_m sind
+# entfallen (doppelt zu design_rules elements_min_m.sidewalk.min und lane_width_m.GOW50_2x1_carriageway).
+# Passt GOW50 in S-XS-06, passt das c06-Profil spätestens nach D4.
 required_width:
-  sidewalk_m: {value: 2.50, source: RAST_06, source_type: de_regelwerk, status: "am Original prüfen"}
-  carriageway_2lane_m: {value: 6.50, source: RAST_06, source_type: assumption, status: "aus Erinnerung, am Original prüfen"}
-  GOW50: {value: 16.50, formula: "2*sidewalk + 2*cycle_track + 2*0.50 + carriageway_2lane", source_type: assumption}
-  GOW50_bus: {value: 17.00, source_type: assumption}
+  GOW50: {value: 17.00, source_type: assumption,
+          formula: "2*D.cross_section_allocation.elements_min_m.sidewalk.min + 2*C.widths_m.de.separated_oneway.standard + 2*D.cross_section_allocation.elements_min_m.buffer_cycle_carriageway + D.lanes.lane_width_m.GOW50_2x1_carriageway.value"}
+  GOW50_bus: {value: 17.50, source_type: assumption,
+              formula: "2*D.cross_section_allocation.elements_min_m.sidewalk.min + 2*C.widths_m.de.separated_oneway.standard + 2*D.cross_section_allocation.elements_min_m.buffer_cycle_carriageway + D.lanes.lane_width_m.GOW50_bus_carriageway.value"}
   GOW30_narrow: {range: [10.80, 13.40], source_type: assumption}
   GOW30_wide: {range: [13.40, 15.70], source_type: assumption}
-  ETW30: {value: 10.80, source_type: assumption}
+  ETW30: {value: 9.75, source_type: assumption, formula: "2*D.cross_section_allocation.elements_min_m.sidewalk.min + D.lanes.lane_width_m.ETW30_mixed.value"}
 
 feasibility_classes:  # width_ratio = width_p10 / required_width; halboffen [min, max): 1,00 -> fits, 0,85 -> tight (F27)
   fits: {min: 1.00, source_type: assumption}
@@ -455,9 +489,15 @@ features:
         in place_score eingehen. Bürogebäude zählen nicht (kein Publikumsverkehr). Zählt Gebäude, nicht Fassadenlänge;
         das Geschoss von OSM-POIs wird nicht geprüft. amenity_excluded: Stadtmöblierung ohne Publikumsverkehr.
     - id: S-FEAT-06
-      description: "Entfernung zur nächsten Schule oder Kita (OSM amenity=school/kindergarten, Fläche oder Punkt); Normierung über den Perzentilrang der negativen Entfernung"
+      description: "Entfernung zur nächsten Schule oder Kita (OSM amenity=school/kindergarten, Fläche oder Punkt); Normierung über den Perzentilrang der negativen Entfernung. school_or_kita_access_m: Abstand vom Abschnitt zum Grundstück der nächsten Einrichtung (C-G30-01)"
       source_type: assumption
       status: draft
+      note: >-
+        Seit 0.18.0 (F07) zwei Spalten mit derselben Rechnung: schools_or_kitas_within_m (place_score, P-RISK-01) und
+        school_or_kita_access_m (C-G30-01, access_radius). Näherung für den Zugang: Eingänge sind nicht erfasst, die
+        amtliche Quelle fehlt (sources.yaml schools/kitas ohne Endpunkt). OSM-Flächen sind meist das Schulgrundstück, bei
+        Kitas teils nur das Gebäude; Punkte (Schulen 58 von 558, Kitas 434 von 987, Abruf 2026-11-04) zählen mit dem
+        Abstand zum Punkt. amenity=school umfasst auch berufsbildende Schulen (docs/open_questions.md).
     - id: S-FEAT-07
       description: "Zugehörigkeit zum Radnetz über den Längenanteil wie S-CONF-02 (Puffer, Winkel und Mindestanteil von dort)"
       source_type: assumption
@@ -473,6 +513,11 @@ features:
         aktiven service_id (calendar und calendar_dates). route_types: 3 und 7xx (Bus) nach GTFS-Spezifikation bzw.
         erweiterten Routentypen. GTFS des HVV (sources.yaml gtfs_hvv, Abruf 2026-10-28) liegt in data/raw und wird
         genutzt; fehlt der Datensatz, ist bus_trips_weekday null. Notiz aktualisiert in 0.17.0 (F31).
+        Seit 0.18.0 (F06) zusätzlich bus_peak_h_dir = Busse je Spitzenstunde und Richtung nach design_rules PRF-02
+        (gleiche Rechnung wie c06) und bus_route = bus_peak_h_dir >= bus_route_min_peak_h_dir (C-G30-02).
+      thresholds:
+        bus_route_min_peak_h_dir: {value: 1, unit: "Busse je Spitzenstunde und Richtung", source_type: assumption,
+                                   check: "Busroute nach PRF-02 (Review 2026-11 F06: bus_per_peak_h_dir >= 1)"}
     - id: S-FEAT-09
       description: "Ist-Tempo: amtliches Regeltempo vor OSM maxspeed; beide bekannt und verschieden -> speed_sources_conflict"
       source: HH_TEMPO
@@ -500,6 +545,21 @@ features:
       source_type: assumption
       status: draft
       note: "Für D-DES-01 (GOW50: baulicher Radweg oder Parallelroute). Listen wie cycling_rules.yaml C-GRAPH-01 und C-NET-05. Entscheidung prstolpe 2026-11-07 (Stapel 5)."
+
+    - id: S-FEAT-12
+      description: "anbaufrei: Anteil der Abschnittslänge ohne Gebäude (ALKIS, Auswahl wie S-FEAT-03) und ohne Einmündung (Knoten mit Grad >= 3, S-NET-01) im Puffer buffer_m >= min_share"
+      thresholds:
+        buffer_m: {value: 30, unit: m, source_type: assumption}
+        min_share: {value: 0.8, unit: "Anteil 0-1", source_type: assumption}
+      source_type: assumption
+      status: draft
+      note: >-
+        Seit 0.18.0 (F23, Entscheidung Q4 a 2026-11-08). Anbaufreie Hauptverkehrsstraßen innerorts (RIN VS II-III, keine
+        Kraftfahrstraße) bleiben GOW50; keine eigene Kategorie. Nutzung nur als Flag gow50_anbaufrei (cat_final GOW50 und
+        anbaufrei) im Steckbrief und in D-SPD-01 (Hinweis statt Stärke bei Ist-Tempo >= anbaufrei_hint.min_ist_kmh).
+        Gemessen wird die Länge des Abschnitts außerhalb der Vereinigung aller Gebäude- und Knotenpuffer; die eigenen
+        Endknoten zählen mit, wenn sie Einmündungen sind. Nach den E1-Stichproben prüfen, ob der Umfang eine Kategorie
+        rechtfertigt.
 
 # ---------------------------------------------------------------
 # Querschnitt: Straßenraumbreite und Machbarkeit (pipeline/s07_crosssection.py, guide.md 4.3 a und c, prompts/07)
@@ -689,6 +749,17 @@ discrepancy:
     source_type: swov_crow
     status: draft
     note: "Ohne Soll-Tempo (SW) oder ohne Ist-Tempo nicht geprüft (null). ETW_ERF mit dem Rechenwert 7 km/h."
+    anbaufrei_hint:
+      categories: [GOW50]
+      feature: anbaufrei
+      flag: gow50_anbaufrei
+      min_ist_kmh: 60
+      source_type: assumption
+      status: draft
+      note: >-
+        F23 (Q4 a, seit 0.18.0): anbaufreie GOW50 (S-FEAT-12) mit Ist-Tempo ab min_ist_kmh erhalten statt einer
+        Tempo-Stärke einen Hinweis (Stärke 0, hint gow50_anbaufrei im Trace): Tempo 50 ist dort fachlich zu prüfen, nicht
+        automatisch eine Diskrepanz.
   design:
     id: D-DES-01
     checks: [cycling, cycle_lanes_allowed, centre_line, parking_along_carriageway, median_if_lanes_per_dir_gte]
@@ -698,7 +769,7 @@ discrepancy:
     # hat (ohne `requirement`: bei jedem Wert, der dann in violated_if als `requirement` steht).
     # violated_if wird dreiwertig ausgewertet (pipeline/lib/expr.py); unbekannt -> disc_design_unknown.
     violations:
-      - {check: cycling, requirement: separated_mandatory_track_or_parallel_route, violated_if: "not separated_cycle_track_present and not parallel_cycle_route_present",
+      - {check: cycling, requirement: separated_track_or_parallel_route, violated_if: "not separated_cycle_track_present and not parallel_cycle_route_present",
          direction: sparse, label_de: "kein baulicher Radweg", source_type: assumption,
          note: "Parallelroute = eigenständiger Radweg oder amtliches Radnetz (Bestand) parallel im Abstand S-FEAT-11 buffer_m (seit 0.16.0)"}
       - {check: cycling, requirement: cycle_lanes_or_existing_track, violated_if: "not (cycle_lane_present or separated_cycle_track_present)",
@@ -773,7 +844,7 @@ priority:
     thresholds:
       snap_m: {value: 15, unit: m, source_type: assumption, check: "wie buffer_m in S-CONF-01; Unfallorte liegen laut Datensatzbeschreibung auf dem Straßenabschnitt. Freigegeben (Entscheidung Projektteam 2026-10-28)"}
       min_length_m: {value: 100, unit: m, source_type: assumption, check: "verhindert sehr hohe Werte je km auf kurzen Knotenstücken. Freigegeben (Entscheidung Projektteam 2026-10-28)"}
-      school_kita_radius_m: {value: 150, unit: m, source_type: assumption, check: "wie sensitive_radius in C-G30-01"}
+      school_kita_radius_m: {value: 150, unit: m, source_type: assumption, check: "Wert des früheren sensitive_radius aus C-G30-01 (bis 0.17.0); bleibt für die Priorität erhalten (F07)"}
       period_years: {value: 5, unit: Jahre, source_type: assumption, check: "prompts/10; guide.md 3.2 nennt 3-5 Jahre"}
     source_type: assumption
     status: draft
@@ -790,8 +861,12 @@ harmonisation:
         (1) ETW30 zwischen zwei GOW-Läufen -> GOW (niedrigeres Soll-Tempo der Nachbarn); (2) GOW zwischen zwei
         ETW30-Läufen -> ETW30; (3) GOW50 zwischen zwei GOW30-Läufen oder am Zugende neben GOW30 -> GOW30;
         (4) GOW30 zwischen GOW50 (oder am Zugende neben GOW50) bleibt und wird in die angrenzenden GOW50-Abschnitte
-        verlängert (kürzerer Nachbar zuerst), bis min_run_m erreicht ist.
+        verlängert (kürzerer Nachbar zuerst), bis min_run_m erreicht ist. Lückenschluss (seit 0.18.0, F07): ein
+        GOW50-Lauf zwischen zwei GOW30-Läufen wird GOW30, wenn er kürzer als gap_close_m ist (statt min_run_m).
       min_run_from: N2
+      thresholds:
+        gap_close_m: {value: 500, unit: m, source: STVO_2024, source_type: de_regelwerk,
+                      check: "Lückenschluss zwischen Tempo-30-Strecken (StVO-Novelle 2024, Fassung prüfen)"}
       max_passes: 20
       locked_categories: [SW, ETW_ERF, GOW80, ETW60]
       source: SWOV_FS_2023
@@ -800,7 +875,10 @@ harmonisation:
       note: >-
         Homogenität des Straßenzugs (SWOV); bei 50 gegen 30 gewinnt das niedrigere Tempo. Entscheidung Projektteam
         2026-11-04. Straßenzug wie N2. Abschnitte mit approved override werden nicht verändert. max_passes ist nur eine
-        technische Grenze. Das Ergebnis der Kaskade bleibt als cat_cascade erhalten.
+        technische Grenze. Das Ergebnis der Kaskade bleibt als cat_cascade erhalten. gap_close_m (F07, Q2 b): Der Review
+        nennt den Lückenschluss bei Regel (4); umgesetzt ist er beim Fall „GOW50 zwischen zwei GOW30“ (Schritt 3), weil
+        nur dort eine Lücke zwischen zwei Tempo-30-Strecken geschlossen wird; Regel (4) verlängert kurze GOW30-Läufe und
+        behält min_run_m. Am Zugende gilt weiter min_run_m.
 
 # ---------------------------------------------------------------
 # Validierung und Sensitivität (pipeline/validate.py, guide.md Teil 7, prompts/12_validation.md)

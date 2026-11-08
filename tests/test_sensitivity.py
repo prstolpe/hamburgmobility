@@ -14,8 +14,8 @@ RULES = load_rules()
 BASE = {
     "highway": "secondary", "access_motor_only": False, "outside_builtup_area": False,
     "ist_verkehrsberuhigt": False, "pedestrian_zone": False, "override_school_street": False,
-    "in_hvs": False, "schools_or_kitas_within_m": 500.0, "shop_frontage_share": 0.1, "crossing_demand": None,
-    "separated_cycle_track_present": True, "width_p10_m": 25.0,
+    "in_hvs": False, "school_or_kita_access_m": 500.0, "shop_frontage_share": 0.1, "crossing_demand": None,
+    "bus_route": False, "width_p10_m": 25.0,
     "betweenness_norm": 1.0, "bus_trips_weekday_norm": 1.0, "dtv_norm": 0.0,
 }
 
@@ -30,8 +30,8 @@ def frame(*rows) -> pd.DataFrame:
 def test_varied_parameters():
     params = {p.key: p for p in sens.varied_parameters(RULES)}
     assert params["thresholds.conn_gow"].effect == "category"
-    assert params["thresholds.conn_gow"].base == pytest.approx(0.6)
-    assert params["thresholds.sensitive_radius"].effect == "category"
+    assert params["thresholds.conn_gow"].base == pytest.approx(0.87)
+    assert params["thresholds.access_radius"].effect == "category"
     assert params["thresholds.frontage"].effect == "category"
     assert params["required_width.GOW50"].effect == "category"
     assert params["thresholds.near_threshold"].effect == "confidence"
@@ -40,7 +40,8 @@ def test_varied_parameters():
     assert {k for k, p in params.items() if p.group == "risk_weight"} == {
         f"risk_weights.{k}" for k in RULES.priority.risk_weights}
     # only assumptions are varied; required_width entries not read by the cascade are not
-    assert "required_width.GOW50_bus" not in params
+    assert params["required_width.GOW50_bus"].effect == "category"  # read by C-G30-02 since 0.18.0 (F06)
+    assert "required_width.ETW30" not in params
 
 
 def test_fixed_assumptions_lists_upstream_thresholds():
@@ -55,13 +56,13 @@ def test_fixed_assumptions_lists_upstream_thresholds():
 
 def test_with_values_copies():
     changed = sens.with_values(RULES, {"thresholds.conn_gow": 0.48, "required_width.GOW50": 13.2,
-                                       "conn_score.in_hvs": 0.3, "risk_weights.cycle_network": 0.24,
+                                       "conn_score.dtv_norm": 0.3, "risk_weights.cycle_network": 0.24,
                                        "thresholds.near_threshold": 0.12})
     assert changed is not RULES
-    assert RULES.classification[3].thresholds["conn_gow"].value == pytest.approx(0.6)
+    assert RULES.classification[3].thresholds["conn_gow"].value == pytest.approx(0.87)
     assert next(r for r in changed.classification if r.id == "C-GOW-01").thresholds["conn_gow"].value == pytest.approx(0.48)
     assert changed.required_width["GOW50"].value == pytest.approx(13.2)
-    assert changed.scores["conn_score"].weights["in_hvs"] == pytest.approx(0.3)
+    assert changed.scores["conn_score"].weights["dtv_norm"] == pytest.approx(0.3)
     assert changed.priority.risk_weights["cycle_network"] == pytest.approx(0.24)
     assert RULES.priority.risk_weights["cycle_network"] == pytest.approx(0.2)
 
@@ -77,26 +78,26 @@ def test_with_values_unknown_key():
 def test_conn_score_recomputed_and_reweighted():
     df = frame({}, {"dtv_norm": None})
     score, share = sens.conn_score(df, RULES)
-    assert score[0] == pytest.approx(0.55)  # 0.35 + 0.20
+    assert score[0] == pytest.approx(0.75)  # 0.45 + 0.30 (F13: no in_hvs)
     assert share[0] == pytest.approx(1.0)
-    assert score[1] == pytest.approx(0.55 / 0.8)  # weight of dtv moved to the others
-    assert share[1] == pytest.approx(0.8)
+    assert score[1] == pytest.approx(1.0)  # weight of dtv moved to the others: 0.75 / 0.75
+    assert share[1] == pytest.approx(0.75)
 
 
 def test_categories_follow_threshold():
-    df = frame({})  # conn_score 0.55 < 0.6
+    df = frame({})  # conn_score 0.75 < 0.87
     assert sens.categories(df, RULES).tolist() == ["ETW30"]
-    lower = sens.with_values(RULES, {"thresholds.conn_gow": 0.48})
+    lower = sens.with_values(RULES, {"thresholds.conn_gow": 0.6})
     assert sens.categories(df, lower).tolist() == ["GOW50"]
 
 
 def test_categories_follow_weights():
     df = frame({})
-    heavier = sens.with_values(RULES, {"conn_score.betweenness_norm": 0.42, "conn_score.bus_trips_weekday_norm": 0.24})
-    # (0.42 + 0.24) / (0.42 + 0.25 + 0.24 + 0.20) = 0.595 -> still ETW30; scores are normalised by the weight sum
+    heavier = sens.with_values(RULES, {"conn_score.betweenness_norm": 0.55, "conn_score.bus_trips_weekday_norm": 0.35})
+    # (0.55 + 0.35) / (0.55 + 0.35 + 0.25) = 0.783 -> still ETW30; scores are normalised by the weight sum
     assert sens.categories(df, heavier).tolist() == ["ETW30"]
-    no_dtv = sens.with_values(RULES, {"conn_score.dtv_norm": 0.0, "conn_score.in_hvs": 0.0})
-    assert sens.categories(df, no_dtv).tolist() == ["GOW50"]  # 0.55 / 0.55 = 1
+    no_dtv = sens.with_values(RULES, {"conn_score.dtv_norm": 0.0})
+    assert sens.categories(df, no_dtv).tolist() == ["GOW50"]  # 0.75 / 0.75 = 1
 
 
 def test_one_at_a_time_columns():
@@ -123,9 +124,9 @@ def test_sample_factors_reproducible():
 
 def test_run_values():
     params = [sens.Param("thresholds.conn_gow", 0.6, "threshold", "category", "C-GOW-01"),
-              sens.Param("conn_score.in_hvs", 0.25, "conn_weight", "category", "scores.conn_score")]
+              sens.Param("conn_score.dtv_norm", 0.25, "conn_weight", "category", "scores.conn_score")]
     assert sens.run_values(params, np.array([1.1, 0.8])) == pytest.approx(
-        {"thresholds.conn_gow": 0.66, "conn_score.in_hvs": 0.2})
+        {"thresholds.conn_gow": 0.66, "conn_score.dtv_norm": 0.2})
 
 
 def test_monte_carlo_shape_and_seed():
@@ -135,7 +136,7 @@ def test_monte_carlo_shape_and_seed():
     runs = sens.monte_carlo(df, RULES, params, factors)
     assert runs.shape == (2, 20)
     assert set(runs.iloc[0]) <= {"ETW30", "GOW50", "GOW30"}
-    assert set(runs.iloc[1]) == {"ETW30"}  # conn_score 0.35 stays below 0.48
+    assert set(runs.iloc[1]) == {"ETW30"}  # conn_score 0.45 stays below 0.87 * 0.8
     assert runs.equals(sens.monte_carlo(df, RULES, params, factors))
 
 

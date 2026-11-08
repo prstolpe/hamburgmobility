@@ -27,15 +27,16 @@ export function methodHtml(meta, changelog) {
     <li>Ist sie heute schon ein verkehrsberuhigter Bereich oder eine Fußgängerzone? Dann ist sie eine <em>Aufenthaltsstraße</em>.</li>
     <li>Verbindet sie wichtige Orte (hoher Verbindungswert oder Hauptverkehrsstraße)? Dann ist sie eine Verbindungsstraße.
       <ul>
-        <li>Liegt eine Schule oder Kita in der Nähe, oder gibt es viele Läden? Oder ist kein Platz für einen eigenen Radweg?
-          Dann soll dort Tempo 30 gelten: <em>Stadtstraße 30</em>.</li>
+        <li>Liegt eine Schule oder Kita direkt an der Straße, oder gibt es viele Läden? Oder ist kein Platz für einen
+          ausreichend breiten eigenen Radweg? Dann soll dort Tempo 30 gelten: <em>Stadtstraße 30</em>.</li>
         <li>Sonst bleibt sie eine <em>Stadtmagistrale</em> mit Tempo 50 und eigenem Radweg.</li>
       </ul></li>
     <li>Alle anderen Straßen erschließen das Quartier: <em>Quartiersstraße</em> mit Tempo 30.</li>
   </ol>
   <p>Danach wird jeder Straßenzug geglättet: Kurze Stücke unter 200 m, die anders eingestuft sind als die Straße davor
   und dahinter, werden angeglichen. Treffen Tempo 50 und Tempo 30 aufeinander, gewinnt Tempo 30. So wechselt die
-  Kategorie nicht alle paar Meter.</p>
+  Kategorie nicht alle paar Meter. Liegt zwischen zwei Tempo-30-Stücken nur ein kurzes Stück Tempo 50, wird die Lücke
+  geschlossen.</p>
   <p>Eingestuft werden Straßen für den Kfz-Verkehr und benannte Zufahrten. Fußwege, Wege in Parks und
   Kleingärten sowie Parkplatzgassen haben keine Kategorie, auch wenn die Hintergrundkarte ihren Namen zeigt.</p>
   <p>Jeder Steckbrief zeigt, welche Regeln gegriffen haben und mit welchen Werten. Die Regeln und alle Schwellenwerte
@@ -49,6 +50,8 @@ export function methodHtml(meta, changelog) {
   (jeweils bis zu ${meta.sensitivity ? num(meta.sensitivity.delta * 100) : "20"} % mehr oder weniger). Wechselt die
   Kategorie in mindestens ${meta.sensitivity ? num(meta.sensitivity.min_change_rate * 100) : "30"} % der Läufe, ist der
   Abschnitt als <em>unsicher</em> markiert und sollte fachlich geprüft werden.</p>
+  ${meta.global_caveats?.items?.length ? `<p>${esc(meta.global_caveats.intro)}</p>
+  <ul>${meta.global_caveats.items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
 
   <h2>Diskrepanz: wo Soll und Ist nicht zusammenpassen</h2>
   <p>Wir vergleichen die Soll-Kategorie mit dem heutigen Zustand: dem Tempolimit, der Gestaltung (zum Beispiel

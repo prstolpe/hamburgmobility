@@ -272,6 +272,16 @@ def category_check(cat_final, soll, ist_cls, p: FacilityParams) -> bool:
     return cat_final in c["cat_final"] and soll in c["soll"] and ist_cls in c["ist_classes"]
 
 
+# rules.yaml C-G30-02 note (F06): existing track narrower than the C-FAC-04 floor of its Ist facility
+TRACK_BELOW_FLOOR_FLAG = "existing_track_below_floor"
+
+
+def track_below_floor(ist_class: str, ist_facility: str | None, width_ist, p: FacilityParams) -> bool:
+    """F06: an existing track (C-FAC-05 class track) whose known Ist width is below the C-FAC-04 floor."""
+    w = _num(width_ist)
+    return ist_class == "track" and w is not None and ist_facility in p.floor and w < p.floor[ist_facility]
+
+
 def confidence(cat_final, flags, p: FacilityParams) -> str:
     if not isinstance(cat_final, str):
         return "low"

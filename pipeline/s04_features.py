@@ -32,8 +32,10 @@ from pipeline.lib.features import (
     area_weighted_sum,
     building_density,
     count_near,
+    free_length_share,
     frontage_share,
     ist_speed,
+    junction_points,
     majority,
     nearest_distance,
     parallel_route_present,
@@ -65,9 +67,11 @@ DESIGN_COLUMNS = ["separated_cycle_track_present", "cycle_lane_present", "lanes"
 FEATURE_DOC = {
     "betweenness": ("OSM-Netz + Tempo", "S-FEAT-02", "Rohwert für betweenness_norm"),
     "betweenness_norm": ("OSM-Netz + Tempo", "S-FEAT-01/02", "scores.conn_score"),
-    "in_hvs": ("DTV-Linien HVS 2019", "S-CONF-04", "C-GOW-01, scores.conn_score"),
+    "in_hvs": ("DTV-Linien HVS 2019", "S-CONF-04", "C-GOW-01"),
     "bus_trips_weekday": ("GTFS HVV", "S-FEAT-08", "Rohwert für bus_trips_weekday_norm"),
     "bus_trips_weekday_norm": ("GTFS HVV", "S-FEAT-01/08", "scores.conn_score"),
+    "bus_peak_h_dir": ("GTFS HVV", "S-FEAT-08 (PRF-02)", "Rohwert für bus_route"),
+    "bus_route": ("GTFS HVV", "S-FEAT-08", "C-G30-02 (required_width.GOW50_bus)"),
     "dtv_official": ("DTV-Linien HVS 2019", "S-CONF-01", "discrepancy.use, Rohwert für dtv_norm"),
     "dtv_norm": ("DTV-Linien HVS 2019", "S-FEAT-01", "scores.conn_score"),
     "conn_score": ("abgeleitet", "scores.conn_score", "C-RUR-01, C-GOW-01"),
@@ -78,7 +82,8 @@ FEATURE_DOC = {
     "population_100m_norm": ("Zensus 2022 Gitter", "S-FEAT-01/04", "scores.place_score"),
     "shop_frontage_share": ("ALKIS-Gebäudefunktion + OSM shop/amenity", "S-FEAT-05", "C-G30-01, scores.place_score (frontage_share)"),
     "frontage_buildings": ("ALKIS-Gebäude", "S-FEAT-05", "Nenner von shop_frontage_share (Nachvollziehbarkeit)"),
-    "schools_or_kitas_within_m": ("OSM Schulen/Kitas", "S-FEAT-06", "C-G30-01, priority.school_kita_within_150m"),
+    "schools_or_kitas_within_m": ("OSM Schulen/Kitas", "S-FEAT-06", "priority.school_kita_within_150m, Rohwert für sensitive_facilities_norm"),
+    "school_or_kita_access_m": ("OSM Schulen/Kitas", "S-FEAT-06", "C-G30-01 (access_radius)"),
     "sensitive_facilities_norm": ("OSM Schulen/Kitas", "S-FEAT-01/06", "scores.place_score"),
     "place_score": ("abgeleitet", "scores.place_score", "Prompt 08/10 (Funktionskonflikt, Diskrepanz)"),
     "place_weight_available": ("abgeleitet", "scores.place_score", "missing_value_policy"),
@@ -102,8 +107,10 @@ FEATURE_DOC = {
     "surface": ("OSM-Tags", "S-FEAT-10", "Erkennbarkeit (guide.md 1.2)"),
     "access_motor_only": ("OSM-Tags", "S-FEAT-10", "C-SW-01"),
     "pedestrian_zone": ("OSM-Tags", "S-FEAT-10", "C-ERF-01"),
+    "anbaufrei_share": ("ALKIS-Gebäude + OSM-Netz", "S-FEAT-12", "Rohwert für anbaufrei"),
+    "anbaufrei": ("ALKIS-Gebäude + OSM-Netz", "S-FEAT-12", "D-SPD-01 anbaufrei_hint, Flag gow50_anbaufrei"),
     "outside_builtup_area": ("keine Quelle", "–", "C-RUR-01"),
-    "crossing_demand": ("nicht definiert", "–", "C-G30-01"),
+    "crossing_demand": ("stillgelegt (C-MISS-01 status inactive)", "–", "C-G30-01 (Teil stillgelegt, F25)"),
     "override_school_street": ("overrides.csv (Prompt 09)", "–", "C-ERF-01"),
     "width_p10_m": ("Querschnitt (Prompt 07)", "–", "C-G30-02"),
 }
@@ -113,7 +120,7 @@ SOURCE_OF = {"Zensus 2022 Gitter": "population_grid", "ALKIS-Gebäude": "alkis",
              "Tempo amtlich/OSM": "speed_limits"}
 NULL_REASON = {
     "outside_builtup_area": "keine Datenquelle für die Ortsgrenze (docs/open_questions.md)",
-    "crossing_demand": "in rules.yaml nicht definiert (docs/open_questions.md)",
+    "crossing_demand": "stillgelegt bis zur Kalibrierung von place_score (C-MISS-01 status inactive, F25)",
     "override_school_street": "kommt aus overrides/overrides.csv (Prompt 09)",
     "width_p10_m": "kommt aus dem Querschnitt (Prompt 07)",
 }
@@ -260,6 +267,17 @@ def bus_features(area: gpd.GeoDataFrame, feed_path, params: FeatureParams, mp: M
                    "shapes": len(shapes)}
 
 
+def bus_peak_features(area: gpd.GeoDataFrame, feed_path, rules, mp: MatchParams, min_share: float) -> pd.Series:
+    """S-FEAT-08 / PRF-02: buses in the busiest hour of the busier direction (same computation as c06); null without GTFS."""
+    if feed_path is None:
+        return pd.Series(np.nan, index=area.index)
+    feed = gtfs.load_feed(feed_path)
+    day = gtfs.representative_weekday(feed)
+    hours = gtfs.trip_start_hours(feed_path)
+    route_types = tuple(rules.features.rule("S-FEAT-08").route_types)
+    return pd.Series(tr.transit_peak(area, feed_path, route_types, hours, feed, day, mp, min_share), index=area.index)
+
+
 def compute(seg: gpd.GeoDataFrame, layers: dict, osm: dict, feed_path, rules) -> tuple[gpd.GeoDataFrame, dict]:
     params = FeatureParams.from_rules(rules)
     mp = MatchParams.from_rules(rules)
@@ -296,12 +314,25 @@ def compute(seg: gpd.GeoDataFrame, layers: dict, osm: dict, feed_path, rules) ->
     facilities = pd.concat([layers[k] for k in ("schools", "kitas") if layers.get(k) is not None], ignore_index=True)
     out.loc[in_area, "schools_or_kitas_within_m"] = nearest_distance(g, facilities.geometry) if len(facilities) \
         else np.nan
+    # F07: same distance (site polygon, point as approximation), read by C-G30-01 against access_radius
+    out.loc[in_area, "school_or_kita_access_m"] = out.loc[in_area, "schools_or_kitas_within_m"]
+
+    # F23 / S-FEAT-12: share of the length without buildings and junctions within buffer_m
+    f12 = rules.features.rule("S-FEAT-12")
+    obstacles = pd.concat([buildings.geometry.reset_index(drop=True), junction_points(seg)], ignore_index=True)
+    share12 = free_length_share(g, gpd.GeoSeries(obstacles, crs=WORK_CRS), f12.thresholds["buffer_m"].value)
+    out.loc[in_area, "anbaufrei_share"] = share12
+    out.loc[in_area, "anbaufrei"] = (share12 >= f12.thresholds["min_share"].value).astype(object).where(share12.notna(), None)
 
     cyc = layers.get("cycle_network")
     if cyc is not None and len(cyc):
         out.loc[in_area, "in_cycle_network"] = zone_share(g, cyc.geometry.explode(index_parts=False)
                                                           .reset_index(drop=True), mp) >= min_share
     out.loc[in_area, "bus_trips_weekday"], info["gtfs"] = bus_features(area, feed_path, params, mp, min_share)
+    peak = bus_peak_features(area, feed_path, rules, mp, min_share)
+    out.loc[in_area, "bus_peak_h_dir"] = peak
+    bus_min = rules.features.rule("S-FEAT-08").thresholds["bus_route_min_peak_h_dir"].value
+    out.loc[in_area, "bus_route"] = (peak >= bus_min).astype(object).where(peak.notna(), None)
 
     out.loc[in_area, "crossings_count"] = count_near(g, osm["crossings"].geometry, params.node_snap_m)
     out.loc[in_area, "traffic_calming_count"] = count_near(g, osm["calming"].geometry, params.node_snap_m)
@@ -328,7 +359,6 @@ def compute(seg: gpd.GeoDataFrame, layers: dict, osm: dict, feed_path, rules) ->
     out["sensitive_facilities_norm"] = percentile_rank(-out["schools_or_kitas_within_m"], in_area, ties=params.ties)
     norms = pd.DataFrame({
         "betweenness_norm": out["betweenness_norm"],
-        "in_hvs": out["in_hvs"].astype("float64").where(in_area),
         "bus_trips_weekday_norm": out["bus_trips_weekday_norm"],
         "dtv_norm": out["dtv_norm"],
         "building_density_norm": out["building_density_norm"],
@@ -352,14 +382,14 @@ def _typed(out: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         out[c] = pd.array([None if _none(v) is None else int(v) for v in out[c]], dtype="Int64")
     for c in ("speed_sources_conflict", "in_cycle_network", "separated_cycle_track_present", "parallel_cycle_route_present", "cycle_lane_present",
               "centre_line", "parking_on_carriageway", "parking_along_carriageway", "angle_parking",
-              "access_motor_only", "pedestrian_zone"):
+              "access_motor_only", "pedestrian_zone", "bus_route", "anbaufrei"):
         if c not in out:
             out[c] = None
         out[c] = pd.array([None if _none(v) is None else bool(v) for v in out[c]], dtype="boolean")
     for c in ("speed_ist_source", "surface", "parking", "travel_speed_source", *NULL_REASON):
         out[c] = out[c].astype("object").where(out[c].notna(), None)
-    for c in ("building_density", "shop_frontage_share", "schools_or_kitas_within_m", "bus_trips_weekday",
-              "population_100m"):
+    for c in ("building_density", "shop_frontage_share", "schools_or_kitas_within_m", "school_or_kita_access_m",
+              "bus_trips_weekday", "bus_peak_h_dir", "anbaufrei_share", "population_100m"):
         out[c] = pd.to_numeric(out[c], errors="coerce").astype("float64")
     return out
 
@@ -373,8 +403,11 @@ def _trace(r, rules) -> str:
         {"id": "S-FEAT-05", "inputs": {"buildings": _none(r["frontage_buildings"]),
                                         "public": _none(r["frontage_public"])}},
         {"id": "S-FEAT-06", "inputs": {"distance_m": _round(r["schools_or_kitas_within_m"], 1)}},
+        {"id": "S-FEAT-08", "inputs": {"bus_trips_weekday": _round(r["bus_trips_weekday"], 0),
+                                        "bus_peak_h_dir": _round(r["bus_peak_h_dir"], 0), "bus_route": _none(r["bus_route"])}},
         {"id": "S-FEAT-09", "inputs": {"official_kmh": _none(r["speed_official_kmh"]),
                                         "osm": _none(r["maxspeed_osm"]), "result": _none(r["speed_ist_kmh"])}},
+        {"id": "S-FEAT-12", "inputs": {"share": _round(r["anbaufrei_share"]), "result": _none(r["anbaufrei"])}},
     ]
     for score in ("conn_score", "place_score"):
         used = {k: w for k, w in rules.scores[score].weights.items()}
@@ -467,8 +500,8 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         "## Methode", "",
         "- **Normierung (S-FEAT-01):** Perzentilrang über alle Abschnitte im Arbeitsgebiet mit bekanntem Wert, "
         "(Rang − 1) / (n − 1); gleiche Werte erhalten den kleinsten Rang ihrer Gruppe (rules.yaml 0.5.0), damit der "
-        "kleinste Wert – z. B. 0 Busfahrten – auf 0 fällt. 1 = größter Wert. `in_hvs` geht als 0/1 "
-        "ein, `shop_frontage_share` unverändert. `sensitive_facilities_norm` ist der Perzentilrang der negativen "
+        "kleinste Wert – z. B. 0 Busfahrten – auf 0 fällt. 1 = größter Wert. `in_hvs` geht seit rules.yaml 0.18.0 "
+        "nicht mehr in conn_score ein (F13), `shop_frontage_share` unverändert. `sensitive_facilities_norm` ist der Perzentilrang der negativen "
         "Entfernung (nah = hoch). Die Normierung hängt vom Arbeitsgebiet ab; bei Ausweitung auf ganz Hamburg ändern "
         "sich die Werte.",
         "- **Fehlende Werte:** bleiben null. conn_score und place_score legen das Gewicht fehlender Merkmale "
@@ -483,7 +516,13 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
         "oder OSM-shop/amenity-Punkt im Gebäude (ohne Stadtmöblierung). Nebengebäude "
         f"({len(params.alkis_ancillary_functions)} Funktionen, z. B. Garage, Gartenhaus) zählen nicht. Schulen und Kitas "
         "gehen über S-FEAT-06 ein, nicht hier. Das Geschoss wird nicht geprüft.",
-        "- **Radnetz, Busfahrten (S-FEAT-07/08):** Längenanteil wie S-CONF-02 (Puffer, Winkel, Mindestanteil).",
+        "- **Radnetz, Busfahrten (S-FEAT-07/08):** Längenanteil wie S-CONF-02 (Puffer, Winkel, Mindestanteil). "
+        "`bus_peak_h_dir` = Busse in der stärksten Stunde der stärkeren Richtung (PRF-02, wie c06); `bus_route` = "
+        "bus_peak_h_dir ≥ S-FEAT-08 bus_route_min_peak_h_dir (C-G30-02, F06).",
+        "- **Schule/Kita am Abschnitt (S-FEAT-06):** `school_or_kita_access_m` = Abstand zur Fläche der nächsten "
+        "Einrichtung aus OSM, bei Punkten zum Punkt (Näherung für das Grundstück; C-G30-01, F07).",
+        "- **anbaufrei (S-FEAT-12):** Längenanteil ohne ALKIS-Gebäude und ohne Einmündung (Knoten mit Grad ≥ 3) im "
+        "Puffer; `anbaufrei` ab min_share (F23).",
         f"- **Ist-Gestaltung (S-FEAT-10):** Mehrheitswert über die Ways des Abschnitts (Gewicht: Länge im "
         f"{WAY_WEIGHT_BUFFER_M:.0f}-m-Puffer). Kein Tag = unbekannt (null), nicht „nein“. Querungen und "
         f"Verkehrsberuhigung: OSM-Knoten höchstens {params.node_snap_m:.0f} m vom Abschnitt. `access_motor_only`: "

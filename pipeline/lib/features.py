@@ -228,6 +228,39 @@ def nearest_distance(seg: gpd.GeoSeries, targets: gpd.GeoSeries) -> pd.Series:
     return pd.Series(out, index=seg.index)
 
 
+def junction_points(seg: gpd.GeoDataFrame) -> gpd.GeoSeries:
+    """S-FEAT-12: network nodes with degree >= 3 (S-NET-01), from the end points of all segments (node_u/node_v)."""
+    ends = pd.concat([
+        pd.DataFrame({"node": seg["node_u"].to_numpy(), "geometry": shapely.get_point(seg.geometry.to_numpy(), 0)}),
+        pd.DataFrame({"node": seg["node_v"].to_numpy(), "geometry": shapely.get_point(seg.geometry.to_numpy(), -1)}),
+    ], ignore_index=True)
+    degree = ends["node"].value_counts()
+    nodes = ends.drop_duplicates("node")
+    nodes = nodes[nodes["node"].map(degree).to_numpy() >= 3]
+    return gpd.GeoSeries(nodes["geometry"].to_numpy(), crs=seg.crs)
+
+
+def free_length_share(seg: gpd.GeoSeries, obstacles: gpd.GeoSeries, buffer_m: float) -> pd.Series:
+    """S-FEAT-12: share of each segment's length farther than buffer_m from every obstacle (buildings, junctions).
+
+    Exact geometry: length outside the union of the obstacle buffers; 1 without an obstacle nearby."""
+    lines = seg.to_numpy()
+    covered = np.zeros(len(seg))
+    if len(obstacles) and len(seg):
+        tree = shapely.STRtree(obstacles.to_numpy())
+        i_seg, i_obs = tree.query(lines, predicate="dwithin", distance=buffer_m)
+        if len(i_seg):
+            order = np.argsort(i_seg, kind="stable")
+            i_seg, i_obs = i_seg[order], i_obs[order]
+            pieces = shapely.intersection(lines[i_seg], shapely.buffer(obstacles.to_numpy()[i_obs], buffer_m))
+            starts = np.flatnonzero(np.r_[True, i_seg[1:] != i_seg[:-1]])
+            for a, b in zip(starts, np.r_[starts[1:], len(i_seg)]):
+                covered[i_seg[a]] = shapely.length(shapely.union_all(pieces[a:b]))
+    length = shapely.length(lines)
+    share = np.where(length > 0, 1.0 - np.minimum(covered, length) / np.where(length > 0, length, 1.0), np.nan)
+    return pd.Series(share, index=seg.index)
+
+
 def count_near(seg: gpd.GeoSeries, points: gpd.GeoSeries, snap_m: float) -> pd.Series:
     """S-FEAT-10: number of points at most snap_m from each segment."""
     i_seg, _ = _pairs(seg.buffer(snap_m), points)

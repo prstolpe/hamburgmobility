@@ -101,6 +101,12 @@ describe("robustness", () => {
     expect(profileHtml(base, meta, "https://example.org/")).not.toContain("angeglichen");
   });
 
+  it("shows hints such as the anbaufrei GOW50 (F23)", () => {
+    const p = { ...base, hints: ["Anbaufreie Stadtmagistrale: kaum Gebäude"] };
+    expect(profileHtml(p, meta, "https://example.org/")).toContain("Anbaufreie Stadtmagistrale");
+    expect(profileHtml(base, meta, "https://example.org/")).not.toContain("Anbaufreie");
+  });
+
   it("labels the table column", () => {
     expect([true, false, null, undefined].map(robust)).toEqual(["unsicher", "robust", "–", "–"]);
   });

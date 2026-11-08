@@ -170,6 +170,8 @@ def classify(final: pd.DataFrame, inp: pd.DataFrame, p: fa.FacilityParams) -> pd
         flags = res["flags"]
         if res["cycle_width_m"] is not None and not np.isfinite(w_ist) and ist in p.satisfies.get(res["cycle_facility"], ()):
             flags.append("ist_width_unknown")
+        if fa.track_below_floor(cls, ist, w_ist, p):
+            flags.append(fa.TRACK_BELOW_FLOOR_FLAG)
         if fa.category_check(f["cat_final"], res["cycle_facility"], cls, p):
             flags.append(p.category_check["flag"])
         gap, partial = fa.facility_gap(res["cycle_facility"], res["cycle_facility_fallback"], cls, ist, w_ist,

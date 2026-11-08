@@ -63,9 +63,28 @@ def test_gow50_stub_at_end_next_to_gow30():
     assert cats == ["GOW30", "GOW30"]
 
 
+GAP_CLOSE = RULES.harmonisation.rule("H-STR-01").thresholds["gap_close_m"].value  # 500 m (F07)
+
+
+def test_gow50_gap_below_gap_close_between_gow30_is_closed():
+    """F07: a GOW50 gap shorter than gap_close_m between two GOW30 runs becomes GOW30 (StVO gap closing)."""
+    assert GAP_CLOSE > MIN_RUN
+    cats, trace = run([("GOW30", 400), ("GOW50", 250), ("GOW30", 400)])
+    assert cats == ["GOW30", "GOW30", "GOW30"]
+    assert trace["s1"][0]["step"] == 3
+    cats, _ = run([("GOW30", 400), ("GOW50", GAP_CLOSE - 1), ("GOW30", 400)])
+    assert cats == ["GOW30", "GOW30", "GOW30"]
+
+
 def test_long_gow50_between_gow30_stays():
-    cats, _ = run([("GOW30", 400), ("GOW50", 250), ("GOW30", 400)])
+    cats, _ = run([("GOW30", 400), ("GOW50", GAP_CLOSE), ("GOW30", 400)])
     assert cats == ["GOW30", "GOW50", "GOW30"]
+
+
+def test_gap_close_does_not_apply_at_street_end():
+    """At the end of the street only min_run_m applies (no gap between two Tempo-30 stretches)."""
+    cats, _ = run([("GOW30", 400), ("GOW50", 250)])
+    assert cats == ["GOW30", "GOW50"]
 
 
 # --- step 4: GOW30 in GOW50 is kept and extended ----------------------------------------------

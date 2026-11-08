@@ -243,3 +243,14 @@ def test_pandas_na_counts_as_missing():
 
     r = fa.soll_facility("ETW30", "HAUPT", pd.NA, pd.NA, None, P)
     assert r.facility == "cycle_street" and "dtv_unknown" in r.flags
+
+
+def test_existing_track_below_floor():
+    """F06: flag existing_track_below_floor when the Ist track width is known and below the C-FAC-04 floor."""
+    floor = P.floor["separated_oneway_both"]
+    assert fa.track_below_floor("track", "separated_oneway_both", floor - 0.4, P)
+    assert not fa.track_below_floor("track", "separated_oneway_both", floor, P)
+    assert not fa.track_below_floor("track", "separated_oneway_both", float("nan"), P)
+    assert not fa.track_below_floor("lane", "cycle_lane", 0.5, P)
+    assert fa.TRACK_BELOW_FLOOR_FLAG == "existing_track_below_floor"
+

@@ -24,8 +24,7 @@ from config.schema.design_model import DesignRuleSet
 from pipeline.c04_principles import _gtfs_path, _links
 from pipeline.lib import gtfs
 from pipeline.lib import overrides as ov
-from pipeline.lib import transit as tr
-from pipeline.lib.transit import match_shapes, transit_cache_key  # noqa: F401 (API used in tests)
+from pipeline.lib.transit import match_shapes, transit_cache_key, transit_peak  # noqa: F401 (API used in tests)
 from pipeline.lib import profile as pf
 from pipeline.lib.area import sample_by_district
 from pipeline.lib.conflate import MatchParams
@@ -93,34 +92,6 @@ def lanes_for_segment(props: dict, design: DesignRuleSet, cycling: CyclingRuleSe
 
 
 # --- GTFS: buses and trams per peak hour and direction (PRF-02) ------------------------------------------------
-
-
-def transit_peak(seg: gpd.GeoDataFrame, feed_path, route_types: tuple, start_hours: pd.Series, feed: dict,
-                 day, mp: MatchParams, min_share: float) -> np.ndarray:
-    """Trips in the busiest hour of the busier direction per segment (0 without a matching shape).
-    Cached in data/interim/cache by transit_cache_key; the cache is only a shortcut, the result is the same."""
-    key = tr.transit_cache_key(feed_path.name, feed_path.stat().st_size, route_types, mp, min_share, seg.geometry)
-    cache = tr.CACHE_DIR / f"transit_peak_{key}.npy"
-    if cache.exists():
-        return np.load(cache)
-    hist = gtfs.hourly_trips_per_shape(feed, start_hours, day, route_types)
-    n = len(seg)
-    if hist.empty:
-        return np.zeros(n)
-    hours = sorted(hist.columns)
-    fwd, bwd = np.zeros((n, len(hours))), np.zeros((n, len(hours)))
-    shapes = gtfs.shapes_gdf(feed, hist.index)
-    matched = tr.match_shapes(seg.geometry, list(shapes.geometry.values), mp, min_share)
-    for shape_id, (hit, d) in zip(shapes.index, matched):
-        if len(hit) == 0:
-            continue
-        counts = hist.loc[shape_id, hours].to_numpy(dtype=float)
-        fwd[hit[d > 0]] += counts
-        bwd[hit[d < 0]] += counts
-    out = np.maximum(fwd.max(axis=1), bwd.max(axis=1))
-    tr.CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    np.save(cache, out)
-    return out
 
 
 def bus_and_tram(seg: gpd.GeoDataFrame, p_design: DesignRuleSet, rules) -> tuple[np.ndarray, np.ndarray, dict]:

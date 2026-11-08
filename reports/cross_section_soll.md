@@ -1,35 +1,35 @@
 # Soll-Querschnitt: Fahrstreifen, Lage der Radanlagen, Raumaufteilung (Stufe c06)
 
-Erzeugt 2026-11-07T15:14:28+00:00 mit pipeline/c06_cross_section_soll.py · design_rules.yaml 0.6.0 · cycling_rules.yaml 0.7.0 · nicht amtlicher Entwurf. Regeln L-01…06, PL-01…06 und PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.
+Erzeugt 2026-11-08T14:19:08+00:00 mit pipeline/c06_cross_section_soll.py · design_rules.yaml 0.7.0 · cycling_rules.yaml 0.8.0 · nicht amtlicher Entwurf. Regeln L-01…06, PL-01…06 und PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.
 
 Verfügbare Breite = width_p10_m der Variante Verkehrsfläche (maßgeblich); die Variante Fassade zeigt das Potenzial inklusive Vorgärten. Das gewünschte Profil enthält Gehwege (Regelmaß), die Radanlage mit Sollbreite aus Prompt 18, ÖPNV, Fahrbahn, Trennstreifen, Bäume (GOW), Ladezone bei Geschäftsnutzung und Parken nur dort, wo OSM heute Parken zeigt (Entscheidung 2026-11-06). Passt es nicht, gilt die Kaskade D1, D2, Fallback, D3, D4, D5, D6, D7 (PRF-06).
 
 ## Kurzfassung
 
 - 36 526 Abschnitte, 4 998 km; bewertet (Profilregeln und Breite vorhanden): 3 861 km. Ohne Breite: 337 km; ohne Profilregeln: 800 km.
-- passt: 2 107 km (55 % der bewerteten Länge).
-- passt nach Abbau: 777 km (20 % der bewerteten Länge).
+- passt: 2 095 km (54 % der bewerteten Länge).
+- passt nach Abbau: 788 km (20 % der bewerteten Länge).
 - passt nicht: 978 km (25 % der bewerteten Länge).
-- Vorschlag GOW50 → GOW30 (D5): 137 Abschnitte, 26.2 km – nicht übernommen, Entscheidung über overrides/overrides.csv.
-- GTFS: repräsentativer Werktag 2026-04-29 (Upload__hvv_Rohdaten_GTFS_Fpl_20260408.ZIP); Straßenbahnrouten im Feed: 0. Busfahrstreifen Soll: 13.1 km.
+- Vorschlag GOW50 → GOW30 (D5): 16 Abschnitte, 2.1 km – nicht übernommen, Entscheidung über overrides/overrides.csv.
+- GTFS: repräsentativer Werktag 2026-04-29 (Upload__hvv_Rohdaten_GTFS_Fpl_20260408.ZIP); Straßenbahnrouten im Feed: 0. Busfahrstreifen Soll: 19.2 km.
 
 ## km je fit_class und Straßenkategorie
 
 | Kategorie | passt | passt nach Abbau | passt nicht | nicht bewertet | gesamt |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | SW | 0.0 | 0.0 | 0.0 | 189.2 | 189.2 |
-| GOW50 | 95.2 | 99.2 | 21.8 | 7.0 | 223.2 |
-| GOW30 | 303.9 | 150.2 | 64.5 | 9.0 | 527.6 |
-| ETW30 | 1 610.7 | 525.3 | 886.0 | 307.5 | 3 329.4 |
+| GOW50 | 126.6 | 107.9 | 0.0 | 7.9 | 242.4 |
+| GOW30 | 265.9 | 151.2 | 88.0 | 8.3 | 513.5 |
+| ETW30 | 1 605.4 | 526.9 | 884.7 | 307.3 | 3 324.3 |
 | ETW_ERF | 97.1 | 2.0 | 5.3 | 13.5 | 118.0 |
 
 ### Verkehrsfläche gegen Fassade (km, nur mit beiden Breiten)
 
 | Verkehrsfläche \ Fassade | passt | passt nach Abbau | passt nicht |
 | --- | ---: | ---: | ---: |
-| passt | 1 886.5 | 5.7 | 2.8 |
-| passt nach Abbau | 672.0 | 43.2 | 1.4 |
-| passt nicht | 762.9 | 17.2 | 20.4 |
+| passt | 1 874.6 | 6.0 | 2.8 |
+| passt nach Abbau | 683.3 | 43.6 | 1.4 |
+| passt nicht | 762.8 | 17.2 | 20.4 |
 
 ## Abbaustufen
 
@@ -37,18 +37,18 @@ Häufigkeit je Stufe (ein Abschnitt kann mehrere Stufen haben). Eine Stufe zähl
 
 | Stufe | Maßnahme | Abschnitte | km | Anteil an bewerteter Länge |
 | --- | --- | ---: | ---: | ---: |
-| D1 | Parken entfernen | 2 162 | 320.0 | 8.3 % |
-| D2 | Baumstreifen → Baumscheiben | 2 441 | 322.4 | 8.4 % |
-| fallback | Fallback der Matrixzelle (Prompt 18) | 549 | 73.6 | 1.9 % |
-| D3 | zweiten Kfz-Fahrstreifen streichen | 200 | 29.8 | 0.8 % |
-| D4 | Rad- und Gehweg auf Mindestbreite | 8 877 | 1 420.1 | 36.8 % |
-| D5 | Vorschlag GOW50 → GOW30 (C-G30-02) | 137 | 26.2 | 0.7 % |
-| D6 | Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen | 6 182 | 977.6 | 25.3 % |
-| D7 | Flag: Radroute auf Parallelstraße verlegen | 534 | 83.8 | 2.2 % |
+| D1 | Parken entfernen | 2 174 | 321.5 | 8.3 % |
+| D2 | Baumstreifen → Baumscheiben | 2 550 | 333.7 | 8.6 % |
+| fallback | Fallback der Matrixzelle (Prompt 18) | 639 | 85.5 | 2.2 % |
+| D3 | zweiten Kfz-Fahrstreifen streichen | 218 | 33.9 | 0.9 % |
+| D4 | Rad- und Gehweg auf Mindestbreite | 8 872 | 1 419.9 | 36.8 % |
+| D5 | Vorschlag GOW50 → GOW30 (C-G30-02) | 16 | 2.1 | 0.1 % |
+| D6 | Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen | 6 191 | 978.0 | 25.3 % |
+| D7 | Flag: Radroute auf Parallelstraße verlegen | 549 | 85.5 | 2.2 % |
 
 Letzte wirksame Stufe bei „passt nach Abbau“ (km):
 
-D1 159.1 · D2 125.5 · fallback 16.2 · D3 28.0 · D4 443.5 · D5 4.4
+D1 159.5 · D2 129.1 · fallback 19.3 · D3 32.9 · D4 445.2 · D5 2.1
 
 ## Fahrstreifen Ist → Soll (km)
 
@@ -56,90 +56,56 @@ Ist je Richtung aus amtlichen Fahrstreifen (sonst OSM lanes, PRF-01). Soll nach 
 
 | Ist \ Soll | 1 | 1 + Bus | 2 | shared | – |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 283.8 | 0.0 | 0.0 | 2 935.3 | 84.7 |
-| 2 | 266.3 | 9.4 | 49.3 | 86.1 | 83.8 |
-| 3 | 88.3 | 2.1 | 17.2 | 15.4 | 14.1 |
-| 4 | 20.7 | 1.1 | 7.4 | 1.7 | 6.2 |
-| 5 | 2.5 | 0.0 | 0.3 | 0.5 | 0.4 |
-| 6 | 0.2 | 0.0 | 0.6 | 0.1 | 0.0 |
-| unbekannt | 0.7 | 0.5 | 0.0 | 408.2 | 0.0 |
+| 1 | 288.5 | 0.0 | 0.0 | 2 930.6 | 84.7 |
+| 2 | 248.8 | 13.6 | 62.8 | 85.9 | 83.8 |
+| 3 | 81.4 | 3.6 | 22.9 | 15.2 | 14.1 |
+| 4 | 20.0 | 1.3 | 7.9 | 1.7 | 6.2 |
+| 5 | 2.3 | 0.1 | 0.4 | 0.5 | 0.4 |
+| 6 | 0.3 | 0.0 | 0.6 | 0.1 | 0.0 |
+| unbekannt | 0.8 | 0.5 | 0.0 | 408.1 | 0.0 |
 
-Weniger Kfz-Fahrstreifen je Richtung im Soll: 416.4 km (davon an GOW50 79.4 km). Zusätzlich D3 im Profil: 29.8 km.
+Weniger Kfz-Fahrstreifen je Richtung im Soll: 403.3 km (davon an GOW50 98.2 km). Zusätzlich D3 im Profil: 33.9 km.
 
 ## Fälle D5: Vorschlag GOW50 → GOW30 (C-G30-02)
 
-137 Abschnitte, 26.2 km. Längste 40, je Straße und Bezirk zusammengefasst:
+16 Abschnitte, 2.1 km. Längste 40, je Straße und Bezirk zusammengefasst:
 
 | Straße | Bezirk | Kfz | Rad | Abschnitte | km | verfügbar m (Median) | Bedarf m (Median) | Beispiel |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Hohe-Schaar-Straße | Hamburg-Mitte | GOW50 | ERSCHL | 15 | 2.58 | 13.6 | 16.8 | `seg_041bf1bffc8768d7` |
-| Elbchaussee | Altona | GOW50 | HAUPT | 4 | 1.82 | 12.1 | 16.8 | `seg_095ae2689e067006` |
-| Kattwykdamm | Hamburg-Mitte | GOW50 | ERSCHL | 8 | 1.47 | 13.0 | 16.8 | `seg_1b8e45ab81ba0191` |
-| Maldfeldstraße | Harburg | GOW50 | ERSCHL | 2 | 1.26 | 5.2 | 15.5 | `seg_62e6f106c665fcdc` |
-| Wellingsbüttler Weg | Wandsbek | GOW50 | HAUPT | 3 | 0.95 | 14.2 | 16.8 | `seg_8232dbac21641f26` |
-| Unterer Landweg | Hamburg-Mitte | GOW50 | HAUPT | 3 | 0.82 | 13.7 | 16.8 | `seg_41145b28109c17fc` |
-| Hafenrandstraße | Hamburg-Mitte | GOW50 | ERSCHL | 1 | 0.77 | 14.0 | 16.8 | `seg_ce0603f23047a60c` |
-| Fürstenmoordamm | Harburg | GOW50 | none | 2 | 0.74 | 12.9 | 16.8 | `seg_02452cc02f4b00d2` |
-| Meiendorfer Mühlenweg | Wandsbek | GOW50 | HAUPT | 2 | 0.74 | 11.0 | 14.2 | `seg_30bb3774a6771bf5` |
-| Neßdeich | Hamburg-Mitte | GOW50 | ERSCHL | 8 | 0.72 | 14.9 | 14.2 | `seg_0aae7f75e01d651d` |
-| Ehestorfer Weg | Harburg | GOW50 | ERSCHL | 1 | 0.67 | 7.8 | 14.2 | `seg_aaf7eec60da1d6d1` |
-| Segeberger Chaussee | Wandsbek | GOW50 | ERSCHL | 3 | 0.65 | 16.4 | 16.8 | `seg_1265f8ab675eb0e7` |
-| Poppenbütteler Chaussee | Wandsbek | GOW50 | ERSCHL | 1 | 0.63 | 11.9 | 16.8 | `seg_91501613d1b165c2` |
-| Farnhornweg | Altona | GOW50 | HAUPT | 4 | 0.60 | 17.0 | 16.8 | `seg_19c6219f387e811c` |
-| Garstedter Weg | Eimsbüttel | GOW50 | BASIS | 5 | 0.60 | 13.9 | 16.8 | `seg_2928b89d6277a8e4` |
-| Eißendorfer Waldweg | Harburg | GOW50 | HAUPT | 1 | 0.52 | 9.3 | 14.2 | `seg_896df8d623e86dbd` |
-| Reinbeker Redder | Bergedorf | GOW50 | HAUPT | 1 | 0.49 | 16.2 | 16.8 | `seg_2818b7cebb47b115` |
-| An der Alsterschleife | Wandsbek | GOW50 | HAUPT | 1 | 0.47 | 10.7 | 14.2 | `seg_c5db1848591c3a8f` |
-| Meiendorfer Straße | Wandsbek | GOW50 | HAUPT | 5 | 0.45 | 15.9 | 16.8 | `seg_372377a05d48046f` |
-| Waldweg | Wandsbek | GOW50 | HAUPT | 2 | 0.44 | 13.9 | 16.8 | `seg_33cee3733f4f13e1` |
-| Garstedter Weg | Eimsbüttel | GOW50 | HAUPT | 3 | 0.39 | 13.9 | 16.8 | `seg_5318793c486e4563` |
-| Saseler Chaussee | Wandsbek | GOW50 | HAUPT | 2 | 0.37 | 15.6 | 16.8 | `seg_631a440381c8a262` |
-| Pinneberger Straße | Eimsbüttel | GOW50 | ERSCHL | 1 | 0.37 | 16.4 | 16.8 | `seg_5fe94056e73a9e8c` |
-| Lohe | Wandsbek | GOW50 | ERSCHL | 2 | 0.36 | 13.8 | 16.8 | `seg_77776eb8d7a91a60` |
-| Liebigstraße / Unterer Landweg | Hamburg-Mitte | GOW50 | HAUPT | 1 | 0.36 | 13.3 | 16.8 | `seg_2ee8229c6c588661` |
-| Jüthornstraße | Wandsbek | GOW50 | HAUPT | 1 | 0.34 | 21.3 | 16.8 | `seg_fab5929161c1ead3` |
-| Reiherstieg-Hauptdeich | Hamburg-Mitte | GOW50 | ERSCHL | 1 | 0.32 | 9.5 | 16.8 | `seg_698b1f7244691ed8` |
-| Krohnstieg | Hamburg-Nord | GOW50 | ERSCHL | 2 | 0.31 | 16.3 | 16.8 | `seg_3d0aaec34de39593` |
-| Liebigstraße | Hamburg-Mitte | GOW50 | BASIS | 1 | 0.29 | 15.2 | 16.8 | `seg_0c0b612632fa40c2` |
-| Pezolddamm | Wandsbek | GOW50 | HAUPT | 1 | 0.28 | 15.3 | 14.2 | `seg_0b3867bdbe79e3c8` |
-| Volksdorfer Damm | Wandsbek | GOW50 | HAUPT | 2 | 0.27 | 14.4 | 16.8 | `seg_028ae77ce0dc6098` |
-| Rodigallee | Wandsbek | GOW50 | HAUPT | 2 | 0.27 | 23.0 | 16.8 | `seg_5f44df6ede1cc9ce` |
-| Hannoversche Straße | Harburg | GOW50 | HAUPT | 1 | 0.27 | 16.6 | 14.2 | `seg_5ce21acd3fd8c1da` |
-| Eißendorfer Waldweg | Harburg | GOW50 | ERSCHL | 1 | 0.26 | 11.7 | 14.2 | `seg_b5c783553fd19e66` |
-| Altmannbrücke / Kurt-Schumacher-Allee | Hamburg-Mitte | GOW50 | ERSCHL | 1 | 0.25 | 15.3 | 16.8 | `seg_b7b3dba2f3c09dbd` |
+| Rodigallee | Wandsbek | GOW50 | HAUPT | 3 | 0.47 | 23.0 | 16.8 | `seg_55056fa247a4e707` |
+| Farnhornweg | Altona | GOW50 | HAUPT | 1 | 0.38 | 21.5 | 16.8 | `seg_19c6219f387e811c` |
+| Curslacker Neuer Deich | Bergedorf | GOW50 | ERSCHL | 6 | 0.37 | 19.0 | 16.8 | `seg_2bc2e079c0620265` |
+| Curslacker Neuer Deich | Bergedorf | GOW50 | HAUPT | 3 | 0.29 | 19.0 | 16.8 | `seg_24b1b4e09c38573e` |
 | Reinbeker Redder | Bergedorf | GOW50 | ERSCHL | 1 | 0.24 | 21.1 | 16.8 | `seg_26c82b76b61029ab` |
-| Maldfeldstraße | Harburg | GOW50 | HAUPT | 1 | 0.23 | 12.4 | 16.8 | `seg_3d552fad6c87a274` |
-| Lemsahler Landstraße | Wandsbek | GOW50 | HAUPT | 1 | 0.22 | 14.4 | 16.8 | `seg_40f4235f6c8c2d16` |
-| Aue-Hauptdeich / Finkenwerder Straße | Hamburg-Mitte | GOW50 | BASIS | 1 | 0.20 | 11.5 | 14.2 | `seg_92b3de74023ddec5` |
-| Curslacker Neuer Deich | Bergedorf | GOW50 | HAUPT | 1 | 0.20 | 22.8 | 16.8 | `seg_b5b9db937f5fb2db` |
+| Sander Damm | Bergedorf | GOW50 | ERSCHL | 1 | 0.17 | 21.4 | 16.8 | `seg_d46c14aafaddb0a9` |
+| Harburger Chaussee | Hamburg-Mitte | GOW50 | BASIS | 1 | 0.14 | 19.8 | 16.8 | `seg_40f4753ab9b721ee` |
 
 ## Fälle D6: Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen
 
-6 182 Abschnitte, 977.6 km. Längste 40, je Straße und Bezirk zusammengefasst:
+6 191 Abschnitte, 978.0 km. Längste 40, je Straße und Bezirk zusammengefasst:
 
 | Straße | Bezirk | Kfz | Rad | Abschnitte | km | verfügbar m (Median) | Bedarf m (Median) | Beispiel |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
 | (ohne Namen) | Hamburg-Mitte | ETW30 | BASIS | 8 | 4.75 | 8.4 | 9.8 | `seg_0ba8afeeda9be278` |
 | Moorwerder Hauptdeich | Hamburg-Mitte | ETW30 | HAUPT | 6 | 3.42 | 8.3 | 9.0 | `seg_471bc3129ecccfdf` |
 | Duvenstedter Triftweg / Langenreiher Weg | Wandsbek | ETW30 | HAUPT | 1 | 2.95 | 3.0 | 11.5 | `seg_be1fbefc540be72f` |
-| Elbchaussee | Altona | GOW30 | HAUPT | 10 | 2.76 | 11.1 | 16.8 | `seg_0fb495600eaa26e8` |
+| Elbchaussee | Altona | GOW30 | HAUPT | 9 | 2.86 | 11.8 | 16.8 | `seg_095ae2689e067006` |
+| Hohe-Schaar-Straße | Hamburg-Mitte | GOW30 | ERSCHL | 16 | 2.75 | 13.6 | 16.8 | `seg_041bf1bffc8768d7` |
 | Eversween | Hamburg-Mitte | ETW30 | ERSCHL | 3 | 2.60 | 11.5 | 11.5 | `seg_1418f89bb01333ff` |
-| Hohe-Schaar-Straße | Hamburg-Mitte | GOW50 | ERSCHL | 15 | 2.58 | 13.6 | 16.8 | `seg_041bf1bffc8768d7` |
 | Falkensteiner Ufer | Altona | ETW30 | HAUPT | 8 | 2.29 | 6.4 | 9.0 | `seg_1b0f130473ae92f5` |
 | Moorwerder Hauptdeich | Hamburg-Mitte | ETW30 | ERSCHL | 4 | 2.14 | 8.1 | 11.5 | `seg_012525751224d503` |
 | Finkenwerder Süderdeich / Süderkirchenweg | Hamburg-Mitte | ETW30 | ERSCHL | 1 | 2.07 | 7.9 | 9.8 | `seg_aa01d1f1f774f9e3` |
+| Meiendorfer Straße | Wandsbek | GOW30 | HAUPT | 14 | 1.96 | 16.2 | 16.8 | `seg_107b5a7d8c2f22df` |
 | Wiet | Hamburg-Mitte | ETW30 | ERSCHL | 1 | 1.88 | 7.3 | 9.8 | `seg_2f0b1863a6eaabb2` |
-| Elbchaussee | Altona | GOW50 | HAUPT | 4 | 1.82 | 12.1 | 16.8 | `seg_095ae2689e067006` |
 | Puckaffer Weg | Wandsbek | ETW30 | ERSCHL | 8 | 1.80 | 9.1 | 10.6 | `seg_659f97f5ab7790ed` |
 | Finkenrieker Hauptdeich | Hamburg-Mitte | ETW30 | ERSCHL | 5 | 1.77 | 5.5 | 9.8 | `seg_09c5ef0ea218b4ab` |
 | Walter-Hammer-Weg | Bergedorf | ETW30 | HAUPT | 1 | 1.73 | 5.0 | 9.0 | `seg_791d0d6faad5e65e` |
+| Kattwykdamm | Hamburg-Mitte | GOW30 | ERSCHL | 12 | 1.71 | 13.8 | 16.8 | `seg_097a4533f3598a68` |
 | Niendorfer Gehege | Eimsbüttel | ETW30 | HAUPT | 2 | 1.67 | 8.8 | 10.2 | `seg_95a931e2a8b279ea` |
 | Siedenfelder Weg | Hamburg-Mitte | ETW30 | HAUPT | 2 | 1.66 | 7.8 | 9.0 | `seg_7fd526806f07de8c` |
 | Raakmoorgrund / Weg Nr. 651 | Hamburg-Nord | ETW30 | HAUPT | 1 | 1.65 | 6.0 | 9.0 | `seg_ecf40172d73d6546` |
 | Waldweg | Wandsbek | GOW30 | BASIS | 5 | 1.57 | 13.9 | 16.8 | `seg_074d9f02a98f9463` |
 | Berliner Ufer | Hamburg-Mitte | ETW30 | ERSCHL | 1 | 1.54 | 4.8 | 9.8 | `seg_b65f34b9ef2b1049` |
-| Meiendorfer Straße | Wandsbek | GOW30 | HAUPT | 9 | 1.51 | 16.2 | 16.8 | `seg_107b5a7d8c2f22df` |
-| Kattwykdamm | Hamburg-Mitte | GOW50 | ERSCHL | 8 | 1.47 | 13.0 | 16.8 | `seg_1b8e45ab81ba0191` |
 | Am Ochsenzoll | Hamburg-Nord | ETW30 | HAUPT | 3 | 1.46 | 5.1 | 9.0 | `seg_aa8b6df36b4c4943` |
 | Mesterbrooksweg | Wandsbek | ETW30 | ERSCHL | 3 | 1.46 | 8.2 | 9.8 | `seg_0f7b44ffb9b6294a` |
 | Rissener Landstraße | Altona | GOW30 | HAUPT | 4 | 1.45 | 13.2 | 16.8 | `seg_01442ed9c9d6fc5f` |
@@ -147,7 +113,9 @@ Weniger Kfz-Fahrstreifen je Richtung im Soll: 416.4 km (davon an GOW50 79.4 km).
 | Kobberdiekskoppel / Ödenweg | Wandsbek | ETW30 | ERSCHL | 1 | 1.39 | 8.2 | 9.8 | `seg_83c6f1d534de6622` |
 | Kuhtrift | Harburg | ETW30 | ERSCHL | 7 | 1.38 | 5.3 | 9.8 | `seg_200e180f02fde42e` |
 | Francoper Straße | Harburg | GOW30 | ERSCHL | 3 | 1.36 | 8.4 | 14.2 | `seg_2cd77ed942e139d9` |
+| Poppenbütteler Chaussee | Wandsbek | GOW30 | ERSCHL | 7 | 1.36 | 9.7 | 16.8 | `seg_17f60dcf357e2a14` |
 | Wulmsberggrund | Harburg | ETW30 | HAUPT | 3 | 1.35 | 4.4 | 9.0 | `seg_12b7e9bc1394309e` |
+| Garstedter Weg | Eimsbüttel | GOW30 | BASIS | 10 | 1.35 | 13.9 | 16.8 | `seg_2928b89d6277a8e4` |
 | Köterdamm | Hamburg-Mitte | ETW30 | ERSCHL | 2 | 1.34 | 8.0 | 9.8 | `seg_1a176f153e0174eb` |
 | Ellerholzweg | Hamburg-Mitte | ETW30 | ERSCHL | 4 | 1.32 | 9.0 | 9.8 | `seg_41858456ea6919d4` |
 | Hagenweg | Wandsbek | ETW30 | ERSCHL | 2 | 1.31 | 8.8 | 9.8 | `seg_b59fc543632c9b89` |
@@ -157,55 +125,54 @@ Weniger Kfz-Fahrstreifen je Richtung im Soll: 416.4 km (davon an GOW50 79.4 km).
 | Osterfelddeich / Kirchenaußendeichsweg | Hamburg-Mitte | ETW30 | HAUPT | 1 | 1.28 | 8.5 | 9.0 | `seg_f107760b70327da7` |
 | Rahlstedter Straße | Wandsbek | GOW30 | HAUPT | 10 | 1.28 | 18.0 | 19.3 | `seg_249dcaa103e67551` |
 | Stillhorner Hauptdeich | Hamburg-Mitte | ETW30 | HAUPT | 2 | 1.27 | 6.4 | 9.0 | `seg_6e9d83c097a58e71` |
-| Maldfeldstraße | Harburg | GOW50 | ERSCHL | 2 | 1.26 | 5.2 | 15.5 | `seg_62e6f106c665fcdc` |
-| Einlagedeich | Hamburg-Mitte | ETW30 | HAUPT | 1 | 1.24 | 7.2 | 9.0 | `seg_64a83dbfbc6d2c96` |
+| Maldfeldstraße | Harburg | GOW30 | ERSCHL | 2 | 1.26 | 5.2 | 15.5 | `seg_62e6f106c665fcdc` |
 
 ## Fälle D7: Flag: Radroute auf Parallelstraße verlegen
 
-534 Abschnitte, 83.8 km. Längste 40, je Straße und Bezirk zusammengefasst:
+549 Abschnitte, 85.5 km. Längste 40, je Straße und Bezirk zusammengefasst:
 
 | Straße | Bezirk | Kfz | Rad | Abschnitte | km | verfügbar m (Median) | Bedarf m (Median) | Beispiel |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Elbchaussee | Altona | GOW30 | HAUPT | 10 | 2.76 | 11.1 | 16.8 | `seg_0fb495600eaa26e8` |
-| Hohe-Schaar-Straße | Hamburg-Mitte | GOW50 | ERSCHL | 15 | 2.58 | 13.6 | 16.8 | `seg_041bf1bffc8768d7` |
-| Elbchaussee | Altona | GOW50 | HAUPT | 4 | 1.82 | 12.1 | 16.8 | `seg_095ae2689e067006` |
+| Elbchaussee | Altona | GOW30 | HAUPT | 9 | 2.86 | 11.8 | 16.8 | `seg_095ae2689e067006` |
+| Hohe-Schaar-Straße | Hamburg-Mitte | GOW30 | ERSCHL | 16 | 2.75 | 13.6 | 16.8 | `seg_041bf1bffc8768d7` |
+| Meiendorfer Straße | Wandsbek | GOW30 | HAUPT | 14 | 1.96 | 16.2 | 16.8 | `seg_107b5a7d8c2f22df` |
+| Kattwykdamm | Hamburg-Mitte | GOW30 | ERSCHL | 12 | 1.71 | 13.8 | 16.8 | `seg_097a4533f3598a68` |
 | Waldweg | Wandsbek | GOW30 | BASIS | 5 | 1.57 | 13.9 | 16.8 | `seg_074d9f02a98f9463` |
-| Meiendorfer Straße | Wandsbek | GOW30 | HAUPT | 9 | 1.51 | 16.2 | 16.8 | `seg_107b5a7d8c2f22df` |
-| Kattwykdamm | Hamburg-Mitte | GOW50 | ERSCHL | 8 | 1.47 | 13.0 | 16.8 | `seg_1b8e45ab81ba0191` |
 | Rissener Landstraße | Altona | GOW30 | HAUPT | 4 | 1.45 | 13.2 | 16.8 | `seg_01442ed9c9d6fc5f` |
 | Francoper Straße | Harburg | GOW30 | ERSCHL | 3 | 1.36 | 8.4 | 14.2 | `seg_2cd77ed942e139d9` |
+| Poppenbütteler Chaussee | Wandsbek | GOW30 | ERSCHL | 7 | 1.36 | 9.7 | 16.8 | `seg_17f60dcf357e2a14` |
+| Garstedter Weg | Eimsbüttel | GOW30 | BASIS | 10 | 1.35 | 13.9 | 16.8 | `seg_2928b89d6277a8e4` |
 | Rahlstedter Straße | Wandsbek | GOW30 | HAUPT | 10 | 1.28 | 18.0 | 19.3 | `seg_249dcaa103e67551` |
-| Maldfeldstraße | Harburg | GOW50 | ERSCHL | 2 | 1.26 | 5.2 | 15.5 | `seg_62e6f106c665fcdc` |
+| Maldfeldstraße | Harburg | GOW30 | ERSCHL | 2 | 1.26 | 5.2 | 15.5 | `seg_62e6f106c665fcdc` |
 | Pollhorner Hauptdeich | Hamburg-Mitte | GOW30 | ERSCHL | 1 | 1.24 | 8.7 | 14.2 | `seg_429717595f22897b` |
 | Seehafenstraße | Harburg | GOW30 | ERSCHL | 3 | 1.20 | 12.0 | 16.8 | `seg_6c5bd4d8e45a5ae3` |
+| Reiherstieg-Hauptdeich | Hamburg-Mitte | GOW30 | ERSCHL | 3 | 1.10 | 11.1 | 16.8 | `seg_4c3ca98a1f2942fa` |
+| Waldweg | Wandsbek | GOW30 | HAUPT | 9 | 1.08 | 13.8 | 16.8 | `seg_3118f842ed1786fa` |
 | Kieler Straße | Eimsbüttel | GOW30 | HAUPT | 5 | 1.02 | 17.3 | 19.3 | `seg_54e2f881116fa080` |
-| Wellingsbüttler Weg | Wandsbek | GOW50 | HAUPT | 3 | 0.95 | 14.2 | 16.8 | `seg_8232dbac21641f26` |
+| Garstedter Weg | Eimsbüttel | GOW30 | HAUPT | 6 | 1.02 | 13.9 | 16.8 | `seg_15f35a37699009b9` |
+| Elbchaussee | Altona | GOW30 | ERSCHL | 3 | 1.00 | 11.1 | 16.8 | `seg_1490a1c6546e1e24` |
+| Volksdorfer Damm | Wandsbek | GOW30 | HAUPT | 5 | 0.98 | 16.7 | 16.8 | `seg_028ae77ce0dc6098` |
+| Wellingsbüttler Weg | Wandsbek | GOW30 | HAUPT | 4 | 0.97 | 13.9 | 16.8 | `seg_8232dbac21641f26` |
 | Schmidts Breite | Hamburg-Mitte | GOW30 | ERSCHL | 4 | 0.89 | 11.3 | 14.2 | `seg_4ede7ec38f7fb372` |
-| Otto-Wels-Straße | Hamburg-Nord | GOW30 | HAUPT | 2 | 0.89 | 12.5 | 14.2 | `seg_8f04976664d41c67` |
-| Unterer Landweg | Hamburg-Mitte | GOW50 | HAUPT | 3 | 0.82 | 13.7 | 16.8 | `seg_41145b28109c17fc` |
+| Unterer Landweg | Hamburg-Mitte | GOW30 | HAUPT | 3 | 0.82 | 13.7 | 16.8 | `seg_41145b28109c17fc` |
 | Wellingsbüttler Weg | Wandsbek | GOW30 | BASIS | 7 | 0.81 | 13.7 | 19.3 | `seg_0658711bfb38f869` |
-| Hafenrandstraße | Hamburg-Mitte | GOW50 | ERSCHL | 1 | 0.77 | 14.0 | 16.8 | `seg_ce0603f23047a60c` |
+| Ehestorfer Weg | Harburg | GOW30 | HAUPT | 2 | 0.78 | 9.6 | 14.2 | `seg_71f041587ef4854d` |
+| Hafenrandstraße | Hamburg-Mitte | GOW30 | ERSCHL | 1 | 0.77 | 14.0 | 16.8 | `seg_ce0603f23047a60c` |
 | Waldweg | Wandsbek | GOW30 | ERSCHL | 4 | 0.77 | 13.3 | 16.8 | `seg_4b56f559d4e0e09f` |
 | Oldesloer Straße | Eimsbüttel | GOW30 | BASIS | 5 | 0.76 | 13.7 | 16.8 | `seg_00ee9ea9ee15e9e6` |
 | Moorburger Straße | Harburg | GOW30 | ERSCHL | 3 | 0.76 | 14.9 | 16.8 | `seg_3315c26eadc8d159` |
-| Garstedter Weg | Eimsbüttel | GOW30 | BASIS | 5 | 0.75 | 13.9 | 16.8 | `seg_31586e0ccf94c0cc` |
-| Meiendorfer Mühlenweg | Wandsbek | GOW50 | HAUPT | 2 | 0.74 | 11.0 | 14.2 | `seg_30bb3774a6771bf5` |
+| Meiendorfer Mühlenweg | Wandsbek | GOW30 | HAUPT | 2 | 0.74 | 11.0 | 14.2 | `seg_30bb3774a6771bf5` |
 | Meckelfelder Weg | Harburg | GOW30 | ERSCHL | 5 | 0.73 | 9.3 | 16.8 | `seg_39ef70c47c8ad7a7` |
-| Poppenbütteler Chaussee | Wandsbek | GOW30 | ERSCHL | 6 | 0.73 | 9.7 | 18.1 | `seg_17f60dcf357e2a14` |
+| Elbchaussee | Altona | GOW30 | BASIS | 2 | 0.72 | 11.1 | 19.3 | `seg_6d356b7f6dbefb13` |
 | Poppenbüttler Hauptstraße | Wandsbek | GOW30 | HAUPT | 6 | 0.72 | 13.6 | 15.4 | `seg_510dca558bd59282` |
 | Aue-Hauptdeich | Hamburg-Mitte | GOW30 | BASIS | 2 | 0.72 | 12.1 | 14.2 | `seg_620f28acdc81233f` |
-| Reiherstieg-Hauptdeich | Hamburg-Mitte | GOW30 | ERSCHL | 1 | 0.71 | 11.1 | 16.8 | `seg_4c3ca98a1f2942fa` |
-| Volksdorfer Damm | Wandsbek | GOW30 | HAUPT | 3 | 0.71 | 17.0 | 19.3 | `seg_0e2587013a5860c3` |
 | Lemsahler Landstraße | Wandsbek | GOW30 | ERSCHL | 1 | 0.70 | 10.8 | 16.8 | `seg_9a1db680f64d374e` |
 | Friedhofstraße | Harburg | GOW30 | HAUPT | 5 | 0.70 | 11.6 | 16.8 | `seg_0b972cbad9999e38` |
-| Ehestorfer Weg | Harburg | GOW50 | ERSCHL | 1 | 0.67 | 7.8 | 14.2 | `seg_aaf7eec60da1d6d1` |
+| Ehestorfer Weg | Harburg | GOW30 | ERSCHL | 1 | 0.67 | 7.8 | 14.2 | `seg_aaf7eec60da1d6d1` |
 | Nedderfeld | Hamburg-Nord | GOW30 | HAUPT | 1 | 0.67 | 17.0 | 19.3 | `seg_aa5407704b13547b` |
 | Rahlstedter Straße | Wandsbek | GOW30 | BASIS | 6 | 0.66 | 18.0 | 19.3 | `seg_31be3a0f3d9cd46d` |
+| Langenbeker Weg | Harburg | GOW30 | HAUPT | 5 | 0.66 | 10.2 | 14.2 | `seg_21a7de81a0076e20` |
 | Bergstedter Chaussee | Wandsbek | GOW30 | HAUPT | 7 | 0.66 | 15.5 | 16.8 | `seg_21a34d8ca88f0d1a` |
-| Gazellenkamp | Eimsbüttel | GOW30 | HAUPT | 2 | 0.66 | 12.0 | 15.4 | `seg_84efc14cffb00c7b` |
-| Ehestorfer Weg | Harburg | GOW30 | HAUPT | 1 | 0.65 | 9.9 | 14.2 | `seg_71f041587ef4854d` |
-| Segeberger Chaussee | Wandsbek | GOW50 | ERSCHL | 3 | 0.65 | 16.4 | 16.8 | `seg_1265f8ab675eb0e7` |
-| Waldweg | Wandsbek | GOW30 | HAUPT | 7 | 0.64 | 13.8 | 16.8 | `seg_3118f842ed1786fa` |
 
 ## Hinweise (Flags)
 
@@ -213,26 +180,26 @@ Weniger Kfz-Fahrstreifen je Richtung im Soll: 416.4 km (davon an GOW50 79.4 km).
 | --- | --- | ---: | ---: |
 | `width_unknown` | keine verfügbare Breite (width_p10_m fehlt) | 3 435 | 336.9 |
 | `no_profile_rules` | keine Profilregeln (SW, GOW80, ETW60 oder ohne Kategorie, PRF-04) | 2 294 | 799.6 |
-| `dtv_unknown` | DTV fehlt an GOW50 – Fahrstreifen = Ist (PRF-01), confidence low | 330 | 30.3 |
-| `lanes_capped_l06` | Soll-Fahrstreifen auf Ist begrenzt (L-06, kein Override) | 248 | 36.8 |
+| `dtv_unknown` | DTV fehlt an GOW50 – Fahrstreifen = Ist (PRF-01), confidence low | 371 | 29.5 |
+| `lanes_capped_l06` | Soll-Fahrstreifen auf Ist begrenzt (L-06, kein Override) | 256 | 35.8 |
 | `pl02_unchecked` | Zweirichtungsradweg: Seitenbedingung PL-02 nicht prüfbar (PRF-07) | 0 | 0.0 |
-| `trees_in_parking_row` | Baumstreifen entfällt, Bäume als Baumscheiben (D2) | 2 441 | 322.4 |
-| `gow30_dtv_above_profile` | GOW30 mit DTV über dem breiten CROW-Profil | 3 404 | 362.6 |
-| `D6` | Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen | 6 182 | 977.6 |
-| `D7` | Flag: Radroute auf Parallelstraße verlegen | 534 | 83.8 |
+| `trees_in_parking_row` | Baumstreifen entfällt, Bäume als Baumscheiben (D2) | 2 550 | 333.7 |
+| `gow30_dtv_above_profile` | GOW30 mit DTV über dem breiten CROW-Profil | 3 194 | 337.5 |
+| `D6` | Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen | 6 191 | 978.0 |
+| `D7` | Flag: Radroute auf Parallelstraße verlegen | 549 | 85.5 |
 
-confidence: high 3 625 km, medium 208 km, low 1 165 km
+confidence: high 3 626 km, medium 208 km, low 1 164 km
 
 ## fit_class je Bezirk (Anteil km)
 
 | Bezirk | Abschnitte | km | passt | passt nach Abbau | passt nicht | nicht bewertet |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Altona | 4 886 | 620.5 | 40 % | 22 % | 29 % | 9 % |
+| Altona | 4 886 | 620.5 | 39 % | 23 % | 29 % | 9 % |
 | Bergedorf | 1 957 | 209.3 | 58 % | 16 % | 21 % | 6 % |
-| Eimsbüttel | 4 004 | 470.4 | 54 % | 21 % | 18 % | 7 % |
+| Eimsbüttel | 4 004 | 470.4 | 54 % | 22 % | 18 % | 7 % |
 | Hamburg-Mitte | 6 839 | 881.3 | 50 % | 13 % | 19 % | 18 % |
-| Hamburg-Nord | 5 136 | 563.3 | 61 % | 15 % | 16 % | 8 % |
-| Harburg | 3 348 | 465.2 | 40 % | 18 % | 26 % | 16 % |
+| Hamburg-Nord | 5 136 | 563.3 | 61 % | 15 % | 15 % | 8 % |
+| Harburg | 3 348 | 465.2 | 39 % | 18 % | 26 % | 16 % |
 | Wandsbek | 7 542 | 1 030.4 | 49 % | 21 % | 28 % | 2 % |
 | ohne Bezirk | 990 | 146.9 | 4 % | 1 % | 2 % | 93 % |
 | **gesamt** | 34 702 | 4 387.3 | 48 % | 18 % | 22 % | 12 % |

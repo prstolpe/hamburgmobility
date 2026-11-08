@@ -27,8 +27,18 @@ def _num(v: Any) -> float | None:
 # --- D-SPD-01 --------------------------------------------------------------------------------
 
 
-def speed_severity(ist_kmh: Any, soll_kmh: Any, rules: RuleSet) -> dict:
-    """Trace step: severity 0-3 from the excess of the Ist limit over the Soll speed; None if not checkable."""
+def hint_flag(category: Any, feature_value: Any, rules: RuleSet) -> bool:
+    """F23: flag of D-SPD-01 anbaufrei_hint (gow50_anbaufrei) – category listed and the feature (anbaufrei) true."""
+    hint = rules.discrepancy.speed.anbaufrei_hint
+    return bool(hint is not None and category in hint.categories and not _missing(feature_value) and bool(feature_value))
+
+
+def speed_severity(ist_kmh: Any, soll_kmh: Any, rules: RuleSet, category: str | None = None,
+                   hint_value: Any = None) -> dict:
+    """Trace step: severity 0-3 from the excess of the Ist limit over the Soll speed; None if not checkable.
+
+    D-SPD-01 anbaufrei_hint (F23): with the hint flag set and Ist >= min_ist_kmh the severity is 0 and the step
+    carries `hint` (the flag name) instead – Tempo 50 is to be checked there, not counted as a discrepancy."""
     d = rules.discrepancy.speed
     ist, soll = _num(ist_kmh), _num(soll_kmh)
     step = {"rule": d.id, "result": None, "inputs": {"speed_ist_kmh": ist, "soll_kmh": soll}}
@@ -37,6 +47,12 @@ def speed_severity(ist_kmh: Any, soll_kmh: Any, rules: RuleSet) -> dict:
     excess = ist - soll
     sev = max((lv.severity for lv in d.levels if excess >= lv.min_excess_kmh), default=0)
     step["inputs"]["excess_kmh"] = excess
+    hint = d.anbaufrei_hint
+    if sev and hint is not None and hint_flag(category, hint_value, rules) and ist >= hint.min_ist_kmh:
+        step["inputs"][hint.feature] = True
+        step["hint"] = hint.flag
+        step["severity_without_hint"] = sev
+        sev = 0
     step["result"] = sev
     return step
 
@@ -158,7 +174,9 @@ def disc_type(directions: set[str]) -> str | None:
 def assess_segment(values: dict, category: str, rules: RuleSet) -> dict:
     """All three dimensions, type and trace for one segment with Soll category `category`."""
     soll = rules.categories[category].speed_kmh
-    s_speed = speed_severity(values.get("speed_ist_kmh"), soll, rules)
+    hint = rules.discrepancy.speed.anbaufrei_hint
+    hint_value = values.get(hint.feature) if hint is not None else None
+    s_speed = speed_severity(values.get("speed_ist_kmh"), soll, rules, category, hint_value)
     s_design, design_v = design_assessment(values, category, rules)
     s_use = use_severity(values.get("dtv_official"), values.get("separated_cycle_track_present"), category, rules)
 
@@ -175,6 +193,7 @@ def assess_segment(values: dict, category: str, rules: RuleSet) -> dict:
     trace = [s_speed, s_design, s_use,
              {"rule": rules.discrepancy.type_rule.id, "result": dtype, "inputs": {"directions": sorted(directions)}}]
     return {"disc_speed": s_speed["result"], "disc_design": s_design["result"], "disc_use": s_use["result"],
+            "gow50_anbaufrei": hint_flag(category, hint_value, rules), "disc_speed_hint": s_speed.get("hint"),
             "disc_max": max(sevs) if sevs else None, "disc_type": dtype, "disc_causes": causes,
             "disc_design_unknown": s_design["unknown"], "disc_trace": trace}
 

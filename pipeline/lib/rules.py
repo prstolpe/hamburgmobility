@@ -133,3 +133,45 @@ def requirement_ref_mismatches(rules: RuleSet, cycling: CyclingRuleSet) -> list[
                 if node != entry.get(field):
                     out.append(f"requirements.{cat}.{key}.{field} = {entry.get(field)}, {ref} = {node}")
     return out
+
+
+_FORMULA_REF = re.compile(r"\b([DC])\.([A-Za-z0-9_.]+)")
+_FORMULA_ARITH = re.compile(r"^[\d\s.+\-*/()]*$")
+
+
+def evaluate_width_formula(formula: str, cycling: CyclingRuleSet, design: DesignRuleSet) -> float:
+    """F05: value of a required_width formula. D.<path> reads design_rules.yaml, C.<path> cycling_rules.yaml; only
+    numbers, + - * / and parentheses are allowed besides the paths. Raises KeyError for a missing path."""
+    roots = {"D": design.model_dump(by_alias=True), "C": cycling.model_dump(by_alias=True)}
+
+    def lookup(m: re.Match) -> str:
+        node = roots[m.group(1)]
+        for step in m.group(2).split("."):
+            if not isinstance(node, dict) or step not in node:
+                raise KeyError(f"{m.group(0)}: path not found")
+            node = node[step]
+        if isinstance(node, bool) or not isinstance(node, (int, float)):
+            raise KeyError(f"{m.group(0)}: not a number")
+        return repr(float(node))
+
+    arith = _FORMULA_REF.sub(lookup, formula)
+    if not _FORMULA_ARITH.match(arith):
+        raise ValueError(f"formula {formula!r}: only D./C. paths, numbers and + - * / ( ) are allowed")
+    return float(eval(arith, {"__builtins__": {}}, {}))  # noqa: S307 – checked: digits and operators only
+
+
+def required_width_formula_mismatches(rules: RuleSet, cycling: CyclingRuleSet, design: DesignRuleSet,
+                                      tol: float = 1e-9) -> list[str]:
+    """Invariant V-INV-06 (F05): every required_width entry with a formula has value == evaluated formula."""
+    out = []
+    for key, entry in rules.required_width.items():
+        if not entry.formula:
+            continue
+        try:
+            got = evaluate_width_formula(entry.formula, cycling, design)
+        except (KeyError, ValueError) as e:
+            out.append(f"required_width.{key}: {e}")
+            continue
+        if entry.value is None or abs(entry.value - got) > tol:
+            out.append(f"required_width.{key} = {entry.value}, formula = {got:g}")
+    return out

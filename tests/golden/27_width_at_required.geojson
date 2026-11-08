@@ -12,7 +12,7 @@
       "type": "Feature",
       "properties": {
         "case_id": "width_at_required",
-        "description": "Ohne Radweg, Breite genau required_width.GOW50",
+        "description": "G02 (F05): GOW-Kandidat ohne Bus, Straßenraum 17,00 m = required_width.GOW50 -> GOW50",
         "expected_category": "GOW50",
         "expected_rules": [
           "C-GOW-01",
@@ -20,7 +20,7 @@
         ],
         "boundary": {
           "ref": "required_width.GOW50",
-          "value": 16.5,
+          "value": 17.0,
           "side": "at"
         },
         "highway": "primary",
@@ -32,11 +32,12 @@
         "ist_verkehrsberuhigt": false,
         "pedestrian_zone": false,
         "override_school_street": false,
-        "schools_or_kitas_within_m": 600.0,
+        "school_or_kita_access_m": 600.0,
         "shop_frontage_share": 0.1,
         "crossing_demand": "low",
         "separated_cycle_track_present": false,
-        "width_p10_m": 16.5
+        "bus_route": false,
+        "width_p10_m": 17.0
       },
       "geometry": {
         "type": "LineString",

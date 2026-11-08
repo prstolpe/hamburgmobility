@@ -21,8 +21,10 @@ from pipeline.lib.features import (
     building_density,
     count_near,
     alkis_buildings,
+    free_length_share,
     frontage_share,
     ist_speed,
+    junction_points,
     majority,
     nearest_distance,
     parse_osm_speed,
@@ -52,7 +54,7 @@ def _gs(*geoms) -> gpd.GeoSeries:
 def test_feature_rules_in_rules_yaml():
     rules = load_rules()
     ids = [r.id for r in rules.features.rules]
-    assert ids == [f"S-FEAT-{i:02d}" for i in range(1, 12)]  # S-FEAT-11 since rules.yaml 0.16.0
+    assert ids == [f"S-FEAT-{i:02d}" for i in range(1, 13)]  # S-FEAT-11 since 0.16.0, S-FEAT-12 since 0.18.0
     assert rules.features.rule("S-FEAT-01").method == "percentile_rank"
     for rule in rules.features.rules:
         assert rule.status == "draft"
@@ -351,3 +353,36 @@ def test_parallel_cycle_route_present():
                 LineString([(-100, 2150), (200, 2150)]))  # crosses the third one at a right angle
     mp_ = MatchParams(buffer_m=200, max_angle_deg=20, min_overlap_share=0.6)
     assert list(parallel_route_present(seg, paths, mp_, min_share=0.5)) == [True, False, False]
+
+
+# --- S-FEAT-12 anbaufrei (F23) ---------------------------------------------------------------
+
+
+def test_free_length_share_exact_geometry():
+    seg = _gs(LineString([(0, 0), (1000, 0)]), LineString([(0, 500), (100, 500)]))
+    house = box(490, 20, 510, 40)  # 20 m from the line: covers x in [490 - sqrt(30^2-20^2), 510 + ...]
+    out = free_length_share(seg, _gs(house), buffer_m=30)
+    covered = 20 + 2 * math.sqrt(30 ** 2 - 20 ** 2)
+    assert out.iloc[0] == pytest.approx(1 - covered / 1000, abs=1e-2)
+    assert out.iloc[1] == pytest.approx(1.0)  # nothing nearby
+
+
+def test_free_length_share_overlapping_obstacles_count_once():
+    seg = _gs(LineString([(0, 0), (100, 0)]))
+    out = free_length_share(seg, _gs(Point(50, 0), Point(50, 0), Point(55, 0)), buffer_m=10)
+    assert out.iloc[0] == pytest.approx(1 - 25 / 100, abs=1e-2)  # union [40, 65]
+
+
+def test_junction_points_degree_three():
+    seg = gpd.GeoDataFrame({"node_u": [1, 2, 2, 4], "node_v": [2, 3, 5, 6]},
+                           geometry=[LineString([(0, 0), (10, 0)]), LineString([(10, 0), (20, 0)]),
+                                     LineString([(10, 0), (10, 10)]), LineString([(50, 0), (60, 0)])], crs=CRS)
+    pts = junction_points(seg)
+    assert len(pts) == 1 and pts.iloc[0].equals(Point(10, 0))
+
+
+def test_anbaufrei_rule_in_rules_yaml():
+    rule = load_rules().features.rule("S-FEAT-12")
+    assert rule.thresholds["buffer_m"].value == 30 and rule.thresholds["min_share"].value == 0.8
+    assert rule.source_type == "assumption" and rule.status == "draft"
+
