@@ -3,12 +3,13 @@
 source / source_type / status may sit on any entry and apply to everything below it
 (e.g. widths_m.de.source_type covers widths_m.de.separated_oneway.standard).
 An entry needs an effective source_type when it is a rule (has an `id`) or holds a number;
-a source is required unless the source_type is 'assumption'. Rules need a status.
+a source is required unless the source_type is 'assumption'. Rules need a status. status: inactive marks a rule
+or block without a data basis (e.g. outside built-up area): it never fires and does not count as covered.
 """
 
 from typing import Any
 
-from config.schema.rules_model import SourceType, Status
+from config.schema.rules_model import INACTIVE, SourceType, Status
 
 # Keys that describe an entry instead of holding a value.
 META_KEYS = {"source", "source_type", "status", "note", "unit", "description", "label_de", "nl", "url", "title"}
@@ -59,17 +60,28 @@ def check_provenance(node: Any, path: str, source_ids: set[str], source_type: st
             raise ValueError(f"{path}: source missing (required unless source_type is assumption)")
     if "id" in node and node.get("status") not in Status.__args__:
         raise ValueError(f"{path} ({node['id']}): status missing or invalid ({node.get('status')!r})")
+    if "id" not in node and "status" in node and node["status"] not in Status.__args__:
+        raise ValueError(f"{path}: invalid status {node['status']!r}")
 
     for key, val in node.items():
         if key not in META_KEYS:
             check_provenance(val, f"{path}.{key}", source_ids, source_type, sources)
 
 
-def collect_ids(node: Any) -> list[str]:
-    """All rule ids in a nested structure, in document order."""
+def collect_ids(node: Any, active_only: bool = False) -> list[str]:
+    """All rule ids in a nested structure, in document order; active_only skips inactive rules and everything
+    below an inactive entry (for counts of covered rules)."""
     if isinstance(node, list):
-        return [i for item in node for i in collect_ids(item)]
+        return [i for item in node for i in collect_ids(item, active_only)]
     if not isinstance(node, dict):
         return []
+    if active_only and node.get("status") == INACTIVE:
+        return []
     ids = [node["id"]] if "id" in node else []
-    return ids + [i for k, v in node.items() if k != "id" for i in collect_ids(v)]
+    return ids + [i for k, v in node.items() if k != "id" for i in collect_ids(v, active_only)]
+
+
+def is_active(node: Any) -> bool:
+    """False for an entry (dict or model) with status inactive."""
+    status = node.get("status") if isinstance(node, dict) else getattr(node, "status", None)
+    return status != INACTIVE

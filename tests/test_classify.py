@@ -10,10 +10,12 @@ from pydantic import ValidationError
 
 from config.schema.rules_model import RuleSet
 from pipeline.lib.classify import classify_segment
-from pipeline.lib.rules import DEFAULT_RULES_PATH, load_rules
+from pipeline.lib.rules import DEFAULT_RULES_PATH, load_rules, with_rules_activated
 from pipeline.s05_classify import classification_inputs, classify_frame
 
 RULES = load_rules()
+# C-RUR-01 is inactive (F28); its logic is tested with the rule switched on.
+RULES_RURAL = with_rules_activated(RULES, {"C-RUR-01"})
 
 # A plain urban street with all inputs present (no fallback-dependent outcome except the policy defaults).
 BASE = {
@@ -52,15 +54,39 @@ def test_defaults_for_missing_policy_inputs():
     r = run(outside_builtup_area=None, override_school_street=None, crossing_demand=None)
     assert r["cat_proposed"] == "ETW30"
     assert set(r["defaults_used"]) == {"outside_builtup_area", "override_school_street", "crossing_demand"}
-    assert step(r, "C-RUR-01")["inputs"]["outside_builtup_area"] is False
-    assert "fallback:outside_builtup_area" in r["confidence_reasons"]
+    assert step(r, "C-ERF-01")["inputs"]["override_school_street"] is False
+    assert "fallback:override_school_street" in r["confidence_reasons"]
     assert r["confidence"] == "mittel"
 
 
-def test_default_is_not_used_when_value_present():
+def test_inactive_rule_is_not_evaluated():
+    """C-RUR-01 is inactive: it never fires, does not lower confidence and is marked in the trace (F28)."""
     r = run(outside_builtup_area=True, conn_score=0.9)
+    assert r["cat_proposed"] == "GOW50"  # cascade continues with C-GOW-01 instead of GOW80
+    assert step(r, "C-RUR-01") == {"id": "C-RUR-01", "passed": False, "result": None, "inputs": {},
+                                   "confidence": None, "status": "inactive"}
+    r = run(outside_builtup_area=None)
+    assert "fallback:outside_builtup_area" not in r["confidence_reasons"]
+
+
+def test_activated_rural_rule_uses_default_as_fallback():
+    r = classify_segment({**BASE, "outside_builtup_area": None}, RULES_RURAL)
+    assert step(r, "C-RUR-01")["inputs"]["outside_builtup_area"] is False
+    assert "fallback:outside_builtup_area" in r["confidence_reasons"]
+
+
+def test_default_is_not_used_when_value_present():
+    r = classify_segment({**BASE, "outside_builtup_area": True, "conn_score": 0.9}, RULES_RURAL)
     assert r["cat_proposed"] == "GOW80"
     assert "outside_builtup_area" not in r["defaults_used"]
+
+
+def test_inactive_group_member_is_skipped():
+    cls = [r.model_copy(update={"status": "inactive"}) if r.id == "C-G30-01" else r for r in RULES.classification]
+    rules = RULES.model_copy(update={"classification": cls})
+    r = classify_segment({**GOW, "schools_or_kitas_within_m": 50.0}, rules)
+    assert r["cat_proposed"] == "GOW50"
+    assert step(r, "C-G30-01")["status"] == "inactive"
 
 
 def test_missing_trigger_input_gives_gow50_low():
@@ -92,7 +118,7 @@ def test_missing_width_with_track_is_still_false():
 
 
 def test_missing_conn_score_in_rural_then_uses_else_branch_low():
-    r = run(outside_builtup_area=True, conn_score=None)
+    r = classify_segment({**BASE, "outside_builtup_area": True, "conn_score": None}, RULES_RURAL)
     assert r["cat_proposed"] == "ETW60" and r["confidence"] == "niedrig"
 
 

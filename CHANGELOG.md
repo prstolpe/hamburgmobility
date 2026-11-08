@@ -490,3 +490,31 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   approved), ersetzt L-02 bis L-06 für den Abschnitt (rule_trace L-OVR, Spalte lanes_source).
 - CLAUDE.md: Prüfdateien in reports/ dürfen EPSG:4326 sein.
 - Nicht umgesetzt (Probelauf, Entscheidung offen): in_hvs aus conn_score nehmen (+430 km GOW).
+
+## rules.yaml 0.17.0, cycling_rules.yaml 0.8.0, design_rules.yaml 0.7.0 – 2026-11-08: Review 2026-11, Paket P0 (Grundlagen)
+- Neuer Regelstatus `inactive` (Strukturempfehlung 5) in allen drei Schemas: Regel bzw. Block ohne Datengrundlage,
+  greift nie, senkt confidence nicht und zählt nicht als abgedeckt (`active_rule_ids`, `collect_ids(active_only=True)`).
+  Die Kaskade prüft inaktive Regeln nicht; rule_trace führt sie als `{id, passed: false, result: null, status: inactive}`.
+  Ein `status` an Blöcken ohne id wird in cycling/design_rules jetzt ebenfalls geprüft; die Default-Regel darf nicht
+  inaktiv sein.
+- F28: C-RUR-01 und cycling_rules `separation_matrix.rural` auf `inactive` (keine Datenquelle für die Ortsgrenze),
+  Notiz „bei Aktivierung `or in_hvs` ergänzen“; N5: Notiz, dass die GOW80/ETW60-Teile ohne Wirkung sind. c04/c05
+  vergeben für GOW80/ETW60 keine Soll-Führung, solange die Zeile inaktiv ist. Ergebnis: keine Kategorie ändert sich;
+  `fallback:outside_builtup_area` senkt confidence nicht mehr (1 777 Abschnitte mittel → hoch, Längenanteil hoch
+  4,3 % → 7,0 %). Goldene Fälle 03–06 und cycling s13/s14 prüfen die Regeln mit `activate` (eingeschaltet); neuer Fall
+  30_rural_inactive zeigt, dass C-RUR-01 nicht greift.
+- F33: design_rules PL-02 `inactive` und `scope: rural` (separated_twoway vergibt nur die inaktive Außerorts-Matrix);
+  cycling_rules S-03 `scope: rural` mit Notiz (bleibt draft, C-PRI-03 begründet damit die Teilerfüllung);
+  PRF-07 Notiz (Teil PL-02 nur außerorts, Teil PL-05 gilt innerorts, bleibt draft). Neues Feld `scope` (Kennzeichnung).
+- F27 / Strukturempfehlung 4: Klassentabellen sind halboffen `[min, max)`, dokumentiert in den Dateiköpfen; Schema prüft
+  Lückenlosigkeit und Überlappungsfreiheit (feasibility_classes, demand.intensity_classes_peak_h,
+  config/schema/intervals.py). `feasibility_class` liest die Intervalle aus der Tabelle (Ergebnis wie bisher:
+  1,00 → fits, 0,85 → tight; goldener Fall G11). intensity_upgrade jetzt `peak_h >= 750` bzw. `>= 350` (bisher `>`),
+  muss an einer Klassengrenze beginnen; in den Daten liegt kein Wert genau auf der Grenze, keine Ergebnisänderung.
+- F31: Notizen S-FEAT-04 (Zensus-Gitter) und S-FEAT-08 (GTFS) aktualisiert – beide liegen in data/raw und werden genutzt.
+- F32: `requirements`-Breiten, die auch in cycling_rules `widths_m` stehen, tragen `ref:` mit dem Pfad dorthin
+  (GOW50 cycle_track_width_m, buffer_to_parking_m; GOW30 cycle_lane_width_m, cycle_lane_width_de_m); ein Test prüft die
+  Gleichheit (`requirement_ref_mismatches`). Werte unverändert.
+- Herkunft ergänzt: `categories.*` mit source/source_type (speed_kmh; ETW_ERF 7 km/h als assumption),
+  `scores.conn_score`, `scores.place_score` und `priority` (formula, risk_weights) mit `source_type: assumption` als
+  Schlüssel statt YAML-Kommentar. Gewichte unverändert.

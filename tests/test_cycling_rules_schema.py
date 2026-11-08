@@ -394,3 +394,40 @@ def test_rejects_unknown_category_in_profile_rules(des):
 
 def test_rejects_profile_rule_missing(des):
     _rejects(DesignRuleSet, _mutated(des, lambda d: d["profile_assignment"]["rules"].pop()), "PRF-07")
+
+
+# --- review 2026-11, P0: status inactive, scope, half-open intensity classes ---------------------------------
+
+
+def test_inactive_rules_and_blocks():
+    """F28/F33: rural matrix and PL-02 are inactive; inactive rules do not count as covered."""
+    from config.schema.provenance import collect_ids
+    from pipeline.lib.rules import active_rule_ids
+
+    cycling, design = load_cycling_rules(), load_design_rules()
+    assert cycling.separation_matrix["rural"]["status"] == "inactive"
+    assert "or in_hvs" in cycling.separation_matrix["rural"]["note"]
+    assert _by_id(design.model_dump(by_alias=True)["placement"]["rules"], "PL-02")["status"] == "inactive"
+    assert _by_id(cycling.separation_matrix["rules"], "S-03")["scope"] == "rural"
+    every = all_rule_ids(load_rules(), cycling, design)
+    active = active_rule_ids(load_rules(), cycling, design)
+    assert set(every) - set(active) == {"C-RUR-01", "PL-02"}
+    assert collect_ids({"status": "inactive", "rules": [{"id": "X-01", "status": "draft"}]}, active_only=True) == []
+
+
+def test_rejects_invalid_block_status(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["separation_matrix"]["rural"].update(status="sleeping")),
+             "invalid status")
+
+
+def test_intensity_classes_half_open(cyc):
+    """F27: intensity classes are gap-free [min, max); intensity_upgrade starts at a class boundary with >=."""
+    CyclingRuleSet.model_validate(cyc)
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["demand"]["intensity_classes_peak_h"].update(
+        oneway=[[0, 150], [160, 750], [750, None]])), "gap")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["demand"]["intensity_classes_peak_h"].update(
+        oneway=[[0, 150], [140, 750], [750, None]])), "overlap")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["widths_m"]["project_target"]["intensity_upgrade"][0].update(
+        {"if": "oneway peak_h > 750"})), "peak_h >= N")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["widths_m"]["project_target"]["intensity_upgrade"][0].update(
+        {"if": "oneway peak_h >= 700"})), "class boundary")

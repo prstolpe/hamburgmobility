@@ -1,6 +1,6 @@
 # Prioritätenliste – Top 30 in Hamburg (7 Bezirke)
 
-Erzeugt: 2026-11-07T15:08:11+00:00 von `pipeline/s08_discrepancy.py`, rules.yaml 0.16.0. Nicht amtlicher Entwurf: Diskrepanz und Priorität sind Vorschläge zur Diskussion, keine Bewertung einzelner Straßen. **Prüfschritt:** Listen von Ortskundigen gegenlesen (Spalte „Prüfung“), zuerst die Straßenliste.
+Erzeugt: 2026-11-08T13:31:17+00:00 von `pipeline/s08_discrepancy.py`, rules.yaml 0.17.0. Nicht amtlicher Entwurf: Diskrepanz und Priorität sind Vorschläge zur Diskussion, keine Bewertung einzelner Straßen. **Prüfschritt:** Listen von Ortskundigen gegenlesen (Spalte „Prüfung“), zuerst die Straßenliste.
 
 Priorität = max(severity) * risk (0–3). risk = gewichtete Summe aus Unfällen mit Fuß-/Radbeteiligung je km (Perzentilrang über ganz Hamburg, Schwere gewichtet), Radnetz, Einwohner und Schule/Kita im Umkreis 150 m (P-RISK-01). Alle Gewichte sind Annahmen.
 

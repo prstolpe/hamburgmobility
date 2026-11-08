@@ -7,11 +7,13 @@ network_design (C-NET-01..13); prompt 17 adds principle_scoring (C-PRI-01..16); 
 facility_assignment (C-FAC-01..07).
 """
 
+import re
 from datetime import date
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from config.schema.intervals import check_class_table
 from config.schema.provenance import META_KEYS, check_provenance, collect_ids
 from config.schema.rules_model import EXPECTED_CATEGORIES
 
@@ -45,6 +47,11 @@ IST_CLASSES = {"cycle_street", "track", "lane", "shared_lane", "no"}
 # Flags of pipeline/lib/facility.py that C-FAC-07 may name.
 FACILITY_FLAGS = {"dtv_unknown", "fallback_check_p19", "cycle_street_blocked", "mixed_over_s04", "no_target_width",
                   "ist_width_unknown", "track_on_access_road"}
+
+
+# widths_m.project_target.intensity_upgrade condition; half-open classes [min, max) (F27), so the upgrade starts at
+# the lower bound of an intensity class (evaluated in pipeline/lib/principles.py).
+UPGRADE_CONDITION = re.compile(r"^\s*(oneway|twoway)\s+peak_h\s*>=\s*(\d+(?:\.\d+)?)\s*$")
 
 
 class _Strict(BaseModel):
@@ -103,6 +110,25 @@ def _check_project_target(target: dict) -> None:
         cols = set(target[facility]) - META_KEYS
         if not cols <= columns:
             raise ValueError(f"widths_m.project_target.{facility}: unknown cycle categories {sorted(cols - columns)}")
+
+
+def _check_intensity(demand: dict, widths: dict) -> None:
+    """F27: intensity classes are half-open [min, max), gap-free and without overlaps; every intensity_upgrade
+    starts at a class boundary of its table."""
+    tables = {k: v for k, v in demand["intensity_classes_peak_h"].items() if k not in META_KEYS}
+    lower = {}
+    for kind, rows in tables.items():
+        path = f"demand.intensity_classes_peak_h.{kind}"
+        check_class_table(((f"[{i}]", lo, hi) for i, (lo, hi) in enumerate(rows)), path)
+        lower[kind] = {float(lo) for lo, _ in rows if lo is not None}
+    for i, u in enumerate(widths["project_target"]["intensity_upgrade"]):
+        path = f"widths_m.project_target.intensity_upgrade[{i}]"
+        m = UPGRADE_CONDITION.match(str(u["if"]))
+        if not m:
+            raise ValueError(f"{path}: condition must read 'oneway|twoway peak_h >= N' (half-open classes [min, max))")
+        kind, thr = m.group(1), float(m.group(2))
+        if thr not in lower.get(kind, set()):
+            raise ValueError(f"{path}: {thr:g} is not a class boundary of demand.intensity_classes_peak_h.{kind}")
 
 
 def _check_ist_mapping(impedance: dict) -> None:
@@ -307,6 +333,7 @@ class CyclingRuleSet(_Strict):
 
         _check_matrix(self.separation_matrix)
         _check_project_target(self.widths_m["project_target"])
+        _check_intensity(self.demand, self.widths_m)
         _check_ist_mapping(self.routing_impedance)
         _rules_by_id(self.cycle_graph, GRAPH_RULE_IDS, "cycle_graph")
         _check_demand_model(self.demand_model)

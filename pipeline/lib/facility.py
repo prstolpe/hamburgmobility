@@ -14,6 +14,7 @@ import pandas as pd
 import shapely
 
 from config.schema.cycling_model import NO_CYCLE_CATEGORY, CyclingRuleSet, width_ref
+from config.schema.provenance import is_active
 from pipeline.lib import principles as pr
 
 
@@ -117,7 +118,8 @@ class SollResult:
 
 def _raw_cell(cat_final: str, cycle_cat: str, p: FacilityParams):
     if cat_final in pr.RURAL:
-        return p.matrix["rural"][cat_final]
+        rural = p.matrix["rural"]
+        return rural[cat_final] if is_active(rural) else None  # inactive: no data basis outside (F28)
     row = p.matrix.get(cat_final)
     if row is None:
         return None

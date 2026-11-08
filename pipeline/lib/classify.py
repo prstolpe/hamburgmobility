@@ -4,13 +4,15 @@ Order = priority: the first top-level rule whose condition is surely true decide
 names a group (GOW) continues with the rules `applies_to: <group>`: all trigger rules are checked
 (for the trace), the first one that passes wins, the rule `no C-…-* passed` is the fallback.
 Missing values and confidence follow classification_policy (C-MISS-01, C-CONF-01).
+A rule with status inactive (no data basis, e.g. C-RUR-01) is not evaluated: it never fires, does not lower
+confidence and appears in rule_trace only as {id, passed: false, result: null, status: inactive}.
 """
 
 import re
 from dataclasses import dataclass
 from typing import Any
 
-from config.schema.rules_model import CATEGORY_GROUPS, RuleSet
+from config.schema.rules_model import CATEGORY_GROUPS, INACTIVE, RuleSet
 from pipeline.lib import expr
 from pipeline.lib.expr import HIGH, LOW, Context, Result
 
@@ -26,6 +28,7 @@ class CompiledRule:
     then_kind: str         # category | group | ternary
     then: Any              # category, group or (category_true, AST, category_false)
     applies_to: str | None
+    active: bool = True    # False for status inactive
 
 
 @dataclass
@@ -56,7 +59,7 @@ def compile_rules(rules: RuleSet) -> tuple[list[CompiledRule], Policy]:
         else:
             kind, cond = "condition", expr.parse(cond_text)
         then_kind, then = _compile_then(r.then, set(CATEGORY_GROUPS))
-        compiled.append(CompiledRule(r.id, kind, cond, then_kind, then, r.applies_to))
+        compiled.append(CompiledRule(r.id, kind, cond, then_kind, then, r.applies_to, r.status != INACTIVE))
 
     defaults, fallback, near = {}, {}, None
     for p in rules.classification_policy:
@@ -143,6 +146,10 @@ def _step(rule_id: str, result: Result, ctx: Context, part: str | None = None) -
     return step
 
 
+def _inactive_step(rule_id: str) -> dict:
+    return {"id": rule_id, "passed": False, "result": None, "inputs": {}, "confidence": None, "status": INACTIVE}
+
+
 def classify_segment(features: dict, rules: RuleSet) -> dict:
     """Target category for one segment.
 
@@ -164,6 +171,9 @@ def classify_segment(features: dict, rules: RuleSet) -> dict:
     for rule in compiled:
         if rule.applies_to is not None:
             continue  # evaluated inside its group
+        if not rule.active:
+            trace.append(_inactive_step(rule.id))
+            continue
         if rule.kind == "default":
             result = Result(True)
         else:
@@ -190,6 +200,8 @@ def classify_segment(features: dict, rules: RuleSet) -> dict:
 
 def _classify_group(group: str, compiled: list[CompiledRule], ctx: Context, trace: list, path: list) -> str:
     members = [r for r in compiled if r.applies_to == group]
+    trace.extend(_inactive_step(r.id) for r in members if not r.active)
+    members = [r for r in members if r.active]
     triggers = [r for r in members if r.kind == "condition"]
     results = {}
     for rule in triggers:

@@ -10,8 +10,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from config.schema.intervals import check_class_table
+
 SourceType = Literal["swov_crow", "de_regelwerk", "hamburg", "assumption"]
-Status = Literal["draft", "reviewed", "approved"]
+# inactive: rule without a data basis (e.g. outside built-up area); it never fires and does not count as covered
+# (review 2026-11, structural recommendation 5, F28/F33).
+Status = Literal["draft", "reviewed", "approved", "inactive"]
+INACTIVE = "inactive"
 
 # The seven categories from CLAUDE.md (Ziel).
 EXPECTED_CATEGORIES = {"SW", "GOW50", "GOW30", "ETW30", "ETW_ERF", "GOW80", "ETW60"}
@@ -29,7 +34,9 @@ KEY_UNITS = {
 # Keys holding the number of an entry whose unit comes from the entry itself.
 VALUE_KEYS = {"value", "min", "max", "ideal", "range"}
 # Non-numeric metadata keys inside entries.
-META_KEYS = {"source", "source_type", "status", "note", "exception", "formula", "check", "unit"}
+META_KEYS = {"source", "source_type", "status", "note", "exception", "formula", "check", "unit", "ref"}
+# requirements.*.ref: path into cycling_rules.yaml for a value that is defined there (F32)
+REF_PREFIX = "cycling_rules.widths_m."
 
 THRESHOLD_REF = re.compile(r"\bthresholds\.([A-Za-z0-9_]+)")
 WIDTH_REF = re.compile(r"\brequired_width\.([A-Za-z0-9_]+)")
@@ -106,6 +113,8 @@ class Source(_Strict):
 class Category(_Strict):
     label_de: str
     speed_kmh: int | None
+    source_type: SourceType  # provenance of the category and its speed_kmh (review 2026-11)
+    source: str | list[str] | None = None
     class_report2: str | None = None
     nl: str | None = None
     rural: bool = False
@@ -225,7 +234,10 @@ class CoherenceRule(BaseModel):
 
 class ScoreDef(_Strict):
     weights: dict[str, float]
+    source_type: SourceType  # provenance of the weights
+    source: str | list[str] | None = None
     missing_value_policy: str | None = None
+    note: str | None = None
 
     @field_validator("weights")
     @classmethod
@@ -514,6 +526,8 @@ class Priority(_Strict):
     formula: str
     risk_weights: dict[str, float]
     risk: RiskRule
+    source_type: SourceType  # provenance of formula and risk_weights (risk has its own)
+    source: str | list[str] | None = None
 
 
 class RuleSet(_Strict):
@@ -591,6 +605,8 @@ class RuleSet(_Strict):
         defaults = [r.id for r in self.classification if r.if_.strip() == "default"]
         if not defaults or self.classification[-1].if_.strip() != "default" or len(defaults) > 1:
             raise ValueError("cascade must end with exactly one rule with if: default")
+        if self.classification[-1].status == INACTIVE:
+            raise ValueError("cascade: the default rule must not be inactive")
 
         if not any(r.thresholds.get("near_threshold") for r in self.classification_policy):
             raise ValueError("classification_policy: threshold near_threshold missing (confidence)")
@@ -642,6 +658,13 @@ class RuleSet(_Strict):
         for key, cls in self.feasibility_classes.items():
             _check_provenance(cls.model_dump(include={"source", "source_type"}),
                               f"feasibility_classes.{key}", source_ids)
+        check_class_table(((k, c.min, c.max) for k, c in self.feasibility_classes.items()), "feasibility_classes")
+
+        for key, cat in self.categories.items():
+            _check_provenance(cat.model_dump(include={"source", "source_type"}), f"categories.{key}", source_ids)
+        for key, score in self.scores.items():
+            _check_provenance(score.model_dump(include={"source", "source_type"}), f"scores.{key}", source_ids)
+        _check_provenance(self.priority.model_dump(include={"source", "source_type"}), "priority", source_ids)
 
         for r in self.harmonisation.rules:
             if r.min_run_from not in {c.id for c in self.coherence}:
@@ -707,6 +730,10 @@ class RuleSet(_Strict):
             if "source_type" in entry:
                 _check_provenance(entry, entry_path, source_ids)
                 _check_units(entry, entry_path, _unit_from_key(key))
+                for field, ref in (entry.get("ref") or {}).items():
+                    if field not in entry or not isinstance(ref, str) or not ref.startswith(REF_PREFIX):
+                        raise ValueError(f"{entry_path}.ref.{field}: must name a value of the entry and a path "
+                                         f"{REF_PREFIX}…")
             elif entry and all(isinstance(v, dict) for v in entry.values()):
                 RuleSet._check_requirement_group(entry, entry_path, source_ids)  # e.g. profiles
             else:

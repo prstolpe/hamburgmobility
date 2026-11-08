@@ -15,8 +15,8 @@ import shapely
 from scipy.sparse.csgraph import dijkstra
 from scipy.spatial import cKDTree
 
-from config.schema.cycling_model import CyclingRuleSet
-from config.schema.provenance import META_KEYS
+from config.schema.cycling_model import UPGRADE_CONDITION, CyclingRuleSet
+from config.schema.provenance import META_KEYS, is_active
 from config.schema.rules_model import RuleSet
 from pipeline.lib.cycle_graph import LANE_VALUES
 from pipeline.lib.cycle_network import Graph
@@ -24,7 +24,7 @@ from pipeline.lib.cycle_network import Graph
 RURAL = ("GOW80", "ETW60")
 # Facilities with one direction per side (one-way intensity rule of widths_m.project_target.intensity_upgrade).
 ONEWAY_FACILITIES = frozenset({"separated_oneway_both", "cycle_lane"})
-_UPGRADE = re.compile(r"^\s*(oneway|twoway)\s+peak_h\s*>\s*(\d+(?:\.\d+)?)\s*$")
+_UPGRADE = UPGRADE_CONDITION  # half-open classes [min, max) (F27)
 _WIDTH = re.compile(r"^\s*(\d+(?:[.,]\d+)?)\s*(m)?\s*$")
 
 
@@ -204,7 +204,8 @@ def soll_facility(cat_final, cycle_cat: str, p: PrincipleParams) -> tuple[str | 
     if not isinstance(cat_final, str):
         return None, None
     if cat_final in RURAL:
-        return _cell(p.matrix["rural"][cat_final])
+        rural = p.matrix["rural"]
+        return _cell(rural[cat_final]) if is_active(rural) else (None, None)  # inactive: no data basis (F28)
     row = p.matrix.get(cat_final)
     if row is None:
         return None, None
@@ -254,7 +255,8 @@ def parse_width(raw) -> float:
 def parse_upgrade(text: str) -> tuple[str, float]:
     m = _UPGRADE.match(str(text))
     if not m:
-        raise ValueError(f"intensity_upgrade condition not understood: {text!r} (expected 'oneway|twoway peak_h > N')")
+        raise ValueError(f"intensity_upgrade condition not understood: {text!r} (expected 'oneway|twoway peak_h >= N', "
+                         "half-open classes [min, max))")
     return m.group(1), float(m.group(2))
 
 
@@ -274,7 +276,7 @@ def required_width(facility, cycle_cat: str, peak_dir, peak_both, p: PrinciplePa
     oneway = facility in ONEWAY_FACILITIES
     for kind, thr, add in p.intensity_upgrade:
         peak = peak_dir if kind == "oneway" else peak_both
-        if (kind == "oneway") == oneway and not _nan(peak) and float(peak) > thr:
+        if (kind == "oneway") == oneway and not _nan(peak) and float(peak) >= thr:
             base += add
     return base
 

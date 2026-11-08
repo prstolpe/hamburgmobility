@@ -1,11 +1,15 @@
 # Radnetz Hamburg – Regelwerk nach den fünf Prinzipien (Entwurf, nicht amtlich)
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
-# status: draft | reviewed | approved (Pflicht bei jeder Regel mit id)
+# status: draft | reviewed | approved | inactive (Pflicht bei jeder Regel mit id; inactive auch an Blöcken ohne id)
+#   inactive = ohne Datengrundlage (z. B. außerorts): greift nie und zählt in Berichten nicht als abgedeckt.
+# scope: rural = Regel betrifft nur außerorts (Kennzeichnung, Review 2026-11 F33).
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 # Werte mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen.
+# Klassentabellen (demand.intensity_classes_peak_h) sind halboffen [min, max): ein Wert auf der Grenze gehört zur
+#   oberen Klasse; intensity_upgrade greift darum ab der Untergrenze (>=) einer Klasse (F27).
 meta:
-  version: 0.7.0
-  date: 2026-11-07
+  version: 0.8.0
+  date: 2026-11-08
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
 
@@ -460,14 +464,17 @@ separation_matrix:
     none: mixed
   SW: {all: own_path, note: 'kein Radverkehr auf Stroomweg; eigene Trasse'}
   rural:
+    status: inactive
+    note: 'Inaktiv seit 0.8.0 (F28): außerorts gibt es keine Datengrundlage (rules.yaml C-RUR-01 inaktiv); c04/c05 vergeben für GOW80/ETW60 keine Soll-Führung. Bei Aktivierung C-RUR-01 um `or in_hvs` ergänzen'
     GOW80: separated_twoway
     ETW60: {preferred: separated_twoway, fallback: mixed, condition: 'mixed nur bei DTV <= mixed_rural_max_dtv'}
   rules:
     - {id: S-01, rule: 'Kein Radfahr- oder Schutzstreifen an GOW50', source: CROW_GOW30_2023, source_type: swov_crow, status: draft}
     - {id: S-02, rule: 'Kein Radstreifen auf ETW30; Hauptroute auf ETW als Fahrradstraße', source: CROW_GOW30_2023, source_type: swov_crow, status: draft}
-    - {id: S-03, rule: 'Zweirichtungsradweg innerorts nur einseitig an Straßen mit einseitiger Bebauung/Zielen oder wenigen Knoten', source_type: assumption, status: draft}
+    - {id: S-03, rule: 'Zweirichtungsradweg innerorts nur einseitig an Straßen mit einseitiger Bebauung/Zielen oder wenigen Knoten', source_type: assumption, status: draft, scope: rural,
+       note: 'Die Matrix vergibt innerorts nie separated_twoway; als Soll-Regel wirkt S-03 nur außerorts (F33). Bleibt draft, weil C-PRI-03 (partial_note) einen Ist-Zweirichtungsradweg mit S-03 als Teilerfüllung begründet'}
     - {id: S-04, rule: 'Mischverkehr auf Fahrbahn nur bei Kfz <= mixed_max_kfz_h', mixed_max_kfz_h: 700, condition: 'Fahrbahn < 6 m', source: ERA_2010, source_type: de_regelwerk, note: 'ERA S. 22 über Sekundärquelle; > 400 Kfz/h bei 6–7 m problematisch', status: draft}
-  mixed_rural_max_dtv: {value: 2500, source_type: assumption}
+  mixed_rural_max_dtv: {value: 2500, source_type: assumption, note: 'nur außerorts (separation_matrix.rural, inaktiv)'}
 
 cycle_street:
   max_motor_vehicles_day: {value: 2500, source_type: assumption, note: 'CROW-Fietsberaad 2018 prüfen'}
@@ -532,7 +539,7 @@ facility_assignment:
 # ---------------------------------------------------------------
 demand:
   peak_hour_share_of_day: {value: 0.15, source: RWS_OPS_2021, source_type: swov_crow}
-  intensity_classes_peak_h:
+  intensity_classes_peak_h:  # halboffen [min, max), null = ohne Obergrenze (F27)
     oneway: [[0, 150], [150, 750], [750, null]]
     twoway: [[0, 50], [50, 150], [150, 350], [350, null]]
     source: RWS_OPS_2021
@@ -567,8 +574,8 @@ widths_m:
     cycle_lane: {HAUPT: 2.50, BASIS: 2.25, ERSCHL: 2.00, none: 2.00}
     cycle_street_carriageway: {value: 4.00, note: 'Fahrradstraße ohne Mittellinie; Begegnung Rad nebeneinander'}
     intensity_upgrade:
-      - {if: 'oneway peak_h > 750', add_m: 0.50}
-      - {if: 'twoway peak_h > 350', add_m: 0.50}
+      - {if: 'oneway peak_h >= 750', add_m: 0.50}  # ab Untergrenze der obersten Klasse (F27, bis 0.7.0: > 750)
+      - {if: 'twoway peak_h >= 350', add_m: 0.50}
 
 # Radnetzdaten
 hamburg_reference:

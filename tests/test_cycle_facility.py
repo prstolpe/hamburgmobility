@@ -10,7 +10,7 @@ import math
 import pytest
 
 from pipeline.lib import facility as fa
-from pipeline.lib.rules import load_cycling_rules
+from pipeline.lib.rules import cycling_with_blocks_activated, load_cycling_rules
 
 CYC = load_cycling_rules()
 P = fa.FacilityParams.from_rules(CYC)
@@ -48,11 +48,18 @@ def test_sw_and_missing_category():
     assert r.facility is None
 
 
+def test_rural_matrix_inactive():
+    """separation_matrix.rural is inactive (F28): no Soll facility outside built-up areas."""
+    r = fa.soll_facility("GOW80", "BASIS", 4000, 10, None, P)
+    assert r.facility is None and r.trace[0]["result"] is None
+
+
 def test_rural_etw60_fallback_needs_low_dtv():
-    lim = P.rural_mixed_max_dtv
-    assert fa.soll_facility("ETW60", "BASIS", lim, 10, False, P).facility == "mixed"
-    assert fa.soll_facility("ETW60", "BASIS", lim + 1, 10, False, P).facility == "separated_twoway"
-    unknown = fa.soll_facility("ETW60", "BASIS", None, 10, False, P)
+    rural = fa.FacilityParams.from_rules(cycling_with_blocks_activated(CYC, ["separation_matrix.rural"]))
+    lim = rural.rural_mixed_max_dtv
+    assert fa.soll_facility("ETW60", "BASIS", lim, 10, False, rural).facility == "mixed"
+    assert fa.soll_facility("ETW60", "BASIS", lim + 1, 10, False, rural).facility == "separated_twoway"
+    unknown = fa.soll_facility("ETW60", "BASIS", None, 10, False, rural)
     assert unknown.facility == "mixed" and "dtv_unknown" in unknown.flags
 
 

@@ -12,9 +12,12 @@
       "type": "Feature",
       "properties": {
         "case_id": "rural_conn_below_threshold",
-        "description": "Außerorts, conn_score knapp unter Schwelle",
+        "description": "Außerorts, conn_score knapp unter Schwelle (C-RUR-01 ist inaktiv, F28; Fall prüft die Regel bei Aktivierung)",
         "expected_category": "ETW60",
         "expected_rules": [
+          "C-RUR-01"
+        ],
+        "activate": [
           "C-RUR-01"
         ],
         "boundary": {

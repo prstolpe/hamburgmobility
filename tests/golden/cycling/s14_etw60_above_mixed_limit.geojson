@@ -12,7 +12,10 @@
       "type": "Feature",
       "properties": {
         "case_id": "etw60_above_mixed_limit",
-        "description": "Außerorts ETW60, 4 000 Kfz/24h (> 2 500) -> Zweirichtungsradweg",
+        "description": "Außerorts ETW60, 4 000 Kfz/24h (> 2 500) -> Zweirichtungsradweg (separation_matrix.rural ist inaktiv, F28; Fall prüft die Zelle bei Aktivierung)",
+        "activate": [
+          "separation_matrix.rural"
+        ],
         "cat_final": "ETW60",
         "cycle_cat": "BASIS",
         "dtv": 4000,

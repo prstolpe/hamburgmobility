@@ -142,6 +142,18 @@ def test_valid_raw_passes(raw):
         ("risk severe weight key unknown", lambda d: d["priority"]["risk"].update(severe_weight_key="x")),
         ("risk threshold without unit", lambda d: d["priority"]["risk"]["thresholds"]["snap_m"].pop("unit")),
         ("risk rule with bad id", lambda d: d["priority"]["risk"].update(id="RISK-1")),
+        # review 2026-11, P0
+        ("default rule inactive", lambda d: d["classification"][-1].update(status="inactive")),
+        ("category without source_type", lambda d: d["categories"]["GOW50"].pop("source_type")),
+        ("category swov_crow without source", lambda d: d["categories"]["GOW50"].pop("source")),
+        ("score weights without source_type", lambda d: d["scores"]["conn_score"].pop("source_type")),
+        ("place_score without source_type", lambda d: d["scores"]["place_score"].pop("source_type")),
+        ("priority without source_type", lambda d: d["priority"].pop("source_type")),
+        ("feasibility classes with gap", lambda d: d["feasibility_classes"]["tight"].update(min=0.90)),
+        ("feasibility classes overlapping", lambda d: d["feasibility_classes"]["tight"].update(max=1.05)),
+        ("feasibility class min >= max", lambda d: d["feasibility_classes"]["tight"].update(min=1.0)),
+        ("requirement ref outside widths_m", lambda d: d["requirements"]["GOW50"]["cycle_track_width_m"].update(ref={"value": "rules.required_width.GOW50"})),
+        ("requirement ref for missing field", lambda d: d["requirements"]["GOW50"]["cycle_track_width_m"].update(ref={"ideal": "cycling_rules.widths_m.de.separated_oneway.standard"})),
     ],
 )
 def test_schema_rejects(raw, description, mutate):
@@ -235,3 +247,56 @@ def test_validation_rules():
 def test_validation_schema_rejects(raw, description, mutate):
     with pytest.raises(ValidationError):
         RuleSet.model_validate(_mutated(raw, mutate))
+
+
+# --- review 2026-11, P0: status inactive, half-open classes, provenance, requirement refs ----------------------
+
+
+def test_inactive_status_is_valid(raw):
+    RuleSet.model_validate(_mutated(raw, lambda d: _rule(d, "C-G50-01").update(status="inactive")))
+
+
+def test_c_rur_01_is_inactive():
+    """F28: no data source for outside_builtup_area; the rural branch is inactive."""
+    rules = load_rules()
+    rur = next(r for r in rules.classification if r.id == "C-RUR-01")
+    assert rur.status == "inactive"
+    assert "or in_hvs" in rur.note
+
+
+def test_feasibility_classes_are_half_open():
+    """F27: [min, max) without gaps or overlaps; fits is open upwards, does_not_fit downwards."""
+    c = load_rules().feasibility_classes
+    assert c["fits"].max is None and c["does_not_fit"].min is None
+    assert c["tight"].min == c["does_not_fit"].max and c["tight"].max == c["fits"].min
+
+
+def test_requirement_refs_match_widths_m():
+    """F32: widths in requirements that also stand in cycling_rules widths_m carry ref: and must agree."""
+    from pipeline.lib.rules import load_cycling_rules, requirement_ref_mismatches
+
+    rules = load_rules()
+    refs = [(cat, key) for cat, reqs in rules.requirements.items() for key, e in reqs.items()
+            if isinstance(e, dict) and e.get("ref")]
+    assert {("GOW50", "cycle_track_width_m"), ("GOW50", "buffer_to_parking_m"), ("GOW30", "cycle_lane_width_m"),
+            ("GOW30", "cycle_lane_width_de_m")} <= set(refs)
+    assert requirement_ref_mismatches(rules, load_cycling_rules()) == []
+
+
+def test_requirement_ref_mismatch_is_reported():
+    from pipeline.lib.rules import load_cycling_rules, requirement_ref_mismatches
+
+    rules = load_rules()
+    reqs = {**rules.requirements, "GOW50": {**rules.requirements["GOW50"],
+            "cycle_track_width_m": {**rules.requirements["GOW50"]["cycle_track_width_m"], "value": 2.10}}}
+    bad = rules.model_copy(update={"requirements": reqs})
+    assert requirement_ref_mismatches(bad, load_cycling_rules()) == [
+        "requirements.GOW50.cycle_track_width_m.value = 2.1, cycling_rules.widths_m.de.separated_oneway.standard = 2.0"]
+
+
+def test_categories_and_weights_have_provenance():
+    rules = load_rules()
+    assert all(c.source_type for c in rules.categories.values())
+    assert rules.scores["conn_score"].source_type == "assumption"
+    assert rules.scores["place_score"].source_type == "assumption"
+    assert rules.priority.source_type == "assumption"

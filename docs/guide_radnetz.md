@@ -121,6 +121,10 @@ pipeline/c05_facility.py je Straßenabschnitt, Regeln C-FAC-01…07 in `facility
 
 - **Soll-Führung** aus der Trennungsmatrix (cat_final × cycle_cat_final, höchste Radkategorie der Kanten des Abschnitts).
   Bei Zellen mit Fallback bleibt bis Prompt 19 die bevorzugte Führung; der Fallback folgt erst, wenn der Raum nicht reicht [B].
+  Die Außerorts-Zeile der Matrix (`separation_matrix.rural`, GOW80/ETW60) ist seit cycling_rules 0.8.0 `status: inactive`:
+  Für die Ortsgrenze gibt es keine Datenquelle (rules.yaml C-RUR-01, ebenfalls inaktiv), GOW80/ETW60 erhalten daher keine
+  Soll-Führung. S-03 und design_rules PL-02 betreffen nur Zweirichtungsradwege, die die Matrix ausschließlich außerorts
+  vergibt; sie sind als außerorts gekennzeichnet (`scope: rural`, PL-02 inaktiv) [B].
 - **Fahrradstraße** nur bei höchstens 2 500 Kfz/Tag und Radverkehr ≥ Kfz in der Spitzenstunde, sonst Mischverkehr mit dem
   Hinweis „Kfz-Menge reduzieren (Filter) oder Route verlegen“. **S-04:** Mischverkehr bis 700 Kfz/h (DTV × 0,10) [B].
   Kfz-Mengen gibt es nur für Hauptverkehrsstraßen; ohne Zählung gelten beide Bedingungen vorläufig als erfüllt
@@ -160,6 +164,9 @@ E Klima 2,25 m für Radfahrstreifen [F] und niederländische Werte für Hauptnet
 Zweirichtung 4,00 m in einer kommunalen CROW-Umsetzung, [Castricum 2020](https://www.castricum.nl/fileadmin/Castricum/documenten-per-onderwerp/raadsdocumenten/Fietsbeleidsplan-eisen-fietsnetwerk-Castricum-april-2020.pdf)) [F].
 Das Projekt-Soll in `widths_m.project_target` ist eine Setzung zwischen beiden und wird mit der
 Spitzenstunde (15 % der Tagesmenge, [RWS 2021](https://www.ndw.nu/binaries/ndw/documenten/publicaties/2021/7/23/operationalisatie-definitie-van-voldoende-veilige-wegen-en-fietsinfrastructuur/Operationalisatie+Definitie+KN+SPV+30-50-70-60-80-fietspaden+definitief+def.pdf)) verbreitert [B].
+Die Stärkeklassen (`demand.intensity_classes_peak_h`) sind halboffene Intervalle [min, max): ein Wert auf der Grenze
+gehört zur oberen Klasse. Die Verbreiterung greift daher ab der Untergrenze der obersten Klasse (Einrichtung ≥ 750,
+Zweirichtung ≥ 350 Rad/h; bis cycling_rules 0.7.0 erst darüber) [B].
 
 ## 5. Fahrstreifen und Raumaufteilung
 

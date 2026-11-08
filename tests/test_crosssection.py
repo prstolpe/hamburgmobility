@@ -174,6 +174,15 @@ def test_feasibility_class_boundaries():
     assert feasibility_class(float("nan"), classes) is None
 
 
+def test_golden_g11_feasibility_half_open():
+    """Review 2026-11 G11 / F27: classes are [min, max) – width_ratio 0.85 -> tight, 1.00 -> fits."""
+    classes = load_rules().feasibility_classes
+    assert feasibility_class(0.85, classes) == "tight"
+    assert feasibility_class(1.00, classes) == "fits"
+    assert feasibility_class(0.8499, classes) == "does_not_fit"
+    assert feasibility_class(0.9999, classes) == "tight"
+
+
 # --- width from neighbours of the same name (S-XS-07, rules.yaml 0.16.0, open question 39) -------------------
 
 

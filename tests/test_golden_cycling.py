@@ -19,7 +19,7 @@ import pytest
 from config.schema.cycling_model import CELL_FACILITY_KEYS, CYCLE_CATEGORIES, FACILITIES, NO_CYCLE_CATEGORY
 from config.schema.provenance import META_KEYS
 from config.schema.rules_model import EXPECTED_CATEGORIES
-from pipeline.lib.rules import load_cycling_rules, load_design_rules
+from pipeline.lib.rules import cycling_with_blocks_activated, load_cycling_rules, load_design_rules
 
 GOLDEN_DIR = Path(__file__).parent / "golden" / "cycling"
 SECTION_FILES = sorted(GOLDEN_DIR.glob("s*.geojson"))
@@ -153,10 +153,20 @@ def _step(module: str):
 @pytest.mark.parametrize("path", SECTION_FILES, ids=lambda p: p.stem)
 def test_golden_facility_and_width(path):
     props = _props(path)
-    result = _step("c05_facility").facility_for_segment(props, CYCLING)
+    cycling = cycling_with_blocks_activated(CYCLING, props["activate"]) if props.get("activate") else CYCLING
+    result = _step("c05_facility").facility_for_segment(props, cycling)
     assert result["cycle_facility"] == props["expected_facility"]
     width = expected_width(props)
     assert result["cycle_width_m"] == (pytest.approx(width) if width is not None else None)
+
+
+def test_inactive_rural_matrix_gives_no_facility():
+    """separation_matrix.rural is inactive (F28): GOW80/ETW60 get no Soll facility until it is switched on."""
+    for path in SECTION_FILES:
+        props = _props(path)
+        if "separation_matrix.rural" in props.get("activate", []):
+            result = _step("c05_facility").facility_for_segment(props, CYCLING)
+            assert result["cycle_facility"] is None
 
 
 @pytest.mark.parametrize("path", SECTION_FILES, ids=lambda p: p.stem)

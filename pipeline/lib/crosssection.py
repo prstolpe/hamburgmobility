@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import shapely
 
+from config.schema.intervals import in_class
 from config.schema.rules_model import RuleSet
 
 # Numerical tolerance for touching parcels and the centre point (not a planning threshold).
@@ -210,14 +211,11 @@ def aggregate_widths(df: pd.DataFrame, params: XsParams) -> pd.DataFrame:
 
 
 def feasibility_class(ratio: float, classes) -> str | None:
-    """Class name from feasibility_classes: fits (>= fits.min), tight (>= tight.min), else does_not_fit."""
+    """Class name from feasibility_classes: the class whose half-open interval [min, max) holds the ratio
+    (F27; a ratio on a boundary belongs to the upper class, e.g. 1.00 -> fits, 0.85 -> tight)."""
     if ratio is None or np.isnan(ratio):
         return None
-    if ratio >= classes["fits"].min:
-        return "fits"
-    if ratio >= classes["tight"].min:
-        return "tight"
-    return "does_not_fit"
+    return next((name for name, c in classes.items() if in_class(ratio, c.min, c.max)), None)
 
 
 def fill_from_neighbours(df: pd.DataFrame, col: str) -> tuple[pd.Series, pd.Series]:

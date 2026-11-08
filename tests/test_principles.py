@@ -11,7 +11,7 @@ import pytest
 import shapely
 
 from pipeline.lib import principles as pr
-from pipeline.lib.rules import load_cycling_rules, load_rules
+from pipeline.lib.rules import cycling_with_blocks_activated, load_cycling_rules, load_rules
 
 P = pr.PrincipleParams.from_rules(load_cycling_rules(), load_rules())
 NAN = float("nan")
@@ -113,7 +113,10 @@ def test_soll_facility_from_matrix():
     assert pr.soll_facility("ETW30", "HAUPT", P) == ("cycle_street", None)
     assert pr.soll_facility("ETW30", "ERSCHL", P) == ("mixed", None)
     assert pr.soll_facility("SW", "BASIS", P) == ("own_path", None)
-    assert pr.soll_facility("GOW80", "HAUPT", P) == ("separated_twoway", None)
+    assert pr.soll_facility("GOW80", "HAUPT", P) == (None, None)  # separation_matrix.rural inactive (F28)
+    rural = pr.PrincipleParams.from_rules(cycling_with_blocks_activated(load_cycling_rules(), ["separation_matrix.rural"]),
+                                          load_rules())
+    assert pr.soll_facility("GOW80", "HAUPT", rural) == ("separated_twoway", None)
     assert pr.soll_facility(None, "HAUPT", P) == (None, None)
 
 
@@ -189,9 +192,21 @@ def test_surface_score_depends_on_category():
 
 
 def test_parse_upgrade():
-    assert pr.parse_upgrade("oneway peak_h > 750") == ("oneway", 750.0)
+    assert pr.parse_upgrade("oneway peak_h >= 750") == ("oneway", 750.0)
     with pytest.raises(ValueError):
         pr.parse_upgrade("if it rains")
+    with pytest.raises(ValueError):  # half-open classes [min, max): only >= (F27)
+        pr.parse_upgrade("oneway peak_h > 750")
+
+
+def test_intensity_upgrade_starts_at_class_boundary():
+    """F27: a peak on the boundary belongs to the upper class and gets the upgrade."""
+    for kind, thr, add in P.intensity_upgrade:
+        facility = "separated_oneway_both" if kind == "oneway" else "separated_twoway"
+        peaks = (lambda v: (v, 0)) if kind == "oneway" else (lambda v: (0, v))
+        base = pr.required_width(facility, "HAUPT", *peaks(0), P)
+        assert pr.required_width(facility, "HAUPT", *peaks(thr), P) == pytest.approx(base + add)
+        assert pr.required_width(facility, "HAUPT", *peaks(thr - 0.01), P) == pytest.approx(base)
 
 
 # --- stops and detour --------------------------------------------------------------------------
@@ -365,6 +380,8 @@ def _golden_sections():
 @pytest.mark.parametrize("props", list(_golden_sections()))
 def test_soll_facility_matches_golden_cases(props):
     """P-SAF-01 Soll lookup: preferred facility when the space fits, otherwise the fallback (prompt 18 decides space)."""
-    preferred, fallback = pr.soll_facility(props["cat_final"], props["cycle_cat"] or "none", P)
+    params = (pr.PrincipleParams.from_rules(cycling_with_blocks_activated(load_cycling_rules(), props["activate"]),
+                                            load_rules()) if props.get("activate") else P)
+    preferred, fallback = pr.soll_facility(props["cat_final"], props["cycle_cat"] or "none", params)
     expected = preferred if props.get("space_fits_preferred", True) or fallback is None else fallback
     assert expected == props["expected_facility"]

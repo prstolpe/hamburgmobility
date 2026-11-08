@@ -292,7 +292,7 @@ Alle Werte gehören als Annahmen mit Quellenbezug in `rules.yaml` und werden von
 - *Orthophotos und Laserscan:* Bordsteinkanten aus Höhensprüngen im Laserscan, Markierungen und parkende Autos aus DOP20 per Bildsegmentierung; Aufwand für Training und Prüfung hoch, Ergebnisse pro Stadtteil validieren.
 - *Straßenbilder:* Panoramax (offen) und Mapillary für Stichproben und Objekterkennung (Radstreifen, Parken); Lizenzen beachten.
 
-**c) Abgleich und Machbarkeitsindikator.** Je Abschnitt: `width_ratio = width_p10 / required_width(Soll)`. Klassen: ≥ 1,0 „passt“, 0,85–1,0 „eng – Umverteilung nötig“, < 0,85 „passt nicht“ (Grenzen = Annahmen). Passt GOW50 nicht, prüft die Regel `C-G30-02` automatisch GOW30 (CROW-Auslöser b) \[F für die Logik, B für die Schwellen\]. Mit Stufe b kommt der Konfliktindikator hinzu: Fläche, die heute für Kfz-Fahren und -Parken genutzt wird, gegen Fläche, die das Soll-Profil verlangt.
+**c) Abgleich und Machbarkeitsindikator.** Je Abschnitt: `width_ratio = width_p10 / required_width(Soll)`. Klassen: ≥ 1,0 „passt“, 0,85 bis unter 1,0 „eng – Umverteilung nötig“, < 0,85 „passt nicht“ (Grenzen = Annahmen; halboffene Intervalle [min, max), ein Wert auf der Grenze gehört zur oberen Klasse). Passt GOW50 nicht, prüft die Regel `C-G30-02` automatisch GOW30 (CROW-Auslöser b) \[F für die Logik, B für die Schwellen\]. Mit Stufe b kommt der Konfliktindikator hinzu: Fläche, die heute für Kfz-Fahren und -Parken genutzt wird, gegen Fläche, die das Soll-Profil verlangt.
 
 ### 4.4 Pragmatischer Einstieg und Ausbaupfad
 
@@ -505,7 +505,7 @@ Der Entwurf `config/rules.yaml` (Version 0.1.0) ist syntaktisch geprüft (PyYAML
 ```yaml
 # Hamburger Straßenfunktionsplan – Regelwerk (Entwurf, nicht amtlich)
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
-# status: draft | reviewed | approved
+# status: draft | reviewed | approved | inactive (inactive = ohne Datengrundlage: greift nie, zählt nicht als abgedeckt)
 meta:
   version: 0.1.0
   date: 2026-10-27
@@ -548,7 +548,7 @@ classification:
     then: 'GOW80 if conn_score >= thresholds.conn_gow else ETW60'
     source: SWOV_FS_2023
     source_type: swov_crow
-    status: draft
+    status: inactive  # seit rules.yaml 0.17.0: keine Datenquelle für die Ortsgrenze; bei Aktivierung `or in_hvs` ergänzen
   - id: C-ERF-01
     if: 'ist_verkehrsberuhigt or pedestrian_zone or override_school_street'
     then: ETW_ERF
@@ -657,7 +657,7 @@ required_width:
   GOW30_wide: {range: [13.40, 15.70], source_type: assumption}
   ETW30: {value: 10.80, source_type: assumption}
 
-feasibility_classes:  # width_ratio = width_p10 / required_width
+feasibility_classes:  # width_ratio = width_p10 / required_width; halboffen [min, max)
   fits: {min: 1.00, source_type: assumption}
   tight: {min: 0.85, max: 1.00, source_type: assumption}
   does_not_fit: {max: 0.85, source_type: assumption}

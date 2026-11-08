@@ -1,6 +1,8 @@
 """Golden cases: synthetic segments with expected category (tests/golden/*.geojson).
 
 Structure tests check the cases; test_golden_classification runs pipeline/s05_classify.py on them.
+A case may list inactive rules under `activate` (e.g. C-RUR-01, F28): it then tests the rule's logic with the rule
+switched on; without `activate` the rule set from rules.yaml applies as is.
 """
 
 import json
@@ -9,7 +11,7 @@ from pathlib import Path
 import geopandas as gpd
 import pytest
 
-from pipeline.lib.rules import all_thresholds, load_rules, referenced_features
+from pipeline.lib.rules import all_thresholds, load_rules, referenced_features, with_rules_activated
 
 GOLDEN_DIR = Path(__file__).parent / "golden"
 GOLDEN_FILES = sorted(GOLDEN_DIR.glob("*.geojson"))
@@ -64,6 +66,8 @@ def test_case_is_complete(path):
     assert props["expected_category"] in RULES.categories
     rule_ids = {r.id for r in RULES.classification}
     assert set(props["expected_rules"]) <= rule_ids
+    inactive = {r.id for r in RULES.classification if r.status == "inactive"}
+    assert set(props.get("activate", [])) <= inactive, "activate only names inactive rules"
 
 
 @pytest.mark.parametrize(
@@ -78,6 +82,13 @@ def test_boundary_matches_rules(path):
     assert boundary["side"] in {"at", "below", "above"}
 
 
+def test_inactive_rule_has_a_case_without_activation():
+    """Every inactive rule has a case showing that it does not fire as long as it is inactive."""
+    inactive = {r.id for r in RULES.classification if r.status == "inactive"}
+    shown = {r for p in GOLDEN_FILES for r in _props(p).get("shows_inactive", []) if not _props(p).get("activate")}
+    assert inactive <= shown
+
+
 def test_every_rule_path_has_a_case():
     covered = {r for p in GOLDEN_FILES for r in _props(p)["expected_rules"]}
     assert {r.id for r in RULES.classification} <= covered
@@ -88,7 +99,7 @@ def test_golden_classification(path):
     from pipeline.s05_classify import classify_segment
 
     props = _props(path)
-    result = classify_segment(_features(props), RULES)
+    result = classify_segment(_features(props), with_rules_activated(RULES, props.get("activate", [])))
     assert result["cat_proposed"] == props["expected_category"]
     passed = {step["id"] for step in result["rule_trace"] if step["passed"]}
     assert set(props["expected_rules"]) <= passed

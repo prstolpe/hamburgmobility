@@ -12,9 +12,12 @@
       "type": "Feature",
       "properties": {
         "case_id": "rural_gow80",
-        "description": "Außerorts, hoher conn_score",
+        "description": "Außerorts, hoher conn_score (C-RUR-01 ist inaktiv, F28; Fall prüft die Regel bei Aktivierung)",
         "expected_category": "GOW80",
         "expected_rules": [
+          "C-RUR-01"
+        ],
+        "activate": [
           "C-RUR-01"
         ],
         "boundary": null,

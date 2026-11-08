@@ -12,7 +12,10 @@
       "type": "Feature",
       "properties": {
         "case_id": "gow80_twoway",
-        "description": "Außerorts GOW80, Bezirksroute -> Zweirichtungsradweg",
+        "description": "Außerorts GOW80, Bezirksroute -> Zweirichtungsradweg (separation_matrix.rural ist inaktiv, F28; Fall prüft die Zelle bei Aktivierung)",
+        "activate": [
+          "separation_matrix.rural"
+        ],
         "cat_final": "GOW80",
         "cycle_cat": "BASIS",
         "dtv": 8000,

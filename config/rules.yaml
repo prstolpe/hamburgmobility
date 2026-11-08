@@ -1,9 +1,14 @@
 # Hamburger Straßenfunktionsplan – Regelwerk (Entwurf, nicht amtlich)
 # source_type: swov_crow | de_regelwerk | hamburg | assumption
-# status: draft | reviewed | approved
+# status: draft | reviewed | approved | inactive
+#   inactive = Regel ohne Datengrundlage (z. B. außerorts): greift nie, senkt confidence nicht und zählt in Berichten
+#   nicht als abgedeckt (Review 2026-11, Strukturempfehlung 5).
+# Klassentabellen (feasibility_classes; cycling_rules intensity_classes_peak_h) sind halboffen [min, max):
+#   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
+#   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.16.0
-  date: 2026-11-07
+  version: 0.17.0
+  date: 2026-11-08
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
   note: "Schwellen mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen."
@@ -22,14 +27,15 @@ sources:
   HH_DTV_HVS_2019: {title: "Verkehrsmengen auf Hauptverkehrsstraßen in Hamburg, Collection verkehrsmengen_dtv_hvs_2019 (BVM)", date: 2019, url: "https://api.hamburg.de/datasets/v1/verkehrsmengen"}
   HH_TEMPO: {title: "Zulässige Höchstgeschwindigkeiten Hamburg (OGC API)", date: 2026-10-28, url: "https://api.hamburg.de/datasets/v1/zulaessige_hoechstgeschwindigkeiten"}
 
+# Kategorien nach Duurzaam Veilig; speed_kmh = Soll-Tempo der Kategorie (Herkunft je Kategorie, seit 0.17.0)
 categories:
-  SW:      {label_de: "Schnellverkehrsstraße", class_report2: null, speed_kmh: null, nl: "stroomweg"}
-  GOW50:   {label_de: "Stadtmagistrale",        class_report2: K1,  speed_kmh: 50, nl: "gebiedsontsluitingsweg 50"}
-  GOW30:   {label_de: "Stadtstraße 30",         class_report2: K2,  speed_kmh: 30, nl: "gebiedsontsluitingsweg 30"}
-  ETW30:   {label_de: "Quartiersstraße",        class_report2: K3,  speed_kmh: 30, nl: "erftoegangsweg 30"}
-  ETW_ERF: {label_de: "Aufenthaltsstraße",      class_report2: K4,  speed_kmh: 7,  nl: "erf", note: "Schrittgeschwindigkeit; 7 nur als Rechenwert"}
-  GOW80:   {label_de: "Landstraße (Verbindung)", rural: true, speed_kmh: 80}
-  ETW60:   {label_de: "Landstraße (Erschließung)", rural: true, speed_kmh: 60}
+  SW:      {label_de: "Schnellverkehrsstraße", class_report2: null, speed_kmh: null, nl: "stroomweg", source: SWOV_FS_2023, source_type: swov_crow}
+  GOW50:   {label_de: "Stadtmagistrale",        class_report2: K1,  speed_kmh: 50, nl: "gebiedsontsluitingsweg 50", source: SWOV_FS_2023, source_type: swov_crow}
+  GOW30:   {label_de: "Stadtstraße 30",         class_report2: K2,  speed_kmh: 30, nl: "gebiedsontsluitingsweg 30", source: [SWOV_FS_2023, CROW_GOW30_2023], source_type: swov_crow}
+  ETW30:   {label_de: "Quartiersstraße",        class_report2: K3,  speed_kmh: 30, nl: "erftoegangsweg 30", source: SWOV_FS_2023, source_type: swov_crow}
+  ETW_ERF: {label_de: "Aufenthaltsstraße",      class_report2: K4,  speed_kmh: 7,  nl: "erf", source_type: assumption, note: "Schrittgeschwindigkeit; 7 nur als Rechenwert (eigene Setzung, kein Wert aus SWOV/CROW)"}
+  GOW80:   {label_de: "Landstraße (Verbindung)", rural: true, speed_kmh: 80, source: SWOV_FS_2023, source_type: swov_crow}
+  ETW60:   {label_de: "Landstraße (Erschließung)", rural: true, speed_kmh: 60, source: SWOV_FS_2023, source_type: swov_crow}
 
 # ---------------------------------------------------------------
 # Klassifikationskaskade: Reihenfolge = Priorität. Erste zutreffende Endregel gewinnt.
@@ -48,7 +54,11 @@ classification:
     then: "GOW80 if conn_score >= thresholds.conn_gow else ETW60"
     source: SWOV_FS_2023
     source_type: swov_crow
-    status: draft
+    status: inactive
+    note: >-
+      Inaktiv seit 0.17.0 (F28): Für outside_builtup_area gibt es keine Datenquelle (C-MISS-01); die Regel greift nie
+      und senkt confidence nicht. Bei Aktivierung `or in_hvs` ergänzen (wie C-GOW-01), sonst wird eine HVS außerorts
+      mit niedrigem conn_score ETW60.
 
   - id: C-ERF-01
     if: "ist_verkehrsberuhigt or pedestrian_zone or override_school_street"
@@ -144,13 +154,16 @@ classification_policy:
 # Verbindungs- und Aufenthaltsscore (gewichtete Summe normierter Merkmale)
 scores:
   conn_score:
-    weights:  # source_type: assumption (Sensitivitätsanalyse)
+    source_type: assumption
+    note: "Gewichte sind Setzungen; Prüfung über die Sensitivitätsanalyse (V-SENS-01)"
+    weights:
       betweenness_norm: 0.35
       in_hvs: 0.25
       bus_trips_weekday_norm: 0.20
       dtv_norm: 0.20
     missing_value_policy: "Gewicht auf übrige Merkmale umlegen, confidence herabsetzen"
   place_score:
+    source_type: assumption
     weights:
       building_density_norm: 0.3
       population_100m_norm: 0.3
@@ -160,12 +173,14 @@ scores:
 # ---------------------------------------------------------------
 # Anforderungen je Kategorie (für Diskrepanz und Machbarkeit)
 # ---------------------------------------------------------------
+# Breiten, die auch in cycling_rules.yaml widths_m stehen, tragen ref: (Pfad dorthin); maßgeblich ist widths_m,
+# tests/test_rules_schema.py prüft, dass die Werte übereinstimmen (F32, seit 0.17.0).
 requirements:
   GOW50:
     cycling: {value: separated_mandatory_track_or_parallel_route, source: CROW_GOW30_2023, source_type: swov_crow}
     cycle_lanes_allowed: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
-    cycle_track_width_m: {value: 2.00, source: ERA_2010, source_type: de_regelwerk}
-    buffer_to_parking_m: {value: 0.75, min: 0.50, source: ERA_2010, source_type: de_regelwerk}
+    cycle_track_width_m: {value: 2.00, source: ERA_2010, source_type: de_regelwerk, ref: {value: cycling_rules.widths_m.de.separated_oneway.standard}}
+    buffer_to_parking_m: {value: 0.75, min: 0.50, source: ERA_2010, source_type: de_regelwerk, ref: {value: cycling_rules.widths_m.de.buffer_to_parking.standard, min: cycling_rules.widths_m.de.buffer_to_parking.min}}
     median_if_lanes_per_dir_gte: {value: 2, source: CROW_GOW30_2023, source_type: swov_crow}
     parking_along_carriageway: {value: false, source: KNSPV_OPS_2021, source_type: swov_crow}
     angle_parking: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
@@ -173,8 +188,8 @@ requirements:
     crossings: {value: "concentrated; zebra on plateau or refuge, or signal", source: KNSPV_OPS_2021, source_type: swov_crow}
   GOW30:
     cycling: {value: cycle_lanes_or_existing_track, source: CROW_GOW30_2023, source_type: swov_crow}
-    cycle_lane_width_m: {min: 1.70, ideal: 2.20, source: CROW_GOW30_2023, source_type: swov_crow}
-    cycle_lane_width_de_m: {value: 1.85, note: "inkl. Breitstrich; E Klima 2022 empfiehlt 2.25", source: ERA_2010, source_type: de_regelwerk}
+    cycle_lane_width_m: {min: 1.70, ideal: 2.20, source: CROW_GOW30_2023, source_type: swov_crow, ref: {min: cycling_rules.widths_m.gow30_cycle_lane.min, ideal: cycling_rules.widths_m.gow30_cycle_lane.ideal}}
+    cycle_lane_width_de_m: {value: 1.85, note: "inkl. Breitstrich; E Klima 2022 empfiehlt 2.25", source: ERA_2010, source_type: de_regelwerk, ref: {value: cycling_rules.widths_m.de.cycle_lane.standard}}
     centre_line: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
     bicycle_street_allowed: {value: false, source: CROW_GOW30_2023, source_type: swov_crow}
     profiles:
@@ -203,7 +218,7 @@ required_width:
   GOW30_wide: {range: [13.40, 15.70], source_type: assumption}
   ETW30: {value: 10.80, source_type: assumption}
 
-feasibility_classes:  # width_ratio = width_p10 / required_width
+feasibility_classes:  # width_ratio = width_p10 / required_width; halboffen [min, max): 1,00 -> fits, 0,85 -> tight (F27)
   fits: {min: 1.00, source_type: assumption}
   tight: {min: 0.85, max: 1.00, source_type: assumption}
   does_not_fit: {max: 0.85, source_type: assumption}
@@ -369,7 +384,7 @@ features:
         buffer_m: {value: 100, unit: m, source_type: assumption, check: "Name population_100m aus scores/priority"}
       source_type: assumption
       status: draft
-      note: "Zensus-Gitter liegt noch nicht in data/raw (Download-URL fehlt in sources.yaml); bis dahin null."
+      note: "Zensus-Gitter 2022 (sources.yaml population_grid, Abruf 2026-10-28) liegt in data/raw und wird genutzt; Abschnitte ohne Zelle im Puffer haben 0 Einwohner (Zellen ohne Einwohner fehlen in der Datei). Notiz aktualisiert in 0.17.0 (F31)."
     - id: S-FEAT-05
       description: "Anteil Erdgeschoss mit Publikumsnutzung = Anteil der ALKIS-Gebäude im Puffer mit Publikumsnutzung (Gebäudefunktion oder OSM-shop/amenity-Punkt im Gebäude); Nebengebäude zählen nicht; ohne Gebäude im Puffer 0 (keine Publikumsnutzung, seit 0.16.0, Entscheidung prstolpe 2026-11-07)"
       thresholds:
@@ -456,7 +471,8 @@ features:
       note: >-
         Repräsentativer Werktag = der Dienstag, Mittwoch oder Donnerstag in der Gültigkeit des Feeds mit den meisten
         aktiven service_id (calendar und calendar_dates). route_types: 3 und 7xx (Bus) nach GTFS-Spezifikation bzw.
-        erweiterten Routentypen. GTFS liegt noch nicht in data/raw (URL fehlt in sources.yaml); bis dahin null.
+        erweiterten Routentypen. GTFS des HVV (sources.yaml gtfs_hvv, Abruf 2026-10-28) liegt in data/raw und wird
+        genutzt; fehlt der Datensatz, ist bus_trips_weekday null. Notiz aktualisiert in 0.17.0 (F31).
     - id: S-FEAT-09
       description: "Ist-Tempo: amtliches Regeltempo vor OSM maxspeed; beide bekannt und verschieden -> speed_sources_conflict"
       source: HH_TEMPO
@@ -609,7 +625,8 @@ coherence:
     note: >-
       Übergänge werden je Knoten gelistet; ob eine Torsituation vorhanden ist, lässt sich aus den Daten nicht
       ablesen (docs/open_questions.md). Direkter Übergang: Abschnitt mit Tempo >= min_speed_kmh (Soll-Tempo, bei SW
-      travel_speed_kmh) trifft auf eine Kategorie mit Soll-Tempo target_speed_kmh.
+      travel_speed_kmh) trifft auf eine Kategorie mit Soll-Tempo target_speed_kmh. GOW80 und ETW60 in
+      gate_transitions sind außerorts und ohne Wirkung, solange C-RUR-01 inaktiv ist (F28, 0.17.0).
     gate_transitions:
       - {from: [GOW50], to: [GOW30]}
       - {from: [GOW80, GOW50, GOW30], to: [ETW30, ETW_ERF, ETW60]}
@@ -733,7 +750,8 @@ discrepancy:
 
 priority:
   formula: "max(severity) * risk"
-  risk_weights:  # source_type: assumption
+  source_type: assumption  # gilt für formula und risk_weights; risk (P-RISK-01) hat eigene Herkunft
+  risk_weights:
     injury_crashes_ped_cyc_per_km_5y: 0.4
     severe_or_fatal_weight: 3
     cycle_network: 0.2

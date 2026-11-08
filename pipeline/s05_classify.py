@@ -23,7 +23,7 @@ from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_map_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT
 from pipeline.lib.report import district_breakdown
-from pipeline.lib.rules import all_thresholds, load_rules, referenced_features
+from pipeline.lib.rules import all_thresholds, load_rules, referenced_features, with_rules_activated
 from pipeline.s04_features import _fmt, _now, _pct
 
 __all__ = ["classification_inputs", "classify_segment", "classify_frame", "main"]
@@ -67,7 +67,8 @@ def golden_results(rules) -> list[dict]:
     out = []
     for path in sorted(GOLDEN_DIR.glob("*.geojson")):
         props = json.loads(path.read_text(encoding="utf-8"))["features"][0]["properties"]
-        r = classify_segment({k: props.get(k) for k in referenced_features(rules)}, rules)
+        case_rules = with_rules_activated(rules, props.get("activate", []))  # inactive rule tested switched on
+        r = classify_segment({k: props.get(k) for k in referenced_features(rules)}, case_rules)
         passed = {s["id"] for s in r["rule_trace"] if s["passed"]}
         out.append({"case": props["case_id"], "expected": props["expected_category"], "got": r["cat_proposed"],
                     "ok": r["cat_proposed"] == props["expected_category"] and set(props["expected_rules"]) <= passed})
@@ -198,7 +199,9 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
     lines += ["", "## Methode", "",
               "- Kaskade `classification` aus rules.yaml, Reihenfolge = Priorität: C-SW-01 → C-RUR-01 → C-ERF-01 → C-GOW-01 "
               "(dann C-G30-01, C-G30-02, sonst C-G50-01) → C-ETW-01. Die Bedingungen werden von `pipeline/lib/expr.py` gelesen; "
-              "Schwellen nur aus rules.yaml.",
+              "Schwellen nur aus rules.yaml. Inaktive Regeln (status inactive: " + (", ".join(
+                  r.id for r in rules.classification if r.status == "inactive") or "keine") + ") werden nicht geprüft, "
+              "senken confidence nicht und stehen in `rule_trace` nur mit status inactive.",
               "- **Fehlende Werte (C-MISS-01):** dreiwertige Logik; eine Regel greift nur bei sicher wahrer Bedingung. "
               "Defaults für Merkmale ohne Datenquelle: " + ", ".join(
                   f"{k} = {d.value}" for p in rules.classification_policy for k, d in p.defaults.items()) + ".",

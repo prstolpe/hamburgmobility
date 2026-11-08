@@ -1,6 +1,6 @@
 # Harmonisierung je Straßenzug – Stufe 5b
 
-Erzeugt: 2026-11-07T15:03:18+00:00 von `pipeline/s05b_harmonise.py`, rules.yaml 0.16.0. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-08T13:26:02+00:00 von `pipeline/s05b_harmonise.py`, rules.yaml 0.17.0. Nicht amtlicher Entwurf.
 
 Regel H-STR-01: kurze Läufe unter 200 m (N2) auf einem Straßenzug werden angeglichen; bei 50 gegen 30 gewinnt das niedrigere Tempo. Straßenzug wie N2 (Knoten mit Grad 2 laufen weiter, an Kreuzungen der gegenseitig beste Partner mit höchstens 30° Richtungsänderung).
 
