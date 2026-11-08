@@ -34,6 +34,8 @@ JUNCTION_METHOD_IDS = {"J-M-01", "J-M-02", "J-M-03", "J-M-04", "J-M-05", "J-M-06
 IST_JUNCTION_TYPES = ("roundabout", "signal_plateau", "signal", "plateau", "none_mapped")
 # Keys of a cyclist_treatment applies_to clause.
 TREATMENT_CLAUSE_KEYS = {"types", "cycle_cats", "crossing_categories"}
+# Soll type of junctions without cycle and pedestrian traffic (motorway nodes, J-10d, Review 2026-11 F08).
+NOT_APPLICABLE = "not_applicable"
 
 
 class _Strict(BaseModel):
@@ -102,6 +104,9 @@ def _check_junctions(j: Junctions) -> None:
                 raise ValueError(f"{row.id}.{key}: unknown junction type {extra[key]!r}")
         if row.same_as is not None and row.same_as not in row_ids:
             raise ValueError(f"{row.id}.same_as: unknown row {row.same_as!r}")
+        crossing = extra.get("cycle_crossing")
+        if crossing is not None and (not isinstance(crossing, list) or not crossing or not set(crossing) <= CYCLE_CATEGORIES):
+            raise ValueError(f"{row.id}.cycle_crossing: list of cycle categories required, got {crossing!r}")
         for cond in (row.if_, row.else_if):
             for name in _NAME.findall(cond or ""):
                 if name not in names and name not in _KEYWORDS:
@@ -123,6 +128,10 @@ def _check_junctions(j: Junctions) -> None:
                 raise ValueError(f"{entry.get('id')}.applies_to: unknown cycle category")
             if not set(clause.get("crossing_categories", [])) <= EXPECTED_CATEGORIES:
                 raise ValueError(f"{entry.get('id')}.applies_to: unknown road category")
+        if ("flag" in entry) != ("flag_cycle_cats" in entry):
+            raise ValueError(f"{entry.get('id')}: flag and flag_cycle_cats belong together")
+        if not set(entry.get("flag_cycle_cats", [])) <= CYCLE_CATEGORIES:
+            raise ValueError(f"{entry.get('id')}.flag_cycle_cats: unknown cycle category")
 
 
 def _check_junction_method(j: Junctions, types: set, row_ids: set) -> None:
@@ -135,11 +144,21 @@ def _check_junction_method(j: Junctions, types: set, row_ids: set) -> None:
         raise ValueError(f"J-M-05.evaluation_order: must list every decision row once, got {order}")
     if j.method_rule("J-M-05")["on_unknown"] not in TYPE_KEYS:
         raise ValueError(f"J-M-05.on_unknown: must be one of {TYPE_KEYS}")
+    fb = j.method_rule("J-M-05")["fallback_if"]
+    names = set(j.inputs) | set(j.thresholds)
+    for t, cond in {None: fb["condition"], **fb.get("condition_by_type", {})}.items():
+        if t is not None and t not in fb["types"]:
+            raise ValueError(f"J-M-05.fallback_if.condition_by_type: {t!r} not in fallback_if.types")
+        unknown = {n for n in _NAME.findall(cond) if n not in names and n not in _KEYWORDS}
+        if unknown:
+            raise ValueError(f"J-M-05.fallback_if: unknown names {sorted(unknown)}")
     alias = j.method_rule("J-M-04")["category_alias"]
     if not (set(alias) | set(alias.values())) <= EXPECTED_CATEGORIES:
         raise ValueError("J-M-04.category_alias: unknown categories")
     if not set(j.method_rule("J-M-02")["zero_dtv_categories"]) <= EXPECTED_CATEGORIES:
         raise ValueError("J-M-02.zero_dtv_categories: unknown categories")
+    if "value" not in (j.method_rule("J-M-06").get("signal_radius_m") or {}):
+        raise ValueError("J-M-06.signal_radius_m: value required (moved from rules.yaml N6, F09)")
     ist_check = j.method_rule("J-M-06")["ist_check"]
     if set(ist_check) != types:
         raise ValueError(f"J-M-06.ist_check: must cover the junction types exactly, missing {sorted(types - set(ist_check))}")

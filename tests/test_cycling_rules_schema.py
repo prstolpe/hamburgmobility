@@ -162,6 +162,33 @@ def test_rejects_unknown_same_as(des):
     _rejects(DesignRuleSet, _mutated(des, mutate), "J-99")
 
 
+def test_rejects_unknown_cycle_crossing_category(des):
+    # Review 2026-11 F03: J-14 cycle_crossing lists cycle categories
+    def mutate(d):
+        _by_id(d["junctions"]["decision_table"]["rows"], "J-14")["cycle_crossing"] = ["HAUPT", "MAIN"]
+    _rejects(DesignRuleSet, _mutated(des, mutate), "cycle_crossing")
+
+
+def test_rejects_treatment_flag_without_categories(des):
+    # Review 2026-11 F02: JC-06 flag needs flag_cycle_cats
+    def mutate(d):
+        _by_id(d["junctions"]["cyclist_treatment"], "JC-06").pop("flag_cycle_cats")
+    _rejects(DesignRuleSet, _mutated(des, mutate), "flag_cycle_cats")
+
+
+def test_rejects_fallback_condition_for_unknown_type(des):
+    def mutate(d):
+        _by_id(d["junctions"]["method"], "J-M-05")["fallback_if"]["condition_by_type"]["signal_protected"] = "space_radius_m < 1"
+    _rejects(DesignRuleSet, _mutated(des, mutate), "condition_by_type")
+
+
+def test_rejects_missing_signal_radius(des):
+    # Review 2026-11 F09: signal_radius_m moved from rules.yaml N6 to J-M-06
+    def mutate(d):
+        _by_id(d["junctions"]["method"], "J-M-06").pop("signal_radius_m")
+    _rejects(DesignRuleSet, _mutated(des, mutate), "signal_radius_m")
+
+
 def test_rejects_unknown_category_in_lane_defaults(des):
     def mutate(d):
         d["lanes"]["default_per_direction"]["GOW70"] = 1

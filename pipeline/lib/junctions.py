@@ -4,9 +4,12 @@ Pure functions; pipeline/c07_junctions.py builds the junctions from the network 
 
 - `category_pair`: through road + highest other road (J-M-04, as N6 in rules.yaml); a standalone cycle path counts
   as the second road if no other road meets the through road.
-- `decide`: decision table J-01..J-11 in the order J-M-05, conditions evaluated with pipeline/lib/expr.py (Kleene
-  logic for missing values), fallback J-M-05.fallback_if.
-- `treatments`: JC-01..JC-05 from their applies_to clauses.
+- `decide`: decision table J-01..J-16 in the order J-M-05, conditions evaluated with pipeline/lib/expr.py (Kleene
+  logic for missing values), fallback J-M-05.fallback_if (condition_by_type for turbo roundabouts, F24). A side of
+  `legs` may list alternatives (`SW+GOW50|GOW30`); rows with `cycle_crossing` (J-14) match only if a route of these
+  cycle categories crosses the through road (`route_crosses`, F03).
+- `treatments`: JC-01..JC-06 from their applies_to clauses; `treatment_flags`: flags of treatments (JC-06
+  turbo_grade_sep_check, F02).
 - `ist_result`: Ist vs Soll via J-M-06.ist_check.
 """
 
@@ -38,9 +41,10 @@ class Side:
 class Row:
     id: str
     tram: bool                # 'any with tram'
-    sides: tuple              # two Side objects (empty for tram rows)
+    sides: tuple              # two tuples of alternative Side objects (empty for tram rows)
     spec: dict                # if/then/else_if/else_then/otherwise/fallback (after same_as)
     same_as: str | None
+    cycle_crossing: frozenset = frozenset()   # J-14: a route of these cycle categories must cross the through road
 
 
 @dataclass
@@ -53,6 +57,7 @@ class JunctionParams:
     on_unknown: str
     fallback_types: frozenset
     fallback_cond: Any
+    fallback_cond_by_type: dict
     near_threshold: float
     treatments: list[dict]
     ist_check: dict[str, dict]
@@ -69,7 +74,8 @@ class JunctionParams:
             src = raw[r.same_as] if r.same_as else r
             spec = {"if": src.if_, "else_if": src.else_if, **{k: (src.model_extra or {}).get(k) for k in TYPE_KEYS}}
             spec = {k: (_compile(v, thresholds) if k in ("if", "else_if") and v else v) for k, v in spec.items()}
-            rows[rid] = Row(rid, *_parse_legs(r.legs), spec=spec, same_as=r.same_as)
+            rows[rid] = Row(rid, *_parse_legs(r.legs), spec=spec, same_as=r.same_as,
+                            cycle_crossing=frozenset((r.model_extra or {}).get("cycle_crossing") or ()))
         m05 = j.method_rule("J-M-05")
         n6 = rules.coherence_rule("N6")
         near = None
@@ -80,7 +86,10 @@ class JunctionParams:
             rows=rows, order=list(m05["evaluation_order"]), thresholds=thresholds,
             rank={c: i for i, c in enumerate(n6.category_rank)}, alias=dict(j.method_rule("J-M-04")["category_alias"]),
             on_unknown=m05["on_unknown"], fallback_types=frozenset(m05["fallback_if"]["types"]),
-            fallback_cond=_compile(m05["fallback_if"]["condition"], thresholds), near_threshold=float(near),
+            fallback_cond=_compile(m05["fallback_if"]["condition"], thresholds),
+            fallback_cond_by_type={t: _compile(c, thresholds)
+                                   for t, c in (m05["fallback_if"].get("condition_by_type") or {}).items()},
+            near_threshold=float(near),
             treatments=list(j.cyclist_treatment), ist_check=j.method_rule("J-M-06")["ist_check"], types=list(j.types),
             method={r["id"]: r for r in j.method})
 
@@ -91,18 +100,34 @@ def _compile(cond: str, thresholds: dict):
     return expr.parse(text)
 
 
+def _split_outside_parens(text: str, sep: str) -> list[str]:
+    parts, depth, cur = [], 0, ""
+    for ch in text:
+        depth += (ch == "(") - (ch == ")")
+        if ch == sep and depth == 0:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    return [*parts, cur]
+
+
+def _parse_side(text: str, legs: str) -> Side:
+    m = _SIDE.match(text)
+    if not m:
+        raise ValueError(f"legs: cannot parse {legs!r}")
+    base, qual = m.group(1), [q.strip() for q in (m.group(2) or "").split("|") if q.strip()]
+    cats = frozenset(q for q in qual if q in CYCLE_CATEGORIES)
+    fac = next((q for q in qual if q not in CYCLE_CATEGORIES), None)
+    return Side(base, cats, fac)
+
+
 def _parse_legs(text: str) -> tuple[bool, tuple]:
+    """'A+B' with alternatives per side ('SW+GOW50|GOW30'); qualifiers in brackets ('cycle_path(RSV|HAUPT)')."""
     if text.strip() == "any with tram":
         return True, ()
-    sides = []
-    for part in text.split("+"):
-        m = _SIDE.match(part)
-        if not m:
-            raise ValueError(f"legs: cannot parse {text!r}")
-        base, qual = m.group(1), [q.strip() for q in (m.group(2) or "").split("|") if q.strip()]
-        cats = frozenset(q for q in qual if q in CYCLE_CATEGORIES)
-        fac = next((q for q in qual if q not in CYCLE_CATEGORIES), None)
-        sides.append(Side(base, cats, fac))
+    sides = [tuple(_parse_side(alt, text) for alt in _split_outside_parens(part, "|"))
+             for part in _split_outside_parens(text, "+")]
     if len(sides) != 2:
         raise ValueError(f"legs: expected two sides in {text!r}")
     return False, tuple(sides)
@@ -146,12 +171,51 @@ def category_pair(legs: list[dict], p: JunctionParams, alias: bool = True) -> tu
     return (top, top), flags
 
 
+def _through_idx(legs: list[dict], pair: tuple[str, str], p: JunctionParams) -> list[int]:
+    top = pair[0]
+    return sorted((i for i, leg in enumerate(legs) if leg["cat"] != CYCLE_PATH and leg_cat(leg, p) == top),
+                  key=lambda i: CYCLE_RANK[_cycle_cat(legs[i])])[:2]
+
+
 def crossing_legs(legs: list[dict], pair: tuple[str, str], p: JunctionParams) -> list[dict]:
     """Legs outside the through road: drop two legs of the top category (those with the lowest cycle category)."""
-    top = pair[0]
-    through = sorted((i for i, leg in enumerate(legs) if leg["cat"] != CYCLE_PATH and leg_cat(leg, p) == top),
-                     key=lambda i: CYCLE_RANK[_cycle_cat(legs[i])])[:2]
+    through = _through_idx(legs, pair, p)
     return [leg for i, leg in enumerate(legs) if i not in through]
+
+
+def route_crosses(legs: list[dict], pair: tuple[str, str], cats: frozenset, p: JunctionParams) -> bool:
+    """J-14 (F03): a route of the cycle categories `cats` crosses the through road: at least two legs outside the
+    through road carry one of them and, where bearings are known, they lie on both sides of the through road (the
+    through road has two legs). Without bearings (golden cases) two such legs suffice."""
+    through = [legs[i] for i in _through_idx(legs, pair, p)]
+    route = [leg for leg in crossing_legs(legs, pair, p) if _cycle_cat(leg) in cats]
+    if len(through) < 2 or len(route) < 2:
+        return False
+    bearings = [leg.get("bearing") for leg in through + route]
+    if any(b is None for b in bearings):
+        return True
+    a, b = through[0]["bearing"], through[1]["bearing"]
+    span = (b - a) % 360.0
+    sides = {((leg["bearing"] - a) % 360.0) < span for leg in route}
+    return len(sides) == 2
+
+
+def _lanes(v) -> int | None:
+    """Soll lanes per direction of a leg (c06 lanes_per_dir_soll): count, 'shared' (no marked lanes) = 1."""
+    if v is None or (isinstance(v, float) and v != v):
+        return None
+    if v == "shared":
+        return 1
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def lanes_per_direction_max(legs: list[dict]) -> int | None:
+    """Highest Soll lane count per direction over the road legs (input of J-14/J-15); None if unknown everywhere."""
+    vals = [n for n in (_lanes(leg.get("lanes")) for leg in legs if leg["cat"] != CYCLE_PATH) if n is not None]
+    return max(vals) if vals else None
 
 
 def _side_matches(side: Side, cat: str, legs: list[dict], p: JunctionParams) -> bool:
@@ -165,12 +229,19 @@ def _side_matches(side: Side, cat: str, legs: list[dict], p: JunctionParams) -> 
                (side.facility is None or leg.get("facility") == side.facility) for leg in pool)
 
 
+def _any_side(alts: tuple, cat: str, legs: list[dict], p: JunctionParams) -> bool:
+    return any(_side_matches(s, cat, legs, p) for s in alts)
+
+
 def row_matches(row: Row, pair: tuple[str, str], legs: list[dict], tram: bool, p: JunctionParams) -> bool:
     if row.tram:
         return bool(tram)
     a, b = row.sides
-    return ((_side_matches(a, pair[0], legs, p) and _side_matches(b, pair[1], legs, p)) or
-            (_side_matches(a, pair[1], legs, p) and _side_matches(b, pair[0], legs, p)))
+    hit = ((_any_side(a, pair[0], legs, p) and _any_side(b, pair[1], legs, p)) or
+           (_any_side(a, pair[1], legs, p) and _any_side(b, pair[0], legs, p)))
+    if hit and row.cycle_crossing:
+        return route_crosses(legs, pair, row.cycle_crossing, p)
+    return hit
 
 
 # --- decision ----------------------------------------------------------------------------------------------------
@@ -195,9 +266,10 @@ def decide(props: dict, p: JunctionParams) -> dict:
     """
     legs = props["legs"]
     flags = list(props.get("flags") or [])
+    lanes = props["lanes_per_direction_max"] if "lanes_per_direction_max" in props else lanes_per_direction_max(legs)
     values = {"entering_dtv_sum": props.get("entering_dtv_sum"), "space_radius_m": props.get("space_radius_m"),
               "tram_present": bool(props.get("tram_present")), "signal_present_ist": props.get("signal_present_ist"),
-              "legs_count": len(legs)}
+              "legs_count": len(legs), "lanes_per_direction_max": lanes}
     pair, pflags = category_pair(legs, p)
     flags += pflags
     trace: list[dict] = [{"id": "J-M-04", "passed": pair is not None, "result": list(pair) if pair else None,
@@ -218,6 +290,9 @@ def decide(props: dict, p: JunctionParams) -> dict:
         elif not row_matches(row, pair, legs, tram, p):
             trace.append({"id": rid, "passed": False, "result": None, "values": {}})
             continue
+        if row.cycle_crossing:
+            trace.append({"id": rid, "passed": True, "result": "cycle_crossing",
+                          "values": {"cycle_crossing": sorted(row.cycle_crossing)}})
         if row.same_as:
             trace.append({"id": rid, "passed": True, "result": f"same_as {row.same_as}", "values": {}})
         jtype, step_conf, step = _apply_row(row, values, p, flags)
@@ -259,7 +334,7 @@ def _apply_row(row: Row, values: dict, p: JunctionParams, flags: list) -> tuple[
         jtype = branch("if", "then", lambda: branch("else_if", "else_then", lambda: spec["otherwise"])
                        if spec.get("else_if") is not None else spec["otherwise"])
     if spec.get("fallback") and jtype in p.fallback_types:
-        v, c, used = _eval(p.fallback_cond, values, p)
+        v, c, used = _eval(p.fallback_cond_by_type.get(jtype, p.fallback_cond), values, p)
         step["fallback_if"] = {"result": v, **used}
         conf = min(conf, c)
         if v is None:
@@ -306,14 +381,26 @@ def treatments(jtype: str | None, pair: tuple[str, str] | None, legs: list[dict]
     return out
 
 
+def treatment_flags(jtype: str | None, legs: list[dict], ids: list[str], p: JunctionParams) -> list[str]:
+    """Flags of the treatments that apply (`flag` with `flag_cycle_cats`: a leg carries one of these categories),
+    e.g. JC-06 turbo_grade_sep_check at turbo roundabouts in the RSV/HAUPT network (F02)."""
+    out = []
+    for entry in p.treatments:
+        if entry["id"] in ids and entry.get("flag") and any(_cycle_cat(leg) in entry["flag_cycle_cats"] for leg in legs):
+            out.append(entry["flag"])
+    return out
+
+
 TREATMENT_DE = {
     "JC-01": "Kreisverkehr mit umlaufendem Radweg, Radverkehr bevorrechtigt (CROW innerorts). Zielkonflikt: SWOV-Analysen "
              "sehen die Wartepflicht für Radfahrende als sicherer; nach deutschem Recht hat der Radverkehr am Kreisverkehr "
              "nur bei fahrbahnnaher Führung Vorrang (StVO/VwV prüfen). Die Vorrangfrage ist vor der Planung zu entscheiden.",
     "JC-02": "Geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor dem Kfz-Verkehr, indirektes Linksabbiegen.",
     "JC-03": "Radfurt in Breite des Radwegs, rot eingefärbt, aufgepflastert, wo der Radverkehr Vorrang hat.",
-    "JC-04": "Mittelinsel für die Querung der Hauptstraße durch die Radroute (≥ 3,00 m HAUPT, ≥ 2,50 m BASIS).",
+    "JC-04": "Mittelinsel für die Querung der Hauptstraße durch die Radroute (≥ 4,00 m RSV, ≥ 3,00 m HAUPT, ≥ 2,50 m BASIS).",
     "JC-05": "Freies Rechtsabbiegen für den Radverkehr an der LSA, wo sicher.",
+    "JC-06": "Turbokreisverkehr: umlaufender Radweg abgesetzt, Radverkehr wartepflichtig (an zweistreifigen Ein- und "
+             "Ausfahrten verdeckt ein Fahrzeug das andere). Im RSV- und HAUPT-Netz planfreie Querung prüfen.",
 }
 
 
@@ -373,7 +460,8 @@ def merge_arms(legs: list[dict], max_angle_deg: float) -> list[dict]:
     """J-M-02 arm_merge: legs with the same street name and DTV and a bearing within max_angle_deg form one arm.
 
     legs need cat, cycle_cat, facility, dtv, name, bearing (degrees) and id; cycle paths are never merged.
-    The arm keeps the highest category, the highest cycle category (with its facility) and ids of all its legs.
+    The arm keeps the highest category, the highest cycle category (with its facility), the highest Soll lane count
+    (lanes) and ids of all its legs.
     """
     arms: list[dict] = []
     for leg in legs:
@@ -391,6 +479,8 @@ def merge_arms(legs: list[dict], max_angle_deg: float) -> list[dict]:
         if CYCLE_RANK[_cycle_cat(leg)] > CYCLE_RANK[_cycle_cat(target)]:
             target["cycle_cat"], target["facility"] = leg["cycle_cat"], leg.get("facility")
         target["tram"] = bool(target.get("tram")) or bool(leg.get("tram"))
+        ln = [n for n in (_lanes(target.get("lanes")), _lanes(leg.get("lanes"))) if n is not None]
+        target["lanes"] = max(ln) if ln else None
     return arms
 
 

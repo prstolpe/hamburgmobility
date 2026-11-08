@@ -116,7 +116,7 @@ Die Netzregeln setzen die vier SWOV-Anforderungen auf Netzebene um: große zusam
 3. **N3 Aufenthaltsbereiche:** Flächen, die von GOW/SW umschlossen sind, werden gebildet; Bereiche unter 25 ha oder mit sehr langer Grenze im Verhältnis zur Fläche werden markiert (Annahme).
 4. **N4 Kürzester gleich sicherster Weg:** Für Knotenpaare des GOW-Netzes wird der zeitkürzeste Weg bei Soll-Tempo mit dem auf GOW/SW beschränkten Weg verglichen; führt der kürzeste über mehr als 300 m ETW, entsteht ein Schleichverkehrsflag (Annahme).
 5. **N5 Übergänge:** Wechsel GOW50→GOW30 und GOW→ETW erfordern eine Torsituation; ein direkter Übergang 70/80→30 ist nicht vorgesehen \[F CROW-Tabelle 4\].
-6. **N6 Knotenkatalog:** Aus dem Kategoriepaar am Knoten wird der Soll-Knotentyp abgeleitet (Tabelle 1.4); Abweichungen vom Ist (z. B. Ampel statt Gehwegüberfahrt) werden gelistet.
+6. **N6 Knotenkatalog:** Aus dem Kategoriepaar am Knoten wird der Soll-Knotentyp abgeleitet (Tabelle 1.4); Abweichungen vom Ist (z. B. Ampel statt Gehwegüberfahrt) werden gelistet. Seit rules.yaml 0.19.0 (Review 2026-11 F09) gibt es dafür nur noch eine Quelle: die Entscheidungstabelle der Knotenpunkte in `design_rules.yaml` (`junctions`, Stufe c07, docs/guide_radnetz.md Abschnitt 6). N6 meldet nur noch Knotenpunkte ohne Soll-Typ und die Übergänge nach N5; der Bericht steht in reports/junctions.md, weil er das Ergebnis von c07 braucht.
 
 ### 1.6 Kriterien für die Diskrepanzanalyse
 
@@ -211,7 +211,7 @@ Die Pipeline ist eine Kette aus neun Python-Stufen, die über GeoParquet-Dateien
 
 **5. Regelbasierte Soll-Kategorie (`s05_classify.py`).** Eine Entscheidungskaskade liest `rules.yaml` (Anhang A): erst Ausschlüsse (SW, Außerorts), dann Verbindungs-Score gegen Schwellen, dann die beiden GOW30-Auslöser nach CROW (Umfeld spricht für 30; 50 ist nicht sicher gestaltbar), dann ETW30/ETW-ERF. Jede Regel liefert `(rule_id, passed, inputs)`. Ergebnis: `cat_proposed`, `cat_confidence` (hoch/mittel/niedrig je nach Datenlage und Abstand zur Schwelle), `rule_trace`. Seit rules.yaml 0.18.0 (Review 2026-11): Auslöser a fragt nach einer Schule oder Kita mit Grundstück höchstens `access_radius` (50 m) vom Abschnitt (StVO § 45 (9) „unmittelbarer Bereich“, F07), Auslöser b nur noch nach dem Raum für einen ausreichenden Radweg (mit Busroute `required_width.GOW50_bus`, F06); `in_hvs` zählt nur als eigener Auslöser, nicht im Verbindungsscore (F13). Defaults und Ersatzquellen, die für alle Abschnitte gleich gelten (`global_caveats` in C-CONF-01: Ortsgrenze, Schulstraße, Querungsbedarf, HVS aus den DTV-Linien, Schulen/Kitas aus OSM), senken die confidence nicht mehr; sie stehen einmal im Bericht und auf der Methodenseite (F14). Der Teil `crossing_demand` von Auslöser a ist stillgelegt (status inactive, F25). Die Harmonisierung (H-STR-01) schließt GOW50-Lücken unter `gap_close_m` (500 m) zwischen zwei GOW30-Läufen (Lückenschluss nach StVO-Novelle 2024, Fassung prüfen). Anbaufreie Abschnitte (S-FEAT-12) bleiben GOW50 und tragen das Flag `gow50_anbaufrei` (Hinweis im Steckbrief und in D-SPD-01, F23).
 
-**6. Netzkohärenz (`s06_coherence.py`).** Die Regeln N1–N6 laufen auf dem Graphen der vorgeschlagenen Kategorien. Verstöße werden nicht automatisch „repariert“, sondern als `flags` gespeichert; eine optionale Glättung (z. B. kurze ETW-Lücke zwischen zwei GOW50) erscheint als Vorschlag mit eigener Regel-ID.
+**6. Netzkohärenz (`s06_coherence.py`).** Die Regeln N1–N5 laufen auf dem Graphen der vorgeschlagenen Kategorien; N6 läuft seit rules.yaml 0.19.0 nach der Knotenstufe c07 (Review 2026-11 F09, siehe 1.5). Verstöße werden nicht automatisch „repariert“, sondern als `flags` gespeichert; eine optionale Glättung (z. B. kurze ETW-Lücke zwischen zwei GOW50) erscheint als Vorschlag mit eigener Regel-ID.
 
 **7. Korrekturebene (`overrides/overrides.csv`).** Spalten: `segment_id, cat_final, reason, author, date, source, review_status`. Die Pipeline übernimmt nur Einträge mit `review_status = approved` und speichert `cat_proposed` und `cat_final` nebeneinander. Fällt eine `segment_id` nach einem Datenupdate weg, meldet ein Test die verwaiste Korrektur. Änderungen laufen per Pull Request mit Vier-Augen-Prinzip.
 
@@ -674,7 +674,7 @@ coherence:
   - {id: N3, rule: 'Aufenthaltsbereiche (von GOW/SW umschlossen) < min_area_ha markieren', min_area_ha: 25, source: SWOV_FS_2023, source_type: assumption}
   - {id: N4, rule: 'Kürzester Weg zwischen GOW-Knoten nutzt > max_etw_m ETW -> Schleichverkehrsflag', max_etw_m: 300, source: SWOV_FS_2023, source_type: assumption}
   - {id: N5, rule: 'Übergang GOW50->GOW30 und GOW->ETW braucht Torsituation; kein direkter Übergang 70/80->30', source: CROW_GOW30_2023, source_type: swov_crow}
-  - {id: N6, rule: 'Soll-Knotentyp aus Kategoriepaar ableiten (Kreisverkehr, Signal mit Plateau, Gehwegüberfahrt, gleichrangig)', source: [SWOV_FS_2023, CROW_GOW30_2023], source_type: swov_crow}
+  - {id: N6, rule: 'Soll-Knotentyp aus design_rules.junctions (c07, junction_type_soll); N6 listet nur Knotenpunkte ohne Soll-Typ und Übergänge nach N5', source: [SWOV_FS_2023, CROW_GOW30_2023], source_type: swov_crow}   # seit 0.19.0 (F09)
 
 # Diskrepanz ('grijze wegen') und Priorisierung
 discrepancy:

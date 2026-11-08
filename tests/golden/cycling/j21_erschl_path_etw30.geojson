@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "name": "erschl_path_etw30",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "erschl_path_etw30",
+        "description": "G08: Eigenständiger Radweg (ERSCHL) trifft ETW30 -> rechts vor links (J-16, Review 2026-11 F10)",
+        "legs": [
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "cycle_path",
+            "cycle_cat": "ERSCHL",
+            "facility": "own_path"
+          }
+        ],
+        "entering_dtv_sum": 1000,
+        "space_radius_m": 25,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "equal_right_before_left",
+        "expected_rules": [
+          "J-16"
+        ],
+        "expected_cyclist_treatment": [],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          569600.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "type": "FeatureCollection",
+  "name": "haupt_etw30_crosses_gow50_2x2",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "haupt_etw30_crosses_gow50_2x2",
+        "description": "G05: Hauptroute auf ETW30 quert GOW50 mit 2 Fahrstreifen je Richtung, Zufluss 8 000 Kfz/24h -> Radwegfurt mit LSA (J-14, Review 2026-11 F03)",
+        "legs": [
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null,
+            "lanes": 2
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null,
+            "lanes": 2
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "HAUPT",
+            "facility": "mixed",
+            "lanes": "shared"
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "HAUPT",
+            "facility": "mixed",
+            "lanes": "shared"
+          }
+        ],
+        "entering_dtv_sum": 8000,
+        "space_radius_m": 25,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "cycle_crossing_signal",
+        "expected_rules": [
+          "J-14"
+        ],
+        "expected_cyclist_treatment": [],
+        "refs_used": [
+          "junctions.thresholds.crossing_signal_min_dtv.value"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          568000.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

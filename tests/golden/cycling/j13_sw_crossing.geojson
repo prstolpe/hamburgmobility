@@ -12,17 +12,22 @@
       "type": "Feature",
       "properties": {
         "case_id": "sw_crossing",
-        "description": "Radroute kreuzt Stroomweg -> planfrei",
+        "description": "Eigenständiger Radweg (Hauptroute) kreuzt Stroomweg -> planfrei (J-10, Review 2026-11 F08)",
         "legs": [
           {
-            "cat": "GOW50",
-            "cycle_cat": "HAUPT",
+            "cat": "SW",
+            "cycle_cat": "none",
             "facility": null
           },
           {
             "cat": "SW",
             "cycle_cat": "none",
             "facility": null
+          },
+          {
+            "cat": "cycle_path",
+            "cycle_cat": "HAUPT",
+            "facility": "own_path"
           }
         ],
         "entering_dtv_sum": 70000,

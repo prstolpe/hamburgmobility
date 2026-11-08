@@ -561,3 +561,35 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   GOW30 527,6 → 513,5 km, ETW30 3 329,4 → 3 324,3 km, HVS-km als GOW30 67,6 % → 64,6 % (Lückenschluss 500 m).
   1 346 Abschnitte (150,7 km) ändern die Kaskaden-Kategorie, 1 075 (133,5 km) cat_final. 25 anbaufreie GOW50
   (17,9 km), davon 13 mit Hinweis statt Tempo-Stärke.
+
+## design_rules.yaml 0.8.0, rules.yaml 0.19.0, plain_language.yaml 0.6.0 – 2026-11-08: Review 2026-11, Paket P2 (Knotenpunkte)
+- F02: JC-01 (Rad-Vorrang) nur noch am einstreifigen Kreisverkehr. Neu JC-06 (assumption, A3): Turbokreisverkehr mit
+  abgesetztem Radweg, Radverkehr wartepflichtig; Flag `turbo_grade_sep_check` (Schlüssel `flag`/`flag_cycle_cats`),
+  wenn ein Arm RSV/HAUPT trägt. Datentest V-INV-07. Goldener Fall j18 (G06), j02 erwartet JC-06 statt JC-01.
+- F03: J-14 `GOW50+ETW30` mit `cycle_crossing: [RSV, HAUPT, BASIS]`: quert eine Radroute den Zug (mindestens zwei Arme
+  außerhalb des Zugs in der Radkategorie, nach Armrichtung auf beiden Seiten), dann `cycle_crossing_signal`, wenn
+  `lanes_per_direction_max >= 2 or entering_dtv_sum > crossing_signal_min_dtv`, sonst `continuous_footway_exit`; sonst
+  J-04. Neue Schwelle `crossing_signal_min_dtv` 12 000 Kfz/24h (assumption, A8). Neuer Eingang
+  `lanes_per_direction_max` = höchste Soll-Fahrstreifenzahl je Richtung der Straßenarme aus c06 (`lanes_per_dir_soll`,
+  `shared` = 1); c07 las cross_section_soll schon, die Stufenfolge c06 → c07 bleibt. Goldener Fall j17 (G05).
+- F08: J-10 nur noch `cycle_path(RSV|HAUPT)+SW` → planfrei; neu J-10b `SW+GOW50|GOW30` (same_as J-01), J-10c
+  `SW+ETW30|ETW_ERF` → LSA, J-10d `SW+SW|cycle_path(BASIS|ERSCHL)` → neuer Typ `not_applicable` (der Review schreibt
+  `SW+SW|cycle_path(BASIS|ERSCHL)+SW`, gleichbedeutend). `legs` erlaubt dafür Alternativen je Seite. evaluation_order
+  beginnt mit J-10, J-10d, J-10c, J-10b. Goldene Fälle j19/j20 (G07), j22, j23; j13 (vorher GOW50-Hauptroute × SW)
+  ist jetzt ein eigenständiger HAUPT-Radweg × SW, weil J-10 nur noch eigenständige Radwege erfasst.
+- F09: N6 ohne `node_types`, `ist_check`, `thresholds.signal_radius_m`; neu `source_of_truth:
+  design_rules.junctions.decision_table`, `category_rank` bleibt. `signal_radius_m` (30 m) jetzt in J-M-06. s06 rechnet
+  N6 nicht mehr (keine Flags `N6_node_mismatch` auf Abschnitten, damit auch nicht mehr auf der Webseite); der N6-Teil
+  (Knotenpunkte ohne Soll-Typ, N5-Übergänge je Knotenpunkt) steht nach c07 in reports/junctions.md (strukturelle
+  Empfehlung 8). Der frühere Abgleich N6 ↔ c07 im Knotenbericht entfällt.
+- F10: J-15 `cycle_path(BASIS|ERSCHL)+GOW50` → LSA bzw. neuer Typ `cycle_crossing_refuge` (Rad wartepflichtig,
+  Mittelinsel nach JC-04); J-16 `cycle_path(ERSCHL)+ETW30` → rechts vor links. ist_check für beide neuen Typen.
+  Datentest V-INV-02 (kein `no_rule`). Goldene Fälle j21 (G08), j24.
+- F24: JC-04 `median_width_m.RSV` 4,00 m (assumption); `turbo_min_radius` 30 m (assumption, am Original prüfen) in
+  J-01 else_if und als `fallback_if.condition_by_type` (Turbokreisel aus J-03 erhalten unter 30 m den Fallback).
+- Webseite: Typtexte für `cycle_crossing_refuge` und `not_applicable` (Kartensymbol „kein Soll-Typ“), Flag-Text
+  `turbo_grade_sep_check`, Methodenseite Knotenpunkte angepasst.
+- Ergebnis (Lauf coherence, discrepancy, validate, junctions, c08): Knotenpunkte 16 259; `no_rule` 11 → 0; planfrei
+  277 → 1; LSA (signal_protected + cycle_crossing_signal) 708 → 892 (840 + 52); Turbokreisel 136 → 59; einstreifige
+  Kreisverkehre 258 → 283; `not_applicable` 157; Gehwegüberfahrt 3 039 → 2 987; eingefärbte Vorfahrt 300 → 339;
+  Handlungsbedarf 2 605 → 2 358; JC-01 394 → 283, JC-06 59 (davon 35 mit `turbo_grade_sep_check`).

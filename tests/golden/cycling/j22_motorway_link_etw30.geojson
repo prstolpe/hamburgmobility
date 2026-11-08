@@ -1,0 +1,55 @@
+{
+  "type": "FeatureCollection",
+  "name": "motorway_link_etw30",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "motorway_link_etw30",
+        "description": "Rampe (SW) an Erschließungsstraße ETW30 -> LSA (J-10c, Review 2026-11 F08)",
+        "legs": [
+          {
+            "cat": "SW",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "ETW30",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 15000,
+        "space_radius_m": 25,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "signal_protected",
+        "expected_rules": [
+          "J-10c"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-02"
+        ],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          570000.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

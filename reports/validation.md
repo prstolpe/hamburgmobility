@@ -1,6 +1,6 @@
 # Validierung und Sensitivität
 
-Erzeugt: 2026-11-08T14:15:40+00:00 von `pipeline/validate.py`, rules.yaml 0.18.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
+Erzeugt: 2026-11-08T14:57:21+00:00 von `pipeline/validate.py`, rules.yaml 0.19.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
 
 ## Kurzfassung
 
@@ -10,7 +10,7 @@ Erzeugt: 2026-11-08T14:15:40+00:00 von `pipeline/validate.py`, rules.yaml 0.18.0
 - Datenqualität: Conflation-Treffer 89,1 % der km, OSM-Gestaltungsmerkmale im Mittel 56,2 % bekannt, ohne Ist-Tempo 7,4 %.
 - Manuelle Stichproben, Rückmelderunde und externe Prüfung sind offen.
 
-Vergleich mit dem vorigen Lauf (2026-11-07T15:10:34+00:00, rules.yaml 0.16.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 071 → 2 213 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
+Vergleich mit dem vorigen Lauf (2026-11-08T14:15:40+00:00, rules.yaml 0.18.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 213 → 2 213 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
 
 ## Prüfungen dieses Laufs
 
@@ -220,7 +220,7 @@ Mögliche Datenfehler nach Straße (längste zuerst, höchstens 30):
 
 ## 3. Sensitivitätsanalyse
 
-Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01 je Lauf); fachliche Korrekturen bleiben außen vor. Basis: rules.yaml 0.18.0, 34 702 Abschnitte, 4387,3 km.
+Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01 je Lauf); fachliche Korrekturen bleiben außen vor. Basis: rules.yaml 0.19.0, 34 702 Abschnitte, 4387,3 km.
 
 ### 3.1 Einzelvariation (V-SENS-01): jede Annahme ±20 %
 
@@ -283,7 +283,6 @@ Nicht variiert (Annahmen früherer Stufen oder ohne Wirkung auf die Kategorie):
 | `coherence.N3.min_area_ha` | 25 | ha | Netzkohärenz: schreibt nur Hinweise, ändert die Kategorie nicht |
 | `coherence.N3.barrier_simplify_m` | 5 | m | Netzkohärenz: schreibt nur Hinweise, ändert die Kategorie nicht |
 | `coherence.N4.max_etw_m` | 300 | m | Netzkohärenz: schreibt nur Hinweise, ändert die Kategorie nicht |
-| `coherence.N6.signal_radius_m` | 30 | m | Netzkohärenz: schreibt nur Hinweise, ändert die Kategorie nicht |
 | `discrepancy.D-SPD-01.severity_1` | 1 | km/h | Diskrepanz: ändert die Kategorie nicht |
 | `discrepancy.D-USE-01.severity_2` | 1,5 | Faktor | Diskrepanz: ändert die Kategorie nicht |
 | `discrepancy.D-USE-01.severity_3` | 2 | Faktor | Diskrepanz: ändert die Kategorie nicht |
@@ -527,13 +526,11 @@ Alle noch offenen Punkte, nach Abschnitt:
 - Varianten umschaltbar machen: Regelwerk-Varianten (z. B. „Kompromiss Hamburg“ mit GOW30-Obergrenze, docs/variants.md) als benannte Schalter in rules.yaml führen und beide Ergebnisse auf der Webseite vergleichbar machen? – Methodik
 - guide.md 3.4 nennt die Spalte `cat_confidence`, prompts/08 und die Pipeline `confidence`. guide.md angleichen? – Methodik
 
-**Netzkohärenz und Korrekturebene (Prompt 09, rules.yaml 0.9.0)** (7)
+**Netzkohärenz und Korrekturebene (Prompt 09, rules.yaml 0.9.0)** (5)
 
 - Neue Annahmen freigeben: N1 Stadtgrenze ≤ 50 m, N2 Straßenzug ≤ 30° Richtungsänderung (Richtung über 15 m), N6 Ampel/Plateau im Umkreis 30 m – Verkehrsplaner*in
 - N3: Schwelle für „sehr lange Grenze im Verhältnis zur Fläche“ fehlt (guide.md 1.5). Kompaktheit 4π·A/U² wird berichtet; ab welchem Wert markieren? – Verkehrsplaner*in
 - N5: Ob an einem Übergang GOW→ETW oder GOW50→GOW30 eine Torsituation vorhanden ist, steht in keiner Quelle. Merkmal festlegen (z. B. Gehwegüberfahrt, Plateau, Einengung) und Datenquelle – Verkehrsplaner*in, GIS
-- N6: Tabelle 1.4 deckt SW–GOW50 (50 Knoten), SW–SW (49), ETW_ERF–ETW_ERF (40) und SW–ETW30 nicht ab (not_defined). Soll-Knotentyp festlegen? – Verkehrsplaner*in
-- N6: GOW50–GOW30 gilt als „Kreisverkehr, sonst Signal mit Plateau“ (Zeile GOW50), GOW30–GOW30 als Kreisverkehr. So gemeint? Kreisverkehr an ETW–ETW-Knoten (64) gilt als Abweichung von „gleichrangig“ – Verkehrsplaner*in
 - N6: Gehwegüberfahrten und Vorfahrtregelung (give_way/stop) sind in OSM kaum erfasst; die meisten Knoten sind not_checkable. Quelle für Ist-Knotentypen? – GIS
 - Flag-Liste fachlich durchsehen (reports/coherence.md, Stichprobe, reports/coherence_flags.geojson) – Verkehrsplaner*in
 
@@ -571,7 +568,7 @@ Alle noch offenen Punkte, nach Abschnitt:
 - Neuwerk/Scharhörn ausgeschlossen (Entscheidung 2026-11-04); später als eigenes kleines Gebiet aufnehmen? – Team
 - DB Rad+ jahr2025: Abruf scheitert seit 2026-11-04 auch ohne bbox (abgebrochenes JSON ab offset 1000). Bei der Datenstelle melden – Team
 
-**Radnetz (Prompt 14, cycling_rules.yaml/design_rules.yaml 0.1.1, sources.yaml 0.1.9, 2026-11-05)** (34)
+**Radnetz (Prompt 14, cycling_rules.yaml/design_rules.yaml 0.1.1, sources.yaml 0.1.9, 2026-11-05)** (33)
 
 - Projekt-Sollbreiten (`widths_m.project_target`) zwischen ERA-Regelmaß und NL-Hauptnetz festlegen – Verkehrsplaner*in
 - CROW-Ontwerpwijzer 2016 im Original: Umwegfaktor, Breiten nach Intensität, Fahrradstraßen-Kriterien prüfen – Verkehrsplaner*in
@@ -593,7 +590,6 @@ Alle noch offenen Punkte, nach Abschnitt:
 - Prompt 19 (design_rules.yaml 0.2.0): neue Annahmen PRF-01…07 freigeben (Entscheidungen prstolpe 2026-11-06: Busse aus GTFS-Stundenmaximum, Zusatzbausteine nach Ist, Fallback nach D1/D2) – Verkehrsplaner*in - PRF-01: Ist-Fahrstreifen = max(amtlich in/gegen), sonst OSM lanes/2; Einrichtungsverkehr = eine amtliche Richtung 0 und bahnigkeit ≠ 2; bei bahnigkeit 2 ganzes Profil mit beiden Richtungen (Bedeutung von bahnigkeit unbestätigt, siehe oben); ohne DTV an GOW50 Soll = Ist (höchstens 2) - PRF-02: Spitzenstunde der Busse aus der Abfahrtsstunde an der ersten Haltestelle; auf langen Linien liegt der Abschnitt bis zu einer Stunde später. Genauer: Zeit an der nächstgelegenen Haltestelle (stop_times je Haltestelle) – lohnt der Aufwand? - PRF-03: Gehwege beidseitig; Baumstreifen beidseitig an GOW50/GOW30; Ladezone einseitig bei shop_frontage_share ≥ 0,4 (Schwelle aus C-G30-01); Parken nur, wo OSM parking erfasst ist; Zweirichtungsradweg links - PRF-04: GOW30-Fahrbahn = untere Grenze der CROW-Profile (5,80 m bis DTV 6 000, sonst 8,40 m), Radfahrstreifen zusätzlich – oder liegen sie innerhalb der CROW-Spanne? Einrichtungsstraßen: GOW 3,25 m je Fahrstreifen, ETW 4,00 m (Fahrradstraßen-Fahrbahn, Rad in Gegenrichtung) – beides ohne Quelle - PRF-04: Für SW, GOW80 und ETW60 fehlen Profilregeln (Fahrstreifenbreiten außerorts, Gehwege außerorts); derzeit kommen GOW80/ETW60 in cat_final nicht vor - PRF-06: Trennstreifen PL-04 nur 0,75 m (elements_min_m); die Annahme 1,00 m bei GOW50 mit Bus steht nur im Text von PL-04 – als Wert aufnehmen?
 - Prompt 19: 362 von 523 km GOW30 haben ein DTV über dem breiten CROW-GOW30-Profil (> 10 000 Kfz/Tag; Flag gow30_dtv_above_profile in reports/cross_section_soll.md). Passt die Einstufung dieser Hauptverkehrsstraßen als GOW30, oder braucht GOW30 mit hoher Belastung eigene Fahrbahnbreiten? – Verkehrsplaner*in – 2026-11-07: siehe rules.yaml 0.14.0 (C-G30-01 Obergrenze, C-G50-02) – 2026-11-07: Obergrenze wieder zurückgenommen (rules.yaml 0.15.0): Umfeld vor heutiger Verkehrsmenge; Regel später verbessern (prstolpe) – Variante mit Obergrenze als Kompromiss gesichert: docs/variants.md (Tag variante-gow50-kompromiss)
 - Prompt 20 (design_rules.yaml 0.3.0): neue Annahmen J-M-01…07 und die Zuordnung JC-01…05 (applies_to) freigeben – Verkehrsplaner*in - Kategoriepaar: Prompt 20 nennt „die beiden ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50 (Kreisverkehr/LSA). Gewählt ist die N6-Lesart (durchgehender Zug zählt einmal). So gemeint? - Clusterradius 25 m über verbindende Abschnitte; 63 Knotenpunkte sind größer als 50 m (bis 187 m, Ketten in dichten Netzen). Zusätzlich eine Obergrenze der Ausdehnung? - Richtungsfahrbahnen: gleicher Name, gleicher DTV, Richtung ≤ 30° = ein Arm. Bestätigen, dass der amtliche DTV auf beiden Richtungsfahrbahnen der Querschnittswert ist - Platz: Suchradius 40 m, umschlossene Inseln zählen als Fläche; Turbokreisverkehr nutzt dieselbe Platzschwelle wie der einstreifige (roundabout_min_radius). Eigener Wert für Turbokreisverkehre? - Unbekannte Bedingung (DTV oder Platz fehlt) → Kreisverkehr bzw. erste Wahl der Zeile mit confidence low; Alternative wäre „kein Soll-Typ“ - JC-03 auch an LSA-, Plateau- und eingefärbten Knoten im RSV/HAUPT-Netz und an jeder Radwegfurt mit Vorrang; JC-04 nur, wenn die Radroute die GOW quert (nicht längs); JC-05 an jeder geschützten LSA-Kreuzung
-- Prompt 20: Die Entscheidungstabelle hat keine Zeile für eigenständige Radwege, die ETW30 queren (412 Knotenpunkte, `no_rule`), und keine für cycle_path(BASIS/ERSCHL)+GOW50 (J-09 nur RSV|HAUPT). Zeilen ergänzen (z. B. Radwegfurt mit Vorrang wie J-08)? – Verkehrsplaner*in
 - Prompt 20: J-03 (GOW30+GOW30 → Kreisverkehr) hat keine DTV-Bedingung; 232 Knotenpunkte erhalten einen einstreifigen Kreisverkehr mit Zufluss über roundabout_max_dtv (Flag dtv_above_roundabout_max, z. B. Ludwig-Erhard-Straße/Rödingsmarkt 61 000 Kfz/24h). J-03 um die Bedingungen von J-01 ergänzen? Hängt mit der Frage zu GOW30 mit hoher Belastung zusammen (Prompt 19) – Verkehrsplaner*in
 - Prompt 20: ETW_ERF hat keine eigene Zeile; über category_alias wie ETW30 behandelt. N6 sieht an ETW–ETW_ERF-Knoten Gehwegüberfahrten vor (rund 900 Netzknoten weichen ab). Eigene Zeilen J-xx für ETW_ERF (z. B. continuous_footway_exit)? – Verkehrsplaner*in
 - Prompt 20: roundabout_single_lane_cycle_yield (Rad wartepflichtig) wird von keiner Zeile vergeben; laut JC-01 gilt der Vorrang innerorts. Für GOW80/ETW60 (außerorts, derzeit nicht in cat_final) vorsehen? – Verkehrsplaner*in
@@ -617,6 +613,14 @@ Alle noch offenen Punkte, nach Abschnitt:
 - F23: S-FEAT-12 `anbaufrei` zählt die eigenen Endknoten eines Abschnitts mit, wenn sie Einmündungen (Grad ≥ 3) sind; Einmündungen sind alle Netzknoten, auch benannte Zufahrten (S-NET-04). Kurze Abschnitte zwischen dichten Knoten sind darum nie anbaufrei. An den E1-Stichproben prüfen, ob Zufahrten oder Rampen ausgenommen werden sollen und ob der Umfang eine eigene Kategorie rechtfertigt (Q4) – Verkehrsplaner*in
 - F06: Das Flag `existing_track_below_floor` braucht die Ist-Breite des Radwegs; sie liegt erst in der Radnetzkette vor (c05, OSM width/cycleway:width, nur rund 119 km bekannt). Das Flag steht darum in `facility_flags` (c05), nicht in der Klassifikation – Methodik
 - F14: Nach den globalen Vorbehalten sind noch 73 % der Länge „mittel“, fast nur wegen `fallback:conn_score` (DTV gibt es nur auf HVS, daher ist das Gewicht außerhalb der HVS fast immer umgelegt). Gilt das ebenfalls als struktureller Vorbehalt (global_caveats) oder soll es weiter je Abschnitt zählen? Der Review sieht es als Unterscheidungsmerkmal vor – Methodik
+
+**Review 2026-11, Paket P2 Knotenpunkte (design_rules.yaml 0.8.0, rules.yaml 0.19.0)** (5)
+
+- F03: „Die Radroute quert den Zug“ ist umgesetzt als: mindestens zwei Arme außerhalb des durchgehenden Zugs tragen RSV/HAUPT/BASIS und liegen, gemessen an der Richtung der Arme (J-M-02), auf beiden Seiten der beiden Zugarme. `lanes_per_direction_max` = höchste Soll-Fahrstreifenzahl je Richtung (c06, `lanes_per_dir_soll`) aller Straßenarme; `shared` zählt 1, ohne Wert ist die Bedingung unbekannt (J-M-05 on_unknown → LSA). So gemeint? – Verkehrsplaner*in
+- F24: `turbo_min_radius` gilt außer in J-01 (else_if) auch im Fallback (`fallback_if.condition_by_type`), damit ein Turbokreisel aus J-03 bei 20–30 m Platz die eingefärbte Vorfahrt erhält. Der Review nennt J-M-05 fallback_if als betroffen, schreibt aber nur J-01 aus. Bestätigen; Wert 30 m am Original prüfen – Verkehrsplaner*in
+- F02: Quelle für die Wartepflicht des Radverkehrs am Turbokreisel (CROW/Fietsberaad, Annahme A3) ergänzen; JC-06 ist bis dahin assumption – Verkehrsplaner*in
+- F10: `cycle_crossing_refuge` an ERSCHL-Wegen (J-15): JC-04 nennt Mittelinselbreiten nur für RSV/HAUPT/BASIS. Breite für ERSCHL festlegen (z. B. wie BASIS 2,50 m)? – Verkehrsplaner*in
+- F08: `not_applicable` prüft das Ist wie vorgeschlagen (ok: Kreisverkehr, LSA, LSA mit Plateau, nichts erfasst); ein Plateau an einem Autobahnknoten zählt damit als Handlungsbedarf. So gewollt? – Methodik
 
 ## Lizenz
 

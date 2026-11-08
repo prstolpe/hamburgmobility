@@ -1,0 +1,59 @@
+{
+  "type": "FeatureCollection",
+  "name": "basis_path_gow50_refuge",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "basis_path_gow50_refuge",
+        "description": "Eigenständiger Radweg (BASIS) quert GOW50 mit 1 Fahrstreifen je Richtung, Zufluss 8 000 Kfz/24h -> Querung mit Mittelinsel, Rad wartepflichtig (J-15, Review 2026-11 F10)",
+        "legs": [
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null,
+            "lanes": 1
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null,
+            "lanes": 1
+          },
+          {
+            "cat": "cycle_path",
+            "cycle_cat": "BASIS",
+            "facility": "own_path"
+          }
+        ],
+        "entering_dtv_sum": 8000,
+        "space_radius_m": 25,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "cycle_crossing_refuge",
+        "expected_rules": [
+          "J-15"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-04"
+        ],
+        "refs_used": [
+          "junctions.thresholds.crossing_signal_min_dtv.value"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          570800.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

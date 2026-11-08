@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "name": "motorway_node",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "motorway_node",
+        "description": "Autobahnknoten SW x SW -> nicht anwendbar (J-10d, Review 2026-11 F08)",
+        "legs": [
+          {
+            "cat": "SW",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "SW",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "SW",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 90000,
+        "space_radius_m": 25,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "not_applicable",
+        "expected_rules": [
+          "J-10d"
+        ],
+        "expected_cyclist_treatment": [],
+        "refs_used": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          570400.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

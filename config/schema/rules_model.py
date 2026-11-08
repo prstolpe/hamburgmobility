@@ -183,16 +183,6 @@ class GateTransition(_Strict):
     to: list[str] = Field(min_length=1)
 
 
-class NodeTypeEntry(_Strict):
-    pair: list[str] = Field(min_length=2, max_length=2)
-    type: str
-
-
-class IstCheck(_Strict):
-    ok: list[str]
-    not_checkable: list[str]
-
-
 class CoherenceRule(BaseModel):
     # Extra keys are rule parameters (e.g. min_run_m); their units are checked in RuleSet.
     model_config = ConfigDict(extra="allow", populate_by_name=True)
@@ -214,10 +204,9 @@ class CoherenceRule(BaseModel):
     restricted_categories: list[str] = []
     # N5
     gate_transitions: list[GateTransition] = []
-    # N6
+    # N6 (since 0.19.0, Review 2026-11 F09: the Soll junction type comes from design_rules.junctions, stage c07)
     category_rank: list[str] = []
-    node_types: list[NodeTypeEntry] = []
-    ist_check: dict[str, IstCheck] = {}
+    source_of_truth: str | None = None
 
     def param(self, name: str) -> float:
         """Numeric parameter: flat key (e.g. min_run_m) or thresholds entry."""
@@ -233,8 +222,6 @@ class CoherenceRule(BaseModel):
                 | set(self.restricted_categories) | set(self.category_rank))
         for g in self.gate_transitions:
             cats |= set(g.from_) | set(g.to)
-        for n in self.node_types:
-            cats |= set(n.pair)
         return cats
 
 
@@ -657,9 +644,9 @@ class RuleSet(_Strict):
                 raise ValueError(f"{path}: unknown categories {unknown}")
             if rule.category_rank and (set(rule.category_rank) != set(cats) or len(rule.category_rank) != len(cats)):
                 raise ValueError(f"{path}.category_rank must list every category exactly once")
-            missing_checks = sorted({n.type for n in rule.node_types} - set(rule.ist_check))
-            if missing_checks:
-                raise ValueError(f"{path}.ist_check: missing node types {missing_checks}")
+            for removed in ("node_types", "ist_check"):
+                if removed in (rule.model_extra or {}):
+                    raise ValueError(f"{path}.{removed}: removed in 0.19.0 (F09); Soll junction type from design_rules.junctions")
 
         for cat, reqs in self.requirements.items():
             if cat not in cats:

@@ -12,7 +12,7 @@
       "type": "Feature",
       "properties": {
         "case_id": "gow50_gow50_turbo",
-        "description": "GOW50 x GOW50, 30 000 Kfz/24h (> 25 000, <= 35 000), Radius 25 m",
+        "description": "GOW50 x GOW50, 30 000 Kfz/24h (> 25 000, <= 35 000), Radius 32 m (>= turbo_min_radius) -> Turbokreisel, Rad wartepflichtig (JC-06, Review 2026-11 F02/F24)",
         "legs": [
           {
             "cat": "GOW50",
@@ -26,19 +26,24 @@
           }
         ],
         "entering_dtv_sum": 30000,
-        "space_radius_m": 25,
+        "space_radius_m": 32,
         "tram_present": false,
         "signal_present_ist": false,
+        "forbidden_cyclist_treatment": [
+          "JC-01"
+        ],
+        "expected_flags": [],
         "expected_junction_type": "turbo_roundabout",
         "expected_rules": [
           "J-01"
         ],
         "expected_cyclist_treatment": [
-          "JC-01"
+          "JC-06"
         ],
         "refs_used": [
           "junctions.thresholds.roundabout_max_dtv.value",
-          "junctions.thresholds.turbo_max_dtv.value"
+          "junctions.thresholds.turbo_max_dtv.value",
+          "junctions.thresholds.turbo_min_radius.value"
         ]
       },
       "geometry": {

@@ -23,11 +23,12 @@ CYCLE_RANK = {c: len(CYCLE_CATS) - i for i, c in enumerate(CYCLE_CATS)}
 PRINCIPLES = ("cohesion", "directness", "safety", "comfort", "attractiveness")
 OFFICIAL_GROUPS = ("Bestand", "In Arbeit")  # every other status of the WFS is a planned addition or improvement
 
-# Display groups of the junction types (map symbols): one shape per group on the website.
+# Display groups of the junction types (map symbols): one shape per group on the website. Types without a group
+# (not_applicable at motorway nodes, J-10d) are shown as "none".
 JUNCTION_GROUPS = {
     "roundabout": ("roundabout_single_lane_cycle_priority", "roundabout_single_lane_cycle_yield", "turbo_roundabout"),
     "signal": ("signal_protected", "cycle_crossing_signal"),
-    "priority": ("priority_raised", "priority_flat_coloured", "cycle_crossing_priority"),
+    "priority": ("priority_raised", "priority_flat_coloured", "cycle_crossing_priority", "cycle_crossing_refuge"),
     "continuous": ("continuous_footway_exit",),
     "equal": ("equal_right_before_left",),
     "grade_separated": ("grade_separated_cycle",),

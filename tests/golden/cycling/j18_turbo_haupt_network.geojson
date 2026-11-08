@@ -1,0 +1,69 @@
+{
+  "type": "FeatureCollection",
+  "name": "turbo_haupt_network",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "turbo_haupt_network",
+        "description": "G06: Turbokreisel im HAUPT-Netz (GOW50 x GOW50, 30 000 Kfz/24h, Radius 35 m) -> JC-06 mit Flag turbo_grade_sep_check, kein JC-01 (Review 2026-11 F02)",
+        "legs": [
+          {
+            "cat": "GOW50",
+            "cycle_cat": "HAUPT",
+            "facility": "separated_oneway_both"
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "HAUPT",
+            "facility": "separated_oneway_both"
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 30000,
+        "space_radius_m": 35,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "forbidden_cyclist_treatment": [
+          "JC-01"
+        ],
+        "expected_flags": [
+          "turbo_grade_sep_check"
+        ],
+        "expected_junction_type": "turbo_roundabout",
+        "expected_rules": [
+          "J-01"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-06"
+        ],
+        "refs_used": [
+          "junctions.thresholds.turbo_max_dtv.value",
+          "junctions.thresholds.turbo_min_radius.value"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          568400.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

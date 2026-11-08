@@ -111,6 +111,7 @@ def test_segment_tile_frame_without_network_category():
     ("priority_raised", "priority"), ("priority_flat_coloured", "priority"), ("cycle_crossing_priority", "priority"),
     ("continuous_footway_exit", "continuous"), ("equal_right_before_left", "equal"),
     ("grade_separated_cycle", "grade_separated"), (None, "none"),
+    ("cycle_crossing_refuge", "priority"), ("not_applicable", "none"),  # Review 2026-11 F10, F08
 ])
 def test_junction_group(jtype, group):
     assert xc.junction_group(jtype) == group
@@ -118,7 +119,8 @@ def test_junction_group(jtype, group):
 
 def test_every_junction_type_has_a_group_and_text():
     for t in DES.junctions.types:
-        assert xc.junction_group(t) != "none"
+        # not_applicable (motorway nodes, J-10d) has no symbol of its own and is drawn as "kein Soll-Typ"
+        assert (xc.junction_group(t) == "none") == (t == "not_applicable")
         assert t in TEXTS["cycling"]["junction_type"]
     assert set(xc.JUNCTION_GROUPS) <= set(TEXTS["cycling"]["junction_group"])
 

@@ -7,7 +7,7 @@
 #   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
 #   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.18.0
+  version: 0.19.0
   date: 2026-11-08
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -694,36 +694,17 @@ coherence:
       min_speed_kmh: {value: 70, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
       target_speed_kmh: {value: 30, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
   - id: N6
-    rule: "Soll-Knotentyp aus Kategoriepaar ableiten (Kreisverkehr, Signal mit Plateau, Gehwegüberfahrt, gleichrangig)"
+    rule: "Soll-Knotentyp aus design_rules.junctions (c07, junction_type_soll); N6 listet nur Knotenpunkte ohne Soll-Typ und Übergänge nach N5"
     source: [SWOV_FS_2023, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
+    source_of_truth: design_rules.junctions.decision_table
     note: >-
-      Nur Knoten mit Grad >= 3. Kategoriepaar: höchste Kategorie am Knoten (bis zu zwei ihrer Abschnitte bilden den
-      durchgehenden Zug) und höchste der übrigen; Rang nach category_rank. Tabelle nach guide.md Tabelle 1.4; erste
-      passende Zeile gilt, kein Treffer = not_defined. Ist-Typ aus OSM: junction=roundabout, highway=traffic_signals
-      und traffic_calming=table im Umkreis signal_radius_m. Gehwegüberfahrten sind in OSM nicht erfasst; dann
-      not_checkable statt Abweichung.
+      Review 2026-11 F09: eine Wahrheit für den Soll-Knotentyp. Der Typ kommt aus der Stufe c07
+      (pipeline/c07_junctions.py, design_rules.yaml junctions); der N6-Teil des Berichts läuft darum nach c07 und steht
+      in reports/junctions.md (Abschnitt N6). node_types, ist_check und thresholds.signal_radius_m entfallen
+      (signal_radius_m jetzt design_rules J-M-06). category_rank bleibt, J-M-04 verweist darauf.
     category_rank: [SW, GOW80, GOW50, GOW30, ETW60, ETW30, ETW_ERF]
-    node_types:
-      - {pair: [GOW50, GOW50], type: roundabout_or_signal_plateau}
-      - {pair: [GOW50, GOW30], type: roundabout_or_signal_plateau}
-      - {pair: [GOW30, GOW30], type: roundabout}
-      - {pair: [GOW50, ETW30], type: priority_gow_sidewalk_crossover}
-      - {pair: [GOW30, ETW30], type: sidewalk_crossover_or_priority_plateau}
-      - {pair: [ETW30, ETW30], type: equal_right_before_left}
-      - {pair: [GOW50, ETW_ERF], type: sidewalk_crossover}
-      - {pair: [GOW30, ETW_ERF], type: sidewalk_crossover}
-      - {pair: [ETW30, ETW_ERF], type: sidewalk_crossover}
-    ist_check:
-      roundabout_or_signal_plateau: {ok: [roundabout, signal_plateau], not_checkable: [signal]}
-      roundabout: {ok: [roundabout], not_checkable: []}
-      priority_gow_sidewalk_crossover: {ok: [], not_checkable: [none_mapped, plateau]}
-      sidewalk_crossover_or_priority_plateau: {ok: [plateau], not_checkable: [none_mapped]}
-      equal_right_before_left: {ok: [plateau], not_checkable: [none_mapped]}
-      sidewalk_crossover: {ok: [], not_checkable: [none_mapped, plateau]}
-    thresholds:
-      signal_radius_m: {value: 30, unit: m, source_type: assumption, check: "Ampeln sind oft an der Haltlinie erfasst"}
   - id: N7
     rule: "Glättungsvorschlag: Insel aus N2 erhält die Kategorie der gleichen Nachbarn (nur Vorschlag, keine Umklassifizierung)"
     source_type: assumption

@@ -110,6 +110,7 @@ def test_junction_case_is_complete(path):
     assert props["expected_junction_type"] in DESIGN.junctions.types
     assert len(props["legs"]) >= 2
     assert set(props["expected_rules"]) | set(props["expected_cyclist_treatment"]) <= _rule_ids()
+    assert set(props.get("forbidden_cyclist_treatment", [])) <= _rule_ids()
 
 
 @pytest.mark.parametrize("path", SECTION_FILES + JUNCTION_FILES, ids=lambda p: p.stem)
@@ -185,3 +186,6 @@ def test_golden_junction_type(path):
     fired = {step["id"] for step in result["rule_trace_junction"] if step["passed"]}
     assert set(props["expected_rules"]) <= fired
     assert set(props["expected_cyclist_treatment"]) <= set(result["cyclist_treatment"])
+    # optional (Review 2026-11 G06): treatments that must not apply and flags that must be set
+    assert not set(props.get("forbidden_cyclist_treatment", [])) & set(result["cyclist_treatment"])
+    assert set(props.get("expected_flags", [])) <= set(result["conflict_flags"])

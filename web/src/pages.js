@@ -139,11 +139,14 @@ export function radnetzHtml(meta) {
   <ul>
     <li><strong>Kreisverkehr</strong>, wo zwei Hauptstraßen sich kreuzen und Platz ist – er hat die wenigsten
       Konfliktpunkte. Ob Radfahrende im Kreisverkehr Vorrang haben, ist umstritten (niederländische Empfehlung gegen
-      Unfallforschung und deutsches Recht); der Steckbrief nennt diesen Zielkonflikt.</li>
-    <li><strong>Ampel</strong> nur bei sehr viel Verkehr oder Straßenbahn, dann geschützt gestaltet.</li>
+      Unfallforschung und deutsches Recht); der Steckbrief nennt diesen Zielkonflikt. Am zweistreifigen
+      Turbokreisverkehr warten Radfahrende immer.</li>
+    <li><strong>Ampel</strong> nur bei sehr viel Verkehr oder Straßenbahn, dann geschützt gestaltet – und wo eine Radroute
+      eine Hauptstraße mit zwei Fahrstreifen je Richtung oder viel Verkehr quert; sonst eine Querung mit Mittelinsel.</li>
     <li><strong>Durchgehender Gehweg</strong> oder <strong>Aufpflasterung</strong>, wo eine Quartiersstraße auf eine
       Hauptstraße trifft; <strong>rechts vor links</strong> zwischen Quartiersstraßen.</li>
-    <li><strong>Brücke oder Tunnel</strong>, wo eine wichtige Radroute eine Schnellstraße oder sehr belastete Straße quert.</li>
+    <li><strong>Brücke oder Tunnel</strong>, wo ein eigener Radweg einer wichtigen Radroute eine Schnellstraße oder sehr
+      belastete Straße quert. Autobahnanschlüsse sind normale Kreuzungen; reine Autobahnknoten erhalten keinen Typ.</li>
   </ul>
   ${c.stats ? `<p>Im Entwurf: ${num(c.stats.n_junctions)} Knotenpunkte, davon ${num(c.stats.n_junctions_action)} mit Umbaubedarf.</p>` : ""}
 

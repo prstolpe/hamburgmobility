@@ -1,12 +1,12 @@
 # Validierung Radnetz, Radanlagen, Querschnitte und Knoten (Prompt 21)
 
-Erzeugt 2026-11-08T14:20:09+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.8.0 · design_rules.yaml 0.7.0 · rules.yaml 0.18.0 · nicht amtlicher Entwurf.
+Erzeugt 2026-11-08T14:58:40+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.8.0 · design_rules.yaml 0.8.0 · rules.yaml 0.19.0 · nicht amtlicher Entwurf.
 
 ## Kurzfassung
 
 - Amtlicher Bestand 371 km: 57,8 % am Soll RSV/HAUPT, 73,2 % bis BASIS; Soll RSV/HAUPT 1 926 km.
 - Zählstellen: Spearman 0,57 an 86 Querschnitten; 100,0 % der 15 stärksten liegen am Soll RSV/HAUPT.
-- Sensitivität ±20%: 41 Annahmen, 82 Läufe; größte Wirkung 0,3 % der Länge mit anderer Führung, 0,3 % mit anderer Fahrstreifenzahl, 1,6 % der Knoten mit anderem Typ; „Querschnitt passt?“ reagiert stärker (bis 10,0 % der Länge, am stärksten `cross_section_allocation.elements_min_m.sidewalk.standard`).
+- Sensitivität ±20%: 43 Annahmen, 86 Läufe; größte Wirkung 0,3 % der Länge mit anderer Führung, 0,3 % mit anderer Fahrstreifenzahl, 1,3 % der Knoten mit anderem Typ; „Querschnitt passt?“ reagiert stärker (bis 10,0 % der Länge, am stärksten `cross_section_allocation.elements_min_m.sidewalk.standard`).
 - Prüflisten der Prompts 17–20 sind noch nicht ausgefüllt; eine Trefferquote der Regeln fehlt.
 
 ## Prüfungen
@@ -93,10 +93,10 @@ Von den 15 stärksten Zählstellen liegen 100,0 % am Soll RSV/HAUPT.
 
 ## 3. Sensitivität der Annahmen (±20%)
 
-Alle Zahlenwerte mit source_type assumption in cycling_rules.yaml und design_rules.yaml (165 Werte; source_type gilt auch für Einträge darunter), je einzeln um −20% und +20% (delta aus rules.yaml V-SENS-01). Neu gerechnet werden Führungsform (c05), Soll-Querschnitt (c06) und Knotentyp (c07) auf ihren gespeicherten Eingangswerten; Werte einer späteren Stufe rechnen nur ab dieser Stufe neu. Führung und Fahrstreifen als Anteil der Länge aller Straßenabschnitte, Knoten als Anteil der Knotenpunkte. Führung = Führungsform nach Prompt 19 (inklusive Fallback).
+Alle Zahlenwerte mit source_type assumption in cycling_rules.yaml und design_rules.yaml (169 Werte; source_type gilt auch für Einträge darunter), je einzeln um −20% und +20% (delta aus rules.yaml V-SENS-01). Neu gerechnet werden Führungsform (c05), Soll-Querschnitt (c06) und Knotentyp (c07) auf ihren gespeicherten Eingangswerten; Werte einer späteren Stufe rechnen nur ab dieser Stufe neu. Führung und Fahrstreifen als Anteil der Länge aller Straßenabschnitte, Knoten als Anteil der Knotenpunkte. Führung = Führungsform nach Prompt 19 (inklusive Fallback).
 
-- Variiert: 41 Werte, 82 Läufe; davon 31 mit einer Änderung.
-- Nicht neu gerechnet (andere Stufen): 88 Werte – siehe unten.
+- Variiert: 43 Werte, 86 Läufe; davon 33 mit einer Änderung.
+- Nicht neu gerechnet (andere Stufen): 90 Werte – siehe unten.
 - Nicht variiert: 35 Zähl- oder Kennwerte (Seeds, Seitenzahl, Linientypen, Fahrstreifen-Vorgaben), 1 Werte gleich 0.
 - Ungültige Regelwerke nach Variation: 0.
 
@@ -109,15 +109,16 @@ Spalten je Richtung: Führung, Fahrstreifen und „Querschnitt passt?“ (fit_cl
 | `cross_section_allocation.elements_min_m.sidewalk.standard` (design) | 3,00 | c06 | 0,29 % | 0,12 % | 9,96 % | 0,00 % | 0,20 % | 0,06 % | 6,29 % | 0,00 % |
 | `cross_section_allocation.elements_min_m.sidewalk.min` (design) | 2,50 | c06 | 0,01 % | 0,00 % | 5,53 % | 0,00 % | 0,04 % | 0,00 % | 8,14 % | 0,00 % |
 | `widths_m.project_target.cycle_street_carriageway.value` (cycling) | 4,00 | c05 | 0,00 % | 0,00 % | 4,66 % | 0,00 % | 0,00 % | 0,00 % | 2,96 % | 0,00 % |
-| `junctions.thresholds.roundabout_min_radius.value` (design) | 20,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 1,64 % | 0,00 % | 0,00 % | 0,00 % | 0,95 % |
-| `junctions.method.[J-M-02].dtv_share_entering.value` (design) | 0,50 | c07 | 0,00 % | 0,00 % | 0,00 % | 1,31 % | 0,00 % | 0,00 % | 0,00 % | 1,40 % |
-| `junctions.thresholds.turbo_max_dtv.value` (design) | 35 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 1,03 % | 0,00 % | 0,00 % | 0,00 % | 0,67 % |
+| `junctions.method.[J-M-02].dtv_share_entering.value` (design) | 0,50 | c07 | 0,00 % | 0,00 % | 0,00 % | 1,29 % | 0,00 % | 0,00 % | 0,00 % | 1,33 % |
+| `junctions.thresholds.roundabout_min_radius.value` (design) | 20,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 1,15 % | 0,00 % | 0,00 % | 0,00 % | 0,73 % |
+| `junctions.thresholds.turbo_max_dtv.value` (design) | 35 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,89 % | 0,00 % | 0,00 % | 0,00 % | 0,52 % |
 | `cross_section_allocation.elements_min_m.loading_zone` (design) | 2,50 | c06 | 0,08 % | 0,00 % | 0,86 % | 0,00 % | 0,04 % | 0,00 % | 0,63 % | 0,00 % |
 | `cross_section_allocation.elements_min_m.parking_parallel` (design) | 2,00 | c06 | 0,00 % | 0,00 % | 0,62 % | 0,00 % | 0,00 % | 0,00 % | 0,73 % | 0,00 % |
+| `junctions.thresholds.roundabout_max_dtv.value` (design) | 25 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,57 % | 0,00 % | 0,00 % | 0,00 % | 0,53 % |
 | `cross_section_allocation.elements_min_m.tree_strip` (design) | 2,00 | c06 | 0,00 % | 0,00 % | 0,54 % | 0,00 % | 0,00 % | 0,00 % | 0,56 % | 0,00 % |
-| `junctions.thresholds.roundabout_max_dtv.value` (design) | 25 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,52 % | 0,00 % | 0,00 % | 0,00 % | 0,43 % |
 | `lanes.lane_width_m.GOW50.general` (design) | 3,25 | c06 | 0,01 % | 0,24 % | 0,41 % | 0,00 % | 0,06 % | 0,26 % | 0,28 % | 0,00 % |
 | `widths_m.project_target.separated_oneway.HAUPT` (cycling) | 2,50 | c05 | 0,25 % | 0,09 % | 0,40 % | 0,00 % | 0,17 % | 0,02 % | 0,35 % | 0,00 % |
+| `junctions.thresholds.turbo_min_radius.value` (design) | 30,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,34 % | 0,00 % | 0,00 % | 0,00 % | 0,23 % |
 | `cross_section_allocation.elements_min_m.buffer_cycle_carriageway` (design) | 0,75 | c06 | 0,06 % | 0,02 % | 0,12 % | 0,00 % | 0,05 % | 0,02 % | 0,19 % | 0,00 % |
 | `lanes.rules.[L-02].peak_h_dir_from_dtv.factor` (design) | 0,06 | c06 | 0,00 % | 0,15 % | 0,11 % | 0,00 % | 0,00 % | 0,02 % | 0,01 % | 0,00 % |
 | `lanes.rules.[L-04].bus_lane_trigger.value` (design) | 20,00 | c06 | 0,02 % | 0,13 % | 0,02 % | 0,00 % | 0,01 % | 0,08 % | 0,01 % | 0,00 % |
@@ -130,15 +131,14 @@ Spalten je Richtung: Führung, Fahrstreifen und „Querschnitt passt?“ (fit_cl
 | `widths_m.project_target.cycle_lane.BASIS` (cycling) | 2,25 | c05 | 0,00 % | 0,00 % | 0,06 % | 0,00 % | 0,00 % | 0,00 % | 0,04 % | 0,00 % |
 | `widths_m.project_target.separated_oneway.BASIS` (cycling) | 2,00 | c05 | 0,00 % | 0,00 % | 0,05 % | 0,00 % | 0,00 % | 0,00 % | 0,02 % | 0,00 % |
 | `lanes.lane_width_m.GOW50.with_bus` (design) | 3,50 | c06 | 0,00 % | 0,00 % | 0,05 % | 0,00 % | 0,00 % | 0,00 % | 0,01 % | 0,00 % |
-| `widths_m.project_target.intensity_upgrade.[1].add_m` (cycling) | 0,50 | c05 | 0,00 % | 0,00 % | 0,03 % | 0,00 % | 0,00 % | 0,00 % | 0,00 % | 0,00 % |
 
 Ohne Wirkung bei ±20% (10): `separation_matrix.mixed_rural_max_dtv.value`, `cycle_street.max_motor_vehicles_day.value`, `facility_assignment.rules.[C-FAC-03].motor_peak_hour_share.value`, `widths_m.project_target.separated_twoway.RSV`, `widths_m.project_target.separated_twoway.HAUPT`, `widths_m.project_target.separated_twoway.BASIS`, `widths_m.project_target.separated_twoway.ERSCHL`, `widths_m.project_target.separated_twoway.none`, `widths_m.project_target.cycle_lane.HAUPT`, `cross_section_allocation.elements_min_m.tram.value`
 
 ### Robustheit je Abschnitt und Knoten
 
-- Abschnitte, deren Führungsform sich in mindestens einem der 82 Läufe ändert: 245 von 36 526 (0,7 %).
+- Abschnitte, deren Führungsform sich in mindestens einem der 86 Läufe ändert: 245 von 36 526 (0,7 %).
 - Abschnitte mit geänderter Fahrstreifenzahl in mindestens einem Lauf: 367 (1,0 %).
-- Knotenpunkte mit geändertem Soll-Typ in mindestens einem Lauf: 719 von 16 259 (4,4 %).
+- Knotenpunkte mit geändertem Soll-Typ in mindestens einem Lauf: 687 von 16 259 (4,2 %).
 - Die Steckbriefe der Webseite nennen je Abschnitt und Knoten die Zahl der Läufe mit Änderung und bis zu 3 auslösende Annahmen.
 
 ### Nicht neu gerechnet
@@ -150,7 +150,8 @@ Diese Annahmen wirken über Nachfragemodell, Netzentwurf, Prinzipien oder die Kn
 | `cycle_categories` | 5 | Kategoriebeschreibung, Prinzipien (Prompt 17) |
 | `cycle_graph` | 6 | Radgraph (Prompt 15) |
 | `demand_model` | 20 | Nachfragemodell (Prompt 15) – je Lauf eine neue Umlegung |
-| `junctions.method` | 4 | Knotenbildung und Platz (J-M-01, J-M-03) – Geometrie, nicht neu gebildet |
+| `junctions` | 1 | andere Stufe |
+| `junctions.method` | 5 | Knotenbildung und Platz (J-M-01, J-M-03) – Geometrie, nicht neu gebildet |
 | `network_design` | 19 | Netzentwurf (Prompt 16) – je Lauf eine neue Umlegung |
 | `principle_scoring` | 9 | Prinzipienprüfung (Prompt 17) |
 | `principle_weights` | 5 | Prinzipienprüfung (Prompt 17); Gewichts-Sensitivität in reports/cycle_principles.md |
@@ -163,7 +164,7 @@ Diese Annahmen wirken über Nachfragemodell, Netzentwurf, Prinzipien oder die Kn
 | --- | --- | --- | --- |
 | Prompt 18 – Führungsform | reports/cycle_facility.md | 30 je Soll-Führung | Durchsicht ausstehend (keine Ergebnisspalten) |
 | Prompt 19 – Soll-Querschnitt | reports/cross_section_soll.md | 70 Skizzen (30 Zufall, 20 breiteste, 20 schmalste) | Durchsicht ausstehend (keine Ergebnisspalten) |
-| Prompt 20 – Knotenpunkte | reports/junctions.md | 30 Zufall, Prüfliste je Soll-Typ | 0 von 270 bewertet – Durchsicht ausstehend |
+| Prompt 20 – Knotenpunkte | reports/junctions.md | 30 Zufall, Prüfliste je Soll-Typ | 0 von 301 bewertet – Durchsicht ausstehend |
 | Prompt 17 – Routen (Prinzipien) | reports/cycle_principles_review.csv | 20 Routen | 0 von 20 bewertet |
 
 Ohne ausgefüllte Prüflisten lässt sich die Trefferquote der Regeln nicht angeben. Die Durchsicht durch Ortskundige ist der wichtigste nächste Schritt (docs/open_questions.md).
@@ -209,7 +210,7 @@ Zum Prüfen gegen Luftbild und Panoramax; dieselben Abschnitte mit Spalten für 
 
 ### Offene Fragen zum Radnetz (docs/open_questions.md)
 
-34 offene Punkte:
+33 offene Punkte:
 
 - Projekt-Sollbreiten (`widths_m.project_target`) zwischen ERA-Regelmaß und NL-Hauptnetz festlegen – Verkehrsplaner*in
 - CROW-Ontwerpwijzer 2016 im Original: Umwegfaktor, Breiten nach Intensität, Fahrradstraßen-Kriterien prüfen – Verkehrsplaner*in
@@ -231,7 +232,6 @@ Zum Prüfen gegen Luftbild und Panoramax; dieselben Abschnitte mit Spalten für 
 - Prompt 19 (design_rules.yaml 0.2.0): neue Annahmen PRF-01…07 freigeben (Entscheidungen prstolpe 2026-11-06: Busse aus GTFS-Stundenmaximum, Zusatzbausteine nach Ist, Fallback nach D1/D2) – Verkehrsplaner*in - PRF-01: Ist-Fahrstreifen = max(amtlich in/gegen), sonst OSM lanes/2; Einrichtungsverkehr = eine amtliche Richtung 0 und bahnigkeit ≠ 2; bei bahnigkeit 2 ganzes Profil mit beiden Richtungen (Bedeutung von bahnigkeit unbestätigt, siehe oben); ohne DTV an GOW50 Soll = Ist (höchstens 2) - PRF-02: Spitzenstunde der Busse aus der Abfahrtsstunde an der ersten Haltestelle; auf langen Linien liegt der Abschnitt bis zu einer Stunde später. Genauer: Zeit an der nächstgelegenen Haltestelle (stop_times je Haltestelle) – lohnt der Aufwand? - PRF-03: Gehwege beidseitig; Baumstreifen beidseitig an GOW50/GOW30; Ladezone einseitig bei shop_frontage_share ≥ 0,4 (Schwelle aus C-G30-01); Parken nur, wo OSM parking erfasst ist; Zweirichtungsradweg links - PRF-04: GOW30-Fahrbahn = untere Grenze der CROW-Profile (5,80 m bis DTV 6 000, sonst 8,40 m), Radfahrstreifen zusätzlich – oder liegen sie innerhalb der CROW-Spanne? Einrichtungsstraßen: GOW 3,25 m je Fahrstreifen, ETW 4,00 m (Fahrradstraßen-Fahrbahn, Rad in Gegenrichtung) – beides ohne Quelle - PRF-04: Für SW, GOW80 und ETW60 fehlen Profilregeln (Fahrstreifenbreiten außerorts, Gehwege außerorts); derzeit kommen GOW80/ETW60 in cat_final nicht vor - PRF-06: Trennstreifen PL-04 nur 0,75 m (elements_min_m); die Annahme 1,00 m bei GOW50 mit Bus steht nur im Text von PL-04 – als Wert aufnehmen?
 - Prompt 19: 362 von 523 km GOW30 haben ein DTV über dem breiten CROW-GOW30-Profil (> 10 000 Kfz/Tag; Flag gow30_dtv_above_profile in reports/cross_section_soll.md). Passt die Einstufung dieser Hauptverkehrsstraßen als GOW30, oder braucht GOW30 mit hoher Belastung eigene Fahrbahnbreiten? – Verkehrsplaner*in – 2026-11-07: siehe rules.yaml 0.14.0 (C-G30-01 Obergrenze, C-G50-02) – 2026-11-07: Obergrenze wieder zurückgenommen (rules.yaml 0.15.0): Umfeld vor heutiger Verkehrsmenge; Regel später verbessern (prstolpe) – Variante mit Obergrenze als Kompromiss gesichert: docs/variants.md (Tag variante-gow50-kompromiss)
 - Prompt 20 (design_rules.yaml 0.3.0): neue Annahmen J-M-01…07 und die Zuordnung JC-01…05 (applies_to) freigeben – Verkehrsplaner*in - Kategoriepaar: Prompt 20 nennt „die beiden ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50 (Kreisverkehr/LSA). Gewählt ist die N6-Lesart (durchgehender Zug zählt einmal). So gemeint? - Clusterradius 25 m über verbindende Abschnitte; 63 Knotenpunkte sind größer als 50 m (bis 187 m, Ketten in dichten Netzen). Zusätzlich eine Obergrenze der Ausdehnung? - Richtungsfahrbahnen: gleicher Name, gleicher DTV, Richtung ≤ 30° = ein Arm. Bestätigen, dass der amtliche DTV auf beiden Richtungsfahrbahnen der Querschnittswert ist - Platz: Suchradius 40 m, umschlossene Inseln zählen als Fläche; Turbokreisverkehr nutzt dieselbe Platzschwelle wie der einstreifige (roundabout_min_radius). Eigener Wert für Turbokreisverkehre? - Unbekannte Bedingung (DTV oder Platz fehlt) → Kreisverkehr bzw. erste Wahl der Zeile mit confidence low; Alternative wäre „kein Soll-Typ“ - JC-03 auch an LSA-, Plateau- und eingefärbten Knoten im RSV/HAUPT-Netz und an jeder Radwegfurt mit Vorrang; JC-04 nur, wenn die Radroute die GOW quert (nicht längs); JC-05 an jeder geschützten LSA-Kreuzung
-- Prompt 20: Die Entscheidungstabelle hat keine Zeile für eigenständige Radwege, die ETW30 queren (412 Knotenpunkte, `no_rule`), und keine für cycle_path(BASIS/ERSCHL)+GOW50 (J-09 nur RSV|HAUPT). Zeilen ergänzen (z. B. Radwegfurt mit Vorrang wie J-08)? – Verkehrsplaner*in
 - Prompt 20: J-03 (GOW30+GOW30 → Kreisverkehr) hat keine DTV-Bedingung; 232 Knotenpunkte erhalten einen einstreifigen Kreisverkehr mit Zufluss über roundabout_max_dtv (Flag dtv_above_roundabout_max, z. B. Ludwig-Erhard-Straße/Rödingsmarkt 61 000 Kfz/24h). J-03 um die Bedingungen von J-01 ergänzen? Hängt mit der Frage zu GOW30 mit hoher Belastung zusammen (Prompt 19) – Verkehrsplaner*in
 - Prompt 20: ETW_ERF hat keine eigene Zeile; über category_alias wie ETW30 behandelt. N6 sieht an ETW–ETW_ERF-Knoten Gehwegüberfahrten vor (rund 900 Netzknoten weichen ab). Eigene Zeilen J-xx für ETW_ERF (z. B. continuous_footway_exit)? – Verkehrsplaner*in
 - Prompt 20: roundabout_single_lane_cycle_yield (Rad wartepflichtig) wird von keiner Zeile vergeben; laut JC-01 gilt der Vorrang innerorts. Für GOW80/ETW60 (außerorts, derzeit nicht in cat_final) vorsehen? – Verkehrsplaner*in

@@ -276,66 +276,16 @@ def test_n5_gate_transitions_listed_not_flagged(rules):
     assert ("GOW50", "GOW30") in gates and ("GOW50", "ETW30") in gates and ("GOW30", "ETW30") in gates
 
 
-# --- N6 Knotentypen --------------------------------------------------------------------------
+# --- N6 ---------------------------------------------------------------------------------------
+# Since rules.yaml 0.19.0 (Review 2026-11 F09) N6 reads the Soll junction type of c07; tests in tests/test_junctions.py
+# and tests/test_junctions_data.py (V-INV-02).
 
 
-def _cross(cats):
-    ends = [(100, 0), (0, 100), (-100, 0), (0, -100)]
-    return [(f"a{i}", [(0, 0), ends[i]], c) for i, c in enumerate(cats)]
-
-
-@pytest.mark.parametrize(
-    ("cats", "expected"),
-    [
-        (["GOW50", "ETW30", "GOW50"], ("GOW50", "ETW30")),
-        (["GOW50", "GOW30", "GOW50", "GOW30"], ("GOW50", "GOW30")),
-        (["GOW50", "GOW30", "ETW30"], ("GOW50", "GOW30")),
-        (["GOW30", "GOW30", "GOW30"], ("GOW30", "GOW30")),
-        (["ETW30", "ETW_ERF", "ETW30"], ("ETW30", "ETW_ERF")),
-    ],
-)
-def test_n6_category_pair(rules, cats, expected):
-    assert coh.node_category_pair(cats, rules) == expected
-
-
-def test_n6_soll_types(rules):
-    assert coh.soll_node_type(("GOW50", "ETW30"), rules) == "priority_gow_sidewalk_crossover"
-    assert coh.soll_node_type(("ETW30", "GOW50"), rules) == "priority_gow_sidewalk_crossover"
-    assert coh.soll_node_type(("GOW30", "GOW30"), rules) == "roundabout"
-    assert coh.soll_node_type(("SW", "GOW50"), rules) == "not_defined"
-
-
-def test_n6_signal_where_sidewalk_crossover_is_mismatch(rules):
-    segs = make_segments(_cross(["GOW50", "ETW30", "GOW50"]))
-    g = coh.build_graph(segs, rules)
-    centre = int(segs.loc[0, "node_u"])
-    flags, nodes = coh.n6_node_types(g, rules, ist_types={centre: "signal"})
-    rec = next(n for n in nodes if n["node"] == centre)
-    assert rec["soll_type"] == "priority_gow_sidewalk_crossover" and rec["result"] == "mismatch"
-    assert all(flag_names(flags, f"a{i}") == {"N6_node_mismatch"} for i in range(3))
-
-    flags, nodes = coh.n6_node_types(g, rules, ist_types={})
-    assert flags == {}
-    assert next(n for n in nodes if n["node"] == centre)["result"] == "not_checkable"
-
-
-def test_n6_roundabout_match_and_degree_two_skipped(rules):
-    segs = make_segments(_cross(["GOW30"] * 4))
-    g = coh.build_graph(segs, rules)
-    centre = int(segs.loc[0, "node_u"])
-    flags, nodes = coh.n6_node_types(g, rules, ist_types={centre: "roundabout"})
-    assert flags == {}
-    assert [n["node"] for n in nodes] == [centre]
-    assert nodes[0]["result"] == "match"
-
-
-def test_ist_node_types(rules):
-    radius = rules.coherence_rule("N6").param("signal_radius_m")
-    points = gpd.GeoSeries([Point(0, 0), Point(1000, 0), Point(2000, 0), Point(3000, 0)], index=[1, 2, 3, 4], crs=WORK_CRS)
-    signals = gpd.GeoSeries([Point(radius * 0.5, 0), Point(1000, radius * 0.9)], crs=WORK_CRS)
-    tables = gpd.GeoSeries([Point(1000, 5), Point(2000, 5)], crs=WORK_CRS)
-    out = coh.ist_node_types(points, signals, tables, roundabout_nodes={4}, radius_m=radius)
-    assert out == {1: "signal", 2: "signal_plateau", 3: "plateau", 4: "roundabout"}
+def test_n6_has_no_own_junction_table(rules):
+    n6 = rules.coherence_rule("N6")
+    assert n6.source_of_truth == "design_rules.junctions.decision_table"
+    assert not hasattr(coh, "n6_node_types")
+    assert {"node_types", "ist_check", "thresholds"}.isdisjoint(set(n6.model_extra or {}) | ({"thresholds"} if n6.thresholds else set()))
 
 
 # --- combined ---------------------------------------------------------------------------------

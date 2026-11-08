@@ -5,9 +5,11 @@ Usage: uv run python -m pipeline.c07_junctions
 Junctions (J-M-01): nodes of the street graph (segments with cat_final) with degree >= 3 and nodes where a standalone
 cycle path meets a street; nodes joined by a short street segment or on the same roundabout form one junction.
 Legs with category, cycle category, Soll facility and DTV (J-M-02), space from the ALKIS traffic area (J-M-03),
-decision table J-01..J-11 (J-M-04, J-M-05), cyclist treatment JC-01..JC-05, Ist type from OSM (J-M-06), priority
-(J-M-07) and overrides/junction_overrides.csv (approved only). Writes data/interim/junctions.parquet (points),
-reports/junctions.md and reports/junctions_review.csv.
+decision table J-01..J-16 (J-M-04, J-M-05; Soll lanes per arm from c06 for J-14/J-15), cyclist treatment
+JC-01..JC-06, Ist type from OSM (J-M-06), priority (J-M-07) and overrides/junction_overrides.csv (approved only).
+Also writes the N6 part of the coherence check (rules.yaml N6 since 0.19.0, Review 2026-11 F09): junctions without a
+Soll type and N5 transitions at junctions, from data/interim/coherence_nodes.parquet (N5 of stage s06).
+Writes data/interim/junctions.parquet (points), reports/junctions.md and reports/junctions_review.csv.
 """
 
 import datetime as dt
@@ -24,7 +26,7 @@ import shapely
 from shapely.geometry import MultiPoint, Point
 
 from config.schema.cycling_model import NO_CYCLE_CATEGORY
-from config.schema.design_model import IST_JUNCTION_TYPES
+from config.schema.design_model import IST_JUNCTION_TYPES, NOT_APPLICABLE
 from pipeline.c04_principles import ALKIS_PATH, SIGNALS_PATH, _links, load_crashes
 from pipeline.lib import junctions as jn
 from pipeline.lib import overrides as ov
@@ -41,7 +43,7 @@ FINAL_PATH = INTERIM / "final.parquet"
 FACILITY_PATH = INTERIM / "cycle_facility.parquet"
 XS_PATH = INTERIM / "cross_section_soll.parquet"
 NETWORK_PATH = INTERIM / "cycle_network.parquet"
-N6_PATH = INTERIM / "coherence_nodes.parquet"
+N5_PATH = INTERIM / "coherence_nodes.parquet"
 OUT_PATH = INTERIM / "junctions.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "junctions.md"
 REVIEW_PATH = REPO_ROOT / "reports" / "junctions_review.csv"
@@ -62,6 +64,8 @@ TYPE_DE = {
     "cycle_crossing_priority": "Radwegfurt mit Vorrang",
     "cycle_crossing_signal": "Radwegfurt mit LSA",
     "grade_separated_cycle": "planfrei (Brücke/Tunnel)",
+    "cycle_crossing_refuge": "Radquerung mit Mittelinsel, Rad wartepflichtig",
+    "not_applicable": "nicht anwendbar (Autobahnknoten)",
     None: "kein Soll-Typ",
 }
 IST_DE = {"roundabout": "Kreisverkehr", "signal_plateau": "LSA mit Plateau", "signal": "LSA", "plateau": "Plateau",
@@ -77,19 +81,8 @@ FLAG_DE = {
     "no_rule": "keine Zeile der Entscheidungstabelle passt",
     "no_cycle_crossing": "planfrei vorgeschlagen, aber keine Radroute quert den Stroomweg (Autobahnanschluss oder Route nur längs)",
     "dtv_above_roundabout_max": "einstreifiger Kreisverkehr vorgeschlagen, Zufluss über roundabout_max_dtv",
+    "turbo_grade_sep_check": "Turbokreisverkehr im RSV/HAUPT-Netz: planfreie Radquerung prüfen (JC-06)",
 }
-# N6 (rules.yaml) Soll types and the c07 types that fulfil them; only for the comparison in the report.
-N6_COMPATIBLE = {
-    "roundabout_or_signal_plateau": {"roundabout_single_lane_cycle_priority", "roundabout_single_lane_cycle_yield",
-                                     "turbo_roundabout", "signal_protected"},
-    "roundabout": {"roundabout_single_lane_cycle_priority", "roundabout_single_lane_cycle_yield", "turbo_roundabout"},
-    "priority_gow_sidewalk_crossover": {"continuous_footway_exit", "priority_raised"},
-    "sidewalk_crossover_or_priority_plateau": {"continuous_footway_exit", "priority_raised"},
-    "equal_right_before_left": {"equal_right_before_left"},
-    "sidewalk_crossover": {"continuous_footway_exit"},
-}
-
-
 def _now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
@@ -110,7 +103,9 @@ def junction_type(props: dict, design) -> dict:
         hit = _PARAMS[id(design)] = (design, jn.JunctionParams.from_rules(design, load_rules()))
     p = hit[1]
     res = jn.decide(props, p)
-    return {**res, "cyclist_treatment": jn.treatments(res["junction_type_soll"], res["pair"], props["legs"], p)}
+    jc = jn.treatments(res["junction_type_soll"], res["pair"], props["legs"], p)
+    res["conflict_flags"] = res["conflict_flags"] + jn.treatment_flags(res["junction_type_soll"], props["legs"], jc, p)
+    return {**res, "cyclist_treatment": jc}
 
 
 # --- inputs ------------------------------------------------------------------------------------------------------
@@ -222,6 +217,7 @@ def describe_legs(clusters: dict, seg: pd.DataFrame, paths: pd.DataFrame, pts: d
             continue
         base = {"id": r.segment_id, "cat": r.cat_final, "cycle_cat": r.cycle_cat, "facility": r.facility,
                 "dtv": None if pd.isna(r.dtv_official) else float(r.dtv_official), "tram": bool(r.tram),
+                "lanes": jn._lanes(r.lanes),
                 "bezirk": r.bezirk, "name": r.name if isinstance(r.name, str) else None}
         if cu is not None:
             add(cu, base, r.geometry, True)
@@ -232,7 +228,7 @@ def describe_legs(clusters: dict, seg: pd.DataFrame, paths: pd.DataFrame, pts: d
         if cu is not None and cu == cv:
             continue
         base = {"id": r.edge_id, "cat": jn.CYCLE_PATH, "cycle_cat": r.cycle_cat_final, "facility": "own_path",
-                "dtv": None, "tram": False, "bezirk": r.bezirk, "name": r.name if isinstance(r.name, str) else None}
+                "dtv": None, "tram": False, "lanes": None, "bezirk": r.bezirk, "name": r.name if isinstance(r.name, str) else None}
         if cu is not None:
             add(cu, base, r.geometry, True)
         if cv is not None:
@@ -306,6 +302,7 @@ def crash_counts(geoms: gpd.GeoSeries, crashes: gpd.GeoDataFrame, radius: float)
 
 def _leg_json(legs: list[dict]) -> str:
     return json.dumps([{"ids": leg["ids"], **{k: leg[k] for k in ("cat", "cycle_cat", "facility", "dtv", "name")},
+                        "lanes": leg.get("lanes"),
                         "bearing": round(leg["bearing"])} for leg in legs],
                       ensure_ascii=False, default=float)
 
@@ -326,6 +323,7 @@ def classify(j: pd.DataFrame, p: jn.JunctionParams) -> pd.DataFrame:
                 leg.get("cycle_cat") in NETWORK_CATS for leg in jn.crossing_legs(legs, res["pair"], p)):
             res["conflict_flags"].append("no_cycle_crossing")
         jc = jn.treatments(soll, res["pair"], legs, p)
+        res["conflict_flags"] += jn.treatment_flags(soll, legs, jc, p)
         ist = jn.ist_type(r.roundabout_ist, r.signal_present_ist, r.plateau_ist)
         result = jn.ist_result(soll, ist, p)
         trace = res["rule_trace_junction"] + [
@@ -362,13 +360,48 @@ ROW_HEAD = ["| node_id | Straßen | Bezirk | Paar | Rad | Zufluss Kfz/24h | Plat
             "| --- | --- | --- | --- | --- | ---: | ---: | --- | --- | --- | ---: | --- |"]
 
 
-def write_report(out: gpd.GeoDataFrame, n6: pd.DataFrame, ctx: dict) -> None:
+def n5_by_junction(n5: pd.DataFrame, node_to: dict) -> pd.DataFrame:
+    """N5 transitions (stage s06, coherence_nodes.parquet) per junction: gate transitions [from, to] and direct_to_30."""
+    n5 = n5.assign(node_id=n5["node"].map(node_to)).dropna(subset=["node_id"])
+    rows = defaultdict(lambda: {"gates": set(), "direct_to_30": False})
+    for nid, gates, direct in zip(n5["node_id"], n5["gates"], n5["direct_to_30"]):
+        rows[nid]["gates"] |= {tuple(g) for g in json.loads(gates)}
+        rows[nid]["direct_to_30"] |= bool(direct)
+    return pd.DataFrame([{"node_id": k, "gates": sorted(v["gates"]), "direct_to_30": v["direct_to_30"]}
+                         for k, v in rows.items()], columns=["node_id", "gates", "direct_to_30"])
+
+
+def n6_section(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> list[str]:
+    """N6 (rules.yaml since 0.19.0, F09): junctions without a Soll type and N5 transitions at junctions."""
+    missing = out[out["junction_type_final"].isna()]
+    na = out[out["junction_type_final"] == NOT_APPLICABLE]
+    lines = ["", "## N6 Netzkohärenz: Knotenpunkte ohne Soll-Typ und Übergänge (N5)", "",
+             f"Seit rules.yaml {ctx['rules_version']} (Review 2026-11 F09) gibt es nur noch einen Soll-Knotentyp: den dieser "
+             "Stufe (design_rules.yaml junctions). N6 meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 "
+             "(Torsituation, aus der Stufe s06); der frühere N6-Abgleich mit eigener Tabelle und Ist-Prüfung entfällt.", "",
+             f"- Ohne Soll-Typ (`no_rule`): {_fmt(len(missing))}"
+             + (" – Paare: " + ", ".join(f"{k} {v}" for k, v in missing["pair"].fillna("–").value_counts().items()) if len(missing) else "")
+             + ".",
+             f"- Nicht anwendbar (`not_applicable`, Autobahnknoten J-10d): {_fmt(len(na))}."]
+    if len(n5):
+        m = out[["node_id", "junction_type_final"]].merge(n5, on="node_id")
+        gates = Counter(g for gs in m["gates"] for g in gs)
+        lines += [f"- Knotenpunkte mit Übergang, der eine Torsituation braucht (N5): {_fmt((m['gates'].map(len) > 0).sum())}; "
+                  f"mit direktem Übergang ≥ 70 km/h → 30 km/h: {_fmt(int(m['direct_to_30'].sum()))}.", "",
+                  "| Übergang (N5) von → nach | Knotenpunkte | häufigste Soll-Typen |", "| --- | ---: | --- |"]
+        for (a, b), v in gates.most_common():
+            t = m[m["gates"].map(lambda gs, g=(a, b): g in gs)]["junction_type_final"].map(_type_de).value_counts().head(3)
+            lines.append(f"| {a} → {b} | {_fmt(v)} | " + "; ".join(f"{k} {_fmt(c)}" for k, c in t.items()) + " |")
+    return lines
+
+
+def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
     viewers = load_viewers()
     n = len(out)
     lines = [
         "# Knotenpunkte: Soll-Knotentyp und Radverkehrsführung (Stufe c07)", "",
         f"Erzeugt {_now()} mit pipeline/c07_junctions.py · design_rules.yaml {ctx['design_version']} · nicht amtlicher "
-        "Entwurf. Entscheidungstabelle J-01…J-11, Führungen JC-01…JC-05 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. "
+        "Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. "
         "Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.", "",
         "## Kurzfassung", "",
         f"- {_fmt(n)} Knotenpunkte aus {_fmt(ctx['n_nodes'])} Netzknoten (Grad ≥ 3: {_fmt(ctx['n_deg3'])}, Kreuzungen "
@@ -393,11 +426,13 @@ def write_report(out: gpd.GeoDataFrame, n6: pd.DataFrame, ctx: dict) -> None:
         "Kfz-Arm; ETW-Arme ohne DTV zählen 0, fehlt DTV an einem GOW/SW-Arm, ist die Summe eine Untergrenze.",
         "3. **Platz (J-M-03):** Radius des größten einbeschriebenen Kreises in der ALKIS-Verkehrsfläche im Umkreis "
         f"{ctx['search_radius']:g} m.",
-        "4. **Kategoriepaar (J-M-04):** wie N6 – durchgehender Zug (höchste Kategorie, bis zu zwei Arme) und höchste übrige "
+        "4. **Kategoriepaar (J-M-04):** Rang nach N6.category_rank – durchgehender Zug (höchste Kategorie, bis zu zwei Arme) und höchste übrige "
         "Straße; bleibt keine, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Der Prompt nennt „die beiden "
         "ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50 (offene Frage).",
         "5. **Entscheidung (J-M-05):** Zeilen in der Reihenfolge " + ", ".join(ctx["order"]) + "; erste passende gilt. "
-        "Unbekannte Bedingung → Typ der Zeile (Kreisverkehr bzw. erste Wahl), Flag condition_unknown.",
+        "Unbekannte Bedingung → Typ der Zeile (Kreisverkehr bzw. erste Wahl), Flag condition_unknown. J-14 und J-15 "
+        "lesen die Soll-Fahrstreifen je Richtung der Arme aus c06 (lanes_per_direction_max); J-14 gilt nur, wenn eine "
+        "Radroute RSV/HAUPT/BASIS den Zug quert (Arme mit der Radkategorie auf beiden Seiten des Zugs).",
         "6. **Ist (J-M-06):** OSM junction=roundabout an einem Arm oder inneren Abschnitt, highway=traffic_signals und "
         f"traffic_calming=table im Umkreis {ctx['signal_radius']:g} m eines Netzknotens; jede Ampel zählt nur für den nächstgelegenen Knotenpunkt.",
         "", "## Anzahl je Soll-Typ", "",
@@ -433,7 +468,8 @@ def write_report(out: gpd.GeoDataFrame, n6: pd.DataFrame, ctx: dict) -> None:
               "auf dem umlaufenden Radweg; SWOV-Auswertungen sehen die Wartepflicht als sicherer. Nach deutschem Recht hat der "
               "Radverkehr am Kreisverkehr nur bei fahrbahnnaher Führung Vorrang (StVO/VwV prüfen). Die Steckbrieftexte der "
               f"{_fmt(jc.apply(lambda xs: 'JC-01' in xs).sum())} Kreisverkehre nennen diesen Konflikt (Spalte treatment_text); "
-              "entschieden ist er nicht.", ""]
+              "entschieden ist er nicht. JC-01 gilt seit design_rules.yaml 0.8.0 nur an einstreifigen Kreisverkehren; am "
+              "Turbokreisverkehr ist der Radverkehr wartepflichtig (JC-06, Review 2026-11 F02).", ""]
 
     lines += ["## Hinweise (conflict_flags)", "", "| Flag | Bedeutung | Knotenpunkte |", "| --- | --- | ---: |"]
     flags = out["conflict_flags"].fillna("").str.split("|")
@@ -459,33 +495,7 @@ def write_report(out: gpd.GeoDataFrame, n6: pd.DataFrame, ctx: dict) -> None:
     for r in gs_net.sort_values(["crashes_cyc", "cycle_rank", "node_id"], ascending=[False, False, True]).itertuples():
         lines.append(_junction_row(r, viewers))
 
-    lines += ["", "## Abgleich mit N6 (Straßenfunktionsplan, reports/coherence.md)", "",
-              "Je Netzknoten mit N6-Eintrag: N6-Soll-Typ gegen den Soll-Typ des Knotenpunkts, zu dem er gehört. "
-              "„vereinbar“ = der c07-Typ erfüllt den N6-Typ.", ""]
-    if len(n6):
-        n6 = n6.copy()
-        n6["ok"] = [t in N6_COMPATIBLE.get(s, set()) for s, t in zip(n6["soll_type"], n6["junction_type_final"])]
-        cols = [t for t in ctx["types"] if (n6["junction_type_final"] == t).any()]
-        lines += ["| N6 \\ c07 | " + " | ".join(_type_de(t) for t in cols) + " | vereinbar |",
-                  "| --- | " + " | ".join("---:" for _ in cols) + " | ---: |"]
-        for s, g in n6.groupby("soll_type"):
-            share = f"{100 * g['ok'].mean():.0f} %" if s in N6_COMPATIBLE else "–"
-            lines.append(f"| {s} | " + " | ".join(_fmt((g['junction_type_final'] == t).sum()) for t in cols) + f" | {share} |")
-        d = n6[n6["soll_type"].isin(N6_COMPATIBLE)]
-        def cnt(s, c):
-            return _fmt(((n6["soll_type"] == s) & (n6["junction_type_final"].isin(c))).sum())
-
-        lines += ["", f"Vereinbar insgesamt: {100 * d['ok'].mean():.0f} % von {_fmt(len(d))} Netzknoten mit definiertem N6-Typ. "
-                  "Hauptursachen der Unterschiede:", "",
-                  f"- N6 kennt keine Fahrradstraßen: {cnt('equal_right_before_left', {'priority_raised'})} ETW–ETW-Knoten "
-                  "werden in c07 „Vorfahrt mit Plateau“ für die Fahrradstraße (J-07).",
-                  f"- ETW_ERF: N6 sieht Gehwegüberfahrt vor, c07 bildet ETW_ERF über category_alias auf ETW30 ab "
-                  f"({cnt('sidewalk_crossover', {'equal_right_before_left', 'priority_raised'})} Netzknoten gleichrangig "
-                  "bzw. Vorfahrt mit Plateau; offene Frage).",
-                  f"- Kreisverkehr ohne Platz: {cnt('roundabout', {'priority_flat_coloured'})} GOW30–GOW30-Knoten erhalten "
-                  "den J-03-Fallback „Vorfahrt, eingefärbte Fläche“; N6 prüft keinen Platz.",
-                  "- Zusammenfassung naher Knoten und Richtungsfahrbahnen: das Kategoriepaar gilt für den ganzen Knotenpunkt; "
-                  "c07 nutzt cat_final (nach Overrides), N6 cat_proposed."]
+    lines += n6_section(out, n5, ctx)
 
     lines += ["", f"## {SAMPLE_SIZE} Zufallsstichproben", "",
               f"Über Bezirke verteilt, Seed {SAMPLE_SEED}. Zusätzlich reports/junctions_review.csv mit bis zu {SAMPLE_SIZE} "
@@ -530,7 +540,7 @@ def main() -> int:
     p = jn.JunctionParams.from_rules(design, rules)
     for path, step in ((FINAL_PATH, "make coherence"), (FACILITY_PATH, "make cycle-facility"),
                        (XS_PATH, "make cross-section-soll"), (NETWORK_PATH, "make cycle-network"),
-                       (N6_PATH, "make coherence"), (ALKIS_PATH, "make fetch"), (SIGNALS_PATH, "make fetch")):
+                       (N5_PATH, "make coherence"), (ALKIS_PATH, "make fetch"), (SIGNALS_PATH, "make fetch")):
         if not path.exists():
             print(f"junctions: {path.relative_to(REPO_ROOT)} missing; run `{step}` first", file=sys.stderr)
             return 1
@@ -543,18 +553,21 @@ def main() -> int:
     radius = float(m["J-M-01"]["cluster_radius_m"]["value"])
     search = float(m["J-M-03"]["search_radius_m"]["value"])
     tol = float(m["J-M-03"]["tolerance_m"]["value"])
-    signal_radius = float(rules.coherence_rule("N6").param("signal_radius_m"))
+    signal_radius = float(m["J-M-06"]["signal_radius_m"]["value"])
     manifest = load_manifest()
 
     final = gpd.read_parquet(FINAL_PATH, columns=["segment_id", "osm_way_ids", "name", "bezirk", "length_m", "node_u",
                                                   "node_v", "cat_final", "dtv_official", "geometry"])
     seg = final[final["cat_final"].notna()].copy()
     fac = pd.read_parquet(FACILITY_PATH, columns=["segment_id", "cycle_cat_final"]).set_index("segment_id")
-    xs = pd.read_parquet(XS_PATH, columns=["segment_id", "cycle_facility_final", "tram_present"]).set_index("segment_id")
+    xs = pd.read_parquet(XS_PATH, columns=["segment_id", "cycle_facility_final", "tram_present", "lanes_per_dir_soll"]
+                         ).set_index("segment_id")
     seg["cycle_cat"] = seg["segment_id"].map(fac["cycle_cat_final"]).fillna(NO_CYCLE_CATEGORY)
     seg["facility"] = seg["segment_id"].map(xs["cycle_facility_final"])
     seg["facility"] = seg["facility"].where(seg["facility"].notna(), None)
     seg["tram"] = seg["segment_id"].map(xs["tram_present"]).fillna(False).astype(bool)
+    seg["lanes"] = seg["segment_id"].map(xs["lanes_per_dir_soll"])
+    seg["lanes"] = seg["lanes"].where(seg["lanes"].notna(), None)
     net = gpd.read_parquet(NETWORK_PATH, columns=["edge_id", "kind", "highway", "name", "sidepath_of", "node_u", "node_v",
                                                   "cycle_cat_final", "bezirk", "geometry"])
     paths = standalone_paths(net, m["J-M-01"])
@@ -630,18 +643,16 @@ def main() -> int:
     out.loc[act.index, "priority_rank"] = np.arange(1, len(act) + 1)
     out.to_parquet(OUT_PATH)
 
-    n6 = pd.read_parquet(N6_PATH, columns=["node", "soll_type"]).dropna(subset=["soll_type"])
     node_to = {n: str(r) for r in roots for n in clusters[r]}
-    n6["node_id"] = n6["node"].map(node_to)
-    n6 = n6.dropna(subset=["node_id"]).merge(out[["node_id", "junction_type_final"]], on="node_id")
+    n5 = n5_by_junction(pd.read_parquet(N5_PATH, columns=["node", "gates", "direct_to_30"]), node_to)
     viewers = load_viewers()
     sample = sample_by_district(out, SAMPLE_SIZE, SAMPLE_SEED, id_col="node_id")
     review_sample(out, viewers).to_csv(REVIEW_PATH, index=False)
     ctx = {"design_version": design.meta.version, "n_nodes": len(pts), "n_deg3": sum(1 for d in deg.values() if d >= 3),
            "n_path_nodes": len(path_nodes), "cluster_radius": radius, "search_radius": search,
-           "signal_radius": signal_radius, "order": p.order, "types": p.types, "tram_routes": _tram_routes(design),
+           "signal_radius": signal_radius, "rules_version": rules.meta.version, "order": p.order, "types": p.types, "tram_routes": _tram_routes(design),
            "crash_years": f"{min(years)}–{max(years)}", "top": out.loc[act.index[:TOP_N]], "sample": sample}
-    write_report(out, n6, ctx)
+    write_report(out, n5, ctx)
     tick(f"wrote {OUT_PATH.relative_to(REPO_ROOT)}, {REPORT_PATH.relative_to(REPO_ROOT)}, {REVIEW_PATH.relative_to(REPO_ROOT)}")
     return 0
 

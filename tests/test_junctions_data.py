@@ -64,3 +64,23 @@ def test_priority_rank_only_for_action_needed(out):
 
 def test_no_crash_details_stored(out):
     assert not [c for c in out.columns if c.startswith("crash") and c not in ("crashes_cyc", "crashes_cyc_severe")]
+
+
+def test_v_inv_02_every_junction_has_a_soll_type(out):
+    """V-INV-02 (Review 2026-11 F10): no junction with no_rule; motorway nodes carry not_applicable (J-10d)."""
+    assert out["junction_type_soll"].notna().all(), out.loc[out["junction_type_soll"].isna(), "pair"].value_counts().to_dict()
+    assert not out["conflict_flags"].fillna("").str.split("|").map(lambda xs: "no_rule" in xs).any()
+
+
+def test_v_inv_07_cyclist_priority_only_at_single_lane_roundabouts(out):
+    """V-INV-07 (Review 2026-11 F02): JC-01 only at single-lane roundabouts; turbo roundabouts get JC-06."""
+    jc = out["cyclist_treatment"].fillna("").str.split("|")
+    jc01 = jc.map(lambda xs: "JC-01" in xs)
+    assert (out.loc[jc01, "junction_type_soll"] == "roundabout_single_lane_cycle_priority").all()
+    turbo = out["junction_type_soll"] == "turbo_roundabout"
+    assert jc[turbo].map(lambda xs: "JC-06" in xs).all()
+
+
+def test_turbo_flag_only_in_main_network(out):
+    flagged = out["conflict_flags"].fillna("").str.split("|").map(lambda xs: "turbo_grade_sep_check" in xs)
+    assert (out.loc[flagged, "junction_type_soll"] == "turbo_roundabout").all()

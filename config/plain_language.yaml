@@ -5,7 +5,7 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.5.0
+  version: 0.6.0
   date: 2026-11-08
 
 categories:
@@ -257,14 +257,16 @@ cycling:
     cycle_crossing_priority: "Radwegfurt mit Vorrang"
     cycle_crossing_signal: "Radwegfurt mit Ampel"
     grade_separated_cycle: "Brücke oder Tunnel für den Radverkehr"
+    cycle_crossing_refuge: "Radquerung mit Mittelinsel, Radverkehr wartet"
+    not_applicable: "kein Knotentyp nötig (Autobahnknoten ohne Rad- und Fußverkehr)"
   junction_group:
     roundabout: "Kreisverkehr"
     signal: "Ampel"
-    priority: "Vorfahrt mit Aufpflasterung oder Furt"
+    priority: "Vorfahrt mit Aufpflasterung, Furt oder Querung mit Mittelinsel"
     continuous: "durchgehender Gehweg"
     equal: "rechts vor links"
     grade_separated: "Brücke oder Tunnel"
-    none: "kein Soll-Typ (keine Regel passt)"
+    none: "kein Soll-Typ (Autobahnknoten oder keine Regel passt)"
   junction_ist:
     roundabout: "Kreisverkehr"
     signal_plateau: "Ampel mit Aufpflasterung"
@@ -285,6 +287,7 @@ cycling:
     no_rule: "keine Regel der Entscheidungstabelle passt"
     no_cycle_crossing: "Brücke/Tunnel vorgeschlagen, aber keine Radroute quert hier"
     dtv_above_roundabout_max: "Kreisverkehr vorgeschlagen, obwohl der Zufluss über der Grenze liegt"
+    turbo_grade_sep_check: "Turbokreisverkehr im Hauptnetz: Brücke oder Tunnel für den Radverkehr prüfen"
   official_status:
     Bestand: "amtliches Radnetz, Bestand"
     In Arbeit: "amtliches Radnetz, in Arbeit"
@@ -327,7 +330,7 @@ cycling:
       space_radius_m: "Platz: Radius des größten Kreises in der Verkehrsfläche (m)"
       tram_present: "Straßenbahn am Knoten"
       signal_present_ist: "Ampel heute (OSM)"
-      decision_rule: "Regel der Entscheidungstabelle (J-01…J-11)"
+      decision_rule: "Regel der Entscheidungstabelle (J-01…J-16)"
       junction_type_soll: "Soll-Knotentyp der Automatik"
       junction_type_final: "Soll-Knotentyp nach fachlicher Korrektur"
       junction_type_source: "proposed (Automatik) oder override (Korrektur)"
@@ -335,7 +338,7 @@ cycling:
       ist_result: "Vergleich Ist/Soll: match, mismatch, not_checkable"
       action_needed: "Umbau nötig (Ist passt nicht)"
       priority_rank: "Rang nach Priorität (nur mit Umbaubedarf)"
-      cyclist_treatment: "Radverkehrsführung (JC-01…JC-05), mit | getrennt"
+      cyclist_treatment: "Radverkehrsführung (JC-01…JC-06), mit | getrennt"
       conflict_flags: "Hinweise, mit | getrennt"
       confidence: "Datenunsicherheit (high, medium, low)"
       top_cycle_cat: "Höchste Radnetzkategorie am Knoten"

@@ -1,4 +1,4 @@
-"""Network coherence rules N1–N7 (guide 1.5 and 3.2 Stufe 6, prompts/09).
+"""Network coherence rules N1–N5 and N7 (guide 1.5 and 3.2 Stufe 6, prompts/09); N6 runs after c07 (F09).
 
 All functions read the proposed categories and return flags; they never change a category.
 A flag is a dict {"id": rule id, "flag": code, "inputs": {...}}; results are dicts
@@ -11,7 +11,6 @@ segments (key = segment_id). Geometries start at node_u (as written by s02_netwo
 import heapq
 import math
 from collections import defaultdict
-from collections.abc import Iterable
 
 import geopandas as gpd
 import networkx as nx
@@ -390,73 +389,7 @@ def n5_transitions(g: nx.MultiGraph, rules) -> tuple[Flags, list[dict]]:
     return flags, nodes
 
 
-# --- N6 Knotentypen --------------------------------------------------------------------------
-
-
-def node_category_pair(cats: Iterable[str], rules) -> tuple[str, str]:
-    """Highest category (up to two of its segments = the through road) and highest of the rest."""
-    rank = {c: i for i, c in enumerate(rules.coherence_rule("N6").category_rank)}
-    ordered = sorted(cats, key=rank.__getitem__)
-    top = ordered[0]
-    rest = list(ordered)
-    for _ in range(2):
-        if top in rest:
-            rest.remove(top)
-    return (top, rest[0]) if rest else (top, top)
-
-
-def soll_node_type(pair: tuple[str, str], rules) -> str:
-    for entry in rules.coherence_rule("N6").node_types:
-        if sorted(entry.pair) == sorted(pair):
-            return entry.type
-    return "not_defined"
-
-
-def ist_node_types(points: gpd.GeoSeries, signals: gpd.GeoSeries, tables: gpd.GeoSeries,
-                   roundabout_nodes: set, radius_m: float) -> dict:
-    """Ist junction type per node from OSM: roundabout, signal_plateau, signal, plateau (else absent)."""
-
-    def near(features: gpd.GeoSeries) -> set:
-        if features is None or features.empty or points.empty:
-            return set()
-        hits = gpd.sjoin_nearest(gpd.GeoDataFrame(geometry=points), gpd.GeoDataFrame(geometry=features),
-                                 max_distance=radius_m, how="inner")
-        return set(hits.index)
-
-    sig, tab = near(signals), near(tables)
-    out = {}
-    for node in points.index:
-        if node in roundabout_nodes:
-            out[node] = "roundabout"
-        elif node in sig:
-            out[node] = "signal_plateau" if node in tab else "signal"
-        elif node in tab:
-            out[node] = "plateau"
-    return out
-
-
-def n6_node_types(g: nx.MultiGraph, rules, ist_types: dict) -> tuple[Flags, list[dict]]:
-    """N6: Soll junction type for nodes with degree >= 3 and comparison with the Ist type from OSM."""
-    rule = rules.coherence_rule("N6")
-    flags: Flags = {}
-    nodes = []
-    for node in sorted(g.nodes):
-        if g.degree(node) < 3:
-            continue
-        inc = _incident(g, node)
-        pair = node_category_pair([d["cat"] for _, _, d in inc], rules)
-        soll = soll_node_type(pair, rules)
-        ist = ist_types.get(node, "none_mapped")
-        if soll == "not_defined":
-            result = "not_defined"
-        elif ist in rule.ist_check[soll].ok:
-            result = "match"
-        elif ist in rule.ist_check[soll].not_checkable:
-            result = "not_checkable"
-        else:
-            result = "mismatch"
-        if result == "mismatch":
-            for sid, _, _ in inc:
-                _add(flags, sid, _flag("N6", "N6_node_mismatch", node=int(node), pair=list(pair), soll=soll, ist=ist))
-        nodes.append({"node": int(node), "pair": list(pair), "soll_type": soll, "ist_type": ist, "result": result})
-    return flags, nodes
+# --- N6 ----------------------------------------------------------------------------------------
+# Since rules.yaml 0.19.0 (Review 2026-11 F09) the Soll junction type comes from design_rules.junctions (stage c07);
+# the N6 part of the check (junctions without a Soll type, N5 transitions at junctions) is written by
+# pipeline/c07_junctions.py (reports/junctions.md). Nothing is computed here.

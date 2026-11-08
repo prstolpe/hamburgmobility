@@ -1,12 +1,13 @@
-"""Stage 6: network coherence N1–N7 on the graph of proposed categories (guide 1.5, 3.2 Stufe 6, prompts/09).
+"""Stage 6: network coherence N1–N5 and N7 on the graph of proposed categories (guide 1.5, 3.2 Stufe 6, prompts/09).
 
 Usage: uv run python -m pipeline.s06_coherence
 
 Reads data/interim/harmonised.parquet, config/rules.yaml (coherence) and the OSM extract (city boundary,
 traffic signals, traffic_calming=table, roundabouts). Writes data/interim/coherence.parquet (input columns plus
-flags and coherence_trace as JSON), data/interim/coherence_nodes.parquet (N5/N6 per node),
+flags and coherence_trace as JSON), data/interim/coherence_nodes.parquet (N5 per node, read by c07 for N6),
 data/interim/coherence_areas.parquet (N3), reports/coherence.md, reports/coherence_flags.geojson.
 Nothing is reclassified: cat_proposed is unchanged, smoothing proposals are N7 flags.
+N6 (rules.yaml since 0.19.0, Review 2026-11 F09) runs after the junction stage c07 and is reported there.
 The run stops with exit code 1 if a check fails; outputs are then not written.
 """
 
@@ -25,7 +26,7 @@ from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, pano
 from pipeline.lib.manifest import REPO_ROOT, load_manifest
 from pipeline.lib.rules import load_rules
 from pipeline.s02_network import _pbf_from_manifest
-from pipeline.s04_features import OSM_BBOX_MARGIN_DEG, _fmt, _now, _pct
+from pipeline.s04_features import _fmt, _now, _pct
 
 IN_PATH = REPO_ROOT / "data" / "interim" / "harmonised.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "coherence.parquet"
@@ -43,7 +44,6 @@ RULE_LABELS = {
     "N3": "Kleiner Aufenthaltsbereich",
     "N4": "Schleichverkehr über ETW",
     "N5": "Direkter Übergang ≥ 70 → 30",
-    "N6": "Knotentyp Soll ≠ Ist",
     "N7": "Glättungsvorschlag",
 }
 # Flags with their own label (otherwise the label of their rule)
@@ -54,7 +54,7 @@ FLAG_LABELS = {"N4_gow_gap": "Lücke im GOW-Netz (Verbindung nur über ETW)"}
 
 
 def read_osm_inputs(pbf, work_area) -> dict:
-    """City boundary (admin_level 4), traffic signals, plateaus and roundabout way ids."""
+    """City boundary (admin_level 4). Signals, plateaus and roundabouts are read by c07 (N6 since 0.19.0, F09)."""
     from pyrosm import OSM
 
     with warnings.catch_warnings():
@@ -63,17 +63,7 @@ def read_osm_inputs(pbf, work_area) -> dict:
         city = b[(b["name"] == CITY_NAME) & (b["admin_level"].astype(str) == CITY_ADMIN_LEVEL)]
         if len(city) != 1:
             raise RuntimeError(f"{len(city)} OSM boundaries {CITY_NAME} admin_level {CITY_ADMIN_LEVEL}; expected 1")
-        wgs = gpd.GeoSeries([work_area], crs=WORK_CRS).to_crs(4326).iloc[0]
-        osm = OSM(str(pbf), bounding_box=wgs.buffer(OSM_BBOX_MARGIN_DEG))
-        kw = dict(filter_type="keep", keep_nodes=True, keep_ways=False, keep_relations=False)
-        signals = osm.get_data_by_custom_criteria(custom_filter={"highway": ["traffic_signals"]}, **kw)
-        tables = osm.get_data_by_custom_criteria(custom_filter={"traffic_calming": ["table"]}, **kw)
-        rb = osm.get_data_by_custom_criteria(custom_filter={"junction": ["roundabout", "circular"]},
-                                             filter_type="keep", keep_nodes=False, keep_ways=True, keep_relations=False)
-    return {"city": to_work_crs(city).geometry.iloc[0],
-            "signals": to_work_crs(signals).geometry.reset_index(drop=True),
-            "tables": to_work_crs(tables).geometry.reset_index(drop=True),
-            "roundabout_ways": set() if rb is None else {int(i) for i in rb["id"]}}
+    return {"city": to_work_crs(city).geometry.iloc[0]}
 
 
 def n3_barriers(pbf, rules, work_area) -> list:
@@ -96,11 +86,6 @@ def area_edge_nodes(seg_all: pd.DataFrame) -> set:
     return n_in & n_out
 
 
-def roundabout_nodes(seg: pd.DataFrame, way_ids: set) -> set:
-    hit = seg["osm_way_ids"].map(lambda ws: any(int(w) in way_ids for w in ws))
-    return set(seg.loc[hit, "node_u"]) | set(seg.loc[hit, "node_v"])
-
-
 # --- computation -----------------------------------------------------------------------------
 
 
@@ -115,10 +100,7 @@ def compute(inp: gpd.GeoDataFrame, rules, osm: dict, work_area) -> dict:
     n4, n4_stats = coh.n4_shortcuts(g, rules)
     n5, n5_nodes = coh.n5_transitions(g, rules)
     points = gpd.GeoSeries({n: d["point"] for n, d in g.nodes(data=True)}, crs=WORK_CRS)
-    ist = coh.ist_node_types(points, osm["signals"], osm["tables"], roundabout_nodes(seg, osm["roundabout_ways"]),
-                             rules.coherence_rule("N6").param("signal_radius_m"))
-    n6, n6_nodes = coh.n6_node_types(g, rules, ist)
-    flags = coh.merge_flags(n1, n2, n3, n4, n5, n6)
+    flags = coh.merge_flags(n1, n2, n3, n4, n5)
 
     out = inp.copy()
     out["flags"] = None
@@ -128,9 +110,7 @@ def compute(inp: gpd.GeoDataFrame, rules, osm: dict, work_area) -> dict:
     out.loc[in_area, "coherence_trace"] = out.loc[in_area, "segment_id"].map(
         lambda s: json.dumps(flags.get(s, []), ensure_ascii=False))
 
-    nodes = pd.DataFrame(n6_nodes, columns=["node", "pair", "soll_type", "ist_type", "result"]).merge(
-        pd.DataFrame(n5_nodes, columns=["node", "gates", "direct_to_30"]), on="node", how="outer")
-    nodes["pair"] = nodes["pair"].map(lambda v: json.dumps(v) if isinstance(v, list) else None)
+    nodes = pd.DataFrame(n5_nodes, columns=["node", "gates", "direct_to_30"])
     nodes["gates"] = nodes["gates"].map(lambda v: json.dumps(v) if isinstance(v, list) else "[]")
     nodes["direct_to_30"] = nodes["direct_to_30"].fillna(False).astype(bool)
     nodes = gpd.GeoDataFrame(nodes, geometry=nodes["node"].map(points.to_dict()), crs=WORK_CRS)
@@ -198,10 +178,8 @@ def write_geojson(res: dict) -> None:
                                    lambda t: ",".join(dict.fromkeys(f["id"] for f in json.loads(t)))),
                                "flags": seg["flags"]}, geometry=seg.geometry, crs=WORK_CRS)]
     nodes = res["nodes"]
-    bad = nodes[(nodes["result"] == "mismatch") | nodes["direct_to_30"]]
-    parts.append(gpd.GeoDataFrame({"layer": "node", "node": bad["node"], "rule": bad.apply(
-        lambda r: ",".join([x for x, on in (("N5", r["direct_to_30"]), ("N6", r["result"] == "mismatch")) if on]), axis=1),
-        "soll_type": bad["soll_type"], "ist_type": bad["ist_type"]}, geometry=bad.geometry, crs=WORK_CRS))
+    bad = nodes[nodes["direct_to_30"]]
+    parts.append(gpd.GeoDataFrame({"layer": "node", "node": bad["node"], "rule": "N5"}, geometry=bad.geometry, crs=WORK_CRS))
     areas = res["areas"]
     small = areas[areas["small"] & areas["complete"]]
     parts.append(gpd.GeoDataFrame({"layer": "area", "rule": "N3", "area_id": small["area_id"],
@@ -329,24 +307,11 @@ def write_report(res: dict, ctx: dict, checks: list[dict]) -> None:
               f"(Flag auf der 30-Seite): {_fmt(int(nodes['direct_to_30'].sum()))} Knoten, "
               f"{_fmt((ft['rule'] == 'N5').sum())} Abschnitte."]
 
-    n6 = nodes[nodes["soll_type"].notna()]
-    xt = pd.crosstab(n6["soll_type"], n6["ist_type"])
-    res_ct = n6["result"].value_counts()
     lines += ["", "## N6 Knotentypen", "",
-              f"Knoten mit Grad ≥ 3: {_fmt(len(n6))}. Ergebnis: " + ", ".join(f"{k} {_fmt(v)}" for k, v in res_ct.items()) + ". "
-              f"Ist aus OSM ({_fmt(ctx['n_signals'])} Ampelknoten, {_fmt(ctx['n_tables'])} Plateaus, "
-              f"{_fmt(ctx['n_roundabouts'])} Kreisverkehrs-Ways im Umkreis {p['N6'].param('signal_radius_m'):g} m); "
-              "none_mapped = nichts davon erfasst. Gehwegüberfahrten sind in OSM nicht erfasst → not_checkable. "
-              "Eine Ampel im Umkreis kann zur Nachbarkreuzung gehören (v. a. bei ETW-Knoten nahe einer Hauptstraße); "
-              "Kreisverkehre haben mehrere Knoten.", "",
-              "| Soll \\ Ist | " + " | ".join(xt.columns) + " |", "| --- |" + " ---: |" * len(xt.columns),
-              *[f"| {i} | " + " | ".join(_fmt(v) for v in row) + " |" for i, row in xt.iterrows()]]
-    mm = n6[n6["result"] == "mismatch"].groupby(["soll_type", "ist_type"]).size().sort_values(ascending=False)
-    lines += ["", "Abweichungen Soll ≠ Ist:", "", "| Soll | Ist | Knoten |", "| --- | --- | ---: |",
-              *[f"| {a} | {b} | {_fmt(v)} |" for (a, b), v in mm.items()]]
-    nd = n6[n6["soll_type"] == "not_defined"]["pair"].value_counts()
-    lines += ["", "Kategoriepaare ohne Soll-Knotentyp (Tabelle 1.4 deckt sie nicht ab): " +
-              (", ".join(f"{', '.join(json.loads(k))} ({v})" for k, v in nd.items()) or "keine") + "."]
+              "Seit rules.yaml 0.19.0 (Review 2026-11 F09) gibt es nur einen Soll-Knotentyp: den der Stufe c07 "
+              "(design_rules.yaml junctions). Der N6-Teil der Prüfung läuft darum nach c07 und steht in reports/junctions.md "
+              "(Abschnitt „N6 Netzkohärenz“): Knotenpunkte ohne Soll-Typ und Übergänge nach N5 je Knotenpunkt. "
+              "Abschnitte tragen kein N6-Flag mehr."]
 
     sample, viewers = ctx["sample"], ctx["viewers"]
     lines += ["", f"## Stichprobe: {len(sample)} zufällige markierte Abschnitte in {pilot_name}, nach Bezirk geschichtet (Seed {SAMPLE_SEED})", "",
@@ -391,13 +356,10 @@ def main() -> int:
     print("coherence: reading OSM extract")
     osm = read_osm_inputs(REPO_ROOT / pbf["path"], work_area)
     osm["barriers"] = n3_barriers(REPO_ROOT / pbf["path"], rules, work_area)
-    print(f"coherence: {len(osm['signals'])} signals, {len(osm['tables'])} tables, "
-          f"{len(osm['roundabout_ways'])} roundabout ways")
     res = compute(inp, rules, osm, work_area)
     checks = run_checks(inp, res["out"], rules)
     ctx = {"rules": rules, "pilot": area_label(names), "districts": names, "viewers": load_viewers(),
-           "sample": pick_sample(res["out"], names), "n_signals": len(osm["signals"]),
-           "n_tables": len(osm["tables"]), "n_roundabouts": len(osm["roundabout_ways"])}
+           "sample": pick_sample(res["out"], names)}
     write_report(res, ctx, checks)
     for c in checks:
         print(f"coherence: {c['name']}: {c['ok']} ({c['detail']})")

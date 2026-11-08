@@ -198,11 +198,27 @@ in design_rules.yaml 0.2.0 (Setzungen sind Annahmen, status draft):
 - CROW empfiehlt innerorts Vorrang für Radfahrende auf umlaufenden Radwegen; SWOV-Analysen sehen Wartepflicht als sicherer [F] – im Regelwerk als dokumentierter Zielkonflikt (JC-01). In Deutschland hängt die Vorfahrt am Kreisverkehr von der fahrbahnnahen Führung ab; vor Gebrauch rechtlich prüfen [B].
 - LSA-Knoten sind nach Volumenkorrektur die unsichersten [F]; sie kommen nur bei hoher Belastung oder Straßenbahn zum Einsatz und werden dann als geschützte Kreuzung gestaltet [B].
 - Sehr belastete oder schnelle Kreuzungen von Hauptrouten: Tunnel oder Brücke ([DCE](https://dutchcycling.nl/expertises/cycling-infrastructure/)) [F].
-- Entscheidungstabelle J-01 bis J-11 in `design_rules.yaml`; Schwellen für Kreisverkehrskapazität sind Annahmen.
+- Entscheidungstabelle J-01 bis J-16 in `design_rules.yaml`; Schwellen für Kreisverkehrskapazität sind Annahmen.
+- Review 2026-11 (design_rules.yaml 0.8.0), alle neuen Werte Annahmen [B]:
+  - Rad-Vorrang am Kreisverkehr (JC-01) nur am einstreifigen Kreisverkehr. Am Turbokreisverkehr ist der Radverkehr
+    wartepflichtig auf abgesetztem Radweg (JC-06); im RSV/HAUPT-Netz Flag `turbo_grade_sep_check` (planfreie Querung
+    prüfen). An zweistreifigen Ein- und Ausfahrten verdeckt ein Fahrzeug das andere; NL-Praxis, Quelle ergänzen (F02).
+  - Turbokreisel brauchen eigenen Platz: `turbo_min_radius` 30 m (am Original prüfen), in J-01 und im Fallback (F24).
+  - Radroute RSV/HAUPT/BASIS quert eine GOW50 an einem ETW30-Arm (Arme mit der Radkategorie auf beiden Seiten des Zugs):
+    Radwegfurt mit LSA, wenn die Soll-Fahrstreifen je Richtung (c06) ≥ 2 sind oder der Zufluss über
+    `crossing_signal_min_dtv` 12 000 Kfz/24 h liegt, sonst Gehwegüberfahrt mit Mittelinsel (J-14, F03). Die
+    Mittelinsel (JC-04) ist für RSV 4,00 m breit (F24).
+  - Knoten mit SW: planfrei nur für eigenständige Radwege RSV/HAUPT (J-10); Rampenknoten an GOW wie J-01 (J-10b), an
+    ETW30/ETW_ERF LSA (J-10c), Autobahnknoten und BASIS/ERSCHL-Wege an SW `not_applicable` (J-10d) (F08).
+  - Eigenständige Radwege BASIS/ERSCHL an GOW50: LSA oder Querung mit Mittelinsel, Rad wartepflichtig (J-15,
+    `cycle_crossing_refuge`); ERSCHL-Wege an ETW30 rechts vor links (J-16, Rechtslage prüfen) (F10).
 - Umsetzung (pipeline/c07_junctions.py, Verfahren J-M-01…07): Knotenpunkte aus Netzknoten mit Grad ≥ 3 und
   Anschlüssen eigenständiger Radwege, nahe Knoten und Kreisverkehre zusammengefasst; Richtungsfahrbahnen als ein Arm;
-  Kategoriepaar wie N6; Platz aus der ALKIS-Verkehrsfläche; Ist-Typ aus OSM. Alle Verfahrensschritte sind Annahmen [B].
-- Ergebnis, Ist → Soll, Prioritäten, planfreie Querungen und Abgleich mit N6: reports/junctions.md;
+  Kategoriepaar mit dem Rang aus N6 (rules.yaml); Platz aus der ALKIS-Verkehrsfläche; Soll-Fahrstreifen je Arm aus c06;
+  Ist-Typ aus OSM (Ampeln im Umkreis J-M-06.signal_radius_m). Alle Verfahrensschritte sind Annahmen [B].
+- Es gibt nur einen Soll-Knotentyp: den dieser Stufe. Der N6-Teil der Netzkohärenz (Knotenpunkte ohne Soll-Typ,
+  Übergänge nach N5) läuft darum nach c07 und steht in reports/junctions.md (Review 2026-11 F09).
+- Ergebnis, Ist → Soll, Prioritäten, planfreie Querungen und N6: reports/junctions.md;
   Prüfliste je Soll-Typ: reports/junctions_review.csv.
 
 ## 7. Grenzen

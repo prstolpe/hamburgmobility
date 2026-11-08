@@ -1,0 +1,59 @@
+{
+  "type": "FeatureCollection",
+  "name": "motorway_link_gow50_no_space",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "motorway_link_gow50_no_space",
+        "description": "G07: Rampe (motorway_link = SW) x GOW50, Zufluss 20 000 Kfz/24h, Radius 12 m -> geschützte LSA-Kreuzung (J-10b)",
+        "legs": [
+          {
+            "cat": "SW",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null
+          },
+          {
+            "cat": "GOW50",
+            "cycle_cat": "none",
+            "facility": null
+          }
+        ],
+        "entering_dtv_sum": 20000,
+        "space_radius_m": 12,
+        "tram_present": false,
+        "signal_present_ist": false,
+        "expected_junction_type": "signal_protected",
+        "expected_rules": [
+          "J-10b",
+          "J-01"
+        ],
+        "expected_cyclist_treatment": [
+          "JC-02"
+        ],
+        "refs_used": [
+          "junctions.thresholds.roundabout_min_radius.value",
+          "junctions.thresholds.turbo_min_radius.value"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          569200.0,
+          5937000.0
+        ]
+      }
+    }
+  ]
+}

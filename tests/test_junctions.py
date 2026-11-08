@@ -77,7 +77,9 @@ def test_gow30_pair_uses_j01_traffic_limits():
     gow30 = [leg("GOW30"), leg("GOW30")]
     assert jn.decide(props(gow30, entering_dtv_sum=T["roundabout_max_dtv"]), P)["junction_type_soll"] == \
         "roundabout_single_lane_cycle_priority"
-    assert jn.decide(props(gow30, entering_dtv_sum=T["roundabout_max_dtv"] + 1), P)["junction_type_soll"] == "turbo_roundabout"
+    turbo_space = T["turbo_min_radius"]  # Review 2026-11 F24: turbo needs its own space
+    assert jn.decide(props(gow30, entering_dtv_sum=T["roundabout_max_dtv"] + 1, space_radius_m=turbo_space),
+                     P)["junction_type_soll"] == "turbo_roundabout"
     high = jn.decide(props(gow30, entering_dtv_sum=T["turbo_max_dtv"] + 1), P)
     assert high["junction_type_soll"] == "signal_protected" and high["rule_id"] == "J-03"
     assert "dtv_above_roundabout_max" not in high["conflict_flags"]
@@ -94,8 +96,9 @@ def test_network_cycle_path_across_access_road_has_priority():
     for cat in ("RSV", "HAUPT", "BASIS"):
         r = jn.decide(props([leg("ETW30"), leg("ETW30"), leg("cycle_path", cat, "own_path")]), P)
         assert r["junction_type_soll"] == "cycle_crossing_priority" and r["rule_id"] == "J-12"
+    # Review 2026-11 F10: J-16 for ERSCHL paths (before: no_rule)
     r = jn.decide(props([leg("ETW30"), leg("ETW30"), leg("cycle_path", "ERSCHL", "own_path")]), P)
-    assert r["junction_type_soll"] is None and "no_rule" in r["conflict_flags"]
+    assert r["junction_type_soll"] == "equal_right_before_left" and r["rule_id"] == "J-16"
 
 
 def test_access_road_meets_pedestrian_zone_continuous_footway():
@@ -117,14 +120,100 @@ def test_signal_counts_only_for_nearest_junction():
     assert list(c07.nearest_hit(juncs, gpd.GeoSeries([Point(300, 0)]), 30.0)) == [False, False, False]
 
 
-def test_cycle_path_basis_across_gow50_has_no_row():
-    r = jn.decide(props([leg("GOW50"), leg("GOW50"), leg("cycle_path", "BASIS", "own_path")]), P)
-    assert r["junction_type_soll"] is None and "no_rule" in r["conflict_flags"]
+@pytest.mark.parametrize("cycle_cat", ["BASIS", "ERSCHL"])
+def test_cycle_path_basis_or_erschl_across_gow50(cycle_cat):
+    # Review 2026-11 F10: J-15 (before: no_rule)
+    def run(lanes, dtv):
+        return jn.decide(props([leg("GOW50", lanes=lanes), leg("GOW50", lanes=lanes), leg("cycle_path", cycle_cat, "own_path")],
+                               entering_dtv_sum=dtv), P)
+    low = run(1, T["crossing_signal_min_dtv"])
+    assert low["junction_type_soll"] == "cycle_crossing_refuge" and low["rule_id"] == "J-15"
+    assert run(1, T["crossing_signal_min_dtv"] + 1)["junction_type_soll"] == "cycle_crossing_signal"
+    assert run(2, 1000)["junction_type_soll"] == "cycle_crossing_signal"
+    unknown = run(None, 1000)
+    assert unknown["junction_type_soll"] == "cycle_crossing_signal" and "condition_unknown" in unknown["conflict_flags"]
 
 
-def test_sw_before_everything():
+def test_sw_rows_before_tram():
+    # Review 2026-11 F08: SW+GOW50 is a ramp node decided like J-01 (J-10b), still before the tram row J-11
     r = jn.decide(props([leg("SW"), leg("SW"), leg("GOW50", "HAUPT")], tram_present=True), P)
-    assert r["junction_type_soll"] == "grade_separated_cycle" and r["rule_id"] == "J-10"
+    assert r["rule_id"] == "J-10b" and r["junction_type_soll"] == "signal_protected"
+
+
+def test_grade_separated_only_for_standalone_main_routes_across_sw():
+    for cat in ("RSV", "HAUPT"):
+        r = jn.decide(props([leg("SW"), leg("SW"), leg("cycle_path", cat, "own_path")]), P)
+        assert r["junction_type_soll"] == "grade_separated_cycle" and r["rule_id"] == "J-10"
+    for cat in ("BASIS", "ERSCHL"):
+        r = jn.decide(props([leg("SW"), leg("SW"), leg("cycle_path", cat, "own_path")]), P)
+        assert r["junction_type_soll"] == "not_applicable" and r["rule_id"] == "J-10d"
+
+
+@pytest.mark.parametrize("legs, rule, jtype", [
+    ([leg("SW"), leg("SW"), leg("SW")], "J-10d", "not_applicable"),
+    ([leg("SW"), leg("ETW30"), leg("ETW30")], "J-10c", "signal_protected"),
+    ([leg("SW"), leg("ETW_ERF")], "J-10c", "signal_protected"),
+    ([leg("SW"), leg("GOW30"), leg("GOW30")], "J-10b", "roundabout_single_lane_cycle_priority"),
+])
+def test_ramp_rows(legs, rule, jtype):
+    r = jn.decide(props(legs), P)
+    assert (r["rule_id"], r["junction_type_soll"]) == (rule, jtype)
+
+
+def test_legs_alternatives_are_parsed():
+    tram, sides = jn._parse_legs("SW+SW|cycle_path(BASIS|ERSCHL)")
+    assert not tram and [s.base for s in sides[0]] == ["SW"]
+    assert [(s.base, sorted(s.cycle_cats)) for s in sides[1]] == [("SW", []), ("cycle_path", ["BASIS", "ERSCHL"])]
+
+
+def test_turbo_needs_own_space():
+    # Review 2026-11 F24: J-01 else_if with turbo_min_radius
+    dtv = T["roundabout_max_dtv"] + 1
+    gow50 = [leg("GOW50"), leg("GOW50")]
+    assert jn.decide(props(gow50, entering_dtv_sum=dtv, space_radius_m=T["turbo_min_radius"]), P)["junction_type_soll"] == "turbo_roundabout"
+    r = jn.decide(props(gow50, entering_dtv_sum=dtv, space_radius_m=T["turbo_min_radius"] - 1), P)
+    assert r["junction_type_soll"] == "signal_protected"
+    # J-03 (with fallback): turbo below turbo_min_radius takes the fallback (fallback_if.condition_by_type)
+    gow30 = [leg("GOW30"), leg("GOW30")]
+    r = jn.decide(props(gow30, entering_dtv_sum=dtv, space_radius_m=T["turbo_min_radius"] - 1), P)
+    assert r["junction_type_soll"] == "priority_flat_coloured"
+
+
+# --- J-14: cycle route crossing GOW50 (Review 2026-11 F03) ---------------------------------------------------------
+
+
+def _crossing(lanes=1, route=("HAUPT", "HAUPT"), bearings=None):
+    legs = [leg("GOW50", lanes=lanes), leg("GOW50", lanes=lanes),
+            leg("ETW30", route[0], "mixed", lanes="shared"), leg("ETW30", route[1], "mixed", lanes="shared")]
+    if bearings:
+        legs = [{**lg, "bearing": b} for lg, b in zip(legs, bearings)]
+    return legs
+
+
+def test_route_crossing_gow50_needs_signal_with_two_lanes_or_high_volume():
+    r = jn.decide(props(_crossing(lanes=2), entering_dtv_sum=8000), P)
+    assert r["junction_type_soll"] == "cycle_crossing_signal" and r["rule_id"] == "J-14"
+    r = jn.decide(props(_crossing(lanes=1), entering_dtv_sum=T["crossing_signal_min_dtv"] + 1), P)
+    assert r["junction_type_soll"] == "cycle_crossing_signal"
+    r = jn.decide(props(_crossing(lanes=1), entering_dtv_sum=T["crossing_signal_min_dtv"]), P)
+    assert r["junction_type_soll"] == "continuous_footway_exit" and r["rule_id"] == "J-14"
+
+
+def test_route_not_crossing_falls_back_to_j04():
+    # only one route arm (route turns onto the main road), or route arms on the same side, or ERSCHL
+    for legs in (_crossing(lanes=2, route=("HAUPT", "none")),
+                 _crossing(lanes=2, bearings=[0, 180, 80, 100]),
+                 _crossing(lanes=2, route=("ERSCHL", "ERSCHL"))):
+        r = jn.decide(props(legs, entering_dtv_sum=20000), P)
+        assert r["rule_id"] == "J-04" and r["junction_type_soll"] == "continuous_footway_exit"
+    r = jn.decide(props(_crossing(lanes=2, bearings=[0, 180, 90, 270]), entering_dtv_sum=8000), P)
+    assert r["rule_id"] == "J-14"
+
+
+def test_lanes_per_direction_max():
+    assert jn.lanes_per_direction_max([leg("GOW50", lanes="2"), leg("ETW30", lanes="shared"), leg("cycle_path")]) == 2
+    assert jn.lanes_per_direction_max([leg("ETW30", lanes="shared")]) == 1
+    assert jn.lanes_per_direction_max([leg("GOW50", lanes=None), leg("GOW50", lanes=float("nan"))]) is None
 
 
 def test_cycle_street_needs_cycle_street_facility():
@@ -152,6 +241,24 @@ def test_jc04_only_when_route_crosses_the_main_road():
     assert "JC-04" in jn.treatments("continuous_footway_exit", pair, across, P)
 
 
+def test_jc01_only_single_lane_roundabout_jc06_at_turbo():
+    # Review 2026-11 F02
+    gow50 = [leg("GOW50"), leg("GOW50")]
+    assert "JC-01" in jn.treatments("roundabout_single_lane_cycle_priority", ("GOW50", "GOW50"), gow50, P)
+    turbo = jn.treatments("turbo_roundabout", ("GOW50", "GOW50"), gow50, P)
+    assert "JC-01" not in turbo and "JC-06" in turbo
+    assert jn.treatment_flags("turbo_roundabout", gow50, turbo, P) == []
+    haupt = [leg("GOW50", "HAUPT"), leg("GOW50")]
+    assert jn.treatment_flags("turbo_roundabout", haupt, turbo, P) == ["turbo_grade_sep_check"]
+    basis = [leg("GOW50", "BASIS"), leg("GOW50")]
+    assert jn.treatment_flags("turbo_roundabout", basis, turbo, P) == []
+
+
+def test_refuge_crossing_has_median():
+    assert "JC-04" in jn.treatments("cycle_crossing_refuge", ("GOW50", "cycle_path"),
+                                    [leg("GOW50"), leg("GOW50"), leg("cycle_path", "ERSCHL", "own_path")], P)
+
+
 def test_jc01_text_names_the_conflict():
     text = jn.treatment_text(["JC-01"])
     assert "SWOV" in text and "StVO" in text
@@ -163,6 +270,10 @@ def test_jc01_text_names_the_conflict():
     ("continuous_footway_exit", "none_mapped", "not_checkable"),
     ("equal_right_before_left", "signal", "mismatch"),
     ("grade_separated_cycle", "none_mapped", "mismatch"),
+    ("cycle_crossing_refuge", "none_mapped", "not_checkable"),
+    ("cycle_crossing_refuge", "signal", "mismatch"),
+    ("not_applicable", "signal", "match"),
+    ("not_applicable", "none_mapped", "match"),
 ])
 def test_ist_result(soll, ist, expected):
     assert jn.ist_result(soll, ist, P) == expected
@@ -186,6 +297,13 @@ def test_dual_carriageway_legs_merge_into_one_arm():
             leg("GOW50", id="c", name="X", dtv=50000, bearing=180), leg("ETW30", "HAUPT", id="d", name="Y", dtv=None, bearing=90)]
     arms = jn.merge_arms(legs, DESIGN.junctions.method_rule("J-M-02")["arm_merge_angle_deg"]["value"])
     assert [a["ids"] for a in arms] == [["a", "b"], ["c"], ["d"]]
+
+
+def test_merged_arm_keeps_highest_lane_count():
+    legs = [leg("GOW50", id="a", name="X", dtv=50000, bearing=10, lanes="1"),
+            leg("GOW50", id="b", name="X", dtv=50000, bearing=350, lanes="2")]
+    arms = jn.merge_arms(legs, DESIGN.junctions.method_rule("J-M-02")["arm_merge_angle_deg"]["value"])
+    assert len(arms) == 1 and arms[0]["lanes"] == 2
 
 
 # --- c07 building blocks -------------------------------------------------------------------------------------------
