@@ -1,0 +1,55 @@
+{
+  "type": "FeatureCollection",
+  "name": "etw_erf_haupt_own_path",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "etw_erf_haupt_own_path",
+        "description": "G09: Hauptroute durch Fußgängerzone (ETW_ERF), Raum noch nicht geprüft -> eigene Trasse bevorzugt, Fallback Mischverkehr erst nach Raumprüfung (fallback_check_p19), Flag haupt_through_pedestrian_area (Review 2026-11 F15)",
+        "cat_final": "ETW_ERF",
+        "cycle_cat": "HAUPT",
+        "dtv": null,
+        "cyc_peak_h_oneway": 100,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": null,
+        "expected_facility": "own_path",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_twoway.HAUPT"
+        ],
+        "expected_lanes_per_direction": "shared",
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "L-01"
+        ],
+        "refs_used": [
+          "separation_matrix.ETW_ERF.HAUPT.preferred",
+          "separation_matrix.ETW_ERF.HAUPT.fallback"
+        ],
+        "expected_flags": [
+          "fallback_check_p19",
+          "haupt_through_pedestrian_area"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            567400.0,
+            5935000.0
+          ],
+          [
+            567520.0,
+            5935015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

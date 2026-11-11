@@ -216,3 +216,17 @@ def test_arcs_skip_blocked_directions():
     arcs = cg.arcs(edges)
     assert len(arcs) == 3
     assert set(zip(arcs["tail"], arcs["head"])) == {(1, 2), (2, 1), (2, 3)}
+
+
+def test_walking_pace_in_living_street_and_pedestrian_zone():
+    """F15: C-IMP-04 uses walking_pace_area for living_street/pedestrian, regardless of the Ist speed."""
+    for hw in ("living_street", "pedestrian"):
+        for speed in (7, None, 50):
+            factor, rule, trace = _imp(cat="ETW_ERF", highway=hw, speed=speed, tags={"bicycle": "yes"})
+            assert (factor, rule) == (F["walking_pace_area"], "C-IMP-04")
+            assert trace["factor_keys"] == ["walking_pace_area"]
+    # a cycle street or an own path keeps its rule
+    assert _imp(highway="living_street", fstr=True)[1] == "C-IMP-01"
+    assert _imp(kind="path", highway="pedestrian", tags={"bicycle": "yes"}, speed=None)[1] == "C-IMP-02"
+    # residential access road unchanged
+    assert _imp(cat="ETW30", highway="residential", speed=30)[:2] == (F["etw30_mixed"], "C-IMP-04")

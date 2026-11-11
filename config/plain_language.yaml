@@ -5,7 +5,7 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.7.0
+  version: 0.8.0
   date: 2026-11-08
 
 categories:
@@ -226,6 +226,13 @@ cycling:
     safety: "Sicherheit"
     comfort: "Komfort"
     attractiveness: "Attraktivität"
+  rsv:
+    fgsv_candidate: "Kandidat für eine Radschnellverbindung nach FGSV (langer Lauf mit hoher Modellnachfrage; Kriterien am Original prüfen)"
+    not_fgsv_candidate: "kein Kandidat für eine Radschnellverbindung nach FGSV (Lauf zu kurz oder Nachfrage zu gering)"
+    confidence:
+      low: "unsicher: Modellnachfrage innerhalb der Modellunsicherheit um den Auslöser – der Lauf kann auch eine normale Hauptroute sein"
+      high: "Modellnachfrage deutlich über dem Auslöser, auch bei der Modellunsicherheit"
+    no_run: "ohne eigenen Lauf (Lückenschluss oder Korrektur)"
   facility_flags:
     dtv_unknown: "Kfz-Menge nicht gezählt – Bedingung vorläufig als erfüllt angenommen"
     fallback_check_p19: "Ersatzlösung möglich, wenn der Platz nicht reicht"
@@ -236,6 +243,8 @@ cycling:
     track_on_access_road: "Radweg an einer Erschließungsstraße – Straßenkategorie prüfen"
     existing_track_below_floor: "heutiger Radweg schmaler als die Untergrenze – zählt nicht als sicherer Radweg (C-G30-02)"
     gow30_high_volume: "viel Kfz-Verkehr für Tempo 30 – Radweg statt Radfahrstreifen"
+    haupt_through_pedestrian_area: "Hauptroute durch Fußgängerzone oder verkehrsberuhigten Bereich – eigene Trasse bevorzugt, sonst nur Schrittgeschwindigkeit"
+    filter_needed: "Kfz-Menge nicht gezählt, aber Durchgangsverkehr wahrscheinlich – Filter prüfen"
   profile_flags:
     width_unknown: "Straßenraumbreite nicht gemessen"
     no_profile_rules: "für diese Straßenkategorie kein Soll-Profil"
@@ -302,7 +311,9 @@ cycling:
       bezirk: "Bezirk"
       length_m: "Länge in Metern"
       cat_final: "Soll-Kategorie des Straßenfunktionsplans"
-      cycle_cat_final: "Soll-Radnetzkategorie (RSV, HAUPT, BASIS, ERSCHL; none = nicht im Radnetz)"
+      cycle_cat_final: "Soll-Radnetzkategorie (RSV = Radvorrangroute, HAUPT, BASIS, ERSCHL; none = nicht im Radnetz)"
+      rsv_fgsv_candidate: "Nur RSV: Lauf erfüllt die FGSV-Kriterien einer Radschnellverbindung (Länge, Nachfrage; Annahme, am Original prüfen)"
+      rsv_confidence: "Nur RSV: Sicherheit der Einstufung (low = Modellnachfrage unter Auslöser × demand_band_factor)"
       cycle_facility_soll: "Soll-Führungsform nach Trennungsmatrix (Prompt 18)"
       cycle_facility_final: "Soll-Führungsform nach Raumprüfung, ggf. Fallback (Prompt 19)"
       cycle_facility_ist: "Ist-Führungsform aus OpenStreetMap"

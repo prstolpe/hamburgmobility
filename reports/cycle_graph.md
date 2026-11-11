@@ -1,6 +1,6 @@
 # Radgraph (Stufe c01)
 
-Erzeugt 2026-11-08T14:13:49+00:00 mit pipeline/c01_cycle_graph.py · cycling_rules.yaml 0.8.0 · OSM-Auszug `data/raw/osm/hamburg_2026-10-28.osm.pbf` (SHA-256 700d2e2603a7…) · nicht amtlicher Entwurf
+Erzeugt 2026-11-11T13:02:41+00:00 mit pipeline/c01_cycle_graph.py · cycling_rules.yaml 0.10.0 · OSM-Auszug `data/raw/osm/hamburg_2026-10-28.osm.pbf` (SHA-256 700d2e2603a7…) · nicht amtlicher Entwurf
 
 ## Kennzahlen
 
@@ -10,7 +10,7 @@ Erzeugt 2026-11-08T14:13:49+00:00 mit pipeline/c01_cycle_graph.py · cycling_rul
 - Größte stark zusammenhängende Komponente: 6 217.7 km (96.7% der Länge)
 - Nur in einer Richtung befahrbar: 17 934 Kanten; in keiner Richtung (widersprüchliche oneway-Angaben der OSM-Wege einer Kante): 16 Kanten, 1 237 m
 - Eigenständige Wege mit Bezug zu einem Straßenabschnitt (sidepath_of, C-GRAPH-06): 8 096 von 21 638
-- Laufzeit: Lesen und Widerstand 23 s, Zusammenfassen 10 s
+- Laufzeit: Lesen und Widerstand 25 s, Zusammenfassen 8 s
 
 ## Länge nach Kantenart und Widerstandsregel
 
@@ -21,10 +21,10 @@ Erzeugt 2026-11-08T14:13:49+00:00 mit pipeline/c01_cycle_graph.py · cycling_rul
 | path | C-IMP-02 | 1.10 | 1 756.6 | 27.3% |
 | road | C-IMP-01 | 1.01 | 25.4 | 0.4% |
 | road | C-IMP-03 | 1.11 | 403.7 | 6.3% |
-| road | C-IMP-04 | 1.07 | 2 487.0 | 38.7% |
+| road | C-IMP-04 | 1.14 | 2 500.3 | 38.9% |
 | road | C-IMP-05 | 1.25 | 3.8 | 0.1% |
 | road | C-IMP-06 | 1.25 | 47.2 | 0.7% |
-| road | C-IMP-07 | 1.54 | 1 659.0 | 25.8% |
+| road | C-IMP-07 | 1.54 | 1 645.8 | 25.6% |
 
 Regeln: config/cycling_rules.yaml (`routing_impedance.ist_mapping`, `cycle_graph`). Alle Werte sind Annahmen (status draft).
 
@@ -50,7 +50,7 @@ Regeln: config/cycling_rules.yaml (`routing_impedance.ist_mapping`, `cycle_graph
 | `ce_7d278eefb73f963b` | Altona | Max-Brauer-Allee | road | C-IMP-07 | 1.50 | eine | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562307,5934366]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.554483/9.940531) · [OSM](https://www.openstreetmap.org/?mlat=53.554483&mlon=9.940531#map=18/53.554483/9.940531) · [Way](https://www.openstreetmap.org/way/1378728926) |
 | `ce_8ac9fedb1ac33744` | Altona | – | path | C-IMP-02 | 1.00 | eine | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559221,5935553]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.565500/9.894174) · [OSM](https://www.openstreetmap.org/?mlat=53.565500&mlon=9.894174#map=18/53.565500/9.894174) · [Way](https://www.openstreetmap.org/way/727131084) |
 | `ce_2bc960a2ce848093` | Bergedorf | Sichter | road | C-IMP-04 | 1.37 | eine | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[580914,5927340]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.488798/10.219532) · [OSM](https://www.openstreetmap.org/?mlat=53.488798&mlon=10.219532#map=18/53.488798/10.219532) · [Way](https://www.openstreetmap.org/way/152222483) |
-| `ce_3b2bb8473d28d4d6` | Bergedorf | Bockhorster Höhe | road | C-IMP-04 | 1.05 | beide | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[577876,5930261]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.515511/10.174475) · [OSM](https://www.openstreetmap.org/?mlat=53.515511&mlon=10.174475#map=18/53.515511/10.174475) · [Way](https://www.openstreetmap.org/way/25753629) |
+| `ce_3b2bb8473d28d4d6` | Bergedorf | Bockhorster Höhe | road | C-IMP-04 | 2.10 | beide | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[577876,5930261]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.515511/10.174475) · [OSM](https://www.openstreetmap.org/?mlat=53.515511&mlon=10.174475#map=18/53.515511/10.174475) · [Way](https://www.openstreetmap.org/way/25753629) |
 | `ce_5b12a772e8bb4ac2` | Bergedorf | Wehrdeich | road | C-IMP-04 | 1.05 | beide | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[578803,5927078]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.486770/10.187651) · [OSM](https://www.openstreetmap.org/?mlat=53.486770&mlon=10.187651#map=18/53.486770/10.187651) · [Way](https://www.openstreetmap.org/way/153805769) |
 | `ce_8b6e96eb4c52fa7a` | Eimsbüttel | Kollaustraße | road | C-IMP-07 | 1.50 | eine | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563641,5939867]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.603761/9.961784) · [OSM](https://www.openstreetmap.org/?mlat=53.603761&mlon=9.961784#map=18/53.603761/9.961784) · [Way](https://www.openstreetmap.org/way/650779284) |
 | `ce_abc63b4339ab0cf1` | Eimsbüttel | Vizelinstraße | road | C-IMP-04 | 1.05 | beide | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563311,5938066]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.587613/9.956437) · [OSM](https://www.openstreetmap.org/?mlat=53.587613&mlon=9.956437#map=18/53.587613/9.956437) · [Way](https://www.openstreetmap.org/way/1072289747) |

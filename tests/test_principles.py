@@ -396,9 +396,10 @@ def _golden_sections():
 
 @pytest.mark.parametrize("props", list(_golden_sections()))
 def test_soll_facility_matches_golden_cases(props):
-    """P-SAF-01 Soll lookup: preferred facility when the space fits, otherwise the fallback (prompt 18 decides space)."""
+    """P-SAF-01 Soll lookup: preferred facility when the space fits or is not yet checked (null, C-FAC-01 keeps
+    preferred and flags fallback_check_p19), otherwise the fallback (prompt 18 decides space)."""
     params = (pr.PrincipleParams.from_rules(cycling_with_blocks_activated(load_cycling_rules(), props["activate"]),
                                             load_rules()) if props.get("activate") else P)
     preferred, fallback = pr.soll_facility(props["cat_final"], props["cycle_cat"] or "none", params, props.get("dtv"))
-    expected = preferred if props.get("space_fits_preferred", True) or fallback is None else fallback
+    expected = preferred if props.get("space_fits_preferred", True) is not False or fallback is None else fallback
     assert expected == props["expected_facility"]

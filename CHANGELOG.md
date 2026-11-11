@@ -629,3 +629,34 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   6 191 → 6 328 Abschnitte, D7 549 → 339; D3 218 → 411, D2 2 550 → 1 878, fallback 639 → 244;
   `capacity_reduction_needed` 3 272 Abschnitte (342,9 km), Reduktion im Median 12 091 Kfz/Tag. c07/c08 nicht neu
   gerechnet (Datenträger voll, pyrosm konnte keine Zwischendateien schreiben).
+
+## cycling_rules.yaml 0.10.0, plain_language.yaml 0.8.0 – 2026-11-08: Review 2026-11, Paket P4 (Radnetz)
+- F12: `cycle_categories.RSV.label_de` „Radvorrangroute / Radroute+“ (Code RSV bleibt). Neu `fgsv_rsv_candidate`
+  (Lauf ≥ `min_length_km` 10 und cyc_calibrated ≥ Auslöser auf mehr als `predominant_share` 0,5 der Länge; assumption,
+  A5 „am Original prüfen“) und C-NET-06 `demand_band_factor` 2,0 (rsv_confidence low, wenn der längengewichtete Median
+  des Laufs < Auslöser × Faktor). c03 schreibt je RSV-Kante `rsv_run_km`, `rsv_fgsv_candidate`, `rsv_confidence`
+  (Werte des längsten Laufs) und einen C-NET-06-Schritt in rule_trace_cycle; c05 je Abschnitt; Steckbrief der Website
+  zeigt FGSV-Kandidat und Unsicherheit; Downloadspalten ergänzt. Keine Kategorieänderung.
+- F15: `separation_matrix.ETW_ERF.HAUPT` = {preferred own_path, fallback mixed, flag haupt_through_pedestrian_area}
+  (assumption); `routing_impedance.factors.walking_pace_area` 2,1 (15/7 km/h, A8); C-IMP-04 `factor_by_highway`
+  (living_street, pedestrian → walking_pace_area, unabhängig vom Ist-Tempo); C-NET-03 ETW_ERF → walking_pace_area.
+  Goldener Fall s20 (G09: HAUPT auf ETW_ERF → own_path, Flags fallback_check_p19 und haupt_through_pedestrian_area).
+- F16: C-NET-03 `soll_factors` je cat_final ersetzt durch `soll_factor_by_facility` (Faktor der bevorzugten Führung der
+  Matrixzelle), `soll_factor_by_category` (path, ETW_ERF; geht vor) und `levels` [HAUPT, BASIS]: Korridore, RSV,
+  HAUPT-Verdichtung und Parallelregel mit der HAUPT-Zelle, BASIS-Anbindung und -Verdichtung mit der BASIS-Zelle. Die
+  Zelle GOW30.high_volume (S-05) zählt mit, wo das DTV bekannt ist (sie entscheidet die Führung). Außerorts (Matrix
+  inaktiv) Ist-Widerstand statt fester Faktoren für GOW80/ETW60 (keine Kanten betroffen). c03 schreibt zusätzlich
+  `soll_factor_basis`, `soll_factor_key_basis`, `soll_facility(_basis)`, `design_cost_basis`.
+- F19: C-FAC-02 `dtv_proxy` (gilt auch für C-FAC-03): DTV fehlt und (N4_shortcut oder betweenness_norm ≥
+  `proxy_betweenness` 0,8, assumption A8) → Bedingung unbekannt (Trace null), Flag `filter_needed`; Führung bleibt.
+  N4-Flag (final.flags) und betweenness_norm liegen in final.parquet vor und werden in c05 gelesen.
+- Schema: neue Prüfungen für soll_factor_by_facility/by_category/levels, demand_band_factor, factor_by_highway,
+  Flags in Matrixzellen, dtv_proxy und fgsv_rsv_candidate; FACILITY_FLAGS um haupt_through_pedestrian_area und
+  filter_needed erweitert.
+- Test test_principles::test_soll_facility_matches_golden_cases: `space_fits_preferred: null` (Raum nicht geprüft)
+  behält wie C-FAC-01 die bevorzugte Führung (vorher als „passt nicht“ gelesen; erst mit G09 sichtbar).
+- Ergebnis (c01–c08 neu, Export/Website nicht neu gerechnet): RSV 65,0 → 72,8 km, HAUPT 1 861,1 → 1 810,2 km,
+  BASIS 1 037,7 → 1 050,5 km, ERSCHL 3 466,6 → 3 496,9 km; HAUPT-Kanten auf ETW_ERF 16,8 → 10,4 km (Abschnitte
+  19,3 → 12,9 km, alle mit Flag); RSV-Läufe 17, davon FGSV-Kandidat 1 (11,5 km), rsv_confidence low 7 (28,5 km);
+  filter_needed 995,9 km (davon Soll-Fahrradstraße 554 km). Kalibrierung c02 nach C-IMP-04: Spearman 0,56 → 0,57,
+  innerhalb Faktor 2 52 % → 48 %.

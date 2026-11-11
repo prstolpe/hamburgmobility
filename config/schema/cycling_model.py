@@ -40,8 +40,10 @@ DESTINATION_TYPES = {"jobs_floor_area", "shops", "schools", "universities", "rap
 GRAPH_RULE_IDS = {f"C-GRAPH-0{i}" for i in range(1, 7)}
 DEMAND_RULE_IDS = {f"C-DEM-0{i}" for i in range(1, 8)}
 NETWORK_RULE_IDS = {f"C-NET-{i:02d}" for i in range(1, 14)}
-# Keys of C-NET-03 soll_factors besides the road categories: own paths (kind = path).
+# Keys of C-NET-03 soll_factor_by_category besides the road categories: own paths (kind = path).
 SOLL_FACTOR_EXTRA_KEYS = {"path"}
+# Levels of C-NET-03 whose matrix column gives the Soll facility of the network design (F16).
+SOLL_FACTOR_LEVELS = {"HAUPT", "BASIS"}
 PRINCIPLE_RULE_IDS = {f"C-PRI-{i:02d}" for i in range(1, 17)}
 # Score forms of C-PRI-01; evaluated in pipeline/lib/principles.py.
 SCORE_FORMS = {"share", "ratio", "inverse_ratio", "excess", "percentile_inverse"}
@@ -50,7 +52,8 @@ FACILITY_RULE_IDS = {f"C-FAC-0{i}" for i in range(1, 8)}
 IST_CLASSES = {"cycle_street", "track", "lane", "shared_lane", "no"}
 # Flags of pipeline/lib/facility.py that C-FAC-07 may name.
 FACILITY_FLAGS = {"dtv_unknown", "fallback_check_p19", "cycle_street_blocked", "mixed_over_s04", "no_target_width",
-                  "ist_width_unknown", "track_on_access_road", "existing_track_below_floor", "gow30_high_volume"}
+                  "ist_width_unknown", "track_on_access_road", "existing_track_below_floor", "gow30_high_volume",
+                  "haupt_through_pedestrian_area", "filter_needed"}
 
 
 # widths_m.project_target.intensity_upgrade condition; half-open classes [min, max) (F27), so the upgrade starts at
@@ -105,6 +108,8 @@ def _check_matrix(matrix: dict) -> None:
             for f in _cell_facilities(cell, f"separation_matrix.{cat}.{col}"):
                 if f not in FACILITIES:
                     raise ValueError(f"separation_matrix.{cat}.{col}: unknown facility {f!r}")
+            if isinstance(cell, dict) and cell.get("flag") is not None and cell["flag"] not in FACILITY_FLAGS:
+                raise ValueError(f"separation_matrix.{cat}.{col}: unknown flag {cell['flag']!r}")
     for cat in RURAL_CATEGORIES:
         for f in _cell_facilities(matrix["rural"][cat], f"separation_matrix.rural.{cat}"):
             if f not in FACILITIES:
@@ -158,6 +163,12 @@ def _check_ist_mapping(impedance: dict) -> None:
         key = rule.get("factor", rule.get("multiply"))
         if key not in factors:
             raise ValueError(f"routing_impedance.ist_mapping {rule['id']}: unknown factor {key!r}")
+        by_highway = rule.get("factor_by_highway") or {}
+        if by_highway and "factor" not in rule:
+            raise ValueError(f"routing_impedance.ist_mapping {rule['id']}: factor_by_highway needs a factor rule")
+        bad = sorted(h for h, k in by_highway.items() if k not in factors)
+        if bad:
+            raise ValueError(f"routing_impedance.ist_mapping {rule['id']}: factor_by_highway refers to unknown factors for {bad}")
 
 
 def _rules_by_id(section: dict, expected: set[str], name: str) -> dict[str, dict]:
@@ -188,13 +199,24 @@ def _check_demand_model(section: dict) -> None:
 def _check_network_design(section: dict, impedance: dict) -> None:
     rules = _rules_by_id(section, NETWORK_RULE_IDS, "network_design")
     factors = set(impedance["factors"]) - DELAY_KEYS
-    soll = rules["C-NET-03"]["soll_factors"]
-    unknown_keys = set(soll) - EXPECTED_CATEGORIES - SOLL_FACTOR_EXTRA_KEYS
+    c03 = rules["C-NET-03"]
+    by_fac, by_cat = c03["soll_factor_by_facility"], c03["soll_factor_by_category"]
+    if set(by_fac) != FACILITIES:
+        raise ValueError(f"network_design C-NET-03: soll_factor_by_facility must name every facility {sorted(FACILITIES)}, "
+                         f"got {sorted(by_fac)}")
+    unknown_keys = set(by_cat) - EXPECTED_CATEGORIES - SOLL_FACTOR_EXTRA_KEYS
     if unknown_keys:
-        raise ValueError(f"network_design C-NET-03: unknown soll_factors keys {sorted(unknown_keys)}")
-    bad = sorted(k for k, v in soll.items() if v not in factors)
+        raise ValueError(f"network_design C-NET-03: unknown soll_factor_by_category keys {sorted(unknown_keys)}")
+    if "path" not in by_cat:
+        raise ValueError("network_design C-NET-03: soll_factor_by_category needs `path` (own paths)")
+    bad = sorted(k for k, v in {**by_fac, **by_cat}.items() if v not in factors)
     if bad:
-        raise ValueError(f"network_design C-NET-03: soll_factors refer to unknown factors for {bad}")
+        raise ValueError(f"network_design C-NET-03: soll factors refer to unknown factors for {bad}")
+    if set(c03["levels"]) != SOLL_FACTOR_LEVELS:
+        raise ValueError(f"network_design C-NET-03: levels must be {sorted(SOLL_FACTOR_LEVELS)}")
+    band = rules["C-NET-06"]["demand_band_factor"]["value"]
+    if not band >= 1:
+        raise ValueError(f"network_design C-NET-06: demand_band_factor must be >= 1, got {band}")
     ds = rules["C-NET-07"].get("density_scaling")
     if ds is not None and (not set(ds["levels"]) <= {"HAUPT", "BASIS"} or ds["reference_density_per_km2"]["value"] <= 0):
         raise ValueError("network_design C-NET-07: density_scaling needs levels HAUPT/BASIS and a positive reference density")
@@ -274,6 +296,13 @@ def _check_facility_assignment(section: dict, widths: dict) -> None:
     rules = _rules_by_id(section, FACILITY_RULE_IDS, "facility_assignment")
     if set(rules["C-FAC-01"]["category_order"]) != CYCLE_CATEGORIES:
         raise ValueError(f"facility_assignment C-FAC-01: category_order must name {sorted(CYCLE_CATEGORIES)}")
+    proxy = rules["C-FAC-02"].get("dtv_proxy")
+    if proxy is not None:
+        thr = proxy["proxy_betweenness"]["value"]
+        if not 0 <= thr <= 1:
+            raise ValueError(f"facility_assignment C-FAC-02 dtv_proxy: proxy_betweenness is a percentile rank in [0, 1], got {thr}")
+        if proxy["flag"] not in FACILITY_FLAGS:
+            raise ValueError(f"facility_assignment C-FAC-02 dtv_proxy: unknown flag {proxy['flag']!r}")
     c04 = rules["C-FAC-04"]
     targets = set(widths["project_target"]) - META_KEYS
     if not set(c04["target_by_facility"]) <= FACILITIES or not set(c04["target_by_facility"].values()) <= targets:
@@ -342,6 +371,9 @@ class CyclingRuleSet(_Strict):
 
         if set(self.cycle_categories) != CYCLE_CATEGORIES:
             raise ValueError(f"cycle categories must be {sorted(CYCLE_CATEGORIES)}, got {sorted(self.cycle_categories)}")
+        fgsv = self.cycle_categories["RSV"].get("fgsv_rsv_candidate")
+        if fgsv is not None and not (fgsv["min_length_km"]["value"] > 0 and 0 <= fgsv["predominant_share"]["value"] < 1):
+            raise ValueError("cycle_categories.RSV.fgsv_rsv_candidate: min_length_km > 0 and predominant_share in [0, 1) required")
         if set(self.principles) != PRINCIPLES:
             raise ValueError(f"principles must be {sorted(PRINCIPLES)}, got {sorted(self.principles)}")
         weights = {k: v for k, v in self.principle_weights.items() if k not in META_KEYS}

@@ -201,6 +201,19 @@ def _steps(value, labels: Labels) -> list[dict]:
             for s in _split(value)]
 
 
+def rsv_block(f: pd.Series, labels: Labels) -> dict | None:
+    """F12: FGSV candidate and uncertainty of an RSV segment (Radvorrangroute); None for other categories."""
+    if _str(f.get("cycle_cat_final")) != "RSV":
+        return None
+    t = labels.t["rsv"]
+    cand = f.get("rsv_fgsv_candidate")
+    cand = None if _missing(cand) else bool(cand)
+    conf = _str(f.get("rsv_confidence"))
+    return {"fgsv_candidate": cand,
+            "fgsv_text": None if cand is None else t["fgsv_candidate"] if cand else t["not_fgsv_candidate"],
+            "confidence": conf, "confidence_text": t["confidence"].get(conf) if conf else t["no_run"]}
+
+
 def segment_cycling_block(f: pd.Series, x: pd.Series, scores: dict | None, labels: Labels) -> dict:
     """Cycling part of a segment profile: category, facility and width (with DE and NL values), side, lanes,
     Soll cross section with degrade steps in plain text, flags, principle scores."""
@@ -215,6 +228,7 @@ def segment_cycling_block(f: pd.Series, x: pd.Series, scores: dict | None, label
     change = lanes_change(x["lanes_per_dir_soll"], x["lanes_per_dir_ist"])
     return {
         "cycle_cat": labels.cat(f["cycle_cat_final"]),
+        "rsv": rsv_block(f, labels),
         "facility": {"soll": soll, "soll_text": labels.text("facility", soll),
                      "ist": _str(f["cycle_facility_ist"]), "ist_text": labels.text("facility", f["cycle_facility_ist"]),
                      "osm_ist_text": labels.text("facility_osm", f["cycle_osm_ist"]),

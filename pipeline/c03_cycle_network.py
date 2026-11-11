@@ -353,8 +353,11 @@ def write_report(ctx: dict) -> None:
         "",
         "## Verfahren",
         "",
-        "1. **Soll-Widerstand (C-NET-03):** Länge × Faktor der regelkonformen Führung je cat_final "
-        f"({', '.join(f'{k} {v}' for k, v in p.soll_factor_keys.items())}) plus Wartezeiten des Ist-Zustands; ungerichtet.",
+        "1. **Soll-Widerstand (C-NET-03):** Länge × Faktor der bevorzugten Führung der Matrixzelle für die Ebene, die "
+        "gerade entworfen wird (HAUPT-Zelle für Korridore, RSV und HAUPT, BASIS-Zelle für die BASIS-Anbindung und -Verdichtung; "
+        "mit S-05, wenn das DTV bekannt ist), Faktoren je Führung "
+        f"({', '.join(f'{k} {v}' for k, v in p.soll_by_facility.items())}); vorrangig je Kategorie "
+        f"({', '.join(f'{k} {v}' for k, v in p.soll_by_category.items())}); plus Wartezeiten des Ist-Zustands; ungerichtet.",
         f"2. **Boni:** Nachfrage (C-NET-04) bis −{p.max_reduction:.0%} ab {_fmt(p.rsv_trigger)} Rad/Werktag; amtliches Radnetz "
         f"(C-NET-05, alle Status) × {p.official_multiplier} bei ≥ {p.min_overlap:.0%} Überdeckung im Puffer {p.match_buffer_m:.0f} m.",
         f"3. **Korridore (C-NET-01/02):** Punkte zusammengefasst ab {p.merge_m:.0f} m; jeder Punkt mit seinen {p.k_nearest} nächsten "
@@ -446,6 +449,28 @@ def write_report(ctx: dict) -> None:
         lines.append(f"| {r['label']} | {r['km']:.2f} | {r['cat']} | {r['planned_km']:.2f} | {_links(r.geometry, viewers)} |")
 
     rsv = ctx["routes"][ctx["routes"]["n_rsv_edges"] > 0]
+    runs = [a for _, a in ctx["rsv_runs"]]
+    n_fgsv = sum(a["fgsv_candidate"] for a in runs)
+    n_low = sum(a["confidence"] == "low" for a in runs)
+    rsv_km = km[cat == "RSV"]
+    conf = out.loc[cat == "RSV", "rsv_confidence"]
+    lines += ["", "## RSV-Läufe: FGSV-Kandidat und Unsicherheit (F12)", "",
+              f"RSV heißt seit cycling_rules.yaml 0.10.0 „{ctx['rsv_label']}“: Der Code bleibt, die Kategorie ist aber keine "
+              "Radschnellverbindung im Sinne der FGSV. FGSV-Kandidat = Lauf ≥ "
+              f"{p.fgsv_min_length_m / 1000:.0f} km mit ≥ {_fmt(p.rsv_trigger)} Rad/Werktag auf mehr als {p.fgsv_predominant_share:.0%} "
+              "der Länge (Annahme A5, FGSV-Hinweise am Original prüfen). rsv_confidence low = längengewichteter Median des Laufs "
+              f"unter {_fmt(p.rsv_trigger)} × {p.rsv_band_factor:g} = {_fmt(p.rsv_trigger * p.rsv_band_factor)} Rad/Werktag "
+              "(Kalibrierung: 52 % der Zählquerschnitte innerhalb Faktor 2).", "",
+              f"- RSV-Läufe (verschieden, über alle Korridore): {len(runs)}, davon FGSV-Kandidaten {n_fgsv}, "
+              f"rsv_confidence low {n_low}.",
+              f"- RSV-km: {_fmt(rsv_km.sum(), 1)}, davon low {_fmt(rsv_km[conf.eq('low').to_numpy()].sum(), 1)}, "
+              f"FGSV-Kandidat {_fmt(rsv_km[out.loc[cat == 'RSV', 'rsv_fgsv_candidate'].fillna(False).to_numpy(dtype=bool)].sum(), 1)}, "
+              f"ohne Lauf (Kontinuität/Override) {_fmt(rsv_km[conf.isna().to_numpy()].sum(), 1)}.", "",
+              "| Lauf km | Median Rad/Werktag | Anteil ≥ Auslöser | FGSV-Kandidat | rsv_confidence |",
+              "| ---: | ---: | ---: | --- | --- |"]
+    for a in sorted(runs, key=lambda x: -x["length_km"])[:TOP_N]:
+        lines.append(f"| {a['length_km']:.1f} | {_fmt(a['cyc_median'])} | {a['share_at_trigger']:.0%} | "
+                     f"{'ja' if a['fgsv_candidate'] else 'nein'} | {a['confidence']} |")
     lines += ["", "## RSV-Abschnitte (C-NET-06)", "",
               f"{len(rsv)} Korridore mit RSV-Läufen. Längste Korridore mit RSV-Anteil:", "",
               "| route_id | Korridor | km | RSV km | Median Rad/Werktag | Prüfen |", "| --- | --- | ---: | ---: | ---: | --- |"]
@@ -558,13 +583,19 @@ def main() -> int:
     length = edges["length_m"].to_numpy(dtype="float64")
     kind = edges["kind"].to_numpy()
 
-    # C-NET-03 Soll resistance
+    # C-NET-03 Soll resistance per design level (F16: preferred facility of the matrix cell of the level, with S-05)
     cat_final = edges["segment_id"].map(final["cat_final"])
-    soll = [cn.soll_factor_for(k, c, f, p) for k, c, f in zip(kind, cat_final, edges["factor"])]
+    seg_dtv = edges["segment_id"].map(final["dtv_official"])
     edges["cat_final"] = cat_final
-    edges["soll_factor"] = [s[0] for s in soll]
-    edges["soll_factor_key"] = [s[1] for s in soll]
-    sf, sb = cn.soll_costs(length, edges["factor"], edges["cost_fwd"], edges["cost_bwd"], edges["soll_factor"])
+    sfx = {"HAUPT": "", "BASIS": "_basis"}
+    soll_cost = {}
+    for lvl in p.soll_levels:
+        soll = [cn.soll_factor_for(k, c, f, p, lvl, d) for k, c, f, d in zip(kind, cat_final, edges["factor"], seg_dtv)]
+        edges["soll_factor" + sfx[lvl]] = [s[0] for s in soll]
+        edges["soll_factor_key" + sfx[lvl]] = [s[1] for s in soll]
+        edges["soll_facility" + sfx[lvl]] = [s[2] for s in soll]
+        soll_cost[lvl] = cn.soll_costs(length, edges["factor"], edges["cost_fwd"], edges["cost_bwd"], edges["soll_factor" + sfx[lvl]])
+    sf, sb = soll_cost["HAUPT"]
     edges["soll_cost_fwd"], edges["soll_cost_bwd"] = sf, sb
 
     # C-NET-04/05 bonuses
@@ -579,13 +610,18 @@ def main() -> int:
     dem_mult = cn.demand_multiplier(edges["cyc_calibrated"], p)
     off_mult = np.where(share_all >= p.min_overlap, p.official_multiplier, 1.0)
     design = cn.undirected_cost(sf, sb) * dem_mult * off_mult
+    design_b = cn.undirected_cost(*soll_cost["BASIS"]) * dem_mult * off_mult
     edges["design_cost"] = design
+    edges["design_cost_basis"] = design_b
     main_comp = edges["in_main_component"].to_numpy(dtype=bool)
     ferry = kind == "ferry"
+    # inp: RSV/HAUPT level (corridors, HAUPT densify, parallel rule); inp_b: BASIS level (binding, BASIS densify)
     inp = cn.DesignInputs.build(geoms, edges["node_u"], edges["node_v"], design, length, edges["cyc_calibrated"], main_comp & ~ferry)
+    inp_b = cn.DesignInputs.build(geoms, edges["node_u"], edges["node_v"], design_b, length, edges["cyc_calibrated"], main_comp & ~ferry)
     pos_all = np.flatnonzero(main_comp & np.isfinite(design))
     g_all = cn.Graph(inp.node_u[pos_all], inp.node_v[pos_all], design[pos_all], pos_all)
     g_new = inp.graph(np.ones(n, dtype=bool))
+    g_new_b = inp_b.graph(np.ones(n, dtype=bool))
     print(f"cycle-network: Soll resistance and bonuses ({time.perf_counter() - t_start:.0f} s)")
 
     # C-NET-01/02 corridors
@@ -599,9 +635,16 @@ def main() -> int:
     paths = cn.route_pairs(g_all, pts["node"].to_numpy(), pairs)
     routes: list[Route] = []
     cyc = inp.demand
+    rsv_runs = {}   # edge tuple -> F12 assessment (identical runs of several corridors counted once)
     for (a, b_), path in paths.items():
-        rsv = cn.rsv_mask(length[path], cyc[path], p)
-        routes.append(Route("corridor", list(path), np.where(rsv, R, H), f"{pts['label'][a]} – {pts['label'][b_]}"))
+        path = np.asarray(path, dtype="int64")
+        runs = cn.rsv_runs(length[path], cyc[path], p)
+        rsv = np.zeros(len(path), dtype=bool)
+        for s_, e_ in runs:
+            rsv[s_:e_] = True
+            key = tuple(sorted(path[s_:e_].tolist()))
+            rsv_runs.setdefault(key, cn.rsv_run_assessment(length[path[s_:e_]], cyc[path[s_:e_]], p))
+        routes.append(Route("corridor", path.tolist(), np.where(rsv, R, H), f"{pts['label'][a]} – {pts['label'][b_]}"))
     print(f"cycle-network: {len(pts)} corridor points, {len(pairs)} pairs, {len(routes)} corridors ({time.perf_counter() - t_start:.0f} s)")
 
     # C-NET-07/08 HAUPT
@@ -636,11 +679,11 @@ def main() -> int:
     shops = read_shops(pbf, p.nahversorgung_shops)
     targets = pd.concat([gpd.GeoSeries(school_pts.to_numpy(), crs=WORK_CRS), shops.geometry], ignore_index=True)
     targets = targets[targets.within(hamburg)]
-    attach = cn.attach_points(g_new, inp, ranks >= B, np.c_[targets.x, targets.y], p.binding_radius_m)
+    attach = cn.attach_points(g_new_b, inp_b, ranks >= B, np.c_[targets.x, targets.y], p.binding_radius_m)
     routes += [Route("attach", r, np.full(len(r), B)) for r in attach]
     ranks = edge_ranks(routes, n)
     ranks[patt_basis & (ranks < B)] = B
-    res_b = cn.densify(inp, ranks >= B, limits["BASIS"], barriers, hamburg, exclude, rural, p)
+    res_b = cn.densify(inp_b, ranks >= B, limits["BASIS"], barriers, hamburg, exclude, rural, p)
     routes += [Route("mesh_basis", r, np.full(len(r), B)) for r in res_b.routes]
     ranks = edge_ranks(routes, n)
     ranks[patt_basis & (ranks < B)] = B
@@ -668,6 +711,19 @@ def main() -> int:
     out = ov.apply_cycle_network(out, ovr)
     final_rank = out["cycle_cat_final"].map(cn.RANK).to_numpy()
     locked_override = (out["cycle_cat_source"] == "override").to_numpy()
+
+    # F12: FGSV candidate and rsv_confidence per final RSV edge, from the longest RSV run through it
+    run_of = np.full(n, -1)
+    run_list = list(rsv_runs.items())
+    for k, (edge_key, a) in enumerate(run_list):
+        e = np.asarray(edge_key, dtype="int64")
+        better = (run_of[e] < 0) | (a["length_km"] > np.array([run_list[j][1]["length_km"] if j >= 0 else -1 for j in run_of[e]]))
+        run_of[e[better]] = k
+    run_of[final_rank != R] = -1
+    rsv_assess = [run_list[j][1] if j >= 0 else None for j in run_of]
+    out["rsv_run_km"] = [a["length_km"] if a else np.nan for a in rsv_assess]
+    out["rsv_fgsv_candidate"] = pd.array([a["fgsv_candidate"] if a else pd.NA for a in rsv_assess], dtype="boolean")
+    out["rsv_confidence"] = [a["confidence"] if a else None for a in rsv_assess]
 
     # routes table, primary route per edge
     best_rank = np.full(n, -1)
@@ -721,6 +777,11 @@ def main() -> int:
         steps += trace_routes[i]
         if len(members[i]) > TRACE_ROUTES:
             steps.append({"rule": "routes", "result": len(members[i])})
+        if rsv_assess[i] is not None:
+            a = rsv_assess[i]
+            steps.append({"rule": "C-NET-06", "result": f"rsv_confidence {a['confidence']}",
+                          "values": {"run_km": a["length_km"], "cyc_median": a["cyc_median"], "share_at_trigger": a["share_at_trigger"],
+                                     "fgsv_rsv_candidate": a["fgsv_candidate"], "band": round(p.rsv_trigger * p.rsv_band_factor)}})
         if patt_alt[i]:
             steps.append({"rule": "C-NET-10", "result": "Parallelroute"})
         if patt_basis[i]:
@@ -832,7 +893,8 @@ def main() -> int:
            "gaps_basis": res_b.gaps, "patt": patt, "points": pts_all, "n_pairs": len(pairs), "n_corridors": len(paths),
            "snap": snap, "components": comps, "mesh_stats": mesh_stats,
            "rounds": {"HAUPT 1": res_h1.rounds, "HAUPT 2": res_h2.rounds, "BASIS": res_b.rounds},
-           "coverage": coverage, "routes": routes_gdf, "n_smoothed": int(smoothed.sum()), "gaps": gaps}
+           "coverage": coverage, "routes": routes_gdf, "n_smoothed": int(smoothed.sum()), "gaps": gaps,
+           "rsv_runs": run_list, "rsv_label": cyc_rules.cycle_categories["RSV"]["label_de"]}
     write_report(ctx)
     print(f"cycle-network: {n} edges -> {OUT_PATH.relative_to(REPO_ROOT)}, {len(routes_gdf)} routes, report "
           f"{REPORT_PATH.relative_to(REPO_ROOT)} ({time.perf_counter() - t_start:.0f} s)")

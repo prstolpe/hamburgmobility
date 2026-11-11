@@ -8,7 +8,7 @@
 # Klassentabellen (demand.intensity_classes_peak_h) sind halboffen [min, max): ein Wert auf der Grenze gehört zur
 #   oberen Klasse; intensity_upgrade greift darum ab der Untergrenze (>=) einer Klasse (F27).
 meta:
-  version: 0.9.0
+  version: 0.10.0
   date: 2026-11-08
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
@@ -30,8 +30,15 @@ sources:
 # ---------------------------------------------------------------
 cycle_categories:
   RSV:
-    label_de: 'Radschnellverbindung / Radroute+'
+    label_de: 'Radvorrangroute / Radroute+'
+    label_note: 'Seit 0.10.0 (Review 2026-11 F12): Code RSV bleibt, die Kategorie ist aber keine Radschnellverbindung im Sinne der FGSV; ob ein Lauf die FGSV-Kriterien erfüllen könnte, zeigt fgsv_rsv_candidate'
     nl: 'snelfietsroute / doorfietsroute'
+    fgsv_rsv_candidate:
+      rule: 'Lauf (C-NET-06) >= min_length_km und cyc_calibrated >= demand_trigger_cyclists_weekday auf dem überwiegenden Teil (Längenanteil > predominant_share): Kandidat für eine Radschnellverbindung nach FGSV; nur Kennzeichnung, keine Kategorie'
+      min_length_km: {value: 10, unit: km, source_type: assumption, note: 'FGSV-Hinweise zu Radschnellverbindungen am Original prüfen (Review 2026-11 Annahme A5, aus dem Gedächtnis)'}
+      predominant_share: {value: 0.5, unit: 'Anteil der Lauflänge', source_type: assumption, note: '„überwiegender Teil“ = mehr als die Hälfte der Länge'}
+      source_type: assumption
+      note: 'FGSV-Hinweise zu Radschnellverbindungen am Original prüfen'
     trip_length_km: {range: [5, 15], source_type: assumption, note: 'nicht in DCE_INFRA; Quelle ergänzen'}
     min_route_length_km: {value: 5, source: DCE_INFRA, source_type: swov_crow, note: 'ECF-Kriterium; Hessen: RSV 10 km, RDV 5 km'}
     demand_trigger_cyclists_weekday: {value: 2000, source: HESSEN_QS_2019, source_type: de_regelwerk}
@@ -222,6 +229,9 @@ routing_impedance:
     # OSM-Prüfung 2026-11-07: fehlende cycleway-Tags erklären die Abweichung nicht (3 km im Umkreis 100 m der Zählstellen).
     gow50_cycle_lane_or_mixed: 1.5
     gow50_separated_track: 1.1
+    # Schrittgeschwindigkeit (Fußgängerzone mit Radfreigabe, verkehrsberuhigter Bereich): 15 km/h / 7 km/h ≈ 2,1.
+    # Eigene Setzung (Review 2026-11 F15, Annahme A8), in V-SENS-01 aufnehmen.
+    walking_pace_area: 2.1
     unpaved_or_cobbles: 1.3
     signal_delay_s: 25
     give_way_delay_s: 8
@@ -233,7 +243,9 @@ routing_impedance:
       - {id: C-IMP-01, when: cycle_street, factor: separated_track_or_cycle_street, status: draft, description: 'Fahrradstraße (amtlich oder OSM bicycle_road=yes / cyclestreet=yes)'}
       - {id: C-IMP-02, when: own_path, factor: separated_track_or_cycle_street, status: draft, description: 'eigenständiger Rad- oder Fußweg mit Radfreigabe (C-GRAPH-01)'}
       - {id: C-IMP-03, when: separated_track, factor: gow50_separated_track, status: draft, description: 'Radweg am Fahrbahnrand in derselben OSM-Linie (cycleway*=track|opposite_track); getrennt erfasste Radwege (cycleway=separate) sind eigene Kanten'}
-      - {id: C-IMP-04, when: low_speed_access_road, factor: etw30_mixed, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh und Erschließungsstraße (cat_final in access_categories, ohne cat_final highway in access_highways)'}
+      - {id: C-IMP-04, when: low_speed_access_road, factor: etw30_mixed, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh und Erschließungsstraße (cat_final in access_categories, ohne cat_final highway in access_highways); highway in factor_by_highway (Schrittgeschwindigkeit) unabhängig vom Ist-Tempo mit dem dort genannten Faktor',
+         factor_by_highway: {living_street: walking_pace_area, pedestrian: walking_pace_area},
+         note: 'Seit 0.10.0 (Review 2026-11 F15): verkehrsberuhigter Bereich (Z. 325.1) und Fußgängerzone mit Radfreigabe nur in Schrittgeschwindigkeit; vorher etw30_mixed'}
       - {id: C-IMP-05, when: low_speed_with_lane, factor: gow30_cycle_lane, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh, Hauptstraße mit Radfahr- oder Schutzstreifen'}
       - {id: C-IMP-06, when: low_speed_mixed, factor: gow30_cycle_lane, status: draft, note: 'Lücke: routing_impedance hat keinen Faktor für Hauptstraße Tempo 30 ohne Radstreifen; vorläufig wie C-IMP-05 (docs/open_questions.md)'}
       - {id: C-IMP-07, when: other, factor: gow50_cycle_lane_or_mixed, status: draft, description: 'alle übrigen befahrbaren Straßen (Ist-Tempo > low_speed_max_kmh)'}
@@ -369,9 +381,15 @@ network_design:
       max_pair_km: 15
       status: draft
     - id: C-NET-03
-      description: 'Soll-Widerstand: Länge x Faktor der regelkonformen Führung je cat_final (Annahme: die Route wird nach Trennungsmatrix ausgebaut, mit geschlossener Decke nach P-COM-02, daher ohne Zuschlag für unbefestigte Beläge) plus die Wartezeiten des Ist-Zustands; Kanten ohne cat_final und Fähren behalten den Ist-Widerstand'
-      soll_factors: {path: separated_track_or_cycle_street, SW: gow50_separated_track, GOW80: gow50_separated_track, GOW50: gow50_separated_track, GOW30: gow30_cycle_lane, ETW30: etw30_mixed, ETW_ERF: etw30_mixed, ETW60: etw30_mixed}
-      note: 'Faktoren aus routing_impedance.factors; keine neuen Zahlen. Netzentwurf ungerichtet (günstigere Richtung)'
+      description: 'Soll-Widerstand: Länge x Faktor der regelkonformen Führung (Annahme: die Route wird nach Trennungsmatrix ausgebaut, mit geschlossener Decke nach P-COM-02, daher ohne Zuschlag für unbefestigte Beläge) plus die Wartezeiten des Ist-Zustands. Führung = preferred der Matrixzelle separation_matrix[cat_final][Ebene] einschließlich der Zelle high_volume (S-05, wenn dtv_official bekannt), Faktor aus soll_factor_by_facility; soll_factor_by_category geht vor (path = eigenständige Wege, ETW_ERF = Schrittgeschwindigkeit). Kanten ohne cat_final, ohne aktive Matrixzeile (außerorts, F28) und Fähren behalten den Ist-Widerstand'
+      soll_factor_by_facility: {separated_oneway_both: gow50_separated_track, separated_twoway: gow50_separated_track,
+                                cycle_lane: gow30_cycle_lane, cycle_street: separated_track_or_cycle_street,
+                                mixed: etw30_mixed, own_path: separated_track_or_cycle_street}
+      soll_factor_by_category: {path: separated_track_or_cycle_street, ETW_ERF: walking_pace_area}
+      levels: [HAUPT, BASIS]
+      facility_level_note: 'Führung = preferred der Matrixzelle für die Ebene, die gerade entworfen wird (HAUPT-Zelle für Korridore, RSV, HAUPT-Verdichtung und Parallelregel; BASIS-Zelle für BASIS-Anbindung und -Verdichtung). Review 2026-11 F16'
+      category_note: 'ETW_ERF: Die Matrix bevorzugt für RSV/HAUPT eine eigene Trasse (F15), der Entwurf rechnet aber mit Schrittgeschwindigkeit, damit Hauptrouten Fußgängerzonen ausweichen, wo eine Alternative besteht; ob eine eigene Trasse möglich ist, prüft erst die Raumprüfung (fallback_check_p19)'
+      note: 'Faktoren aus routing_impedance.factors; keine neuen Zahlen. Netzentwurf ungerichtet (günstigere Richtung). Bis 0.9.0 soll_factors je cat_final (GOW30 immer gow30_cycle_lane, ETW_ERF etw30_mixed)'
       status: draft
     - id: C-NET-04
       description: 'Bonus für Kanten mit hoher Nachfrage: Widerstand x (1 - max_reduction x min(cyc_calibrated / Bezugswert, 1)); Bezugswert = RSV demand_trigger_cyclists_weekday'
@@ -388,6 +406,8 @@ network_design:
     - id: C-NET-06
       description: 'RSV: zusammenhängende Läufe eines Korridors mit cyc_calibrated >= RSV demand_trigger_cyclists_weekday; Lücken bis gap_max_m werden überbrückt; Läufe ab RSV min_route_length_km werden RSV, der übrige Korridor HAUPT'
       gap_max_m: 500
+      demand_band_factor: {value: 2.0, source_type: assumption,
+                           note: 'RSV-Lauf mit cyc_calibrated < trigger x factor (längengewichteter Median des Laufs): rsv_confidence low, sonst high (Kalibrierung: 52 % der Querschnitte innerhalb Faktor 2; Review 2026-11 F12)'}
       status: draft
     - id: C-NET-07
       description: 'Maschen: Polygonisierung des Netzes einer Ebene (mit höheren Ebenen) zusammen mit Barrierelinien und der Landesgrenze; Größe = Seitenlänge des flächengleichen Quadrats der Masche ohne Ausschlussflächen. Maschen mit Mittelpunkt in ländlichen Stadtteilen (project.yaml rural_exclude) werden nicht geprüft'
@@ -468,7 +488,8 @@ separation_matrix:
     none: mixed
   ETW_ERF:
     RSV: {preferred: own_path, fallback: mixed, note: 'RSV möglichst nicht durch Fußgängerzonen'}
-    HAUPT: mixed
+    HAUPT: {preferred: own_path, fallback: mixed, flag: haupt_through_pedestrian_area, source_type: assumption,
+            note: 'Seit 0.10.0 (Review 2026-11 F15): wie RSV; Mischverkehr in Fußgängerzone und verkehrsberuhigtem Bereich nur in Schrittgeschwindigkeit (StVO), widerspricht HAUPT-Zielgeschwindigkeit 20 km/h'}
     BASIS: mixed
     ERSCHL: mixed
     none: mixed
@@ -506,11 +527,21 @@ facility_assignment:
       category_order: [RSV, HAUPT, BASIS, ERSCHL]
       status: draft
     - id: C-FAC-02
-      description: 'Fahrradstraße nur, wenn Kfz/Tag <= cycle_street.max_motor_vehicles_day und Radverkehr in der Spitzenstunde (cyc_peak_h, beide Richtungen) >= Kfz in der Spitzenstunde (DTV x motor_peak_hour_share). Sonst Soll mixed und Flag cycle_street_blocked („Kfz-Menge reduzieren (Filter) oder Route verlegen“). Fehlt das DTV: Bedingung vorläufig erfüllt, Flag dtv_unknown (Entscheidung Projektteam 2026-11-06: Erschließungsstraßen ohne Zählung gelten als schwach belastet)'
+      description: 'Fahrradstraße nur, wenn Kfz/Tag <= cycle_street.max_motor_vehicles_day und Radverkehr in der Spitzenstunde (cyc_peak_h, beide Richtungen) >= Kfz in der Spitzenstunde (DTV x motor_peak_hour_share). Sonst Soll mixed und Flag cycle_street_blocked („Kfz-Menge reduzieren (Filter) oder Route verlegen“). Fehlt das DTV: Bedingung vorläufig erfüllt, Flag dtv_unknown (Entscheidung Projektteam 2026-11-06: Erschließungsstraßen ohne Zählung gelten als schwach belastet). Ausnahme dtv_proxy: dann Bedingung unbekannt (Trace-Ergebnis null), Soll bleibt, Flag filter_needed'
       dtv_missing_counts_as_met: true
+      dtv_proxy:
+        rule: 'DTV fehlt und (Flag N4_shortcut oder betweenness_norm >= proxy_betweenness): Bedingung unbekannt, Flag filter_needed („Durchgangsverkehr wahrscheinlich, Filter prüfen“); gilt für C-FAC-02 und C-FAC-03'
+        shortcut_flag: N4_shortcut
+        shortcut_flag_note: 'Schleichverkehrsflag aus rules.yaml N4 (pipeline/s06_coherence.py, Spalte flags in final.parquet)'
+        betweenness_attribute: betweenness_norm
+        betweenness_note: 'Perzentilrang der Kfz-Betweenness über das Arbeitsgebiet (rules.yaml S-FEAT-01/02)'
+        proxy_betweenness: {value: 0.8, source_type: assumption, note: 'eigene Setzung (Review 2026-11 Annahme A8), in V-SENS-01 aufnehmen'}
+        flag: filter_needed
+        source_type: assumption
+        note: 'Review 2026-11 F19: Die Entscheidung vom 06.11. (schwach belastet bis zum Beweis des Gegenteils) bleibt; Abschnitte mit Hinweisen auf Durchgangsverkehr werden sichtbar (Liste für modale Filter). Keine Kategorie- oder Führungsänderung. VwV-StVO zu Z. 244.1 lässt Fahrradstraßen auch bei hoher Netzbedeutung zu (Fassung prüfen, Annahme A7)'
       status: draft
     - id: C-FAC-03
-      description: 'Prüfung S-04 bei Soll mixed: Kfz/h = DTV x motor_peak_hour_share (beide Richtungen) gegen separation_matrix S-04 mixed_max_kfz_h; überschritten: Flag mixed_over_s04 (Soll bleibt mixed, Maßnahme Verkehrsmenge senken). Fahrbahnbreite (width_median_m) wird nur protokolliert. Fehlt das DTV: vorläufig erfüllt, Flag dtv_unknown'
+      description: 'Prüfung S-04 bei Soll mixed: Kfz/h = DTV x motor_peak_hour_share (beide Richtungen) gegen separation_matrix S-04 mixed_max_kfz_h; überschritten: Flag mixed_over_s04 (Soll bleibt mixed, Maßnahme Verkehrsmenge senken). Fahrbahnbreite (width_median_m) wird nur protokolliert. Fehlt das DTV: vorläufig erfüllt, Flag dtv_unknown; trifft C-FAC-02 dtv_proxy zu: Bedingung unbekannt, Flag filter_needed (F19)'
       motor_peak_hour_share: {value: 0.10, note: 'Spitzenstundenanteil Kfz, aus der Notiz zu design_rules L-02 (0,10 x 0,55 Lastrichtung); HBS prüfen'}
       dtv_missing_counts_as_met: true
       status: draft

@@ -71,20 +71,69 @@ def test_params_take_thresholds_from_rule_files():
 # --- C-NET-03..05 Soll resistance and bonuses ----------------------------------------------------
 
 
-@pytest.mark.parametrize("kind, cat, ist, key", [
-    ("path", None, 1.3, "separated_track_or_cycle_street"),
-    ("road", "GOW50", 2.0, "gow50_separated_track"),
-    ("road", "GOW30", 1.25, "gow30_cycle_lane"),
-    ("road", "ETW30", 1.05, "etw30_mixed"),
-    ("road", None, 2.0, None),       # no cat_final: Ist factor
-    ("ferry", None, 1.0, None),
+@pytest.mark.parametrize("kind, cat, level, dtv, ist, key, facility", [
+    ("path", None, "HAUPT", None, 1.3, "separated_track_or_cycle_street", None),
+    ("road", "GOW50", "HAUPT", None, 2.0, "gow50_separated_track", "separated_oneway_both"),
+    # F16: GOW30 by the preferred facility of the level's matrix cell
+    ("road", "GOW30", "HAUPT", None, 1.25, "gow50_separated_track", "separated_oneway_both"),
+    ("road", "GOW30", "BASIS", None, 1.25, "gow30_cycle_lane", "cycle_lane"),
+    ("road", "ETW30", "HAUPT", None, 1.05, "separated_track_or_cycle_street", "cycle_street"),
+    ("road", "ETW30", "BASIS", None, 1.05, "etw30_mixed", "mixed"),
+    ("road", "SW", "HAUPT", None, 1.5, "separated_track_or_cycle_street", "own_path"),
+    # F15: ETW_ERF at walking pace on every level (soll_factor_by_category before the facility)
+    ("road", "ETW_ERF", "HAUPT", None, 1.05, "walking_pace_area", None),
+    ("road", "ETW_ERF", "BASIS", None, 1.05, "walking_pace_area", None),
+    ("road", "GOW80", "HAUPT", None, 1.5, None, None),   # rural matrix inactive (F28): Ist factor
+    ("road", None, "HAUPT", None, 2.0, None, None),      # no cat_final: Ist factor
+    ("ferry", None, "HAUPT", None, 1.0, None, None),
 ])
-def test_soll_factor(kind, cat, ist, key):
-    factor, used = cn.soll_factor_for(kind, cat, ist, P)
+def test_soll_factor(kind, cat, level, dtv, ist, key, facility):
+    factor, used, fac = cn.soll_factor_for(kind, cat, ist, P, level, dtv)
     if key is None:
-        assert (factor, used) == (ist, "ist")
+        assert (factor, used, fac) == (ist, "ist", None)
     else:
-        assert (factor, used) == (F[key], key)
+        assert (factor, used, fac) == (F[key], key, facility)
+
+
+def test_soll_factor_gow30_high_volume_on_basis_level():
+    """F16 with S-05: a GOW30 above the wide-profile DTV gets the track factor on the BASIS level too."""
+    lim = P.high_volume["GOW30"].dtv_above
+    assert cn.soll_factor_for("road", "GOW30", 1.25, P, "BASIS", lim + 1)[1:] == ("gow50_separated_track", "separated_oneway_both")
+    assert cn.soll_factor_for("road", "GOW30", 1.25, P, "BASIS", lim)[1] == "gow30_cycle_lane"
+    assert cn.soll_factor_for("road", "GOW30", 1.25, P, "BASIS", float("nan"))[1] == "gow30_cycle_lane"
+
+
+# --- C-NET-06 RSV runs, F12 ------------------------------------------------------------------------
+
+
+def test_rsv_run_assessment_fgsv_candidate_and_confidence():
+    t, band = P.rsv_trigger, P.rsv_trigger * P.rsv_band_factor
+    n = int(P.fgsv_min_length_m // 1000)
+    long_ = np.full(n, 1000.0)
+    a = cn.rsv_run_assessment(long_, np.full(n, band), P)
+    assert a["fgsv_candidate"] and a["confidence"] == "high" and a["share_at_trigger"] == 1.0
+    low = cn.rsv_run_assessment(long_, np.full(n, band - 1), P)
+    assert low["fgsv_candidate"] and low["confidence"] == "low"
+    short = cn.rsv_run_assessment(long_[:-1], np.full(n - 1, band), P)
+    assert not short["fgsv_candidate"]
+    # predominant part: exactly predominant_share of the length at the trigger is not enough
+    k = int(round(n * P.fgsv_predominant_share))
+    d = np.r_[np.full(k, t), np.full(n - k, t - 1)]
+    assert not cn.rsv_run_assessment(long_, d, P)["fgsv_candidate"]
+    assert cn.rsv_run_assessment(long_, np.r_[np.full(k + 1, t), np.full(n - k - 1, t - 1)], P)["fgsv_candidate"]
+
+
+def test_rsv_runs_match_mask():
+    lengths = np.full(12, 1000.0)
+    d = np.r_[np.full(6, P.rsv_trigger), [0.0], np.full(5, P.rsv_trigger)]
+    runs = cn.rsv_runs(lengths, d, P)
+    mask = cn.rsv_mask(lengths, d, P)
+    assert sum(e - s for s, e in runs) == mask.sum()
+
+
+def test_weighted_median():
+    assert cn.weighted_median(np.array([1.0, 10.0]), np.array([3.0, 1.0])) == 1.0
+    assert cn.weighted_median(np.array([1.0, 10.0]), np.array([1.0, 3.0])) == 10.0
 
 
 def test_soll_costs_keep_node_delays():

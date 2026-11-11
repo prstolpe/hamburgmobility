@@ -20,6 +20,25 @@ from pipeline.lib import principles as pr
 
 
 @dataclass(frozen=True)
+class DtvProxy:
+    """C-FAC-02 dtv_proxy (F19): without a DTV, a shortcut flag or a high betweenness makes the condition unknown."""
+    shortcut_flag: str
+    betweenness_attribute: str
+    threshold: float
+    flag: str
+
+    @classmethod
+    def from_rule(cls, rule: dict | None) -> "DtvProxy | None":
+        if rule is None:
+            return None
+        return cls(rule["shortcut_flag"], rule["betweenness_attribute"], float(rule["proxy_betweenness"]["value"]), rule["flag"])
+
+    def hit(self, shortcut, betweenness) -> bool:
+        short = False if _missing(shortcut) else bool(shortcut)
+        return short or (not _missing(betweenness) and float(betweenness) >= self.threshold)
+
+
+@dataclass(frozen=True)
 class FacilityParams:
     matrix: dict
     category_order: tuple
@@ -49,6 +68,7 @@ class FacilityParams:
     lowers_confidence: frozenset
     high_volume: dict              # road category -> principles.HighVolume (S-05, F01)
     cs_motor_traffic: bool         # C-FAC-04 cycle_street_motor_traffic (F18), read by principles.required_width
+    proxy: DtvProxy | None = None  # C-FAC-02 dtv_proxy (F19)
 
     @classmethod
     def from_rules(cls, cyc: CyclingRuleSet, road: RuleSet | None = None) -> "FacilityParams":
@@ -92,6 +112,7 @@ class FacilityParams:
             lowers_confidence=frozenset(r["C-FAC-07"]["lowers_confidence"]),
             high_volume=pr.high_volume_cells(cyc, road),
             cs_motor_traffic=pr.cycle_street_motor_traffic(cyc),
+            proxy=DtvProxy.from_rule(r["C-FAC-02"].get("dtv_proxy")),
         )
 
 
@@ -135,8 +156,14 @@ def _raw_cell(cat_final: str, cycle_cat: str, p: FacilityParams):
     return row if "all" in row else row.get(cycle_cat)
 
 
-def soll_facility(cat_final, cycle_cat, dtv, cyc_peak_both, space_fits_preferred, p: FacilityParams) -> SollResult:
-    """Soll facility after C-FAC-01 (matrix), C-FAC-02 (cycle street) and C-FAC-03 (S-04)."""
+def soll_facility(cat_final, cycle_cat, dtv, cyc_peak_both, space_fits_preferred, p: FacilityParams,
+                  shortcut=None, betweenness=None) -> SollResult:
+    """Soll facility after C-FAC-01 (matrix), C-FAC-02 (cycle street) and C-FAC-03 (S-04).
+
+    shortcut (N4 shortcut flag) and betweenness (betweenness_norm) feed the dtv_proxy of C-FAC-02/03 (F19): without
+    a DTV and with a proxy hit the condition is unknown (trace result None) and the segment gets filter_needed;
+    the facility stays.
+    """
     cycle_cat = cycle_cat if isinstance(cycle_cat, str) else NO_CYCLE_CATEGORY
     dtv = _num(dtv)
     res = SollResult(None, None)
@@ -170,18 +197,26 @@ def soll_facility(cat_final, cycle_cat, dtv, cyc_peak_both, space_fits_preferred
             facility = fallback
         elif space_fits_preferred is None and allowed:
             _add(res.flags, "fallback_check_p19")
+    if isinstance(cell, dict) and cell.get("flag"):   # e.g. haupt_through_pedestrian_area (F15)
+        _add(res.flags, cell["flag"])
     res.trace.append({"id": "C-FAC-01", "result": facility, "values": values})
 
     motor_peak = None if dtv is None else dtv * p.motor_peak_share
+    proxy_hit = dtv is None and p.proxy is not None and p.proxy.hit(shortcut, betweenness)
+    proxy_values = {} if p.proxy is None or dtv is not None else {
+        "dtv_proxy": proxy_hit, p.proxy.shortcut_flag: None if _missing(shortcut) else bool(shortcut),
+        p.proxy.betweenness_attribute: _num(betweenness), "proxy_betweenness": p.proxy.threshold}
     if facility == "cycle_street":
         cyc = _num(cyc_peak_both)
         if dtv is None:
             ok = p.cs_dtv_missing_met
             _add(res.flags, "dtv_unknown")
+            if proxy_hit:
+                _add(res.flags, p.proxy.flag)
         else:
             ok = dtv <= p.cs_max_dtv and cyc is not None and cyc >= motor_peak
-        res.trace.append({"id": "C-FAC-02", "result": ok, "values": {
-            "dtv": dtv, "max_motor_vehicles_day": p.cs_max_dtv, "cyc_peak_h": cyc, "motor_peak_h": motor_peak}})
+        res.trace.append({"id": "C-FAC-02", "result": None if proxy_hit else ok, "values": {
+            "dtv": dtv, "max_motor_vehicles_day": p.cs_max_dtv, "cyc_peak_h": cyc, "motor_peak_h": motor_peak, **proxy_values}})
         if not ok:
             facility = "mixed"
             _add(res.flags, "cycle_street_blocked")
@@ -189,10 +224,13 @@ def soll_facility(cat_final, cycle_cat, dtv, cyc_peak_both, space_fits_preferred
         if dtv is None:
             ok = p.s04_dtv_missing_met
             _add(res.flags, "dtv_unknown")
+            if proxy_hit:
+                _add(res.flags, p.proxy.flag)
         else:
             ok = motor_peak <= p.s04_max_kfz_h
-        res.trace.append({"id": "S-04", "result": ok, "values": {
-            "dtv": dtv, "motor_peak_hour_share": p.motor_peak_share, "motor_peak_h": motor_peak, "mixed_max_kfz_h": p.s04_max_kfz_h}})
+        res.trace.append({"id": "S-04", "result": None if proxy_hit else ok, "values": {
+            "dtv": dtv, "motor_peak_hour_share": p.motor_peak_share, "motor_peak_h": motor_peak, "mixed_max_kfz_h": p.s04_max_kfz_h,
+            **proxy_values}})
         if not ok:
             _add(res.flags, "mixed_over_s04")
     res.facility, res.fallback = facility, fallback

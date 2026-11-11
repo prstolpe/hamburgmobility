@@ -39,8 +39,12 @@ class NetworkParams:
     merge_m: float
     k_nearest: int
     max_pair_m: float
-    soll_factors: dict       # key (road category or "path") -> numeric factor
-    soll_factor_keys: dict   # key -> name in routing_impedance.factors
+    factors: dict                 # routing_impedance.factors (length factors)
+    soll_by_facility: dict        # facility -> name in routing_impedance.factors (C-NET-03, F16)
+    soll_by_category: dict        # road category or "path" -> factor name; before the facility (C-NET-03, F15)
+    soll_levels: tuple            # matrix columns of the design levels (HAUPT, BASIS)
+    matrix: dict                  # separation_matrix (read by principles.soll_facility)
+    high_volume: dict             # road category -> principles.HighVolume (S-05)
     max_reduction: float
     official_multiplier: float
     match_buffer_m: float
@@ -50,6 +54,9 @@ class NetworkParams:
     rsv_trigger: float
     rsv_min_length_m: float
     rsv_gap_max_m: float
+    rsv_band_factor: float        # C-NET-06 demand_band_factor (F12)
+    fgsv_min_length_m: float      # cycle_categories.RSV.fgsv_rsv_candidate (F12)
+    fgsv_predominant_share: float
     mesh_max_m: dict
     mesh_ref_density: float | None     # residents per km² (C-NET-07 density_scaling), None = constant mesh
     mesh_density_levels: tuple
@@ -73,12 +80,18 @@ class NetworkParams:
     compare_buffer_m: float
 
     @classmethod
-    def from_rules(cls, cyc: CyclingRuleSet) -> "NetworkParams":
+    def from_rules(cls, cyc: CyclingRuleSet, road=None) -> "NetworkParams":
+        """road = config/rules.yaml (S-05 high_volume limit for C-NET-03); loaded if not given."""
+        from pipeline.lib import principles as pr   # principles imports this module
+        if road is None:
+            from pipeline.lib.rules import load_rules
+            road = load_rules()
         r = {x["id"]: x for x in cyc.network_design["rules"]}
-        factors = cyc.routing_impedance["factors"]
+        factors = {k: float(v) for k, v in cyc.routing_impedance["factors"].items() if isinstance(v, (int, float))}
         cats = cyc.cycle_categories
         checks = {c["id"]: c for p in cyc.principles.values() for c in p["checks"]}
-        soll = r["C-NET-03"]["soll_factors"]
+        c03 = r["C-NET-03"]
+        fgsv = cats["RSV"]["fgsv_rsv_candidate"]
         c01 = r["C-NET-01"]
         return cls(
             innenstadt_label=c01["innenstadt"]["label"],
@@ -90,8 +103,12 @@ class NetworkParams:
             merge_m=float(c01["merge_m"]),
             k_nearest=int(r["C-NET-02"]["k_nearest"]),
             max_pair_m=float(r["C-NET-02"]["max_pair_km"]) * 1000,
-            soll_factors={k: float(factors[v]) for k, v in soll.items()},
-            soll_factor_keys=dict(soll),
+            factors=factors,
+            soll_by_facility=dict(c03["soll_factor_by_facility"]),
+            soll_by_category=dict(c03["soll_factor_by_category"]),
+            soll_levels=tuple(c03["levels"]),
+            matrix=cyc.separation_matrix,
+            high_volume=pr.high_volume_cells(cyc, road),
             max_reduction=float(r["C-NET-04"]["max_reduction"]),
             official_multiplier=float(r["C-NET-05"]["multiplier"]),
             match_buffer_m=float(r["C-NET-05"]["match_buffer_m"]),
@@ -101,6 +118,9 @@ class NetworkParams:
             rsv_trigger=float(cats["RSV"]["demand_trigger_cyclists_weekday"]["value"]),
             rsv_min_length_m=float(cats["RSV"]["min_route_length_km"]["value"]) * 1000,
             rsv_gap_max_m=float(r["C-NET-06"]["gap_max_m"]),
+            rsv_band_factor=float(r["C-NET-06"]["demand_band_factor"]["value"]),
+            fgsv_min_length_m=float(fgsv["min_length_km"]["value"]) * 1000,
+            fgsv_predominant_share=float(fgsv["predominant_share"]["value"]),
             mesh_max_m={c: float(cats[c]["mesh_m"]["range"][1]) for c in ("HAUPT", "BASIS")},
             mesh_ref_density=(float(r["C-NET-07"]["density_scaling"]["reference_density_per_km2"]["value"])
                               if "density_scaling" in r["C-NET-07"] else None),
@@ -129,15 +149,28 @@ class NetworkParams:
 # --- C-NET-03..05 Soll resistance and bonuses -------------------------------------------------------
 
 
-def soll_factor_for(kind: str, cat_final, ist_factor: float, p: NetworkParams) -> tuple[float, str]:
-    """Length factor of the rule-conform facility (C-NET-03) and its factor name; "ist" keeps the Ist factor."""
+def soll_factor_for(kind: str, cat_final, ist_factor: float, p: NetworkParams, level: str,
+                    dtv=None) -> tuple[float, str, str | None]:
+    """Length factor of the rule-conform facility (C-NET-03), its factor name and the facility it stands for.
+
+    Own paths and categories in soll_factor_by_category (ETW_ERF: walking pace, F15) take their factor directly;
+    roads otherwise the preferred facility of separation_matrix[cat_final][level], with the high_volume cell (S-05)
+    when the DTV is known (F16). No cat_final, no active matrix row (rural, F28) or a ferry: Ist factor, "ist".
+    """
+    from pipeline.lib import principles as pr   # principles imports this module
     if kind == "path":
-        key = "path"
-    elif kind == "road" and isinstance(cat_final, str) and cat_final in p.soll_factors:
-        key = cat_final
-    else:
-        return float(ist_factor), "ist"
-    return p.soll_factors[key], p.soll_factor_keys[key]
+        key = p.soll_by_category["path"]
+        return p.factors[key], key, None
+    if kind != "road" or not isinstance(cat_final, str):
+        return float(ist_factor), "ist", None
+    if cat_final in p.soll_by_category:
+        key = p.soll_by_category[cat_final]
+        return p.factors[key], key, None
+    facility, _ = pr.soll_facility(cat_final, level, p, dtv)
+    if facility is None:
+        return float(ist_factor), "ist", None
+    key = p.soll_by_facility[facility]
+    return p.factors[key], key, facility
 
 
 def soll_costs(length, ist_factor, cost_fwd, cost_bwd, soll_factor) -> tuple[np.ndarray, np.ndarray]:
@@ -384,9 +417,9 @@ def route_pairs(g: Graph, point_nodes: np.ndarray, pairs: list[tuple[int, int]])
 # --- C-NET-06 RSV ---------------------------------------------------------------------------------------------
 
 
-def rsv_mask(lengths: np.ndarray, demand: np.ndarray, p: NetworkParams) -> np.ndarray:
-    """Along an ordered route: runs with demand >= trigger, gaps up to gap_max_m bridged, kept if the run
-    is at least min_route_length_km long."""
+def rsv_runs(lengths: np.ndarray, demand: np.ndarray, p: NetworkParams) -> list[tuple[int, int]]:
+    """Along an ordered route: (start, end) of the runs with demand >= trigger, gaps up to gap_max_m bridged,
+    kept if the run is at least min_route_length_km long."""
     lengths = np.asarray(lengths, dtype="float64")
     hi = np.nan_to_num(np.asarray(demand, dtype="float64"), nan=0.0) >= p.rsv_trigger
     runs = _runs(hi.tolist())
@@ -394,11 +427,40 @@ def rsv_mask(lengths: np.ndarray, demand: np.ndarray, p: NetworkParams) -> np.nd
         s, e, v = runs[k]
         if not v and lengths[s:e].sum() <= p.rsv_gap_max_m:
             hi[s:e] = True
-    out = np.zeros(len(hi), dtype=bool)
-    for s, e, v in _runs(hi.tolist()):
-        if v and lengths[s:e].sum() >= p.rsv_min_length_m:
-            out[s:e] = True
+    return [(s, e) for s, e, v in _runs(hi.tolist()) if v and lengths[s:e].sum() >= p.rsv_min_length_m]
+
+
+def rsv_mask(lengths: np.ndarray, demand: np.ndarray, p: NetworkParams) -> np.ndarray:
+    """Edges of the RSV runs of an ordered route (C-NET-06)."""
+    out = np.zeros(len(lengths), dtype=bool)
+    for s, e in rsv_runs(lengths, demand, p):
+        out[s:e] = True
     return out
+
+
+def weighted_median(values: np.ndarray, weights: np.ndarray) -> float:
+    """Length-weighted median (lower median); NaN values count as 0 (no demand)."""
+    v = np.nan_to_num(np.asarray(values, dtype="float64"), nan=0.0)
+    w = np.asarray(weights, dtype="float64")
+    if not len(v) or w.sum() <= 0:
+        return float("nan")
+    order = np.argsort(v, kind="stable")
+    cum = np.cumsum(w[order])
+    return float(v[order][np.searchsorted(cum, 0.5 * cum[-1])])
+
+
+def rsv_run_assessment(lengths: np.ndarray, demand: np.ndarray, p: NetworkParams) -> dict:
+    """F12 for one RSV run: length, length-weighted median demand, share of the length at or above the trigger,
+    FGSV candidate (length >= fgsv min_length and share > predominant_share) and rsv_confidence (low if the
+    median is below trigger x demand_band_factor, C-NET-06)."""
+    lengths = np.asarray(lengths, dtype="float64")
+    d = np.nan_to_num(np.asarray(demand, dtype="float64"), nan=0.0)
+    total = float(lengths.sum())
+    share = float(lengths[d >= p.rsv_trigger].sum() / total) if total > 0 else 0.0
+    median = weighted_median(d, lengths)
+    return {"length_km": round(total / 1000, 3), "cyc_median": round(median), "share_at_trigger": round(share, 3),
+            "fgsv_candidate": bool(total >= p.fgsv_min_length_m and share > p.fgsv_predominant_share),
+            "confidence": "low" if median < p.rsv_trigger * p.rsv_band_factor else "high"}
 
 
 # --- C-NET-07 meshes ----------------------------------------------------------------------------------------------

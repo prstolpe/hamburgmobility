@@ -45,10 +45,19 @@ Das amtliche Radnetz ist Startpunkt und Vergleichsebene, nicht Ergebnis [B].
 
 | Code | Hamburg-Begriff | NL-Vorbild | Maschenweite | Auslöser |
 | --- | --- | --- | --- | --- |
-| RSV | Radschnellverbindung / Radroute+ | snelfietsroute | Korridore | ≥ 2.000 Rad/Werktag (Hessen) [F], ≥ 5 km [F] |
+| RSV | Radvorrangroute / Radroute+ | snelfietsroute | Korridore | ≥ 2.000 Rad/Werktag (Hessen) [F], ≥ 5 km [F] |
 | HAUPT | Radroute | hoofdfietsroute | 400–600 m [F] | Stadtnetz, Bezirkszentren, Schnellbahn |
 | BASIS | Bezirksroute | wijkontsluitend | 200–300 m [F] | Schulen, Nahversorgung |
 | ERSCHL | Quartiersnetz | buurtnetwerk | 100–150 m [F] | alle übrigen befahrbaren Straßen/Wege |
+
+**RSV ist keine Radschnellverbindung im Sinne der FGSV** (seit cycling_rules 0.10.0, Review 2026-11 F12): Der Code bleibt,
+die Bezeichnung lautet „Radvorrangroute / Radroute+“. Die FGSV-Hinweise zu Radschnellverbindungen setzen u. a. rund 10 km
+Länge und ≥ 2.000 Rad/24 h an (aus dem Gedächtnis, am Original prüfen; Annahme A5). Jeder RSV-Lauf wird darum zusätzlich
+gekennzeichnet: **FGSV-Kandidat** (`fgsv_rsv_candidate`), wenn der Lauf ≥ 10 km lang ist und auf mehr als der Hälfte seiner
+Länge die Modellnachfrage den Auslöser erreicht; **rsv_confidence low** (C-NET-06 `demand_band_factor` 2,0), wenn der
+längengewichtete Median der Modellnachfrage unter Auslöser × 2 liegt. Hintergrund: Nur 52 % der Zählquerschnitte liegen
+innerhalb Faktor 2 des Modells, eine absolute Schwelle auf Modellwerte ist dort instabil. Beides steht im Steckbrief und
+ändert keine Kategorie [B].
 
 ## 3. Netzentwurf in fünf Schritten
 
@@ -64,7 +73,9 @@ Das amtliche Radnetz ist Startpunkt und Vergleichsebene, nicht Ergebnis [B].
   und freigegebene Fußwege sowie Fähren mit Radmitnahme aus OSM, gerichtet (Gegenrichtung in Einbahnstraßen nur mit
   `oneway:bicycle=no`). Kanten-ID `ce_…` stabil wie `segment_id`; Bezug zum Abschnitt über `segment_id` bzw. `sidepath_of`.
 - **Widerstand Ist** (C-IMP-01…08): Länge × Faktor aus `routing_impedance` je Führung und Tempo, plus Wartezeit an LSA und
-  bei Wartepflicht, umgerechnet mit 15 km/h [B].
+  bei Wartepflicht, umgerechnet mit 15 km/h [B]. Verkehrsberuhigte Bereiche (`living_street`) und Fußgängerzonen mit
+  Radfreigabe (`pedestrian`) erhalten seit cycling_rules 0.10.0 unabhängig vom Ist-Tempo den Faktor `walking_pace_area`
+  2,1 (Schrittgeschwindigkeit, 15 km/h zu 7 km/h; eigene Setzung, Review 2026-11 F15, C-IMP-04 `factor_by_highway`) [B].
 - **Nachfrage** (pipeline/c02_cycle_demand.py, C-DEM-01…07): Einwohner aus dem Zensus-Gitter in 500-m-Zonen; Ziele aus
   ALKIS-Geschossfläche (Nichtwohnen), Geschäften, Schulen, Hochschulen und Schnellbahnstationen; Gravitationsmodell mit
   exponentiellem Distanzverfall im Band 0,5–15 km; Umlegung auf kürzeste Wege nach wahrgenommenem Widerstand, gemittelt
@@ -77,8 +88,17 @@ Das amtliche Radnetz ist Startpunkt und Vergleichsebene, nicht Ergebnis [B].
 
 pipeline/c03_cycle_network.py, Regeln C-NET-01…13 in `network_design` (alle Annahmen, status draft):
 
-- **Soll-Widerstand:** Länge × Faktor der regelkonformen Führung je cat_final plus Wartezeiten des Ist-Zustands; Boni für
-  hohe Nachfrage und für Kanten des amtlichen Radnetzes [B].
+- **Soll-Widerstand:** Länge × Faktor der regelkonformen Führung plus Wartezeiten des Ist-Zustands; Boni für
+  hohe Nachfrage und für Kanten des amtlichen Radnetzes [B]. Seit cycling_rules 0.10.0 (Review 2026-11 F16) folgt der
+  Faktor der **bevorzugten Führung der Matrixzelle für die Ebene, die gerade entworfen wird**: HAUPT-Zelle für Korridore,
+  RSV, HAUPT-Verdichtung und Parallelregel, BASIS-Zelle für BASIS-Anbindung und -Verdichtung (`soll_factor_by_facility`).
+  Die Zelle `GOW30.high_volume` (S-05) zählt mit, wo das DTV bekannt ist: Sie entscheidet die Führung (Radweg statt
+  Radfahrstreifen) und damit den Faktor. Eine GOW30-Hauptroute rechnet so mit dem Radweg-Faktor 1,1 statt 1,25, eine
+  ETW30-Hauptroute mit der Fahrradstraße (1,0), eine BASIS-Route auf ETW30 mit Mischverkehr (1,05). Fußgängerzonen und
+  verkehrsberuhigte Bereiche (ETW_ERF) rechnen auf jeder Ebene mit Schrittgeschwindigkeit (`soll_factor_by_category`,
+  F15), obwohl die Matrix für RSV/HAUPT dort eine eigene Trasse bevorzugt: So weichen Hauptrouten Fußgängerzonen aus, wo
+  eine Alternative besteht; ob eine eigene Trasse möglich ist, prüft erst die Raumprüfung. Bis 0.9.0 galt ein fester
+  Faktor je cat_final (GOW30 immer Radfahrstreifen, ETW_ERF wie ETW30) [B].
 - **Korridore:** Innenstadt, Schnellbahn-Umsteigeknoten, Hochschulen und Arbeitsplatzschwerpunkte, je mit den nächsten
   Punkten und der Innenstadt verbunden. Bezirks- und Stadtteilzentren fehlen noch (kein Datensatz) [B].
 - **Hierarchie:** RSV auf Korridorläufen ab 2.000 Rad/Werktag und 5 km [F]; HAUPT und BASIS durch Teilen zu großer Maschen
@@ -125,6 +145,10 @@ pipeline/c05_facility.py je Straßenabschnitt, Regeln C-FAC-01…07 in `facility
   Für die Ortsgrenze gibt es keine Datenquelle (rules.yaml C-RUR-01, ebenfalls inaktiv), GOW80/ETW60 erhalten daher keine
   Soll-Führung. S-03 und design_rules PL-02 betreffen nur Zweirichtungsradwege, die die Matrix ausschließlich außerorts
   vergibt; sie sind als außerorts gekennzeichnet (`scope: rural`, PL-02 inaktiv) [B].
+- **Hauptroute durch Fußgängerzone (seit cycling_rules 0.10.0, Review 2026-11 F15):** ETW_ERF × HAUPT wie RSV: eigene
+  Trasse bevorzugt, Fallback Mischverkehr erst nach der Raumprüfung (Flag `fallback_check_p19`), immer Flag
+  `haupt_through_pedestrian_area`. Mischverkehr in Fußgängerzone und verkehrsberuhigtem Bereich heißt
+  Schrittgeschwindigkeit mit Vorrang des Fußverkehrs (StVO) und widerspricht der HAUPT-Zielgeschwindigkeit 20 km/h [B].
 - **GOW30 mit hoher Belastung (S-05, seit cycling_rules 0.9.0, Review 2026-11 F01):** Liegt das DTV über
   `requirements.GOW30.profiles.wide.max_dtv` in rules.yaml (10 000 Kfz/Tag, Grenze einschließlich: 10 000 →
   Radfahrstreifen, 10 001 → Radweg), gilt vor der Radkategorie die Zelle `GOW30.high_volume`: Radweg je Seite, kein
@@ -134,7 +158,12 @@ pipeline/c05_facility.py je Straßenabschnitt, Regeln C-FAC-01…07 in `facility
 - **Fahrradstraße** nur bei höchstens 2 500 Kfz/Tag und Radverkehr ≥ Kfz in der Spitzenstunde, sonst Mischverkehr mit dem
   Hinweis „Kfz-Menge reduzieren (Filter) oder Route verlegen“. **S-04:** Mischverkehr bis 700 Kfz/h (DTV × 0,10) [B].
   Kfz-Mengen gibt es nur für Hauptverkehrsstraßen; ohne Zählung gelten beide Bedingungen vorläufig als erfüllt
-  (Entscheidung 2026-11-06, Flag dtv_unknown) [B].
+  (Entscheidung 2026-11-06, Flag dtv_unknown) [B]. **Proxy für Durchgangsverkehr** (seit cycling_rules 0.10.0, Review
+  2026-11 F19, C-FAC-02 `dtv_proxy`): Fehlt das DTV und trägt der Abschnitt das Schleichverkehrsflag `N4_shortcut`
+  (rules.yaml N4) oder liegt seine Kfz-Betweenness im Perzentil ≥ 0,8 (`betweenness_norm`, eigene Setzung, Annahme A8),
+  ist die Bedingung unbekannt: Die Führung bleibt, der Abschnitt erhält das Flag `filter_needed` („Durchgangsverkehr
+  wahrscheinlich, Filter prüfen“). Das ergibt die Liste für modale Filter in reports/cycle_facility.md; die VwV-StVO zu
+  Z. 244.1 lässt Fahrradstraßen auch bei hoher Netzbedeutung zu (Fassung prüfen, Annahme A7) [B].
 - **Sollbreite** = Projekt-Soll plus Verbreiterung nach Spitzenstunde, nie unter dem deutschen Mindestmaß; DE-Regelmaß und
   NL-Hauptnetz werden als Vergleich mitgeführt. Mischverkehr ohne Sollbreite; eigene Trasse wie Zweirichtungsradweg [B].
   Untergrenze für Zweirichtungsradweg und eigene Trasse ist seit 0.9.0 das Mindestmaß des einseitigen

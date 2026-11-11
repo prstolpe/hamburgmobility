@@ -217,7 +217,7 @@ export const LAYER_INFO = {
   feas: { title: "Machbarkeit", text: "Passt der Soll-Querschnitt der eigenen Kategorie in den Straßenraum?" },
   hvs: { title: "Hauptverkehrsstraßen (Vergleich)", text: "Hauptverkehrsstraßennetz der BVM zum Vergleich mit der Soll-Kategorie." },
   cnet: { title: "Radnetz (Soll)", cycling: true,
-    text: "Vorgeschlagenes Radnetz in vier Ebenen: Radschnellverbindung, Radroute, Bezirksroute und Quartiersnetz." },
+    text: "Vorgeschlagenes Radnetz in vier Ebenen: Radvorrangroute, Radroute, Bezirksroute und Quartiersnetz." },
   cfac: { title: "Radanlagen (Soll)", cycling: true,
     text: "Welche Radverkehrsanlage der Abschnitt nach dem Entwurf haben soll – nach der Prüfung, ob der Platz reicht." },
   cgap: { title: "Radanlagen Soll/Ist", cycling: true,
@@ -229,7 +229,7 @@ export const LAYER_INFO = {
   jct: { title: "Knotenpunkte", cycling: true,
     text: "Vorgeschlagener Knotentyp; Form und Farbe zeigen den Typ, größere Zeichen: Umbau nötig. Sichtbar ab Zoomstufe 12." },
   coff: { title: "Radnetz Hamburg (amtlich)", cycling: true,
-    text: "Amtliches Radnetz Hamburg zum Vergleich; grau darunter das vorgeschlagene Soll-Radnetz (Radschnellverbindungen und Radrouten)." },
+    text: "Amtliches Radnetz Hamburg zum Vergleich; grau darunter das vorgeschlagene Soll-Radnetz (Radvorrangrouten und Radrouten)." },
 };
 
 export const OVERLAY_INFO = {

@@ -287,3 +287,39 @@ def test_floor_twoway_and_own_path_oneside_min():
     oneside = CYC.widths_m["de"]["separated_twoway"]["oneside_min"]
     assert P.floor["separated_twoway"] == oneside and P.floor["own_path"] == oneside
     assert oneside > CYC.widths_m["de"]["separated_twoway"]["min"]
+
+
+# --- Review 2026-11 F15 / F19 ------------------------------------------------------------------------------
+
+
+def test_haupt_on_etw_erf_prefers_own_path_with_flag():
+    """F15 (G09): HAUPT through a pedestrian area like RSV: own_path preferred, mixed as fallback, flag set."""
+    r = fa.soll_facility("ETW_ERF", "HAUPT", None, 50, None, P)
+    assert (r.facility, r.fallback) == ("own_path", "mixed")
+    assert {"fallback_check_p19", "haupt_through_pedestrian_area"} <= set(r.flags)
+    fb = fa.soll_facility("ETW_ERF", "HAUPT", None, 50, False, P)
+    assert fb.facility == "mixed" and "haupt_through_pedestrian_area" in fb.flags
+    assert "haupt_through_pedestrian_area" not in fa.soll_facility("ETW_ERF", "BASIS", None, 50, None, P).flags
+
+
+def test_dtv_proxy_by_shortcut_or_betweenness():
+    """F19: without a DTV, N4 shortcut or betweenness_norm >= proxy_betweenness -> condition unknown, filter_needed."""
+    thr = P.proxy.threshold
+    for kw in ({"shortcut": True, "betweenness": 0.0}, {"shortcut": False, "betweenness": thr}):
+        r = fa.soll_facility("ETW30", "HAUPT", None, 0, True, P, **kw)
+        assert r.facility == "cycle_street"                       # facility stays (no category change)
+        assert {"dtv_unknown", P.proxy.flag} <= set(r.flags) and "cycle_street_blocked" not in r.flags
+        step = next(s for s in r.trace if s["id"] == "C-FAC-02")
+        assert step["result"] is None and step["values"]["dtv_proxy"] is True
+    below = fa.soll_facility("ETW30", "HAUPT", None, 0, True, P, shortcut=False, betweenness=thr - 0.01)
+    assert P.proxy.flag not in below.flags
+    assert next(s for s in below.trace if s["id"] == "C-FAC-02")["result"] is True
+
+
+def test_dtv_proxy_on_mixed_and_not_with_dtv():
+    r = fa.soll_facility("ETW30", "ERSCHL", None, 10, True, P, shortcut=True)
+    assert r.facility == "mixed" and P.proxy.flag in r.flags
+    assert next(s for s in r.trace if s["id"] == "S-04")["result"] is None
+    known = fa.soll_facility("ETW30", "ERSCHL", 500, 10, True, P, shortcut=True, betweenness=1.0)
+    assert P.proxy.flag not in known.flags                        # DTV known: the proxy is not used
+    assert fa.soll_facility("ETW30", "ERSCHL", None, 10, True, P, shortcut=None, betweenness=math.nan).flags == ["dtv_unknown"]

@@ -9,7 +9,7 @@ const META = {
   categories: {}, discrepancy_types: {}, width_classes_m: {}, feasibility: {}, github_repo: null, feedback_email: null,
   cycling: {
     disclaimer: "Radnetz-Entwurf – nicht amtlich",
-    cycle_categories: { RSV: "Radschnellverbindung", HAUPT: "Radroute", BASIS: "Bezirksroute", ERSCHL: "Quartiersnetz" },
+    cycle_categories: { RSV: "Radvorrangroute / Radroute+", HAUPT: "Radroute", BASIS: "Bezirksroute", ERSCHL: "Quartiersnetz" },
     no_cycle_category: "nicht im Soll-Radnetz",
     facility: { separated_oneway_both: "Radweg beidseitig", separated_twoway: "Zweirichtungsradweg", cycle_lane: "Radfahrstreifen",
       cycle_street: "Fahrradstraße", mixed: "Mischverkehr", own_path: "eigene Trasse" },
@@ -157,6 +157,19 @@ describe("segment profile with cycling block", () => {
     expect(html).toContain("Sicherheit");
     expect(html).toContain("2 von 82");
     expect(html).toContain("Radnetz-Entwurf – nicht amtlich");
+  });
+
+  it("shows FGSV candidate and uncertainty for a Radvorrangroute (F12), nothing for other categories", () => {
+    const rsv = { ...CYCLING_BLOCK, cycle_cat: { code: "RSV", label: "Radvorrangroute / Radroute+" },
+      rsv: { fgsv_candidate: false, fgsv_text: "kein Kandidat für eine Radschnellverbindung nach FGSV", confidence: "low",
+        confidence_text: "unsicher: Modellnachfrage innerhalb der Modellunsicherheit" } };
+    const html = profileHtml({ ...base, cycling: rsv }, META, "u");
+    expect(html).toContain("Radvorrangroute / Radroute+");
+    expect(html).toContain("Radschnellverbindung (FGSV)");
+    expect(html).toContain("kein Kandidat für eine Radschnellverbindung nach FGSV");
+    expect(html).toContain("unsicher: Modellnachfrage");
+    const plain = profileHtml({ ...base, cycling: { ...CYCLING_BLOCK, rsv: null } }, META, "u");
+    expect(plain).not.toContain("Radschnellverbindung (FGSV)");
   });
 
   it("leaves the section out without cycling data", () => {

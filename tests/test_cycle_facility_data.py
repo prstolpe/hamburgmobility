@@ -71,3 +71,24 @@ def test_v_inv_04_no_cycle_lane_on_high_volume_gow30(out):
     assert not (high & (out["cycle_facility_soll"] == "cycle_lane")).any()
     flagged = out["facility_flags"].fillna("").str.split("|").apply(lambda xs: "gow30_high_volume" in xs)
     assert (flagged == high).all()
+
+
+def test_filter_needed_only_without_dtv(out):
+    """F19: filter_needed only where the DTV is missing, and always together with dtv_unknown."""
+    flags = out["facility_flags"].fillna("").str.split("|")
+    hit = flags.apply(lambda xs: "filter_needed" in xs)
+    assert out.loc[hit, "dtv_official"].isna().all()
+    assert flags[hit].apply(lambda xs: "dtv_unknown" in xs).all()
+
+
+def test_haupt_through_pedestrian_area_flag(out):
+    """F15: every HAUPT segment on ETW_ERF carries the flag and has own_path as Soll (space not checked in c05)."""
+    m = (out["cat_final"] == "ETW_ERF") & (out["cycle_cat_final"] == "HAUPT")
+    flags = out.loc[m, "facility_flags"].fillna("")
+    assert flags.str.contains("haupt_through_pedestrian_area").all()
+    assert (out.loc[m, "cycle_facility_soll"] == "own_path").all()
+
+
+def test_rsv_columns_only_on_rsv(out):
+    other = out["cycle_cat_final"] != "RSV"
+    assert out.loc[other, "rsv_confidence"].isna().all() and out.loc[other, "rsv_fgsv_candidate"].isna().all()

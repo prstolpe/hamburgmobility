@@ -111,6 +111,8 @@ export function cyclingHtml(c, meta) {
     <p class="note">${esc(meta.cycling.disclaimer)}</p>
     ${dl([
       ["Radnetz (Soll)", `${esc(c.cycle_cat.label)}${c.cycle_cat.code !== "none" ? ` (${esc(c.cycle_cat.code)})` : ""}`],
+      ["Radschnellverbindung (FGSV)", c.rsv?.fgsv_text ? esc(c.rsv.fgsv_text) : null],
+      ["Sicherheit der Einstufung", c.rsv?.confidence_text ? esc(c.rsv.confidence_text) : null],
       ["Radanlage Soll", f.soll_text ? `${esc(f.soll_text)}${f.fallback_used ? " – Ersatzlösung, weil der Platz für die bevorzugte nicht reicht" : ""}` : "kein Soll"],
       ["Radanlage heute", f.ist_text ? `${esc(f.ist_text)}${f.osm_ist_text ? ` (OpenStreetMap: ${esc(f.osm_ist_text)})` : ""}` : null],
       ["Soll/Ist", f.gap_text ? esc(f.gap_text) : null],

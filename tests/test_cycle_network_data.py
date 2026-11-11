@@ -89,3 +89,21 @@ def test_haupt_and_basis_connected(net):
         g = cn.Graph(net["node_u"].to_numpy()[pos], net["node_v"].to_numpy()[pos], np.ones(len(pos)), pos)
         n, _ = connected_components(g.matrix, directed=False)
         assert n == 1, level
+
+
+def test_rsv_assessment_only_on_rsv_edges(net):
+    """F12: rsv_confidence/rsv_fgsv_candidate only on final RSV edges; values in the vocabulary."""
+    assert {"rsv_confidence", "rsv_fgsv_candidate", "rsv_run_km", "soll_factor_basis", "soll_facility"} <= set(net.columns)
+    other = net["cycle_cat_final"] != "RSV"
+    assert net.loc[other, "rsv_confidence"].isna().all() and net.loc[other, "rsv_fgsv_candidate"].isna().all()
+    assert set(net["rsv_confidence"].dropna()) <= {"low", "high"}
+    cand = net["rsv_fgsv_candidate"].fillna(False).astype(bool)
+    assert (net.loc[cand, "rsv_run_km"] * 1000 >= P.fgsv_min_length_m - 1e-6).all()
+
+
+def test_soll_factor_by_level(net):
+    """F15/F16: ETW_ERF at walking pace on both levels; GOW30 on the HAUPT level with the track factor."""
+    road = net[net["kind"] == "road"]
+    assert (road.loc[road["cat_final"] == "ETW_ERF", ["soll_factor_key", "soll_factor_key_basis"]] == "walking_pace_area").all().all()
+    g30 = road[road["cat_final"] == "GOW30"]
+    assert (g30["soll_factor_key"] == "gow50_separated_track").all()

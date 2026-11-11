@@ -269,17 +269,55 @@ def test_network_rule_missing(cyc):
 
 
 def test_rejects_unknown_soll_factor(cyc):
-    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03")["soll_factors"].update(GOW50="fast")),
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03")["soll_factor_by_facility"].update(mixed="fast")),
              "unknown factors")
 
 
 def test_rejects_unknown_soll_factor_key(cyc):
-    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03")["soll_factors"].update(GOW99="etw30_mixed")),
-             "unknown soll_factors keys")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03")["soll_factor_by_category"].update(GOW99="etw30_mixed")),
+             "unknown soll_factor_by_category keys")
 
 
-def test_soll_factors_cover_all_categories(cyc):
-    assert set(_net(cyc, "C-NET-03")["soll_factors"]) == EXPECTED_CATEGORIES | {"path"}
+def test_soll_factor_by_facility_covers_all_facilities(cyc):
+    """F16: the Soll factor follows the facility of the matrix cell; every facility needs a factor."""
+    assert set(_net(cyc, "C-NET-03")["soll_factor_by_facility"]) == FACILITIES
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03")["soll_factor_by_facility"].pop("mixed")),
+             "every facility")
+
+
+def test_soll_factor_by_category_path_and_walking_pace(cyc):
+    by_cat = _net(cyc, "C-NET-03")["soll_factor_by_category"]
+    assert by_cat["path"] == "separated_track_or_cycle_street"
+    assert by_cat["ETW_ERF"] == "walking_pace_area"        # F15
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03")["soll_factor_by_category"].pop("path")), "path")
+
+
+def test_rejects_bad_soll_levels_and_band(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-03").update(levels=["HAUPT"])), "levels")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _net(d, "C-NET-06")["demand_band_factor"].update(value=0.5)),
+             "demand_band_factor")
+
+
+def test_rejects_unknown_factor_by_highway(cyc):
+    def mut(d):
+        next(r for r in d["routing_impedance"]["ist_mapping"]["rules"] if r["id"] == "C-IMP-04")["factor_by_highway"]["living_street"] = "slow"
+    _rejects(CyclingRuleSet, _mutated(cyc, mut), "factor_by_highway")
+
+
+def test_rejects_unknown_matrix_flag(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["separation_matrix"]["ETW_ERF"]["HAUPT"].update(flag="nope")), "unknown flag")
+
+
+def test_dtv_proxy_checks(cyc):
+    def proxy(d):
+        return next(r for r in d["facility_assignment"]["rules"] if r["id"] == "C-FAC-02")["dtv_proxy"]
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: proxy(d)["proxy_betweenness"].update(value=80)), "percentile")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: proxy(d).update(flag="nope")), "unknown flag")
+
+
+def test_fgsv_candidate_checks(cyc):
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["cycle_categories"]["RSV"]["fgsv_rsv_candidate"]["predominant_share"].update(value=1.5)),
+             "predominant_share")
 
 
 def test_rejects_official_and_planned_overlap(cyc):

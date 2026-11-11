@@ -246,3 +246,18 @@ def test_cycling_meta_has_labels_for_every_element_and_category():
     assert m["disclaimer"] == TEXTS["cycling"]["disclaimer"]
     for key in ("facility", "gap", "fit", "lanes", "junction_type", "junction_group", "official_status"):
         assert m[key] == TEXTS["cycling"][key]
+
+
+def test_segment_block_rsv_fgsv_candidate_and_confidence():
+    """F12: the profile of an RSV segment shows the FGSV candidate and the uncertainty; other categories none."""
+    t = TEXTS["cycling"]["rsv"]
+    b = xc.segment_cycling_block(pd.Series(_fac_row(cycle_cat_final="RSV", rsv_fgsv_candidate=False, rsv_confidence="low")),
+                                 pd.Series(_xs_row()), None, LABELS)
+    assert b["cycle_cat"]["label"] == CYC.cycle_categories["RSV"]["label_de"] == "Radvorrangroute / Radroute+"
+    assert b["rsv"] == {"fgsv_candidate": False, "fgsv_text": t["not_fgsv_candidate"], "confidence": "low",
+                        "confidence_text": t["confidence"]["low"]}
+    c = xc.segment_cycling_block(pd.Series(_fac_row(cycle_cat_final="RSV", rsv_fgsv_candidate=None, rsv_confidence=None)),
+                                 pd.Series(_xs_row()), None, LABELS)["rsv"]
+    assert c["fgsv_text"] is None and c["confidence_text"] == t["no_run"]
+    assert xc.segment_cycling_block(pd.Series(_fac_row()), pd.Series(_xs_row()), None, LABELS)["rsv"] is None
+    json.dumps(b)

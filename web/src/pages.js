@@ -106,7 +106,7 @@ export function radnetzHtml(meta) {
   <ul>${cats}</ul>
   <p>So entsteht das Netz: Ein einfaches Verkehrsmodell schätzt, wie viele Menschen auf welcher Straße Rad fahren
   würden – von Wohnorten zu Arbeitsplätzen, Läden, Schulen, Hochschulen und Bahnhöfen. Das Modell ist an Hamburger
-  Zählstellen angepasst. Stark genutzte Verbindungen zwischen Zentren werden Radschnellverbindung oder Radroute.
+  Zählstellen angepasst. Stark genutzte Verbindungen zwischen Zentren werden Radvorrangroute oder Radroute; ob ein Lauf die FGSV-Kriterien einer Radschnellverbindung erfüllen könnte, steht im Steckbrief.
   Danach werden zu große Lücken im Netz geschlossen; Schulen und Nahversorgung werden angebunden. Das amtliche
   Radnetz bekommt einen Vorrang, ist aber nicht das Ziel. Alle übrigen befahrbaren Straßen und Wege bilden das
   Quartiersnetz.</p>

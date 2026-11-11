@@ -52,6 +52,8 @@ FLAG_DE = {"dtv_unknown": "Kfz-Menge unbekannt – Bedingung vorläufig erfüllt
            "ist_width_unknown": "Ist-Breite unbekannt (OSM)",
            "track_on_access_road": "Radweg an Erschließungsstraße mit Soll-Fahrradstraße – Straßenkategorie prüfen (C-FAC-06)",
            "gow30_high_volume": "GOW30 über dem breiten CROW-Profil (DTV > max_dtv): Radweg je Seite statt Radfahrstreifen (S-05)",
+           "haupt_through_pedestrian_area": "Hauptroute durch Fußgängerzone/verkehrsberuhigten Bereich: eigene Trasse bevorzugt, sonst Mischverkehr in Schrittgeschwindigkeit (F15)",
+           "filter_needed": "Kfz-Menge unbekannt, aber Durchgangsverkehr wahrscheinlich (N4 oder Betweenness): Filter prüfen (C-FAC-02/03 dtv_proxy, F19)",
            fa.TRACK_BELOW_FLOOR_FLAG: "heutiger Radweg schmaler als die Untergrenze aus C-FAC-04 (F06)"}
 CAT_ORDER = ["SW", "GOW80", "GOW50", "GOW30", "ETW60", "ETW30", "ETW_ERF"]
 CYC_ORDER = ["RSV", "HAUPT", "BASIS", "ERSCHL", NO_CYCLE_CATEGORY]
@@ -81,9 +83,10 @@ def _params(cycling: CyclingRuleSet) -> fa.FacilityParams:
     return hit[1]
 
 
-def evaluate(cat_final, cycle_cat, dtv, peak_dir, peak_both, space_fits_preferred, p: fa.FacilityParams) -> dict:
-    """Soll facility and width of one segment (C-FAC-01..04)."""
-    soll = fa.soll_facility(cat_final, cycle_cat, dtv, peak_both, space_fits_preferred, p)
+def evaluate(cat_final, cycle_cat, dtv, peak_dir, peak_both, space_fits_preferred, p: fa.FacilityParams,
+             shortcut=None, betweenness=None) -> dict:
+    """Soll facility and width of one segment (C-FAC-01..04); shortcut/betweenness for the dtv_proxy (F19)."""
+    soll = fa.soll_facility(cat_final, cycle_cat, dtv, peak_both, space_fits_preferred, p, shortcut, betweenness)
     width = fa.target_width(soll.facility, cycle_cat, peak_dir, peak_both, p)
     flags = list(soll.flags)
     if width.width is None and soll.facility in p.required_by_facility:
@@ -98,7 +101,17 @@ def facility_for_segment(props: dict, cycling: CyclingRuleSet) -> dict:
     peak_dir = props.get("cyc_peak_h_oneway")
     peak_both = props.get("cyc_peak_h", peak_dir)
     return evaluate(props["cat_final"], props["cycle_cat"], props.get("dtv"), peak_dir, peak_both,
-                    props.get("space_fits_preferred"), _params(cycling))
+                    props.get("space_fits_preferred"), _params(cycling), props.get("n4_shortcut"), props.get("betweenness_norm"))
+
+
+def has_flag(flags_json, flag: str) -> bool:
+    """A coherence flag (rules.yaml N1..N5, column flags of final.parquet: JSON list) is set on the segment."""
+    if not isinstance(flags_json, str):
+        return False
+    try:
+        return flag in json.loads(flags_json)
+    except ValueError:
+        return False
 
 
 # --- inputs per segment -------------------------------------------------------------------------------------
@@ -125,14 +138,23 @@ def segment_inputs(final: pd.DataFrame, net: gpd.GeoDataFrame, tags: dict, p: fa
     side["twoway"] = side["cost_fwd"].notna() & side["cost_bwd"].notna()
     side["side"] = fa.sidepath_side(final.geometry.reindex(side["seg"]).values, side.geometry.values)
 
-    both = pd.concat([road[["seg", "cycle_cat_final", "cyc_peak_h", "cyc_peak_h_fwd", "cyc_peak_h_bwd"]],
-                      side[["seg", "cycle_cat_final", "cyc_peak_h", "cyc_peak_h_fwd", "cyc_peak_h_bwd"]]])
+    rsv_cols = [c for c in ("rsv_fgsv_candidate", "rsv_confidence") if c in net.columns]
+    both = pd.concat([road[["seg", "cycle_cat_final", "cyc_peak_h", "cyc_peak_h_fwd", "cyc_peak_h_bwd", *rsv_cols]],
+                      side[["seg", "cycle_cat_final", "cyc_peak_h", "cyc_peak_h_fwd", "cyc_peak_h_bwd", *rsv_cols]]])
     both["peak_dir"] = np.fmax(both["cyc_peak_h_fwd"].to_numpy(dtype="float64"), both["cyc_peak_h_bwd"].to_numpy(dtype="float64"))
     g = both.groupby("seg")
     out = pd.DataFrame(index=final.index)
     out["cycle_cat_final"] = g["cycle_cat_final"].agg(lambda s: fa.highest_category(s, p)).reindex(out.index).fillna(NO_CYCLE_CATEGORY)
     out["cyc_peak_h_dir"] = g["peak_dir"].max().reindex(out.index)
     out["cyc_peak_h"] = g["cyc_peak_h"].max().reindex(out.index)
+    # F12: RSV run assessment of the segment's RSV edges (c03): candidate if any, confidence low if any low
+    rsv = both[both["cycle_cat_final"] == "RSV"]
+    rg_ = rsv.groupby("seg")
+    out["rsv_fgsv_candidate"] = (rg_["rsv_fgsv_candidate"].agg(lambda s: bool(s.fillna(False).any()) if s.notna().any() else pd.NA)
+                                 if "rsv_fgsv_candidate" in rsv else pd.Series(dtype="object")).reindex(out.index)
+    out["rsv_confidence"] = (rg_["rsv_confidence"].agg(lambda s: None if s.isna().all() else ("low" if (s == "low").any() else "high"))
+                             if "rsv_confidence" in rsv else pd.Series(dtype="object")).reindex(out.index)
+    out.loc[out["cycle_cat_final"] != "RSV", ["rsv_fgsv_candidate", "rsv_confidence"]] = None
     rg = road.groupby("seg")
     out["cycleway_values"] = rg["cw"].agg(lambda s: set().union(*s)).reindex(out.index)
     out["bicycle_road"] = rg["bicycle_road"].any().reindex(out.index).fillna(False).astype(bool)
@@ -155,7 +177,10 @@ def classify(final: pd.DataFrame, inp: pd.DataFrame, p: fa.FacilityParams) -> pd
     for seg, f in final.iterrows():
         i = inp.loc[seg]
         cw = set(i["cycleway_values"]) if isinstance(i["cycleway_values"], set) else set()
-        res = evaluate(f["cat_final"], i["cycle_cat_final"], f["dtv_official"], i["cyc_peak_h_dir"], i["cyc_peak_h"], None, p)
+        shortcut = has_flag(f["flags"], p.proxy.shortcut_flag) if p.proxy is not None else None
+        betweenness = f[p.proxy.betweenness_attribute] if p.proxy is not None else None
+        res = evaluate(f["cat_final"], i["cycle_cat_final"], f["dtv_official"], i["cyc_peak_h_dir"], i["cyc_peak_h"], None, p,
+                       shortcut, betweenness)
         cls = fa.ist_class(p, fahrradstrasse=_bool(f["fahrradstrasse_official"]), bicycle_road=bool(i["bicycle_road"]),
                            cycleway_values=cw, has_sidepath=bool(i["has_sidepath"]),
                            # s04 features also cover segments without a road edge (no impedance_trace)
@@ -189,7 +214,10 @@ def classify(final: pd.DataFrame, inp: pd.DataFrame, p: fa.FacilityParams) -> pd
                                                                "width_ist_m": None if not np.isfinite(w_ist) else float(w_ist)}},
                  {"id": "C-FAC-06", "result": gap, "values": {"partial": partial}},
                  {"id": "C-FAC-07", "result": conf, "values": {"flags": flags}}]
-        rows.append({"segment_id": seg, "cycle_cat_final": i["cycle_cat_final"], "cyc_peak_h": i["cyc_peak_h"],
+        rows.append({"segment_id": seg, "cycle_cat_final": i["cycle_cat_final"],
+                     "rsv_fgsv_candidate": None if fa._missing(i["rsv_fgsv_candidate"]) else bool(i["rsv_fgsv_candidate"]),
+                     "rsv_confidence": i["rsv_confidence"] if isinstance(i["rsv_confidence"], str) else None,
+                     "cyc_peak_h": i["cyc_peak_h"],
                      "cyc_peak_h_dir": i["cyc_peak_h_dir"], "cycle_facility_soll": res["cycle_facility"],
                      "cycle_facility_fallback": res["cycle_facility_fallback"], "cycle_width_soll_m": res["cycle_width_m"],
                      "cycle_width_de_m": res["cycle_width_de_m"], "cycle_width_nl_m": res["cycle_width_nl_m"],
@@ -249,6 +277,14 @@ def write_report(out: gpd.GeoDataFrame, version: str, p: fa.FacilityParams) -> N
         f"Fallback in Prompt 19 zu prüfen: {_fmt(km(flags.str.contains('fallback_check_p19')), 0)} km.",
         f"- GOW30 über dem breiten CROW-Profil (S-05, Flag gow30_high_volume, Soll Radweg je Seite ohne Fallback): "
         f"{_fmt(km(flags.str.contains('gow30_high_volume')), 0)} km von {_fmt(km(out['cat_final'] == 'GOW30'), 0)} km GOW30.",
+        f"- Kfz-Menge unbekannt, Durchgangsverkehr wahrscheinlich (C-FAC-02/03 dtv_proxy, Flag filter_needed, Liste für modale "
+        f"Filter): {_fmt(km(flags.str.contains('filter_needed')), 0)} km, davon Soll-Fahrradstraße "
+        f"{_fmt(km(flags.str.contains('filter_needed') & (out['cycle_facility_soll'] == 'cycle_street')), 0)} km.",
+        f"- Hauptroute durch Fußgängerzone/verkehrsberuhigten Bereich (F15, Flag haupt_through_pedestrian_area): "
+        f"{_fmt(km(flags.str.contains('haupt_through_pedestrian_area')), 1)} km.",
+        f"- RSV (Radvorrangroute): {_fmt(km(out['cycle_cat_final'] == 'RSV'), 1)} km, davon FGSV-Kandidat "
+        f"{_fmt(km(out['rsv_fgsv_candidate'].fillna(False).astype(bool)), 1)} km, rsv_confidence low "
+        f"{_fmt(km(out['rsv_confidence'] == 'low'), 1)} km (F12, c03).",
         "",
         "## km je Führungsform: Soll und Ist",
         "",
@@ -347,9 +383,10 @@ def main() -> int:
     def tick(msg: str) -> None:
         print(f"cycle-facility: {msg} ({time.perf_counter() - t0:.0f} s)")
 
+    proxy_cols = ["flags", p.proxy.betweenness_attribute] if p.proxy is not None else []
     final = gpd.read_parquet(FINAL_PATH, columns=["segment_id", "name", "bezirk", "length_m", "cat_final", "dtv_official",
                                                   "fahrradstrasse_official", "separated_cycle_track_present",
-                                                  "cycle_lane_present", "width_median_m", "geometry"]).set_index("segment_id")
+                                                  "cycle_lane_present", "width_median_m", *proxy_cols, "geometry"]).set_index("segment_id")
     net = gpd.read_parquet(NETWORK_PATH)
     pbf = REPO_ROOT / _pbf_from_manifest(load_manifest())["path"]
     way_ids = {int(w) for ws in net["osm_way_ids"] for w in ws}

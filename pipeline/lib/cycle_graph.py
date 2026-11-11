@@ -43,6 +43,7 @@ class GraphParams:
     give_way_delay_s: float
     factors: dict
     imp_rules: tuple  # (id, when, factor key, is_multiplier)
+    imp_by_highway: dict  # rule id -> {highway: factor key}; such highways meet the rule regardless of speed (C-IMP-04, F15)
     low_speed_max_kmh: float
     access_categories: frozenset
     access_highways: frozenset
@@ -73,6 +74,7 @@ class GraphParams:
             give_way_delay_s=float(imp["factors"]["give_way_delay_s"]),
             factors=factors,
             imp_rules=tuple((r["id"], r["when"], r.get("factor", r.get("multiply")), "multiply" in r) for r in m["rules"]),
+            imp_by_highway={r["id"]: dict(r["factor_by_highway"]) for r in m["rules"] if r.get("factor_by_highway")},
             low_speed_max_kmh=float(m["low_speed_max_kmh"]),
             access_categories=frozenset(m["access_categories"]),
             access_highways=frozenset(m["access_highways"]),
@@ -167,8 +169,11 @@ def impedance(kind: str, highway: str, tags: dict, cat, speed, fahrradstrasse: b
     }
     factor, chosen, rules, keys = None, None, [], []
     for rule_id, when, key, multiply in params.imp_rules:
-        if multiply or factor is not None or not conditions[when]:
+        by_highway = params.imp_by_highway.get(rule_id, {})
+        own = road and highway in by_highway   # e.g. walking pace in living_street/pedestrian (C-IMP-04, F15)
+        if multiply or factor is not None or not (conditions[when] or own):
             continue
+        key = by_highway[highway] if own else key
         factor, chosen = params.factors[key], rule_id
         rules.append(rule_id)
         keys.append(key)
