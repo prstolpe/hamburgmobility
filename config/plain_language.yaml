@@ -5,7 +5,7 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.8.0
+  version: 0.9.0
   date: 2026-11-08
 
 categories:
@@ -141,7 +141,8 @@ columns:
   dtv_official: "Durchschnittliche tägliche Verkehrsstärke (Kfz/24 h), Stand 2019, nur Hauptverkehrsstraßen"
   bus_trips_weekday: "Busfahrten an einem Werktag (HVV-Fahrplan)"
   in_cycle_network: "Teil des Radnetzes Hamburg (OSM-Relationen)"
-  separated_cycle_track_present: "Baulicher Radweg vorhanden (OSM); leer = unbekannt"
+  separated_cycle_track_present: "Baulicher Radweg vorhanden (OSM-Tag oder begleitender Radweg, Ist-Führung S-FEAT-13); leer = unbekannt"
+  parallel_cycle_route_present: "Parallelroute im Soll-Radnetz (RSV/HAUPT/BASIS, Umweg höchstens P-DIR-01); nur GOW50"
   cycle_lane_present: "Radfahr- oder Schutzstreifen vorhanden (OSM); leer = unbekannt"
   centre_line: "Mittelmarkierung (OSM); leer = unbekannt"
   parking_along_carriageway: "Parken längs der Fahrbahn (OSM); leer = unbekannt"
@@ -245,6 +246,8 @@ cycling:
     gow30_high_volume: "viel Kfz-Verkehr für Tempo 30 – Radweg statt Radfahrstreifen"
     haupt_through_pedestrian_area: "Hauptroute durch Fußgängerzone oder verkehrsberuhigten Bereich – eigene Trasse bevorzugt, sonst nur Schrittgeschwindigkeit"
     filter_needed: "Kfz-Menge nicht gezählt, aber Durchgangsverkehr wahrscheinlich – Filter prüfen"
+    parallel_cycle_route: "kein baulicher Radweg, aber eine Parallelroute im Radnetz – mildert, ersetzt den Radweg nicht"
+    track_tag_only: "Radweg nur laut Straßen-Tag in OpenStreetMap, kein Radweg im Radgraphen – prüfen"
   profile_flags:
     width_unknown: "Straßenraumbreite nicht gemessen"
     no_profile_rules: "für diese Straßenkategorie kein Soll-Profil"

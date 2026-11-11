@@ -5,7 +5,8 @@ Usage: uv run python -m pipeline.c05_facility
 Rules C-FAC-01..07 (config/cycling_rules.yaml `facility_assignment`) on top of separation_matrix, cycle_street,
 S-04 and widths_m. The fallback of a matrix cell is decided in prompt 19 (space); until then the preferred
 facility stays and the flag fallback_check_p19 is set. Writes data/interim/cycle_facility.parquet (one row per
-segment_id of final.parquet) and reports/cycle_facility.md.
+segment_id of final.parquet) and reports/cycle_facility.md. The Ist facility (C-FAC-05) and the parallel route come
+from stage c03b (data/interim/ist_facility.parquet, rules.yaml S-FEAT-13/S-FEAT-11, Review 2026-11 F26/F21).
 """
 
 import datetime as dt
@@ -30,6 +31,7 @@ from pipeline.s02_network import _pbf_from_manifest
 INTERIM = REPO_ROOT / "data" / "interim"
 FINAL_PATH = INTERIM / "final.parquet"
 NETWORK_PATH = INTERIM / "cycle_network.parquet"
+IST_PATH = INTERIM / "ist_facility.parquet"
 OUT_PATH = INTERIM / "cycle_facility.parquet"
 REPORT_PATH = REPO_ROOT / "reports" / "cycle_facility.md"
 SAMPLE_SIZE = 30
@@ -54,7 +56,9 @@ FLAG_DE = {"dtv_unknown": "Kfz-Menge unbekannt – Bedingung vorläufig erfüllt
            "gow30_high_volume": "GOW30 über dem breiten CROW-Profil (DTV > max_dtv): Radweg je Seite statt Radfahrstreifen (S-05)",
            "haupt_through_pedestrian_area": "Hauptroute durch Fußgängerzone/verkehrsberuhigten Bereich: eigene Trasse bevorzugt, sonst Mischverkehr in Schrittgeschwindigkeit (F15)",
            "filter_needed": "Kfz-Menge unbekannt, aber Durchgangsverkehr wahrscheinlich (N4 oder Betweenness): Filter prüfen (C-FAC-02/03 dtv_proxy, F19)",
-           fa.TRACK_BELOW_FLOOR_FLAG: "heutiger Radweg schmaler als die Untergrenze aus C-FAC-04 (F06)"}
+           fa.TRACK_BELOW_FLOOR_FLAG: "heutiger Radweg schmaler als die Untergrenze aus C-FAC-04 (F06)",
+           "parallel_cycle_route": "kein baulicher Radweg, aber Parallelroute im Soll-Radnetz (S-FEAT-11): mildert, ersetzt nicht (C-FAC-01, F21)",
+           "track_tag_only": "Radweg nur aus dem Straßen-Tag, ohne Radweg im Radgraphen – Tags prüfen (S-FEAT-13, F26)"}
 CAT_ORDER = ["SW", "GOW80", "GOW50", "GOW30", "ETW60", "ETW30", "ETW_ERF"]
 CYC_ORDER = ["RSV", "HAUPT", "BASIS", "ERSCHL", NO_CYCLE_CATEGORY]
 # OSM width keys (as C-PRI-08)
@@ -117,26 +121,15 @@ def has_flag(flags_json, flag: str) -> bool:
 # --- inputs per segment -------------------------------------------------------------------------------------
 
 
-def _trace_inputs(trace: str) -> dict:
-    try:
-        return json.loads(trace)["inputs"]
-    except (TypeError, ValueError, KeyError):
-        return {}
-
-
 def segment_inputs(final: pd.DataFrame, net: gpd.GeoDataFrame, tags: dict, p: fa.FacilityParams) -> pd.DataFrame:
-    """Cycle category, peak hour, OSM cycleway values, sidepaths and Ist width per segment_id."""
+    """Cycle category, peak hour and the OSM widths of street edges and sidepaths per segment_id (the Ist facility
+    comes from stage c03b, S-FEAT-13)."""
     road = net[(net["kind"] == "road") & net["segment_id"].notna()].copy()
     side = net[(net["kind"] == "path") & net["sidepath_of"].notna()].copy()
     road["seg"], side["seg"] = road["segment_id"], side["sidepath_of"]
-    road_in = [_trace_inputs(t) for t in road["impedance_trace"]]
-    road["cw"] = [set(i.get("cycleway") or []) for i in road_in]
-    road["bicycle_road"] = [i.get("bicycle_road") == "yes" for i in road_in]
     road["w_cw"] = edge_width(road["osm_way_ids"].tolist(), tags, CYCLEWAY_WIDTH_KEYS)
     road["w_road"] = edge_width(road["osm_way_ids"].tolist(), tags, ROAD_WIDTH_KEYS)
     side["w_path"] = edge_width(side["osm_way_ids"].tolist(), tags, PATH_WIDTH_KEYS)
-    side["twoway"] = side["cost_fwd"].notna() & side["cost_bwd"].notna()
-    side["side"] = fa.sidepath_side(final.geometry.reindex(side["seg"]).values, side.geometry.values)
 
     rsv_cols = [c for c in ("rsv_fgsv_candidate", "rsv_confidence") if c in net.columns]
     both = pd.concat([road[["seg", "cycle_cat_final", "cyc_peak_h", "cyc_peak_h_fwd", "cyc_peak_h_bwd", *rsv_cols]],
@@ -156,14 +149,9 @@ def segment_inputs(final: pd.DataFrame, net: gpd.GeoDataFrame, tags: dict, p: fa
                              if "rsv_confidence" in rsv else pd.Series(dtype="object")).reindex(out.index)
     out.loc[out["cycle_cat_final"] != "RSV", ["rsv_fgsv_candidate", "rsv_confidence"]] = None
     rg = road.groupby("seg")
-    out["cycleway_values"] = rg["cw"].agg(lambda s: set().union(*s)).reindex(out.index)
-    out["bicycle_road"] = rg["bicycle_road"].any().reindex(out.index).fillna(False).astype(bool)
     out["w_cw"] = rg["w_cw"].min().reindex(out.index)
     out["w_road"] = rg["w_road"].min().reindex(out.index)
     sg = side.groupby("seg")
-    out["has_sidepath"] = out.index.isin(side["seg"])
-    out["sidepath_twoway"] = sg["twoway"].any().reindex(out.index).fillna(False).astype(bool)
-    out["sidepath_both_sides"] = sg["side"].agg(lambda x: {-1, 1} <= set(x)).reindex(out.index).fillna(False).astype(bool)
     out["w_path"] = sg["w_path"].min().reindex(out.index)
     return out
 
@@ -172,21 +160,24 @@ def _bool(v) -> bool:
     return bool(v) if v is not None and v is not pd.NA and not (isinstance(v, float) and np.isnan(v)) else False
 
 
-def classify(final: pd.DataFrame, inp: pd.DataFrame, p: fa.FacilityParams) -> pd.DataFrame:
+def parallel_flag(parallel, track_present) -> bool:
+    """C-FAC-01 evaluates the parallel route like D-DES-01 (F21): no separated track, but a parallel route of the Soll
+    network (S-FEAT-11) -> flag parallel_cycle_route; the Soll facility stays."""
+    return _bool(parallel) and not _bool(track_present)
+
+
+def classify(final: pd.DataFrame, inp: pd.DataFrame, ist_df: pd.DataFrame, p: fa.FacilityParams) -> pd.DataFrame:
+    """Soll per segment (C-FAC-01..04) against the Ist facility of stage c03b (S-FEAT-13 = C-FAC-05), gap and flags."""
     rows = []
     for seg, f in final.iterrows():
         i = inp.loc[seg]
-        cw = set(i["cycleway_values"]) if isinstance(i["cycleway_values"], set) else set()
+        s13 = ist_df.loc[seg]
         shortcut = has_flag(f["flags"], p.proxy.shortcut_flag) if p.proxy is not None else None
         betweenness = f[p.proxy.betweenness_attribute] if p.proxy is not None else None
         res = evaluate(f["cat_final"], i["cycle_cat_final"], f["dtv_official"], i["cyc_peak_h_dir"], i["cyc_peak_h"], None, p,
                        shortcut, betweenness)
-        cls = fa.ist_class(p, fahrradstrasse=_bool(f["fahrradstrasse_official"]), bicycle_road=bool(i["bicycle_road"]),
-                           cycleway_values=cw, has_sidepath=bool(i["has_sidepath"]),
-                           # s04 features also cover segments without a road edge (no impedance_trace)
-                           track_present=_bool(f["separated_cycle_track_present"]), lane_present=_bool(f["cycle_lane_present"]))
-        ist = fa.ist_facility(cls, bool(i["sidepath_twoway"]), p, bool(i["sidepath_both_sides"]))
-        if i["has_sidepath"] and cls == "track":
+        cls, ist = s13["cycle_osm_ist"], s13["cycle_facility_ist"]   # S-FEAT-13, computed once in c03b (F26)
+        if s13["has_sidepath"] and cls == "track":
             w_ist = i["w_path"]
         elif cls in ("track", "lane"):
             w_ist = i["w_cw"]
@@ -195,6 +186,10 @@ def classify(final: pd.DataFrame, inp: pd.DataFrame, p: fa.FacilityParams) -> pd
         else:
             w_ist = np.nan
         flags = res["flags"]
+        if p.parallel_flag and parallel_flag(s13["parallel_cycle_route_present"], s13["separated_cycle_track_present"]):
+            flags.append(p.parallel_flag)
+        if _bool(s13["track_tag_only"]):
+            flags.append("track_tag_only")
         if res["cycle_width_m"] is not None and not np.isfinite(w_ist) and ist in p.satisfies.get(res["cycle_facility"], ()):
             flags.append("ist_width_unknown")
         if fa.track_below_floor(cls, ist, w_ist, p):
@@ -205,12 +200,13 @@ def classify(final: pd.DataFrame, inp: pd.DataFrame, p: fa.FacilityParams) -> pd
                                        res["cycle_width_m"], p)
         conf = fa.confidence(f["cat_final"], flags, p)
         trace = [*res["rule_trace"],
-                 {"id": "C-FAC-05", "result": cls, "values": {"fahrradstrasse_official": _bool(f["fahrradstrasse_official"]),
-                                                               "track_present": _bool(f["separated_cycle_track_present"]),
-                                                               "lane_present": _bool(f["cycle_lane_present"]),
-                                                               "bicycle_road": bool(i["bicycle_road"]), "cycleway": sorted(cw),
-                                                               "sidepath": bool(i["has_sidepath"]),
-                                                               "sidepath_both_sides": bool(i["sidepath_both_sides"]), "facility_ist": ist,
+                 {"id": "C-FAC-01", "result": res["cycle_facility"], "values": {
+                     "parallel_cycle_route_present": None if fa._missing(s13["parallel_cycle_route_present"]) else bool(s13["parallel_cycle_route_present"]),
+                     "separated_cycle_track_present": None if fa._missing(s13["separated_cycle_track_present"]) else bool(s13["separated_cycle_track_present"]),
+                     "note": "Parallelroute mildert, ersetzt nicht (S-FEAT-11, F21)"}},
+                 {"id": "C-FAC-05", "result": cls, "values": {"source": "S-FEAT-13 (Stufe c03b)", "facility_ist": ist,
+                                                               "sidepath": bool(s13["has_sidepath"]),
+                                                               "track_tag_only": _bool(s13["track_tag_only"]),
                                                                "width_ist_m": None if not np.isfinite(w_ist) else float(w_ist)}},
                  {"id": "C-FAC-06", "result": gap, "values": {"partial": partial}},
                  {"id": "C-FAC-07", "result": conf, "values": {"flags": flags}}]
@@ -374,7 +370,7 @@ def write_report(out: gpd.GeoDataFrame, version: str, p: fa.FacilityParams) -> N
 def main() -> int:
     cyc = load_cycling_rules()
     p = fa.FacilityParams.from_rules(cyc)
-    for path, step in ((NETWORK_PATH, "make cycle-network"), (FINAL_PATH, "make coherence")):
+    for path, step in ((NETWORK_PATH, "make cycle-network"), (FINAL_PATH, "make coherence"), (IST_PATH, "make ist-facility")):
         if not path.exists():
             print(f"cycle-facility: {path.relative_to(REPO_ROOT)} missing; run `{step}` first", file=sys.stderr)
             return 1
@@ -385,15 +381,15 @@ def main() -> int:
 
     proxy_cols = ["flags", p.proxy.betweenness_attribute] if p.proxy is not None else []
     final = gpd.read_parquet(FINAL_PATH, columns=["segment_id", "name", "bezirk", "length_m", "cat_final", "dtv_official",
-                                                  "fahrradstrasse_official", "separated_cycle_track_present",
-                                                  "cycle_lane_present", "width_median_m", *proxy_cols, "geometry"]).set_index("segment_id")
+                                                  "width_median_m", *proxy_cols, "geometry"]).set_index("segment_id")
+    ist_df = pd.read_parquet(IST_PATH).set_index("segment_id").reindex(final.index)
     net = gpd.read_parquet(NETWORK_PATH)
     pbf = REPO_ROOT / _pbf_from_manifest(load_manifest())["path"]
     way_ids = {int(w) for ws in net["osm_way_ids"] for w in ws}
     tags = read_way_tags(pbf, way_ids)
     tick(f"OSM tags of {len(tags)} ways")
     inp = segment_inputs(final, net, tags, p)
-    res = classify(final, inp, p)
+    res = classify(final, inp, ist_df, p)
     tick(f"{len(res)} segments classified")
     out = final[["name", "bezirk", "length_m", "cat_final", "dtv_official", "width_median_m", "geometry"]].join(res)
     out = gpd.GeoDataFrame(out, geometry="geometry", crs=final.crs).reset_index()

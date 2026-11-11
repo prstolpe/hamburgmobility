@@ -1,16 +1,16 @@
 # Validierung und Sensitivität
 
-Erzeugt: 2026-11-08T14:57:21+00:00 von `pipeline/validate.py`, rules.yaml 0.19.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
+Erzeugt: 2026-11-11T21:13:41+00:00 von `pipeline/validate.py`, rules.yaml 0.20.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
 
 ## Kurzfassung
 
 - HVS-Abgleich: 96,7 % der HVS-km sind GOW50 oder GOW30; 22,9 km HVS außerhalb, 20,9 km Bezirksstraßen mit GOW50.
 - Ist-Tempo: 72,1 % der Soll-ETW30-km (mit bekanntem Tempo) haben heute höchstens 30 km/h; 1939 Ausreißer sind mögliche Datenfehler.
-- Sensitivität: 2 213 Abschnitte (244,8 km, 5,6 % der Länge) sind „unsicher“; die Top 30 der Priorität bleiben im Mittel zu 91,9 % gleich.
+- Sensitivität: 2 213 Abschnitte (244,8 km, 5,6 % der Länge) sind „unsicher“; die Top 30 der Priorität bleiben im Mittel zu 91,5 % gleich.
 - Datenqualität: Conflation-Treffer 89,1 % der km, OSM-Gestaltungsmerkmale im Mittel 56,2 % bekannt, ohne Ist-Tempo 7,4 %.
 - Manuelle Stichproben, Rückmelderunde und externe Prüfung sind offen.
 
-Vergleich mit dem vorigen Lauf (2026-11-08T14:15:40+00:00, rules.yaml 0.18.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 213 → 2 213 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
+Vergleich mit dem vorigen Lauf (2026-11-08T14:57:21+00:00, rules.yaml 0.19.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 213 → 2 213 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
 
 ## Prüfungen dieses Laufs
 
@@ -220,7 +220,7 @@ Mögliche Datenfehler nach Straße (längste zuerst, höchstens 30):
 
 ## 3. Sensitivitätsanalyse
 
-Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01 je Lauf); fachliche Korrekturen bleiben außen vor. Basis: rules.yaml 0.19.0, 34 702 Abschnitte, 4387,3 km.
+Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01 je Lauf); fachliche Korrekturen bleiben außen vor. Basis: rules.yaml 0.20.0, 34 702 Abschnitte, 4387,3 km.
 
 ### 3.1 Einzelvariation (V-SENS-01): jede Annahme ±20 %
 
@@ -348,7 +348,7 @@ Einfluss je Annahme im Monte-Carlo (Korrelation des Faktors mit dem Anteil gewec
 
 ### 3.3 Priorität: Top 30 in Hamburg (7 Bezirke) bei variierten Gewichten
 
-Gleiche Läufe; risk mit variierten `priority.risk_weights`, Diskrepanzen aus dem Basislauf (eine geänderte Kategorie ändert auch die Diskrepanz – das ist hier nicht abgebildet). Im Mittel bleiben **91,9 % der Top 30** in der Top 30. 23 Abschnitte bleiben in mindestens 90 % der Läufe, 0 in weniger als der Hälfte.
+Gleiche Läufe; risk mit variierten `priority.risk_weights`, Diskrepanzen aus dem Basislauf (eine geänderte Kategorie ändert auch die Diskrepanz – das ist hier nicht abgebildet). Im Mittel bleiben **91,5 % der Top 30** in der Top 30. 22 Abschnitte bleiben in mindestens 90 % der Läufe, 0 in weniger als der Hälfte.
 
 
 ### 3.4 Stichprobe: 30 zufällige unsichere Abschnitte in Hamburg (7 Bezirke), nach Bezirk geschichtet (Seed 42)
@@ -406,7 +406,7 @@ Conflation-Trefferquote = Anteil der km mit amtlichem Gegenstück (match_quality
 
 OSM-Tag-Vollständigkeit je Merkmal (Anteil der Abschnitte mit bekanntem Wert):
 
-| Bezirk | baulicher Radweg | Radfahrstreifen | Mittelmarkierung | Parken | Fahrstreifen | Belag | maxspeed |
+| Bezirk | Radweg-Tag | Radfahrstreifen | Mittelmarkierung | Parken | Fahrstreifen | Belag | maxspeed |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Wandsbek | 54,1 % | 54,1 % | 16,3 % | 5,0 % | 37,1 % | 94,2 % | 83,5 % |
 | Hamburg-Mitte | 68,2 % | 68,2 % | 18,1 % | 43,8 % | 52,4 % | 98,0 % | 81,0 % |
@@ -440,7 +440,7 @@ Pilotlauf: rules.yaml 0.12.0, Normierung über Eimsbüttel + 500 m. Jetzt: Normi
 
 - Abschnitte in beiden Läufen: 4004; nur im Pilotlauf: 0; nur jetzt: 0
 - Kategorie (cat_final) geändert: 147 Abschnitte, 15,7 km (3,3 % der Länge)
-- Top 30 der Priorität: 86,7 % sind in beiden Läufen in der Top 30
+- Top 30 der Priorität: 83,3 % sind in beiden Läufen in der Top 30
 
 | vorher | jetzt | Abschnitte | km |
 | --- | --- | ---: | ---: |
@@ -621,6 +621,22 @@ Alle noch offenen Punkte, nach Abschnitt:
 - F02: Quelle für die Wartepflicht des Radverkehrs am Turbokreisel (CROW/Fietsberaad, Annahme A3) ergänzen; JC-06 ist bis dahin assumption – Verkehrsplaner*in
 - F10: `cycle_crossing_refuge` an ERSCHL-Wegen (J-15): JC-04 nennt Mittelinselbreiten nur für RSV/HAUPT/BASIS. Breite für ERSCHL festlegen (z. B. wie BASIS 2,50 m)? – Verkehrsplaner*in
 - F08: `not_applicable` prüft das Ist wie vorgeschlagen (ok: Kreisverkehr, LSA, LSA mit Plateau, nichts erfasst); ein Plateau an einem Autobahnknoten zählt damit als Handlungsbedarf. So gewollt? – Methodik
+
+**Review 2026-11, Paket P3 Soll-Querschnitt und Radanlage (cycling_rules.yaml 0.9.0, design_rules.yaml 0.9.0)** (6)
+
+- F01: S-05 wertet `dtv_official > requirements.GOW30.profiles.wide.max_dtv` aus („über 10 000“, Grenze einschließlich: 10 000 → Radfahrstreifen); `max_dtv` ist damit eine Obergrenze, keine halboffene Klassentabelle (F27). Ohne DTV (Erschließungsstraßen) greift S-05 nicht. So gemeint? – Verkehrsplaner*in
+- F01: Das Flag `gow30_dtv_above_profile` im Soll-Querschnitt bleibt als Hinweis bestehen und fällt jetzt mit `gow30_high_volume` (c05) zusammen. Eines von beiden streichen (rules.yaml C-G30-01 note nennt noch `gow30_dtv_above_profile`)? – Methodik
+- F17: D2 betrifft nur den neuen Baumstreifen. Das Flag `existing_trees_conflict` (Bestandsbäume nicht entfernen) ist nicht umgesetzt, weil es keine Baumdaten gibt: sources.yaml `street_trees` (Straßenbaumkataster) hat keinen Endpunkt; OSM natural=tree ist unvollständig. Endpunkt des Straßenbaumkatasters ermitteln – GIS
+- F18: Für Soll-Fahrradstraßen gibt es kein Attribut, ob Kfz frei sind. Angenommen ist der Hamburger Regelfall „Kfz frei“/„Anlieger frei“ (C-FAC-04 `cycle_street_motor_traffic: true`, Fahrbahn 4,75 m). Gilt das auch für die Ist-Prüfung P-COM-01 bestehender Fahrradstraßen (OSM motor_vehicle wird nicht gelesen)? – Verkehrsplaner*in
+- F20: `de.separated_twoway.oneside_min` 2,50 m / `oneside_standard` 3,00 m (einseitiger Zweirichtungsradweg, Annahme A6) am Original ERA 2010 prüfen – Verkehrsplaner*in
+- V-INV-05 („passt in S-XS-06 ⇒ c06 passt spätestens nach D4“) ist auf realen Daten verletzt: 1 069 Abschnitte, 134 km (ETW30 762 / 84,5 km, GOW30 291 / 47,4 km, GOW50 16 / 2,1 km). Gründe: (1) die Ladezone bei Geschäftsnutzung (2,50 m) wird von keiner Abbaustufe entfernt (ETW30 646, GOW30 143 Abschnitte); (2) ETW30 mit Bus hat im Profil 6,50 m Fahrbahn (ETW30_mixed.bus), required_width.ETW30 rechnet mit 4,75 m; (3) GOW30: required_width.GOW30_narrow (10,80 m, Bereich ohne formula) ist schmaler als jedes c06-Profil mit Radweg (S-05, Fahrbahn 5,80 m + Radwege + Trennstreifen) oder Radfahrstreifen an der Untergrenze (2 × 2,50 + 3,80 + 2 × 1,70 = 12,20 m); (4) GOW50 mit D5 (16). Test als xfail (strict) geführt. Ladezone als Abbaustufe (z. B. in D1), required_width.GOW30_* und ETW30_bus per formula aus dem Mindestprofil ableiten (F05) oder Invariante enger fassen? – Methodik
+
+**Review 2026-11, Paket P4 Radnetz (cycling_rules.yaml 0.10.0)** (4)
+
+- F12: FGSV-Hinweise zu Radschnellverbindungen am Original prüfen (Annahme A5): Mindestlänge 10 km (`fgsv_rsv_candidate.min_length_km`) und ≥ 2 000 Rad/24 h. „Überwiegender Teil“ ist als Längenanteil > 50 % umgesetzt (`predominant_share`), die Unsicherheit als längengewichteter Median der Modellnachfrage des Laufs < Auslöser × `demand_band_factor` (2,0). Läufe werden je Korridor gebildet; sich überlappende Läufe verschiedener Korridore zählen als eigene Läufe, eine Kante übernimmt die Werte des längsten Laufs. So gemeint? – Verkehrsplaner*in
+- F15/F16: Für ETW_ERF rechnet der Netzentwurf auf allen Ebenen mit Schrittgeschwindigkeit (`soll_factor_by_category`, 2,1), obwohl die Matrix für RSV/HAUPT dort eine eigene Trasse bevorzugt (die nach F16 den Faktor 1,0 ergäbe). Begründung: Sonst würde der Entwurf Hauptrouten gerade in Fußgängerzonen ziehen. Bestätigen – Methodik
+- F15: Schrittgeschwindigkeit gilt jetzt für `living_street` und `pedestrian` als Straßenabschnitt (C-IMP-04 `factor_by_highway`, unabhängig vom Ist-Tempo). Nicht erfasst sind Gehwege und Fußgängerzonen, die als eigenständiger Weg mit Radfreigabe im Graph liegen (C-IMP-02, Faktor 1,0; StVO: „Radfahrer frei“ = Schrittgeschwindigkeit). Auch dort `walking_pace_area`? – Verkehrsplaner*in
+- F19: `filter_needed` senkt die facility_confidence nicht (nicht in C-FAC-07 `lowers_confidence`), weil `dtv_unknown` sie auf denselben Abschnitten schon senkt. Das N4-Flag trägt nur ETW-Abschnitte; der Proxy `betweenness_norm ≥ 0,8` (Perzentil der Kfz-Betweenness, A8) wirkt vor allem auf GOW/SW ohne DTV-Zählung, dort aber nur bei Soll-Fahrradstraße oder Mischverkehr. Schwelle in V-SENS-01 aufnehmen – Methodik
 
 ## Lizenz
 

@@ -61,3 +61,17 @@ def test_crash_counts_consistent(out):
     assert (a["crashes_ped"] <= a["crashes_ped_cyc"]).all() and (a["crashes_cyc"] <= a["crashes_ped_cyc"]).all()
     assert (a["crashes_ped"] + a["crashes_cyc"] >= a["crashes_ped_cyc"]).all()
     assert (a["crashes_severe_fatal"] <= a["crashes_ped_cyc"]).all()
+
+
+def test_f21_parallel_route_mitigates_missing_track(out):
+    """Review 2026-11 F21: GOW50 without a separated track (S-FEAT-13) always has the violation; with a parallel route
+    of the Soll network (S-FEAT-11) it weighs 0.5."""
+    a = out[out["disc_trace"].notna() & (out["cat_final"] == "GOW50")]
+    no_track = (a["separated_cycle_track_present"] == False).fillna(False).astype(bool)  # noqa: E712
+    causes = a["disc_causes"].map(json.loads)
+    cause = causes.map(lambda cs: next((c for c in cs if c["label"] == "kein baulicher Radweg"), None))
+    assert cause[no_track].notna().all()
+    assert cause[(a["separated_cycle_track_present"] == True).fillna(False).astype(bool)].isna().all()  # noqa: E712
+    par = no_track & (a["parallel_cycle_route_present"] == True).fillna(False).astype(bool)  # noqa: E712
+    assert (cause[par].map(lambda c: c["weight"]) == 0.5).all()
+    assert (cause[no_track & ~par].map(lambda c: c["weight"]) == 1).all()

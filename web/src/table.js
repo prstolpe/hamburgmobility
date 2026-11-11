@@ -61,7 +61,7 @@ export function renderTable(root, rows, getState, { onOpen, onOtherDistrict, cap
           <button type="button" data-sort="${c.key}">${esc(c.label)}</button></th>`).join("")}<th scope="col">Steckbrief</th></tr></thead>
         <tbody>${slice.map((r) => `<tr>
           <td>${esc(r.name ?? "–")}</td><td>${esc(r.cat)}</td><td>${num(r.spd)}</td><td>${esc(r.dt ?? (r.dm === null ? "nicht prüfbar" : "keine"))}</td>
-          <td>${num(r.dm)}</td><td>${num(r.acc)}</td><td>${num(r.pr, 2)}</td><td>${esc(r.conf)}</td><td>${robust(r.un)}</td><td>${num(r.len)}</td>
+          <td>${num(r.dm, Number.isInteger(r.dm) || r.dm == null ? 0 : 1)}</td><td>${num(r.acc)}</td><td>${num(r.pr, 2)}</td><td>${esc(r.conf)}</td><td>${robust(r.un)}</td><td>${num(r.len)}</td>
           <td><button type="button" class="link" data-open="${esc(r.id)}">öffnen<span class="visually-hidden"> ${esc(r.name ?? r.id)}</span></button></td></tr>`).join("")}
         </tbody></table></div>
       <nav class="pager" aria-label="Seiten der Tabelle">

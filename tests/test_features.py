@@ -54,7 +54,7 @@ def _gs(*geoms) -> gpd.GeoSeries:
 def test_feature_rules_in_rules_yaml():
     rules = load_rules()
     ids = [r.id for r in rules.features.rules]
-    assert ids == [f"S-FEAT-{i:02d}" for i in range(1, 13)]  # S-FEAT-11 since 0.16.0, S-FEAT-12 since 0.18.0
+    assert ids == [f"S-FEAT-{i:02d}" for i in range(1, 14)]  # S-FEAT-11 since 0.16.0, S-FEAT-12 since 0.18.0, S-FEAT-13 since 0.20.0
     assert rules.features.rule("S-FEAT-01").method == "percentile_rank"
     for rule in rules.features.rules:
         assert rule.status == "draft"
@@ -257,14 +257,16 @@ def test_count_near():
 
 
 def test_way_design_cycleways():
-    assert way_design({"cycleway:right": "track", "cycleway:left": "lane"})["separated_cycle_track_present"] is True
+    # cycle_track_tag (until rules.yaml 0.19.0 separated_cycle_track_present) is only an input of S-FEAT-13 (F26)
+    assert way_design({"cycleway:right": "track", "cycleway:left": "lane"})["cycle_track_tag"] is True
     assert way_design({"cycleway:both": "lane"})["cycle_lane_present"] is True
-    assert way_design({"cycleway:both": "lane"})["separated_cycle_track_present"] is False
-    assert way_design({"cycleway:right": "separate"})["separated_cycle_track_present"] is True
-    assert way_design({"bicycle": "use_sidepath"})["separated_cycle_track_present"] is True
-    assert way_design({"cycleway": "no"})["separated_cycle_track_present"] is False
+    assert way_design({"cycleway:both": "lane"})["cycle_track_tag"] is False
+    assert way_design({"cycleway:right": "separate"})["cycle_track_tag"] is True
+    assert way_design({"bicycle": "use_sidepath"})["cycle_track_tag"] is True
+    assert way_design({"cycleway": "no"})["cycle_track_tag"] is False
     untagged = way_design({})
-    assert untagged["separated_cycle_track_present"] is None and untagged["cycle_lane_present"] is None
+    assert untagged["cycle_track_tag"] is None and untagged["cycle_lane_present"] is None
+    assert "separated_cycle_track_present" not in untagged
 
 
 def test_way_design_lanes_markings_surface_motorroad():
@@ -342,17 +344,6 @@ def test_shapes_in_work_crs(feed):
     assert s1.geom_type == "LineString"
     xs = [c[0] for c in s1.coords]
     assert xs == sorted(xs)  # ordered by shape_pt_sequence
-
-
-def test_parallel_cycle_route_present():
-    # S-FEAT-11 (rules.yaml 0.16.0): own cycle path or official network running parallel within buffer_m
-    from pipeline.lib.conflate import MatchParams
-    from pipeline.lib.features import parallel_route_present
-    seg = _gs(LineString([(0, 0), (300, 0)]), LineString([(0, 1000), (300, 1000)]), LineString([(0, 2000), (0, 2300)]))
-    paths = _gs(LineString([(-50, 150), (350, 150)]),   # parallel 150 m away from the first segment
-                LineString([(-100, 2150), (200, 2150)]))  # crosses the third one at a right angle
-    mp_ = MatchParams(buffer_m=200, max_angle_deg=20, min_overlap_share=0.6)
-    assert list(parallel_route_present(seg, paths, mp_, min_share=0.5)) == [True, False, False]
 
 
 # --- S-FEAT-12 anbaufrei (F23) ---------------------------------------------------------------

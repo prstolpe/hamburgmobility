@@ -1,6 +1,6 @@
 # Kohärenzbericht – Stufe 6
 
-Erzeugt: 2026-11-08T14:54:48+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0.19.0. Nicht amtlicher Entwurf: Die Regeln markieren nur; nichts wird umklassifiziert. Entscheidungen über overrides/overrides.csv.
+Erzeugt: 2026-11-11T21:06:57+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0.20.0. Nicht amtlicher Entwurf: Die Regeln markieren nur; nichts wird umklassifiziert. Entscheidungen über overrides/overrides.csv.
 
 ## Kennzahlen
 
@@ -994,7 +994,7 @@ Fachlich durchsehen: Ist das Flag berechtigt? **Durchsicht: offen.**
 
 ## Korrekturebene (Stufe 6b)
 
-Erzeugt: 2026-11-08T14:54:50+00:00 von `pipeline/s06b_overrides.py`, rules.yaml 0.19.0. Quelle: `overrides/overrides.csv`; übernommen wird nur review_status = approved. cat_proposed bleibt unverändert, cat_final steht daneben.
+Erzeugt: 2026-11-11T21:06:59+00:00 von `pipeline/s06b_overrides.py`, rules.yaml 0.20.0. Quelle: `overrides/overrides.csv`; übernommen wird nur review_status = approved. cat_proposed bleibt unverändert, cat_final steht daneben.
 
 | review_status | Einträge |
 | --- | ---: |

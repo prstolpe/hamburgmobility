@@ -87,13 +87,13 @@ def test_etw30_tempo_and_outlier_hints():
 
 def test_data_quality_per_district():
     df = pd.DataFrame([
-        seg(bezirk="A", match_quality="exact", separated_cycle_track_present=True, cycle_lane_present=None,
+        seg(bezirk="A", match_quality="exact", cycle_track_tag=True, cycle_lane_present=None,
             centre_line=None, parking_along_carriageway=False, lanes=2, surface="asphalt", maxspeed_osm="50",
             in_hvs=True, dtv_official=12000),
-        seg(bezirk="A", match_quality="none", separated_cycle_track_present=None, cycle_lane_present=None,
+        seg(bezirk="A", match_quality="none", cycle_track_tag=None, cycle_lane_present=None,
             centre_line=None, parking_along_carriageway=None, lanes=None, surface=None, maxspeed_osm=None,
             in_hvs=True, dtv_official=None, speed_ist_kmh=None, length_m=300),
-        seg(bezirk=None, match_quality="partial", separated_cycle_track_present=False, cycle_lane_present=False,
+        seg(bezirk=None, match_quality="partial", cycle_track_tag=False, cycle_lane_present=False,
             centre_line=False, parking_along_carriageway=True, lanes=1, surface="asphalt", maxspeed_osm="30"),
     ])
     q = v.data_quality(df).set_index("bezirk")
@@ -101,7 +101,7 @@ def test_data_quality_per_district():
     a = q.loc["A"]
     assert a["n"] == 2 and a["km"] == pytest.approx(0.4)
     assert a["conflation_hit_km"] == pytest.approx(0.25)  # 100 of 400 m matched
-    assert a["tag_separated_cycle_track_present"] == pytest.approx(0.5)
+    assert a["tag_cycle_track_tag"] == pytest.approx(0.5)
     assert a["tag_centre_line"] == 0.0
     assert a["osm_tags_mean"] == pytest.approx((0.5 + 0 + 0 + 0.5 + 0.5 + 0.5 + 0.5) / 7)
     assert a["missing_speed"] == pytest.approx(0.5)

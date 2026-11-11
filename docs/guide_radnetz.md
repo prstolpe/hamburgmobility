@@ -116,6 +116,19 @@ zu belasteten Hauptstraßen verlaufen [F]. Regel P-ATT-03 schlägt eine Parallel
 innerhalb von 200 m liegt und den Umwegfaktor einhält; die Hauptstraße erhält trotzdem getrennte
 Radwege (GOW50), weil dort Ziele liegen [B].
 
+### 3.2a Ist-Führung und Parallelroute je Abschnitt (Stufe c03b, seit Review 2026-11)
+
+pipeline/c03b_ist_facility.py (`make ist-facility`), Regeln rules.yaml S-FEAT-13 und S-FEAT-11 (Annahmen, status draft):
+
+- **Eine Ist-Führung je Abschnitt** (S-FEAT-13, F26/E9) nach den Regeln von C-FAC-05, mit begleitenden Radwegen je
+  Seite. Prinzipien (c04), Führungsform (c05) und Diskrepanz (s08) lesen sie; Invariante V-INV-08 als Datentest.
+- **Prüfliste „Radweg-Tag ohne Radgraph“** (Flag `track_tag_only`): OSM-Radweg an der Straße, aber weder begleitender
+  Radweg noch Radweg in der Straßenlinie im Radgraphen. Zählt als Radweg; der Widerstand im Radgraphen bleibt
+  Fahrbahnführung (C-IMP-07), bis die Tags geprüft sind.
+- **Parallelroute** (S-FEAT-11, F21) nur im Soll-Radnetz RSV/HAUPT/BASIS mit Umweg ≤ P-DIR-01; darum läuft die Stufe
+  nach c03 und die Diskrepanz (s08) danach.
+- Ergebnis, Vergleich mit den früheren Definitionen und Stichproben: reports/ist_facility.md.
+
 ### 3.3 Prinzipienprüfung (Prompt 17, umgesetzt)
 
 pipeline/c04_principles.py, Prüfungen P-COH/P-DIR/P-SAF/P-COM/P-ATT aus `principles`, Bewertung nach C-PRI-01…16 in
@@ -126,8 +139,12 @@ pipeline/c04_principles.py, Prüfungen P-COH/P-DIR/P-SAF/P-COM/P-ATT aus `princi
   Handlungsbedarf [B].
 - **Scores:** je Prüfung 0–1, je Prinzip das Mittel der bewerteten Prüfungen, gesamt mit `principle_weights`.
   Fehlende Daten (z. B. OSM width) zählen nicht als gut, sondern senken die confidence [B].
-- **Ist-Führung** aus der Ist-Widerstandsregel (C-IMP) und OSM cycleway; begleitende Radwege gelten als baulich getrennt
-  und ersetzen die Führung der Straße daneben [B].
+- **Ist-Führung:** Straßenkanten und ihre begleitenden Radwege übernehmen die Ist-Führung ihres Abschnitts aus
+  rules.yaml S-FEAT-13 (Stufe c03b, Regeln von C-FAC-05, seit cycling_rules 0.11.0, Review 2026-11 F26/E9); dieselbe
+  Ist-Führung lesen c05 und die Diskrepanz (s08), geprüft als Invariante V-INV-08. Übrige Kanten (eigenständige Wege)
+  aus der Ist-Widerstandsregel (C-IMP). Begleitende Radwege ersetzen Breite, Belag und Beleuchtung der Straße
+  daneben [B]. Bis 0.10.0 zählte c04 jeden in beiden Richtungen befahrbaren begleitenden Radweg als
+  Zweirichtungsradweg und Straßen mit Radweg-Tag ohne begleitenden Radweg als Fahrbahnführung.
 - **Direktheit:** Umwegfaktor je Route und als Netzstichprobe (OD-Paare je Kategorie, Seed dokumentiert); Halte an LSA
   und bei Wartepflicht, Zeitverlust mit den Wartezeiten aus `routing_impedance` [B].
 - **Nicht bewertet (Daten fehlen):** Knotentyp P-SAF-02 (Prompt 20), Steigung P-COM-03 (kein Höhenmodell), Lärm P-ATT-02
@@ -173,8 +190,13 @@ pipeline/c05_facility.py je Straßenabschnitt, Regeln C-FAC-01…07 in `facility
   (Begegnung Lkw/Pkw), ohne Kfz 4,00 m. Für Soll-Fahrradstraßen gibt es kein Attribut zur Kfz-Freigabe; angenommen ist
   der Hamburger Regelfall „Kfz frei“ (C-FAC-04 `cycle_street_motor_traffic`). Dieselbe Breite gilt für die Ist-Prüfung
   P-COM-01 (C-PRI-08) [B].
-- **Ist-Führung** aus OSM (Fahrradstraße, Radweg, Streifen, Sharrow/Busspur, keine) und **Lücke**: fehlt, falscher Typ,
-  zu schmal (nur wo OSM eine Breite hat) [B].
+- **Ist-Führung** aus OSM (Fahrradstraße, Radweg, Streifen, Sharrow/Busspur, keine), berechnet einmal je Abschnitt in
+  der Stufe c03b (S-FEAT-13, Liste „Radweg-Tag ohne Radgraph“ in reports/ist_facility.md), und **Lücke**: fehlt,
+  falscher Typ, zu schmal (nur wo OSM eine Breite hat) [B].
+- **Parallelroute an GOW50** (F21): Liegt eine Route des Soll-Radnetzes RSV/HAUPT/BASIS parallel mit Umweg ≤ P-DIR-01
+  (rules.yaml S-FEAT-11), bleibt die Soll-Führung Radweg; der Abschnitt erhält das Flag `parallel_cycle_route`, und
+  die Diskrepanz zählt den fehlenden Radweg nur halb. Ziele liegen an der Magistrale; die Parallelroute mildert, sie
+  ersetzt den Radweg nicht [B].
 - Ergebnis, Matrix Straßen- × Radkategorie, Lückenliste und 30 Stichproben je Führungsform: reports/cycle_facility.md.
 
 ### 3.5 Webseite und Validierung (Prompt 21, umgesetzt)

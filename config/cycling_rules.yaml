@@ -8,7 +8,7 @@
 # Klassentabellen (demand.intensity_classes_peak_h) sind halboffen [min, max): ein Wert auf der Grenze gehört zur
 #   oberen Klasse; intensity_upgrade greift darum ab der Untergrenze (>=) einer Klasse (F27).
 meta:
-  version: 0.10.0
+  version: 0.11.0
   date: 2026-11-08
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
@@ -128,7 +128,8 @@ principle_scoring:
       network_only: [P-COH-03]
       status: draft
     - id: C-PRI-02
-      description: 'Ist-Führung je Kante aus der Bedingung der Ist-Widerstandsregel (C-IMP-xx, when) und den OSM-cycleway-Werten. Begleitende Radwege (sidepath_of) gelten als baulich getrennt: Einrichtungsradweg, wenn nur eine Richtung befahrbar ist, sonst Zweirichtungsradweg. Eine Straßenkante mit begleitendem Radweg übernimmt dessen Führung, Breite, Belag und Beleuchtung (Radfahrende nutzen den Radweg). Fähren und Straßenkanten ohne Ist-Regel: unbekannt'
+      description: 'Ist-Führung je Kante: Straßenkanten und ihre begleitenden Radwege (sidepath_of) übernehmen die Ist-Führung ihres Abschnitts aus rules.yaml S-FEAT-13 (Stufe c03b, Regeln von C-FAC-05, seit 0.11.0). Übrige Kanten (eigenständige Wege, Kanten ohne Abschnitt) aus der Bedingung der Ist-Widerstandsregel (C-IMP-xx, when, by_condition) und den OSM-cycleway-Werten; begleitende Radwege ohne Abschnittswert: Einrichtungsradweg, wenn nur eine Richtung befahrbar ist, sonst Zweirichtungsradweg. Eine Straßenkante mit begleitendem Radweg übernimmt dessen Breite, Belag und Beleuchtung (Radfahrende nutzen den Radweg). Fähren und Straßenkanten ohne Ist-Regel: unbekannt'
+      note: 'Review 2026-11 F26 (E9): bis 0.10.0 eigene Definition aus dem Radgraphen (jeder in beiden Richtungen befahrbare begleitende Radweg = Zweirichtungsradweg; Radweg-Tag ohne begleitenden Radweg = Fahrbahnführung); jetzt eine Ist-Führung je Abschnitt für c04, c05 und s08 (Invariante V-INV-08)'
       by_condition: {cycle_street: cycle_street, own_path: own_path, separated_track: separated_oneway_both, low_speed_access_road: mixed, low_speed_with_lane: cycle_lane, low_speed_mixed: mixed, other: mixed}
       lane_upgrade: cycle_lane
       lane_upgrade_note: 'Straßenkante mit cycleway*=lane|opposite_lane (Wert im impedance_trace) wird cycle_lane, auch bei Ist-Tempo > 30 (C-IMP-07)'
@@ -523,8 +524,10 @@ facility_assignment:
   source_type: assumption
   rules:
     - id: C-FAC-01
-      description: 'Soll-Führung = separation_matrix[cat_final][cycle_cat_final] (außerorts separation_matrix.rural); vorher die Zelle high_volume der Zeile, wenn dtv_official > deren dtv_above (S-05, GOW30). Zelle mit preferred/fallback: preferred; fallback nur, wenn space_fits_preferred = false (Prompt 19). Ist der Raum noch nicht geprüft, bleibt preferred und das Flag fallback_check_p19 wird gesetzt. ETW60: fallback mixed nur bei DTV <= separation_matrix.mixed_rural_max_dtv. cycle_cat_final je Abschnitt = höchste Radkategorie seiner Straßenkanten und begleitenden Radwege (category_order), ohne Kante: none'
+      description: 'Soll-Führung = separation_matrix[cat_final][cycle_cat_final] (außerorts separation_matrix.rural); vorher die Zelle high_volume der Zeile, wenn dtv_official > deren dtv_above (S-05, GOW30). Zelle mit preferred/fallback: preferred; fallback nur, wenn space_fits_preferred = false (Prompt 19). Ist der Raum noch nicht geprüft, bleibt preferred und das Flag fallback_check_p19 wird gesetzt. ETW60: fallback mixed nur bei DTV <= separation_matrix.mixed_rural_max_dtv. cycle_cat_final je Abschnitt = höchste Radkategorie seiner Straßenkanten und begleitenden Radwege (category_order), ohne Kante: none. Parallelroute wie D-DES-01 (parallel_route): ohne baulichen Radweg (S-FEAT-13) und mit Parallelroute im Soll-Radnetz (rules.yaml S-FEAT-11) Flag parallel_route.flag; die Soll-Führung bleibt'
       category_order: [RSV, HAUPT, BASIS, ERSCHL]
+      parallel_route: {feature: parallel_cycle_route_present, flag: parallel_cycle_route, source_type: assumption,
+        note: 'Review 2026-11 F21 (seit 0.11.0): Ziele liegen an der Magistrale (guide_radnetz 3.2); die Parallelroute mildert die Lücke (D-DES-01 severity_if 0,5), ersetzt den Radweg aber nicht'}
       status: draft
     - id: C-FAC-02
       description: 'Fahrradstraße nur, wenn Kfz/Tag <= cycle_street.max_motor_vehicles_day und Radverkehr in der Spitzenstunde (cyc_peak_h, beide Richtungen) >= Kfz in der Spitzenstunde (DTV x motor_peak_hour_share). Sonst Soll mixed und Flag cycle_street_blocked („Kfz-Menge reduzieren (Filter) oder Route verlegen“). Fehlt das DTV: Bedingung vorläufig erfüllt, Flag dtv_unknown (Entscheidung Projektteam 2026-11-06: Erschließungsstraßen ohne Zählung gelten als schwach belastet). Ausnahme dtv_proxy: dann Bedingung unbekannt (Trace-Ergebnis null), Soll bleibt, Flag filter_needed'
@@ -557,7 +560,7 @@ facility_assignment:
       nl_reference: {separated_oneway_both: nl.hoofdnet_oneway.standard, separated_twoway: nl.hoofdnet_twoway.standard, cycle_lane: nl.cycle_lane_hoofdnet.standard, own_path: nl.hoofdnet_twoway.standard}
       status: draft
     - id: C-FAC-05
-      description: 'Ist-Führung aus OSM je Abschnitt, erste zutreffende Klasse in Reihenfolge von ist_classes: cycle_street (fahrradstrasse_official oder OSM bicycle_road/cyclestreet = yes), track (cycleway*-Wert in track_values oder begleitender Radweg sidepath_of), lane (lane_values), shared_lane (shared_values), sonst no (auch ohne cycleway-Tag). Abbildung auf die Führungsnamen mit to_facility; begleitende Radwege auf beiden Straßenseiten -> separated_oneway_both, nur auf einer Seite und in beiden Richtungen befahrbar -> twoway_track_facility (Abweichung von C-PRI-02, das jeden in beiden Richtungen befahrbaren begleitenden Radweg als Zweirichtungsradweg zählt). Ist-Breite aus OSM wie C-PRI-08'
+      description: 'Ist-Führung aus OSM je Abschnitt, erste zutreffende Klasse in Reihenfolge von ist_classes: cycle_street (fahrradstrasse_official oder OSM bicycle_road/cyclestreet = yes), track (cycleway*-Wert in track_values, Radweg-Tag cycle_track_tag nach rules.yaml S-FEAT-10 oder begleitender Radweg sidepath_of), lane (lane_values oder cycle_lane_present), shared_lane (shared_values), sonst no (auch ohne cycleway-Tag). Abbildung auf die Führungsnamen mit to_facility; begleitende Radwege auf beiden Straßenseiten -> separated_oneway_both, nur auf einer Seite und in beiden Richtungen befahrbar -> twoway_track_facility. Berechnet einmal je Abschnitt in der Stufe c03b als rules.yaml S-FEAT-13 (seit 0.11.0, F26/E9); c04 (C-PRI-02), c05 und s08 lesen das Ergebnis. Ist-Breite (in c05) aus OSM wie C-PRI-08'
       ist_classes: [cycle_street, track, lane, shared_lane, 'no']
       track_values: [track, opposite_track, separate]
       track_note: 'separate = getrennt erfasster Radweg; auch wenn kein sidepath_of gefunden wurde, als track gewertet'

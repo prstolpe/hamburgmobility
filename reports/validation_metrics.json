@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-08T14:57:21+00:00",
-  "rules_version": "0.19.0",
+  "generated": "2026-11-11T21:13:41+00:00",
+  "rules_version": "0.20.0",
   "runs": 500,
   "seed": 20261104,
   "hvs_km": 690.830212,
@@ -15,7 +15,7 @@
   "uncertain_km": 244.844602,
   "uncertain_share_km": 0.055807,
   "changed_any_n": 4543,
-  "top30_mean_overlap": 0.919133,
+  "top30_mean_overlap": 0.915,
   "conflation_hit_km": 0.891066,
   "osm_tags_mean": 0.562475,
   "missing_speed": 0.073829,

@@ -1,6 +1,6 @@
 # Klassifikationsbericht – Stufe 5
 
-Erzeugt: 2026-11-08T14:07:01+00:00 von `pipeline/s05_classify.py`, rules.yaml 0.18.0. Nicht amtlicher Entwurf: Die Automatik schlägt vor, Menschen entscheiden (overrides/overrides.csv).
+Erzeugt: 2026-11-11T21:01:48+00:00 von `pipeline/s05_classify.py`, rules.yaml 0.20.0. Nicht amtlicher Entwurf: Die Automatik schlägt vor, Menschen entscheiden (overrides/overrides.csv).
 
 ## Kennzahlen
 

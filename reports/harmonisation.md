@@ -1,6 +1,6 @@
 # Harmonisierung je Straßenzug – Stufe 5b
 
-Erzeugt: 2026-11-08T14:07:03+00:00 von `pipeline/s05b_harmonise.py`, rules.yaml 0.18.0. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-11T21:01:51+00:00 von `pipeline/s05b_harmonise.py`, rules.yaml 0.20.0. Nicht amtlicher Entwurf.
 
 Regel H-STR-01: kurze Läufe unter 200 m (N2) auf einem Straßenzug werden angeglichen; bei 50 gegen 30 gewinnt das niedrigere Tempo. Lückenschluss: ein GOW50-Lauf zwischen zwei GOW30-Läufen wird GOW30, wenn er kürzer als gap_close_m = 500 m ist (F07, StVO-Novelle 2024, Fassung prüfen). Straßenzug wie N2 (Knoten mit Grad 2 laufen weiter, an Kreuzungen der gegenseitig beste Partner mit höchstens 30° Richtungsänderung).
 

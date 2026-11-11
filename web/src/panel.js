@@ -183,7 +183,8 @@ export function profileHtml(p, meta, pageUrl) {
   const issue = issueUrl(meta.github_repo, p, pageUrl);
   const mail = mailtoUrl(meta.feedback_email, p, pageUrl);
   const reasons = p.reasons.map((r) => `<li>${esc(r.text)} <span class="rule">(${esc(r.rule)})</span></li>`).join("");
-  const sev = (v) => (v === null ? "nicht prüfbar" : `${v} von 3`);
+  // halves only in design (rules.yaml D-DES-01 severity_if, Review 2026-11 F21)
+  const sev = (v) => (v === null ? "nicht prüfbar" : `${num(v, Number.isInteger(v) ? 0 : 1)} von 3`);
   return `
   <header class="panel-head">
     <h2 id="panel-title">${esc(p.name ?? "Abschnitt ohne Namen")}</h2>

@@ -660,3 +660,29 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   19,3 → 12,9 km, alle mit Flag); RSV-Läufe 17, davon FGSV-Kandidat 1 (11,5 km), rsv_confidence low 7 (28,5 km);
   filter_needed 995,9 km (davon Soll-Fahrradstraße 554 km). Kalibrierung c02 nach C-IMP-04: Spearman 0,56 → 0,57,
   innerhalb Faktor 2 52 % → 48 %.
+
+## rules.yaml 0.20.0, cycling_rules.yaml 0.11.0, plain_language.yaml 0.9.0 – 2026-11-08: Review 2026-11, Paket P5 (Ist-Führung und Diskrepanz)
+- F26 (Entscheidungsvorlage E9): neue Regel S-FEAT-13 (assumption, draft) – eine Ist-Führung je Abschnitt nach den
+  Regeln von C-FAC-05 (begleitende Radwege je Seite), berechnet einmal in der neuen Stufe c03b
+  (pipeline/c03b_ist_facility.py, `make ist-facility`, data/interim/ist_facility.parquet, reports/ist_facility.md).
+  `separated_cycle_track_present` = Ist-Führung in `track_facilities` [separated_oneway_both, separated_twoway],
+  dreiwertig (unbekannt, wenn „keine“ nur aus fehlenden OSM-Angaben folgt, S-FEAT-10). C-PRI-02 (c04) übernimmt die
+  Ist-Führung für Straßenkanten und begleitende Radwege, C-FAC-05 (c05) und s08 (D-DES-01, D-USE-01) lesen sie.
+  Der S-FEAT-10-Tag heißt jetzt `cycle_track_tag` (nur Eingang von S-FEAT-13). Flag `track_tag_only` (Radweg-Tag
+  ohne Radweg im Radgraphen) als Prüfliste. Invariante V-INV-08 als Datentest (tests/test_ist_facility_data.py).
+- F21: D-DES-01 cycling `violated_if: "not separated_cycle_track_present"`, `severity_if: {parallel_cycle_route_present: 0.5}`
+  (Parallelroute mildert, ersetzt nicht); Gestaltungsstärke = Summe der Gewichte (halbe Stufen möglich, Spalten
+  disc_design/disc_max Float). S-FEAT-11 neu: nur Soll-Radnetz `qualifying_cycle_categories` [RSV, HAUPT, BASIS],
+  gleich gerichtet im Puffer 200 m, Netzweg zwischen den Lotfußpunkten der Abschnittsenden ≤ P-DIR-01 × Länge (je
+  Ebene wie C-PRI-04 b), ohne Kanten derselben Straße; nur für Kategorien mit `separated_track_or_parallel_route`
+  (GOW50). Bisherige Listen path_highways/bicycle_allowed/official_status entfallen. C-FAC-01 `parallel_route`:
+  Flag `parallel_cycle_route`, Soll-Führung bleibt. Schema: `severity_if`, neue FeatureRule-Felder, FACILITY_FLAGS.
+- Strukturempfehlung 8 (Stufenfolge): s08 läuft nach `cycle-demand → cycle-network → ist-facility`; Makefile
+  (`make rerun`, Kommentare), guide.md 3.2 und guide_radnetz.md 3.2a/3.3/3.4 angepasst. Die Klassifikation braucht
+  die Ist-Führung nicht (C-G30-02 nur Raum; reports/classification.md unverändert).
+- Website: halbe Gestaltungsstärken mit deutschem Dezimalkomma (Steckbrief, Tabelle).
+- Ergebnis (features bis c08, validate; Export/Website nicht neu gerechnet): GOW50 „kein baulicher Radweg“
+  14,9 km (144 Abschnitte) → 38,4 km (343), davon 15,7 km mit Parallelroute (Gewicht 0,5); Parallelroute an GOW50
+  197,5 → 87,4 km. Radweg-Tag ohne Radgraph 107,7 km (1 592 Abschnitte; ETW30 42,7, GOW30 37,4, GOW50 27,2 km), jetzt
+  überall Radweg; Ist-Führung in c04 auf 151 km Kanten geändert (davon zweiseitige Zweirichtungs-Seitenwege → Radweg
+  je Seite 73,6 km Abschnitte), c05 unverändert. Priorität geändert bei 829 Abschnitten, Top 30: 7 neue Einträge.

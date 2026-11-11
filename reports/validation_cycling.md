@@ -1,6 +1,6 @@
 # Validierung Radnetz, Radanlagen, Querschnitte und Knoten (Prompt 21)
 
-Erzeugt 2026-11-11T13:09:15+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.10.0 · design_rules.yaml 0.9.0 · rules.yaml 0.19.0 · nicht amtlicher Entwurf.
+Erzeugt 2026-11-11T21:15:41+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.11.0 · design_rules.yaml 0.9.0 · rules.yaml 0.20.0 · nicht amtlicher Entwurf.
 
 ## Kurzfassung
 

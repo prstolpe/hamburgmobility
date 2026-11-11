@@ -53,7 +53,7 @@ IST_CLASSES = {"cycle_street", "track", "lane", "shared_lane", "no"}
 # Flags of pipeline/lib/facility.py that C-FAC-07 may name.
 FACILITY_FLAGS = {"dtv_unknown", "fallback_check_p19", "cycle_street_blocked", "mixed_over_s04", "no_target_width",
                   "ist_width_unknown", "track_on_access_road", "existing_track_below_floor", "gow30_high_volume",
-                  "haupt_through_pedestrian_area", "filter_needed"}
+                  "haupt_through_pedestrian_area", "filter_needed", "parallel_cycle_route", "track_tag_only"}
 
 
 # widths_m.project_target.intensity_upgrade condition; half-open classes [min, max) (F27), so the upgrade starts at
@@ -317,6 +317,9 @@ def _check_facility_assignment(section: dict, widths: dict) -> None:
                 raise ValueError(f"facility_assignment C-FAC-04 {key}.{fac}: widths_m.{path} not found") from None
             if not isinstance(value, (int, float)):
                 raise ValueError(f"facility_assignment C-FAC-04 {key}.{fac}: widths_m.{path} is not a number")
+    par = rules["C-FAC-01"].get("parallel_route")
+    if par is not None and par.get("flag") not in FACILITY_FLAGS:
+        raise ValueError(f"facility_assignment C-FAC-01: parallel_route.flag must be one of {sorted(FACILITY_FLAGS)}")
     c05 = rules["C-FAC-05"]
     if set(c05["ist_classes"]) != IST_CLASSES:
         raise ValueError(f"facility_assignment C-FAC-05: ist_classes must be {sorted(IST_CLASSES)}")

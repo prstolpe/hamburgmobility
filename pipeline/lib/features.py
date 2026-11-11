@@ -340,7 +340,7 @@ def way_design(tags: dict) -> dict:
     positions, orientations = _parking(tags)
     known = positions - {"separate"}
     return {
-        "separated_cycle_track_present": track,
+        "cycle_track_tag": track,
         "cycle_lane_present": lane,
         "lanes": _int_or_none(tags.get("lanes")),
         "centre_line": {"yes": True, "no": False}.get(markings),
@@ -363,13 +363,3 @@ def majority(values: list, weights: list[float]):
     if not totals:
         return None
     return max(totals.items(), key=lambda kv: kv[1])[0]
-
-
-def parallel_route_present(seg: gpd.GeoSeries, lines: gpd.GeoSeries, params, min_share: float) -> pd.Series:
-    """S-FEAT-11: True where at least min_share of the segment lies within params.buffer_m of a cycle route line
-    running in the same direction (zone_share of S-CONF-02 with the parallel buffer)."""
-    from pipeline.lib.conflate import zone_share
-
-    if lines is None or len(lines) == 0:
-        return pd.Series(False, index=seg.index)
-    return zone_share(seg, lines, params) >= min_share

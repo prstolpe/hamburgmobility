@@ -2,8 +2,9 @@
 
 Usage: uv run python -m pipeline.s08_discrepancy
 
-Reads data/interim/final.parquet (cat_final and Ist features), the Unfallatlas ZIPs listed in data/manifest.json
-and config/rules.yaml (discrepancy, priority). Writes data/interim/discrepancy.parquet with disc_speed,
+Reads data/interim/final.parquet (cat_final and Ist features), data/interim/ist_facility.parquet (Ist cycle facility
+S-FEAT-13 and parallel route S-FEAT-11 of stage c03b, Review 2026-11 F26/F21), the Unfallatlas ZIPs listed in
+data/manifest.json and config/rules.yaml (discrepancy, priority). Writes data/interim/discrepancy.parquet with disc_speed,
 disc_design, disc_use (0-3), disc_type (D1-D3), disc_causes, crash counts per segment, risk, priority and
 disc_trace (JSON), plus reports/priority_top30.md and reports/discrepancy.md.
 Crashes are stored and shown only as counts per segment, never as single records.
@@ -31,6 +32,10 @@ from pipeline.s04_features import _fmt, _now, _pct
 
 SOURCES_PATH = REPO_ROOT / "config" / "sources.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "final.parquet"
+IST_PATH = REPO_ROOT / "data" / "interim" / "ist_facility.parquet"
+# columns of stage c03b used here (S-FEAT-13, S-FEAT-11); they replace columns of the same name in final.parquet
+IST_COLUMNS = ["cycle_osm_ist", "cycle_facility_ist", "separated_cycle_track_present", "track_tag_only",
+               "parallel_cycle_route_present"]
 OUT_PATH = REPO_ROOT / "data" / "interim" / "discrepancy.parquet"
 TOP_PATH = REPO_ROOT / "reports" / "priority_top30.md"
 REPORT_PATH = REPO_ROOT / "reports" / "discrepancy.md"
@@ -55,6 +60,7 @@ def discrepancy_inputs(rules) -> list[str]:
     cols = set(FIXED_INPUTS)
     for v in rules.discrepancy.design.violations:
         cols |= expr.features_in(expr.parse(v.violated_if))
+        cols |= set(v.severity_if or {})
     if rules.discrepancy.speed.anbaufrei_hint is not None:
         cols.add(rules.discrepancy.speed.anbaufrei_hint.feature)
     return sorted(cols - {"requirement", "lanes_per_dir_max"})
@@ -80,6 +86,19 @@ def load_crashes(manifest: dict, src: dict) -> tuple[gpd.GeoDataFrame, dict[int,
 def _year_span(cov: dict[int, int]) -> str:
     years = [y for y, n in cov.items() if n > 0]
     return f"{min(years)}–{max(years)}" if years else "–"
+
+
+def with_ist(seg: gpd.GeoDataFrame, ist: pd.DataFrame) -> gpd.GeoDataFrame:
+    """Segments with the Ist cycle facility of stage c03b (S-FEAT-13, S-FEAT-11) joined on segment_id; order kept."""
+    if not ist["segment_id"].is_unique:
+        raise ValueError("ist_facility.parquet: segment_id not unique")
+    out = seg.drop(columns=[c for c in IST_COLUMNS if c in seg.columns])
+    joined = out[["segment_id"]].merge(ist, on="segment_id", how="left")
+    for c in IST_COLUMNS:
+        out[c] = joined[c].to_numpy()
+    for c in ("separated_cycle_track_present", "track_tag_only", "parallel_cycle_route_present"):
+        out[c] = pd.array([None if expr.is_missing(v) else bool(v) for v in out[c]], dtype="boolean")
+    return out
 
 
 # --- computation -----------------------------------------------------------------------------
@@ -136,8 +155,10 @@ def compute(seg: gpd.GeoDataFrame, crashes: gpd.GeoDataFrame, cov: dict[int, int
     res["disc_trace"] = traces
     res["disc_causes"] = [json.dumps(c, ensure_ascii=False, default=_json) for c in res["disc_causes"]]
     res["disc_design_unknown"] = [json.dumps(u) for u in res["disc_design_unknown"]]
-    for c in ("disc_speed", "disc_design", "disc_use", "disc_max"):
+    for c in ("disc_speed", "disc_use"):
         res[c] = pd.array(res[c].tolist(), dtype="Int64")
+    for c in ("disc_design", "disc_max"):  # severity_if weights (F21) allow halves
+        res[c] = pd.array([None if v is None else float(v) for v in res[c].tolist()], dtype="Float64")
     res["priority"] = pd.to_numeric(res["priority"], errors="coerce").astype("float64")
     return res[RESULT_COLUMNS], stats
 
@@ -347,6 +368,20 @@ def write_top30(pilot: gpd.GeoDataFrame, ctx: dict) -> None:
     TOP_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _track_lines(area: pd.DataFrame) -> list[str]:
+    """F21/F26: 'kein baulicher Radweg' (D-DES-01) with and without a parallel route of the Soll network."""
+    causes = area["disc_causes"].map(json.loads)
+    hit = causes.map(lambda cs: next((c for c in cs if c["label"] == "kein baulicher Radweg"), None))
+    if hit.isna().all():
+        return []
+    mild = hit.map(lambda c: c is not None and c.get("weight", 1) < 1)
+    km = lambda m: _km(area.loc[m, "length_m"].sum())
+    return [f"- „kein baulicher Radweg“ (D-DES-01, Ist-Führung S-FEAT-13): {_fmt(hit.notna().sum())} Abschnitte "
+            f"({km(hit.notna())} km), davon mit Parallelroute im Soll-Radnetz (Gewicht 0,5, S-FEAT-11) "
+            f"{_fmt(mild.sum())} Abschnitte ({km(mild)} km); Radweg nur aus dem Straßen-Tag (track_tag_only, "
+            f"Prüfliste reports/ist_facility.md): {km(area['track_tag_only'].fillna(False).astype(bool))} km."]
+
+
 def write_report(area: gpd.GeoDataFrame, pilot: gpd.GeoDataFrame, checks: list[dict], ctx: dict) -> None:
     rules, viewers, stats = ctx["rules"], ctx["viewers"], ctx["stats"]
     cats = [c for c in rules.categories if c in set(area["cat_final"])]
@@ -367,14 +402,17 @@ def write_report(area: gpd.GeoDataFrame, pilot: gpd.GeoDataFrame, checks: list[d
         f"- Anbaufreie GOW50 (Flag gow50_anbaufrei, S-FEAT-12, F23): {_fmt(area['gow50_anbaufrei'].astype(bool).sum())} "
         f"Abschnitte ({_km(area.loc[area['gow50_anbaufrei'].astype(bool), 'length_m'].sum())} km), davon "
         f"{_fmt(area['disc_speed_hint'].notna().sum())} mit Hinweis statt Tempo-Stärke (Ist ab "
-        f"{d.speed.anbaufrei_hint.min_ist_kmh:g} km/h, D-SPD-01 anbaufrei_hint).", "",
+        f"{d.speed.anbaufrei_hint.min_ist_kmh:g} km/h, D-SPD-01 anbaufrei_hint).",
+        *_track_lines(area), "",
         "### Stärke je Dimension (Abschnitte im Arbeitsgebiet)", "",
-        "| Dimension | Regel | 0 | 1 | 2 | 3 | nicht prüfbar |", "| --- | --- | ---: | ---: | ---: | ---: | ---: |"]
+        "Halbe Stufen nur in der Gestaltung (severity_if, F21).", "",
+        "| Dimension | Regel | 0 | 0,5 | 1 | 1,5 | 2 | 2,5 | 3 | nicht prüfbar |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
     for col, label in DIMENSIONS.items():
-        vc = area[col].value_counts(dropna=False)
+        vals = pd.to_numeric(area[col], errors="coerce").astype("float64")
         rule_id = {"disc_speed": d.speed.id, "disc_design": d.design.id, "disc_use": d.use.id}[col]
-        lines.append(f"| {label} | {rule_id} | " + " | ".join(str(int(vc.get(k, 0))) for k in (0, 1, 2, 3))
-                     + f" | {int(area[col].isna().sum())} |")
+        lines.append(f"| {label} | {rule_id} | " + " | ".join(str(int((vals == k).sum())) for k in (0, 0.5, 1, 1.5, 2, 2.5, 3))
+                     + f" | {int(vals.isna().sum())} |")
     lines += ["", "### Gestaltung: Häufigkeit der Verstöße und unbekannte Prüfungen", "",
               "Fehlende OSM-Tags gelten als unbekannt, nicht als Verstoß (S-FEAT-10).", "",
               "| Soll | Prüfung | Verstoß | kein Verstoß | unbekannt | Anteil unbekannt |",
@@ -431,7 +469,10 @@ def main() -> int:
     if not IN_PATH.exists():
         print("discrepancy: data/interim/final.parquet missing; run `make coherence` first", file=sys.stderr)
         return 1
-    seg = gpd.read_parquet(IN_PATH)
+    if not IST_PATH.exists():
+        print("discrepancy: data/interim/ist_facility.parquet missing; run `make ist-facility` first", file=sys.stderr)
+        return 1
+    seg = with_ist(gpd.read_parquet(IN_PATH), pd.read_parquet(IST_PATH, columns=["segment_id", *IST_COLUMNS]))
     try:
         crashes, cov = load_crashes(load_manifest(), src)
     except (FileNotFoundError, ValueError) as exc:

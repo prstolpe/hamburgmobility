@@ -1,6 +1,6 @@
 # Knotenpunkte: Soll-Knotentyp und Radverkehrsführung (Stufe c07)
 
-Erzeugt 2026-11-11T13:08:11+00:00 mit pipeline/c07_junctions.py · design_rules.yaml 0.9.0 · nicht amtlicher Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.
+Erzeugt 2026-11-11T21:14:37+00:00 mit pipeline/c07_junctions.py · design_rules.yaml 0.9.0 · nicht amtlicher Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.
 
 ## Kurzfassung
 
@@ -123,7 +123,7 @@ Nur Knotenpunkte mit Handlungsbedarf; sortiert nach Radunfällen (Unfallatlas 20
 
 ## N6 Netzkohärenz: Knotenpunkte ohne Soll-Typ und Übergänge (N5)
 
-Seit rules.yaml 0.19.0 (Review 2026-11 F09) gibt es nur noch einen Soll-Knotentyp: den dieser Stufe (design_rules.yaml junctions). N6 meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 (Torsituation, aus der Stufe s06); der frühere N6-Abgleich mit eigener Tabelle und Ist-Prüfung entfällt.
+Seit rules.yaml 0.20.0 (Review 2026-11 F09) gibt es nur noch einen Soll-Knotentyp: den dieser Stufe (design_rules.yaml junctions). N6 meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 (Torsituation, aus der Stufe s06); der frühere N6-Abgleich mit eigener Tabelle und Ist-Prüfung entfällt.
 
 - Ohne Soll-Typ (`no_rule`): 0.
 - Nicht anwendbar (`not_applicable`, Autobahnknoten J-10d): 157.

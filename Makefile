@@ -3,7 +3,10 @@
 # Intended run order (crosssection runs before classify, because rule C-G30-02 needs the
 # street space width):
 #   fetch -> network -> conflate -> features -> crosssection -> classify (+harmonise) -> coherence
-#   -> discrepancy -> validate -> export -> web
+#   -> cycle-demand -> cycle-network -> ist-facility -> discrepancy -> validate -> export -> web
+# discrepancy reads the Ist cycle facility (rules.yaml S-FEAT-13) and the parallel route of the Soll cycle network
+# (S-FEAT-11) from ist-facility (c03b); both need the cycle graph and the Soll cycle network, so discrepancy runs after
+# the first cycling stages (rules.yaml 0.20.0, Review 2026-11 F21/F26). The classification does not need them.
 # validate runs before export because the website shows its robustness mark ("unsicher").
 # coherence checks N1–N5 (and N7); N6 (junctions without a Soll type, N5 transitions per junction) needs the Soll
 # junction type and runs in the junctions stage (c07) of the cycling chain (rules.yaml 0.19.0, Review 2026-11 F09).
@@ -16,10 +19,11 @@ SHELL := /bin/bash
 
 PIPELINE_TARGETS := fetch network conflate features crosssection classify coherence discrepancy export validate
 # Cycle network extension (prompts 14–21, docs/guide_radnetz.md); runs after classify (needs cat_final).
-#   cycle-demand -> cycle-network -> cycle-principles -> cycle-facility -> cross-section-soll -> junctions
-#   -> export-cycling
+#   cycle-demand -> cycle-network -> ist-facility -> cycle-principles -> cycle-facility -> cross-section-soll
+#   -> junctions -> export-cycling
+# ist-facility (c03b) computes the Ist facility once per segment for c04, c05 and s08 (V-INV-08).
 # junctions (c07) reads the Soll lanes of cross-section-soll (J-14/J-15) and the N5 nodes of coherence and writes N6.
-CYCLING_TARGETS := cycle-demand cycle-network cycle-principles cycle-facility cross-section-soll junctions export-cycling
+CYCLING_TARGETS := cycle-demand cycle-network ist-facility cycle-principles cycle-facility cross-section-soll junctions export-cycling
 .PHONY: help install dirs test web web-test a11y basemap site-data override-template rerun $(PIPELINE_TARGETS) $(CYCLING_TARGETS)
 
 # run_step(target, script): run pipeline/<script>.py if it exists, otherwise report that it is missing.
@@ -67,7 +71,7 @@ coherence: dirs ## Network coherence flags N1-N5/N7 and overrides (N6 runs in ju
 override-template: ## Template rows for new overrides (IDS="seg_... seg_...")
 	@uv run python -m pipeline.override_template $(IDS)
 
-discrepancy: dirs ## Discrepancy types and priority
+discrepancy: dirs ## Discrepancy types and priority (needs ist-facility)
 	$(call run_step,discrepancy,s08_discrepancy)
 
 export: dirs ## Export downloads, profiles, search index and PMTiles (data/out)
@@ -100,6 +104,9 @@ cycle-demand: dirs ## Cycle graph and cycle demand model (prompt 15)
 cycle-network: dirs ## Target cycle network: hierarchy and gap closing (prompt 16)
 	$(call run_step,cycle-network,c03_cycle_network)
 
+ist-facility: dirs ## Ist cycle facility per segment (S-FEAT-13) and parallel route of the Soll network (S-FEAT-11)
+	$(call run_step,ist-facility,c03b_ist_facility)
+
 cycle-principles: dirs ## Five principles per route and network, Ist and Soll (prompt 17)
 	$(call run_step,cycle-principles,c04_principles)
 
@@ -116,20 +123,30 @@ export-cycling: dirs ## Cycling validation (c08) and export incl. cycling layers
 	$(call run_step,export-cycling,c08_validate_cycling)
 	$(call run_step,export-cycling,s09_export)
 
-# rerun FROM=<street stage>: street stages from FROM to discrepancy, then validate alongside the cycling chain
-# (they share no outputs; N6 is part of junctions at the end of the cycling chain), then export-cycling. Workers per stage: SFP_WORKERS (default all cores, 1 = serial).
-STREET_CHAIN := network conflate features crosssection classify coherence discrepancy
+# rerun FROM=<stage>: CHAIN from FROM (street stages, the first cycling stages, ist-facility and discrepancy), then
+# validate alongside the rest of the cycling chain (they share no outputs; N6 is part of junctions), then
+# export-cycling. FROM may also name a stage of the cycling tail (validate is then skipped).
+# Workers per stage: SFP_WORKERS (default all cores, 1 = serial).
+CHAIN := network conflate features crosssection classify coherence cycle-demand cycle-network ist-facility discrepancy
+TAIL := cycle-principles cycle-facility cross-section-soll junctions
 FROM ?= classify
 rerun: dirs ## Full rerun from FROM (default classify) to export; validate runs alongside the cycling chain
-	@run=0; for s in $(STREET_CHAIN); do \
+	@run=0; for s in $(CHAIN); do \
 		if [ "$$s" = "$(FROM)" ]; then run=1; fi; \
 		if [ $$run = 1 ]; then $(MAKE) --no-print-directory $$s || exit 1; fi; \
 	done; \
-	if [ $$run = 0 ]; then echo "rerun: FROM=$(FROM) ist keine Straßenstufe ($(STREET_CHAIN))"; exit 1; fi
-	@$(MAKE) --no-print-directory validate > data/interim/validate.log 2>&1 & v=$$!; \
-	$(MAKE) --no-print-directory cycle-demand cycle-network cycle-principles cycle-facility cross-section-soll junctions; c=$$?; \
-	wait $$v; vs=$$?; cat data/interim/validate.log; \
-	if [ $$c -ne 0 ] || [ $$vs -ne 0 ]; then echo "rerun: Abbruch (Radnetz $$c, validate $$vs)"; exit 1; fi
+	if [ $$run = 1 ]; then \
+		$(MAKE) --no-print-directory validate > data/interim/validate.log 2>&1 & v=$$!; \
+		$(MAKE) --no-print-directory $(TAIL); c=$$?; \
+		wait $$v; vs=$$?; cat data/interim/validate.log; \
+		if [ $$c -ne 0 ] || [ $$vs -ne 0 ]; then echo "rerun: Abbruch (Radnetz $$c, validate $$vs)"; exit 1; fi; \
+	else \
+		for s in $(TAIL); do \
+			if [ "$$s" = "$(FROM)" ]; then run=1; fi; \
+			if [ $$run = 1 ]; then $(MAKE) --no-print-directory $$s || exit 1; fi; \
+		done; \
+		if [ $$run = 0 ]; then echo "rerun: FROM=$(FROM) ist keine Stufe ($(CHAIN) $(TAIL))"; exit 1; fi; \
+	fi
 	@$(MAKE) --no-print-directory export-cycling
 
 test: ## Run tests (Python and website unit tests)

@@ -7,7 +7,7 @@
 #   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
 #   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.19.0
+  version: 0.20.0
   date: 2026-11-08
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -528,23 +528,35 @@ features:
       source_type: assumption
       status: draft
       note: >-
-        separated_cycle_track_present: cycleway[:both|left|right] = track oder separate, oder bicycle = use_sidepath.
-        cycle_lane_present: cycleway… = lane. centre_line: lane_markings. parking: parking:[both|left|right] bzw.
+        cycle_track_tag (bis 0.19.0 separated_cycle_track_present): cycleway[:both|left|right] = track oder separate,
+        oder bicycle = use_sidepath; nur Eingang für S-FEAT-13 (Review 2026-11 F26). cycle_lane_present: cycleway… = lane. centre_line: lane_markings. parking: parking:[both|left|right] bzw.
         parking:lane:… (altes Schema). crossings/traffic_calming: Knoten highway=crossing bzw. traffic_calming=* höchstens
         node_snap_m vom Abschnitt. Fehlende Tags heißen 'unbekannt', nicht 'nein'.
       thresholds:
         node_snap_m: {value: 1, unit: m, source_type: assumption}
 
     - id: S-FEAT-11
-      description: "parallel_cycle_route_present: mindestens min_length_share (S-CONF-02) des Abschnitts liegt im Puffer buffer_m einer gleich gerichteten Radroute (Winkel wie S-CONF-01): OSM highway=cycleway oder path_highways mit bicycle_allowed, dazu amtliches Radnetz mit official_status"
+      description: >-
+        parallel_cycle_route_present: mindestens min_length_share (S-CONF-02) des Abschnitts liegt im Puffer buffer_m von
+        gleich gerichteten Kanten (Winkel wie S-CONF-01) des Soll-Radnetzes (Stufe c03) mit cycle_cat_final in
+        qualifying_cycle_categories, und der Netzweg auf diesen Kanten zwischen den Lotfußpunkten der beiden
+        Abschnittsenden ist höchstens P-DIR-01 (cycling_rules principles, Schwelle der Kategorie) mal so lang wie der
+        Abschnitt. Geprüft wird je Ebene wie C-PRI-04 (b): RSV allein, RSV+HAUPT, RSV+HAUPT+BASIS, jeweils mit der
+        Schwelle der untersten Ebene; eine bestandene Ebene genügt. Kanten des Abschnitts selbst und aller Abschnitte mit
+        gleichem Straßennamen (Straßenkante und begleitende Radwege) zählen nicht.
       thresholds:
         buffer_m: {value: 200, unit: m, source_type: assumption, check: "gleich cycling_rules.yaml P-ATT-03 parallel_max_m"}
-      path_highways: [path, footway, pedestrian, bridleway]
-      bicycle_allowed: ["yes", designated, permissive]
-      official_status: [Bestand]
+      qualifying_cycle_categories: [RSV, HAUPT, BASIS]
+      detour_check: P-DIR-01
+      applies_to_requirement: separated_track_or_parallel_route
       source_type: assumption
       status: draft
-      note: "Für D-DES-01 (GOW50: baulicher Radweg oder Parallelroute). Listen wie cycling_rules.yaml C-GRAPH-01 und C-NET-05. Entscheidung prstolpe 2026-11-07 (Stapel 5)."
+      note: >-
+        Für D-DES-01 (GOW50: Parallelroute mildert, ersetzt aber nicht) und C-FAC-01 (Flag parallel_cycle_route).
+        Berechnet nur für Abschnitte, deren Soll-Kategorie die Anforderung applies_to_requirement hat (requirements.*.cycling).
+        Seit 0.20.0 (Review 2026-11 F21): nur das Soll-Radnetz RSV/HAUPT/BASIS mit Umweg <= P-DIR-01 statt jedes
+        OSM-Radwegs und des amtlichen Radnetzes im 200-m-Puffer (Parkwege dienten bisher als Ersatz); berechnet in der
+        Stufe c03b nach dem Soll-Radnetz.
 
     - id: S-FEAT-12
       description: "anbaufrei: Anteil der Abschnittslänge ohne Gebäude (ALKIS, Auswahl wie S-FEAT-03) und ohne Einmündung (Knoten mit Grad >= 3, S-NET-01) im Puffer buffer_m >= min_share"
@@ -560,6 +572,23 @@ features:
         Gemessen wird die Länge des Abschnitts außerhalb der Vereinigung aller Gebäude- und Knotenpuffer; die eigenen
         Endknoten zählen mit, wenn sie Einmündungen sind. Nach den E1-Stichproben prüfen, ob der Umfang eine Kategorie
         rechtfertigt.
+
+    - id: S-FEAT-13
+      description: >-
+        ist_facility je Abschnitt einmal berechnen (Regeln von cycling_rules C-FAC-05 inkl. begleitender Radwege je Seite,
+        E9); separated_cycle_track_present = ist_facility in track_facilities; C-PRI-02 (c04) und C-FAC-05 (c05)
+        übernehmen ist_facility für Straßenkanten und ihre begleitenden Radwege, s08 liest sie
+      track_facilities: [separated_oneway_both, separated_twoway]
+      source_type: assumption
+      status: draft
+      note: >-
+        Seit 0.20.0 (Review 2026-11 F26, Entscheidungsvorlage E9). Stufe c03b (pipeline/c03b_ist_facility.py) nach dem
+        Radgraphen; vorher gab es drei Definitionen (S-FEAT-10 Tag, C-PRI-02 Radgraph, C-FAC-05). Eingänge: S-FEAT-10
+        cycle_track_tag und cycle_lane_present, amtliche Fahrradstraßen, cycleway-Werte der Straßenkanten und begleitende
+        Radwege (sidepath_of) des Radgraphen. separated_cycle_track_present bleibt dreiwertig (S-FEAT-10): unbekannt, wenn
+        die Ist-Klasse no nur aus fehlenden OSM-Angaben folgt (kein cycleway-Tag, kein begleitender Radweg, keine
+        Fahrradstraße). Abschnitte mit Radweg-Tag, aber ohne begleitenden Radweg im Radgraphen (Kante mit C-IMP-07 statt
+        C-IMP-03) zählen nach C-FAC-05 als Radweg und stehen als Prüfliste in reports/ist_facility.md (Flag track_tag_only).
 
 # ---------------------------------------------------------------
 # Querschnitt: Straßenraumbreite und Machbarkeit (pipeline/s07_crosssection.py, guide.md 4.3 a und c, prompts/07)
@@ -744,15 +773,17 @@ discrepancy:
   design:
     id: D-DES-01
     checks: [cycling, cycle_lanes_allowed, centre_line, parking_along_carriageway, median_if_lanes_per_dir_gte]
-    severity: "Anzahl verletzter Anforderungen, gekappt bei 3"
+    severity: "Summe der Gewichte verletzter Anforderungen, gekappt bei max_severity; Gewicht 1, mit severity_if das Gewicht der ersten zutreffenden Bedingung (seit 0.20.0, F21)"
     max_severity: 3
     # Prüfung je Anforderung: gilt, wenn die Soll-Kategorie die Anforderung `check` mit dem Wert `requirement`
     # hat (ohne `requirement`: bei jedem Wert, der dann in violated_if als `requirement` steht).
     # violated_if wird dreiwertig ausgewertet (pipeline/lib/expr.py); unbekannt -> disc_design_unknown.
+    # severity_if: {merkmal: gewicht} – ist das Merkmal wahr, zählt der Verstoß nur mit diesem Gewicht (unbekannt: 1).
     violations:
-      - {check: cycling, requirement: separated_track_or_parallel_route, violated_if: "not separated_cycle_track_present and not parallel_cycle_route_present",
+      - {check: cycling, requirement: separated_track_or_parallel_route, violated_if: "not separated_cycle_track_present",
+         severity_if: {parallel_cycle_route_present: 0.5},
          direction: sparse, label_de: "kein baulicher Radweg", source_type: assumption,
-         note: "Parallelroute = eigenständiger Radweg oder amtliches Radnetz (Bestand) parallel im Abstand S-FEAT-11 buffer_m (seit 0.16.0)"}
+         note: "Ziele liegen an der Magistrale (guide_radnetz 3.2): Parallelroute (S-FEAT-11, Soll-Radnetz) mildert, ersetzt aber nicht (seit 0.20.0, Review 2026-11 F21)"}
       - {check: cycling, requirement: cycle_lanes_or_existing_track, violated_if: "not (cycle_lane_present or separated_cycle_track_present)",
          direction: sparse, label_de: "Radverkehr auf der Fahrbahn ohne Radfahrstreifen", source_type: assumption}
       - {check: cycling, requirement: mixed, violated_if: "separated_cycle_track_present",
@@ -778,7 +809,7 @@ discrepancy:
   use:
     id: D-USE-01
     rule: "dtv_official > factor * requirements[cat_final].profiles[profile].max_dtv"
-    profile_if_track: track     # separated_cycle_track_present -> Profil track (ohne max_dtv: kein Verstoß)
+    profile_if_track: track     # separated_cycle_track_present (S-FEAT-13) -> Profil track (ohne max_dtv: kein Verstoß)
     profile_default: wide       # sonst das großzügigere Profil
     profile_reported: narrow    # Grenze des schmalen Profils nur im Trace
     levels:

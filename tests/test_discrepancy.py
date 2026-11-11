@@ -287,9 +287,42 @@ def test_street_summary_lists_bezirke():
     assert street_summary(df, top_ids=set()).iloc[0]["bezirke"] == "Altona, Eimsbüttel"
 
 
-def test_gow50_without_track_but_parallel_route_is_no_violation():
-    # rules.yaml 0.16.0 (open question 65): D-DES-01 "Radweg oder Parallelroute" is checkable via S-FEAT-11
+def test_gow50_parallel_route_mitigates_but_does_not_replace_track():
+    # rules.yaml 0.20.0 (Review 2026-11 F21): violated_if only "not separated_cycle_track_present";
+    # a parallel route of the Soll network (S-FEAT-11) halves the weight (severity_if 0.5)
     no_track = {**GOW50_OK, "separated_cycle_track_present": False}
-    assert "kein baulicher Radweg" in [c["label"] for c in assess("GOW50", **no_track)["disc_causes"]]
+    r = assess("GOW50", **no_track)
+    cause = next(c for c in r["disc_causes"] if c["label"] == "kein baulicher Radweg")
+    assert cause["weight"] == 1 and r["disc_design"] == 1
     r = assess("GOW50", **{**no_track, "parallel_cycle_route_present": True})
+    cause = next(c for c in r["disc_causes"] if c["label"] == "kein baulicher Radweg")
+    assert cause["weight"] == 0.5 and cause["inputs"]["parallel_cycle_route_present"] is True
+    assert r["disc_design"] == 0.5 and r["disc_max"] == 0.5 and r["disc_type"] == "D2"
+
+
+def test_gow50_parallel_route_unknown_counts_full_weight():
+    r = assess("GOW50", **{**GOW50_OK, "separated_cycle_track_present": False, "parallel_cycle_route_present": None})
+    assert r["disc_design"] == 1
+
+
+def test_gow50_track_present_parallel_route_irrelevant():
+    r = assess("GOW50", **{**GOW50_OK, "parallel_cycle_route_present": True})
     assert "kein baulicher Radweg" not in [c["label"] for c in r["disc_causes"]] and r["disc_design"] == 0
+
+
+def test_gow50_track_unknown_is_unknown_even_with_parallel_route():
+    r = assess("GOW50", **{**GOW50_OK, "separated_cycle_track_present": None, "parallel_cycle_route_present": True})
+    assert "cycling" in r["disc_design_unknown"]
+
+
+def test_half_weight_adds_to_other_violations():
+    r = assess("GOW50", **{**GOW50_OK, "separated_cycle_track_present": False, "parallel_cycle_route_present": True,
+                           "parking_along_carriageway": True})
+    assert r["disc_design"] == 1.5
+
+
+def test_severity_if_weights_validated():
+    from config.schema.rules_model import DesignViolation
+    with pytest.raises(ValueError):
+        DesignViolation(check="cycling", violated_if="x", direction="sparse", label_de="x", source_type="assumption",
+                        severity_if={"y": 1.5})

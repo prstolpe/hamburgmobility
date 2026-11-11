@@ -20,7 +20,7 @@ NO_DISTRICT = "ohne Bezirk"
 TOTAL = "gesamt"
 # Columns derived from OSM tags (S-FEAT-10, maxspeed) whose completeness is reported, with labels.
 OSM_TAG_COLUMNS = {
-    "separated_cycle_track_present": "baulicher Radweg",
+    "cycle_track_tag": "Radweg-Tag",
     "cycle_lane_present": "Radfahrstreifen",
     "centre_line": "Mittelmarkierung",
     "parking_along_carriageway": "Parken",

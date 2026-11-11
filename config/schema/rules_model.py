@@ -333,9 +333,10 @@ class FeatureRule(_Strict):
     alkis_public_functions: list[str] = []
     alkis_ancillary_functions: list[str] = []
     route_types: list[int] = []
-    path_highways: list[str] = []      # S-FEAT-11
-    bicycle_allowed: list[str] = []    # S-FEAT-11
-    official_status: list[str] = []    # S-FEAT-11
+    qualifying_cycle_categories: list[str] = []  # S-FEAT-11: Soll cycle categories that count as parallel route
+    detour_check: str | None = None              # S-FEAT-11: cycling_rules principle check with detour thresholds
+    applies_to_requirement: str | None = None    # S-FEAT-11: requirements.*.cycling value whose categories are assessed
+    track_facilities: list[str] = []             # S-FEAT-13: Ist facilities that count as separated cycle track
     note: str | None = None
 
 
@@ -417,6 +418,15 @@ class DesignViolation(_Strict):
     source_type: SourceType
     source: str | list[str] | None = None
     note: str | None = None
+    # feature -> weight of the violation when the feature is true (first true feature wins; unknown/false: 1), F21
+    severity_if: dict[str, float] | None = None
+
+    @field_validator("severity_if")
+    @classmethod
+    def _weights(cls, v):
+        if v is not None and not all(0 < w <= 1 for w in v.values()):
+            raise ValueError("severity_if weights must be in (0, 1]")
+        return v
 
     def direction_for(self, category: str) -> str:
         if isinstance(self.direction, str):

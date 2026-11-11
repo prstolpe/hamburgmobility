@@ -87,10 +87,28 @@ def _no_ref(name: str) -> float:
     raise expr.ExprError(f"discrepancy conditions take no references ({name})")
 
 
-def design_assessment(values: dict, category: str, rules: RuleSet) -> tuple[dict, list[dict]]:
-    """Trace step and violations (each with check, label, direction, inputs).
+def violation_weight(v: DesignViolation, values: dict) -> tuple[float, dict]:
+    """F21: weight of a violation – the weight of the first severity_if feature that is true, else 1.
 
-    result = number of violations capped at max_severity; None if no check applies or none was decidable.
+    Returns (weight, inputs of the severity_if features); unknown features count as not true."""
+    used: dict = {}
+    for feature, w in (v.severity_if or {}).items():
+        val = values.get(feature)
+        used[feature] = None if _missing(val) else bool(val)
+        if used[feature]:
+            return float(w), used
+    return 1.0, used
+
+
+def _severity_value(x: float):
+    return int(x) if float(x).is_integer() else float(x)
+
+
+def design_assessment(values: dict, category: str, rules: RuleSet) -> tuple[dict, list[dict]]:
+    """Trace step and violations (each with check, label, direction, weight, inputs).
+
+    result = sum of the violation weights (1, or the severity_if weight, F21) capped at max_severity; None if no
+    check applies or none was decidable.
     """
     d = rules.discrepancy.design
     vals = dict(values)
@@ -108,9 +126,11 @@ def design_assessment(values: dict, category: str, rules: RuleSet) -> tuple[dict
             continue
         decided += 1
         if r.value:
+            weight, sev_inputs = violation_weight(v, values)
             violations.append({"dimension": "design", "check": v.check, "label": v.label_de,
-                               "direction": v.direction_for(category), "inputs": inputs})
-    result = None if decided == 0 else min(len(violations), d.max_severity)
+                               "direction": v.direction_for(category), "weight": _severity_value(weight),
+                               "inputs": {**inputs, **sev_inputs}})
+    result = None if decided == 0 else _severity_value(min(sum(x["weight"] for x in violations), d.max_severity))
     step = {"rule": d.id, "result": result, "violations": [x["check"] for x in violations], "unknown": unknown,
             "inputs": {}}
     return step, violations

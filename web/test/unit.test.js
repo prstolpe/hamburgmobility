@@ -107,6 +107,12 @@ describe("robustness", () => {
     expect(profileHtml(base, meta, "https://example.org/")).not.toContain("Anbaufreie");
   });
 
+  it("shows half design severities with a German decimal (F21)", () => {
+    const p = { ...base, discrepancy: { ...base.discrepancy, design: 0.5, max: 0.5 } };
+    expect(profileHtml(p, meta, "https://example.org/")).toContain("0,5 von 3");
+    expect(profileHtml(base, meta, "https://example.org/")).toContain("0 von 3");
+  });
+
   it("labels the table column", () => {
     expect([true, false, null, undefined].map(robust)).toEqual(["unsicher", "robust", "–", "–"]);
   });

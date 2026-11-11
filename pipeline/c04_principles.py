@@ -40,6 +40,7 @@ NETWORK_PATH = INTERIM / "cycle_network.parquet"
 ROUTES_PATH = INTERIM / "cycle_routes.parquet"
 GAPS_PATH = INTERIM / "cycle_mesh_gaps.parquet"
 FINAL_PATH = INTERIM / "final.parquet"
+IST_PATH = INTERIM / "ist_facility.parquet"
 ALKIS_PATH = RAW / "alkis__Nutzung.parquet"
 SIGNALS_PATH = RAW / "traffic_signals__osm.parquet"
 SCHOOLS_PATH = RAW / "schools__osm.parquet"
@@ -190,8 +191,12 @@ def _trace_cycleway(trace: str):
         return None
 
 
-def edge_frame(net: gpd.GeoDataFrame, final: pd.DataFrame, tags: dict, p: pr.PrincipleParams) -> pd.DataFrame:
-    """Facility, width, surface, lit, DTV per edge (Ist and Soll inputs), sidepaths folded into their road."""
+def edge_frame(net: gpd.GeoDataFrame, final: pd.DataFrame, tags: dict, p: pr.PrincipleParams,
+               ist: pd.Series | None = None) -> pd.DataFrame:
+    """Facility, width, surface, lit, DTV per edge (Ist and Soll inputs), sidepaths folded into their road.
+
+    ist = Ist facility per segment_id (rules.yaml S-FEAT-13, stage c03b): street edges and their sidepaths take it
+    (C-PRI-02 since cycling_rules 0.11.0, F26); other edges keep the facility of their Ist impedance rule."""
     n = len(net)
     kind = net["kind"].to_numpy()
     ways = net["osm_way_ids"].tolist()
@@ -204,6 +209,12 @@ def edge_frame(net: gpd.GeoDataFrame, final: pd.DataFrame, tags: dict, p: pr.Pri
     cycleway = [_trace_cycleway(t) for t in net["impedance_trace"]]
     fac = [pr.ist_facility(k, r, c, bool(o) if s else None, p)
            for k, r, c, o, s in zip(kind, net["imp_rule"], cycleway, oneway, is_side)]
+    ist = ist if ist is not None else pd.Series(dtype=object)
+    owner = np.where(kind == "road", net["segment_id"].to_numpy(dtype=object), np.where(is_side, side.to_numpy(dtype=object), None))
+    seg_ist = pd.Series(owner).map(ist).to_numpy(dtype=object)
+    from_segment = np.array([isinstance(x, str) and (k == "road" or s) for x, k, s in zip(seg_ist, kind, is_side)])
+    for i in np.flatnonzero(from_segment):
+        fac[i] = seg_ist[i]
 
     lit = edge_lit(ways, tags, p)
     surf_own = edge_osm_values(ways, tags, ("surface",))
@@ -231,7 +242,8 @@ def edge_frame(net: gpd.GeoDataFrame, final: pd.DataFrame, tags: dict, p: pr.Pri
     for seg, g in sp.groupby("seg"):
         twoway = (~g["oneway"]).any()
         lits = [x for x in g["lit"] if x is not None]
-        by_seg[seg] = {"fac": p.sidepath_twoway if twoway else p.sidepath_oneway, "width": np.nanmin(g["width"]) if g["width"].notna().any() else np.nan,
+        seg_fac = ist.get(seg)
+        by_seg[seg] = {"fac": seg_fac if isinstance(seg_fac, str) else (p.sidepath_twoway if twoway else p.sidepath_oneway), "width": np.nanmin(g["width"]) if g["width"].notna().any() else np.nan,
                        "surface": _first(g["surface"].tolist()), "lit": (False if False in lits else (True if lits else None))}
     from_side = np.zeros(n, dtype=bool)
     segs = net["segment_id"].to_numpy(dtype=object)
@@ -250,7 +262,7 @@ def edge_frame(net: gpd.GeoDataFrame, final: pd.DataFrame, tags: dict, p: pr.Pri
             for k, c, pc, s, cc, d in zip(kind, cat_final, parent_cat, is_side, cyc_cat, dtv)]
     peak_dir = np.fmax(net["cyc_peak_h_fwd"].to_numpy(dtype="float64"), net["cyc_peak_h_bwd"].to_numpy(dtype="float64"))
     return pd.DataFrame({
-        "kind": kind, "is_sidepath": is_side, "from_sidepath": from_side, "cat_final": cat_final, "parent_cat": parent_cat,
+        "kind": kind, "is_sidepath": is_side, "from_sidepath": from_side, "ist_from_segment": from_segment, "cat_final": cat_final, "parent_cat": parent_cat,
         "cycle_cat": cyc_cat, "facility_ist": fac, "facility_soll": [s[0] for s in soll], "facility_fallback": [s[1] for s in soll],
         "width_m": width, "surface": surface, "lit": lit, "dtv": dtv, "peak_dir": peak_dir,
         "peak_both": net["cyc_peak_h"].to_numpy(dtype="float64")}, index=net.index)
@@ -738,7 +750,8 @@ def main() -> int:
     cyc_rules = load_cycling_rules()
     p = pr.PrincipleParams.from_rules(cyc_rules, load_rules())
     for path, step in ((NETWORK_PATH, "make cycle-network"), (ROUTES_PATH, "make cycle-network"), (GAPS_PATH, "make cycle-network"),
-                       (FINAL_PATH, "make coherence"), (ALKIS_PATH, "make fetch"), (SIGNALS_PATH, "make fetch")):
+                       (FINAL_PATH, "make coherence"), (IST_PATH, "make ist-facility"), (ALKIS_PATH, "make fetch"),
+                       (SIGNALS_PATH, "make fetch")):
         if not path.exists():
             print(f"cycle-principles: {path.relative_to(REPO_ROOT)} missing; run `{step}` first", file=sys.stderr)
             return 1
@@ -768,7 +781,8 @@ def main() -> int:
     way_ids = {int(w) for ws in net["osm_way_ids"] for w in ws}
     tags = read_way_tags(pbf, way_ids)
     tick(f"OSM tags of {len(tags)} ways")
-    ef = edge_frame(net, final, tags, p)
+    ist = pd.read_parquet(IST_PATH, columns=["segment_id", "cycle_facility_ist"]).set_index("segment_id")["cycle_facility_ist"]
+    ef = edge_frame(net, final, tags, p, ist)
 
     # stops per edge (C-PRI-05)
     signals = gpd.read_parquet(SIGNALS_PATH)
@@ -891,7 +905,8 @@ def main() -> int:
     for i in range(n):
         edge_extra.append({
             "P-SAF-01": {"ist": ef["facility_ist"].iat[i], "soll": ef["facility_soll"].iat[i], "fallback": ef["facility_fallback"].iat[i],
-                         "from_sidepath": bool(ef["from_sidepath"].iat[i])},
+                         "from_sidepath": bool(ef["from_sidepath"].iat[i]),
+                         "ist_source": "S-FEAT-13" if bool(ef["ist_from_segment"].iat[i]) else "C-IMP"},
             "P-SAF-03": {"lit": ef["lit"].iat[i]},
             "P-SAF-04": {"crashes_cyc_5y": int(crashes_cyc[i])},
             "P-COM-01": {"width_m": None if not np.isfinite(ef["width_m"].iat[i]) else round(float(ef["width_m"].iat[i]), 2),

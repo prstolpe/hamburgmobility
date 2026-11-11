@@ -26,12 +26,14 @@ def test_segment_ids_unchanged(out):
 
 def test_columns(out):
     expected = {"conn_score", "place_score", "conn_weight_available", "place_weight_available", "in_hvs",
-                "schools_or_kitas_within_m", "separated_cycle_track_present", "cycle_lane_present", "lanes",
+                "schools_or_kitas_within_m", "cycle_track_tag", "cycle_lane_present", "lanes",
                 "centre_line", "parking", "crossings_count", "traffic_calming_count", "surface", "speed_ist_kmh",
                 "speed_sources_conflict", "access_motor_only", "pedestrian_zone", "in_cycle_network",
                 "feature_trace", "school_or_kita_access_m", "bus_peak_h_dir", "bus_route", "anbaufrei_share",
                 "anbaufrei"} | set(NORMS)
     assert expected <= set(out.columns)
+    # F21/F26: S-FEAT-11 and the Ist track (S-FEAT-13) are computed in stage c03b, not here
+    assert not {"separated_cycle_track_present", "parallel_cycle_route_present"} & set(out.columns)
 
 
 def test_p1_features(out):

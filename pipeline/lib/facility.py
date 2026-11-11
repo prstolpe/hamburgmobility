@@ -69,6 +69,7 @@ class FacilityParams:
     high_volume: dict              # road category -> principles.HighVolume (S-05, F01)
     cs_motor_traffic: bool         # C-FAC-04 cycle_street_motor_traffic (F18), read by principles.required_width
     proxy: DtvProxy | None = None  # C-FAC-02 dtv_proxy (F19)
+    parallel_flag: str | None = None  # C-FAC-01 parallel_route.flag (F21)
 
     @classmethod
     def from_rules(cls, cyc: CyclingRuleSet, road: RuleSet | None = None) -> "FacilityParams":
@@ -113,6 +114,7 @@ class FacilityParams:
             high_volume=pr.high_volume_cells(cyc, road),
             cs_motor_traffic=pr.cycle_street_motor_traffic(cyc),
             proxy=DtvProxy.from_rule(r["C-FAC-02"].get("dtv_proxy")),
+            parallel_flag=(r["C-FAC-01"].get("parallel_route") or {}).get("flag"),
         )
 
 

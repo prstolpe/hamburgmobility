@@ -1,6 +1,6 @@
 # Merkmalsbericht – Stufe 4
 
-Erzeugt: 2026-11-08T14:03:17+00:00 von `pipeline/s04_features.py`, rules.yaml 0.18.0. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-11T20:58:02+00:00 von `pipeline/s04_features.py`, rules.yaml 0.20.0. Nicht amtlicher Entwurf.
 
 ## Kennzahlen
 
@@ -67,8 +67,7 @@ Erzeugt: 2026-11-08T14:03:17+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | `speed_sources_conflict` | Tempo amtlich/OSM | S-FEAT-09 | Unsicherheit (confidence) | 0.0 % | 0.0 % |
 | `travel_speed_kmh` | Tempo amtlich/OSM/Standard | S-FEAT-02 | Gewicht der Betweenness | 3.4 % | 3.4 % |
 | `travel_speed_source` | Tempo amtlich/OSM/Standard | S-FEAT-02 | Herkunft von travel_speed_kmh | 3.4 % | 3.4 % |
-| `separated_cycle_track_present` | OSM-Tags | S-FEAT-10 | C-G30-02, requirements.*.cycling | 36.5 % | 35.8 % |
-| `parallel_cycle_route_present` | OSM-Radwege + amtliches Radnetz (Bestand) | S-FEAT-11 | D-DES-01 (GOW50: Radweg oder Parallelroute) | 0.0 % | 0.0 % |
+| `cycle_track_tag` | OSM-Tags | S-FEAT-10 | S-FEAT-13 (Ist-Führung, Stufe c03b) | 36.5 % | 35.8 % |
 | `cycle_lane_present` | OSM-Tags | S-FEAT-10 | requirements.*.cycle_lanes_allowed | 36.5 % | 35.8 % |
 | `lanes` | OSM-Tags | S-FEAT-10 | requirements.GOW50.median_if_lanes_per_dir_gte | 57.3 % | 57.0 % |
 | `centre_line` | OSM-Tags | S-FEAT-10 | requirements.GOW30.centre_line | 83.3 % | 83.1 % |
@@ -116,8 +115,7 @@ Erzeugt: 2026-11-08T14:03:17+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | OSM Radnetz Hamburg | fallback | `in_cycle_network` | 0.0 % |
 | Tempo amtlich/OSM | ok | `speed_ist_kmh`, `speed_ist_source`, `speed_sources_conflict` | 4.9 % |
 | Tempo amtlich/OSM/Standard | – | `travel_speed_kmh`, `travel_speed_source` | 3.4 % |
-| OSM-Tags | – | `separated_cycle_track_present`, `cycle_lane_present`, `lanes`, `centre_line`, `parking`, `parking_on_carriageway`, `parking_along_carriageway`, `angle_parking`, `surface`, `access_motor_only`, `pedestrian_zone` | 45.4 % |
-| OSM-Radwege + amtliches Radnetz (Bestand) | – | `parallel_cycle_route_present` | 0.0 % |
+| OSM-Tags | – | `cycle_track_tag`, `cycle_lane_present`, `lanes`, `centre_line`, `parking`, `parking_on_carriageway`, `parking_along_carriageway`, `angle_parking`, `surface`, `access_motor_only`, `pedestrian_zone` | 45.4 % |
 | OSM-Knoten | – | `crossings_count`, `traffic_calming_count` | 0.0 % |
 | ALKIS-Gebäude + OSM-Netz | – | `anbaufrei_share`, `anbaufrei` | 0.0 % |
 | keine Quelle | – | `outside_builtup_area` | 100.0 % |
@@ -313,7 +311,7 @@ Erzeugt: 2026-11-08T14:03:17+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | --- | --- |
 | `in_hvs` | False: 82.8 %, True: 17.2 % |
 | `in_cycle_network` | False: 96.9 %, True: 3.1 % |
-| `separated_cycle_track_present` | False: 41.8 %, null: 36.5 %, True: 21.7 % |
+| `cycle_track_tag` | False: 41.8 %, null: 36.5 %, True: 21.7 % |
 | `cycle_lane_present` | False: 57.9 %, null: 36.5 %, True: 5.5 % |
 | `centre_line` | null: 83.3 %, False: 16.4 %, True: 0.3 % |
 | `parking_on_carriageway` | null: 70.7 %, False: 22.1 %, True: 7.2 % |
