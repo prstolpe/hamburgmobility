@@ -15,6 +15,7 @@ import shapely
 
 from config.schema.cycling_model import NO_CYCLE_CATEGORY, CyclingRuleSet, width_ref
 from config.schema.provenance import is_active
+from config.schema.rules_model import RuleSet
 from pipeline.lib import principles as pr
 
 
@@ -46,9 +47,15 @@ class FacilityParams:
     not_assessed_soll: frozenset
     category_check: dict           # C-FAC-06: cat_final, soll, ist_classes (sets) and flag
     lowers_confidence: frozenset
+    high_volume: dict              # road category -> principles.HighVolume (S-05, F01)
+    cs_motor_traffic: bool         # C-FAC-04 cycle_street_motor_traffic (F18), read by principles.required_width
 
     @classmethod
-    def from_rules(cls, cyc: CyclingRuleSet) -> "FacilityParams":
+    def from_rules(cls, cyc: CyclingRuleSet, road: RuleSet | None = None) -> "FacilityParams":
+        """road = config/rules.yaml (S-05 reads requirements.GOW30.profiles.wide.max_dtv); loaded if not given."""
+        if road is None:
+            from pipeline.lib.rules import load_rules
+            road = load_rules()
         r = {x["id"]: x for x in cyc.facility_assignment["rules"]}
         pri = {x["id"]: x for x in cyc.principle_scoring["rules"]}
         s04 = next(x for x in cyc.separation_matrix["rules"] if x["id"] == "S-04")
@@ -83,6 +90,8 @@ class FacilityParams:
             category_check={**{k: frozenset(c06["category_check"][k]) for k in ("cat_final", "soll", "ist_classes")},
                             "flag": c06["category_check"]["flag"]},
             lowers_confidence=frozenset(r["C-FAC-07"]["lowers_confidence"]),
+            high_volume=pr.high_volume_cells(cyc, road),
+            cs_motor_traffic=pr.cycle_street_motor_traffic(cyc),
         )
 
 
@@ -134,6 +143,15 @@ def soll_facility(cat_final, cycle_cat, dtv, cyc_peak_both, space_fits_preferred
     cell = _raw_cell(cat_final, cycle_cat, p) if isinstance(cat_final, str) else None
     if cell is None:
         res.trace.append({"id": "C-FAC-01", "result": None, "values": {"cat_final": cat_final, "cycle_cat": cycle_cat}})
+        return res
+    hv = pr.high_volume(cat_final, dtv, p)
+    if hv is not None:   # S-05 (F01): before the cycle category, no fallback to a cycle lane
+        _add(res.flags, hv.flag)
+        values = {"cat_final": cat_final, "cycle_cat": cycle_cat, "dtv": dtv, "dtv_above": hv.dtv_above, "fallback": None}
+        res.trace.append({"id": "C-FAC-01", "result": hv.facility, "values": {**values, "cell": "high_volume"}})
+        if hv.rule:
+            res.trace.append({"id": hv.rule, "result": hv.facility, "values": values})
+        res.facility, res.fallback = hv.facility, None
         return res
     preferred, fallback = pr.soll_facility(cat_final, cycle_cat, p)
     facility = preferred

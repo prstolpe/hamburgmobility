@@ -1,6 +1,6 @@
 # Fünf Prinzipien: Bewertung des Soll-Radnetzes (Stufe c04)
 
-Erzeugt 2026-11-08T14:18:53+00:00 mit pipeline/c04_principles.py · cycling_rules.yaml 0.8.0 · nicht amtlicher Entwurf. Alle Bewertungsregeln (C-PRI-01…16) und die Gewichte sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
+Erzeugt 2026-11-11T12:44:25+00:00 mit pipeline/c04_principles.py · cycling_rules.yaml 0.9.0 · nicht amtlicher Entwurf. Alle Bewertungsregeln (C-PRI-01…16) und die Gewichte sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
 
 **score_ist** bewertet den heutigen Zustand der Soll-Route, **score_soll** den Zustand nach regelkonformem Ausbau (Führung nach Trennungsmatrix, Sollbreite, geschlossene Decke, Beleuchtung). Die Differenz ist der Handlungsbedarf. Fehlende Daten senken die confidence, nicht den Score.
 
@@ -8,9 +8,9 @@ Erzeugt 2026-11-08T14:18:53+00:00 mit pipeline/c04_principles.py · cycling_rule
 
 - RSV: 65 km, Score Ist 0.56 → Soll 0.68
 - HAUPT: 1 861 km, Score Ist 0.67 → Soll 0.77
-- BASIS: 1 038 km, Score Ist 0.79 → Soll 0.83
-- Führung entspricht heute der Trennungsmatrix auf 49 % der Netzlänge mit bekannter Führung (RSV/HAUPT: 26 %).
-- 5054 Routen bewertet; mittlerer Handlungsbedarf (score_soll − score_ist) 0.06, confidence: high 1909, medium 3145, low 0.
+- BASIS: 1 038 km, Score Ist 0.78 → Soll 0.83
+- Führung entspricht heute der Trennungsmatrix auf 48 % der Netzlänge mit bekannter Führung (RSV/HAUPT: 26 %).
+- 5054 Routen bewertet; mittlerer Handlungsbedarf (score_soll − score_ist) 0.07, confidence: high 1909, medium 3145, low 0.
 - Nicht bewertbar mangels Daten: P-SAF-02 (Knotentypen erst mit Prompt 20 (pipeline/c07_junctions.py)), P-COM-03 (kein Höhenmodell geladen (sources.yaml laserscan ohne Abruf)), P-ATT-02 (keine Lärmkarte (sources.yaml noise_maps ohne Endpunkt, Entscheidung 2026-11-06)).
 
 ## Datenlage je Prüfung
@@ -44,7 +44,7 @@ Längengewichtete Mittel über die Kanten der Kategorie (Kantenwerte für Direkt
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | RSV | 65 | 0.33 / 0.35 | 0.65 / 0.65 | 0.66 / 0.79 | 0.49 / 1.00 | 0.63 / 0.63 | 0.56 / 0.68 |
 | HAUPT | 1 861 | 0.68 / 0.71 | 0.66 / 0.66 | 0.64 / 0.82 | 0.69 / 1.00 | 0.70 / 0.70 | 0.67 / 0.77 |
-| BASIS | 1 038 | 0.79 / 0.80 | 0.81 / 0.81 | 0.75 / 0.82 | 0.86 / 1.00 | 0.71 / 0.71 | 0.79 / 0.83 |
+| BASIS | 1 038 | 0.79 / 0.80 | 0.81 / 0.81 | 0.75 / 0.82 | 0.86 / 1.00 | 0.71 / 0.71 | 0.78 / 0.83 |
 
 ## Zusammenhang (P-COH)
 
@@ -97,19 +97,19 @@ Längengewichtete Mittel über die Kanten der Kategorie (Kantenwerte für Direkt
 
 | Ist \ Soll | Radfahrstreifen | Fahrradstraße | Mischverkehr | eigener Weg | Radweg je Seite | unbekannt |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Radfahrstreifen | 15 | 29 | 15 | 0 | 25 | 0 |
+| Radfahrstreifen | 5 | 29 | 15 | 0 | 36 | 0 |
 | Fahrradstraße | 0 | 18 | 2 | 0 | 0 | 0 |
-| Mischverkehr | 17 | 970 | 607 | 0 | 48 | 41 |
+| Mischverkehr | 9 | 970 | 607 | 0 | 56 | 41 |
 | eigener Weg | 0 | 0 | 0 | 417 | 0 | 0 |
-| Radweg je Seite | 51 | 98 | 44 | 0 | 223 | 7 |
-| Zweirichtungsradweg | 21 | 108 | 48 | 11 | 140 | 4 |
+| Radweg je Seite | 11 | 98 | 44 | 0 | 263 | 7 |
+| Zweirichtungsradweg | 7 | 108 | 48 | 11 | 154 | 4 |
 | unbekannt | 0 | 0 | 0 | 0 | 0 | 5 |
 
 P-SAF-03 Beleuchtung: OSM lit auf 85 % der Netzlänge bekannt; davon beleuchtet 90 %. P-SAF-04 Unfälle mit Radbeteiligung 2021–2025: 7 667 Unfälle an Kanten des Soll-Netzes (je Kante höchstens 15 m entfernt; nur Summen gespeichert).
 
 ## Komfort und Attraktivität (P-COM, P-ATT)
 
-- P-COM-01 Breite: anwendbar auf 1 274 km (ohne Mischverkehr), Breite in OSM auf 11 % davon; von diesen erreichen 20 % die Sollbreite.
+- P-COM-01 Breite: anwendbar auf 1 274 km (ohne Mischverkehr), Breite in OSM auf 11 % davon; von diesen erreichen 18 % die Sollbreite.
 - P-COM-02 Belag: bekannt auf 96 %; RSV/HAUPT mit geschlossener Decke 67 %.
 - P-ATT-01 Grünanteil im 20-m-Puffer: Median 13 % (Ziel 30 %, ALKIS-Grünflächen und OSM-Bäume).
 - P-ATT-03: 327 km des Soll-Netzes liegen an Straßen mit DTV > 15 000.
@@ -124,7 +124,7 @@ Rangfolge nach Handlungsbedarf-km = (score_soll − score_ist) × Länge in km (
 | 2 | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Harburg (300 Tsd. m²) (`rt_3645a25b810b0a3f`) | RSV | 19.8 | 0.56 | 0.71 | 0.14 | 2.86 | 0.57 → 0.75 | 0.44 → 1.00 | high | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565693,5927156]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.489264/9.990118) · [OSM](https://www.openstreetmap.org/?mlat=53.489264&mlon=9.990118#map=18/53.489264/9.990118) |
 | 3 | Umsteigeknoten Neugraben – Arbeitsplatzschwerpunkt Hamburg-Mitte (379 Tsd. m²) (`rt_a1437067c8713aec`) | HAUPT | 16.2 | 0.73 | 0.87 | 0.14 | 2.33 | 0.59 → 0.83 | 0.60 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560451,5929359]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.509694/9.911549) · [OSM](https://www.openstreetmap.org/?mlat=53.509694&mlon=9.911549#map=18/53.509694/9.911549) |
 | 4 | Umsteigeknoten Neugraben – Hochschule Technologiezentrum Hamburg-Finkenwerder (`rt_fa57d47917cbb47c`) | HAUPT | 15.3 | 0.73 | 0.87 | 0.14 | 2.16 | 0.59 → 0.83 | 0.61 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560443,5928887]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.505453/9.911335) · [OSM](https://www.openstreetmap.org/?mlat=53.505453&mlon=9.911335#map=18/53.505453/9.911335) |
-| 5 | Verdichtung HAUPT: Elbchaussee (`rt_0b6a6a1d99fe5f69`) | HAUPT | 21.8 | 0.63 | 0.72 | 0.09 | 2.00 | 0.53 → 0.73 | 0.88 → 1.00 | high | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[551948,5934994]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.561248/9.784279) · [OSM](https://www.openstreetmap.org/?mlat=53.561248&mlon=9.784279#map=18/53.561248/9.784279) |
+| 5 | Verdichtung HAUPT: Elbchaussee (`rt_0b6a6a1d99fe5f69`) | HAUPT | 21.8 | 0.63 | 0.72 | 0.09 | 2.05 | 0.53 → 0.73 | 0.87 → 1.00 | high | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[551948,5934994]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.561248/9.784279) · [OSM](https://www.openstreetmap.org/?mlat=53.561248&mlon=9.784279#map=18/53.561248/9.784279) |
 | 6 | Innenstadt (Rathausmarkt) – Hochschule Gebäude D (`rt_8eabe7a2f46ef973`) | RSV | 14.8 | 0.59 | 0.72 | 0.12 | 1.80 | 0.58 → 0.74 | 0.55 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565276,5929388]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.509382/9.984308) · [OSM](https://www.openstreetmap.org/?mlat=53.509382&mlon=9.984308#map=18/53.509382/9.984308) |
 | 7 | Arbeitsplatzschwerpunkt Hamburg-Mitte (263 Tsd. m²) – Arbeitsplatzschwerpunkt Bergedorf (224 Tsd. m²) (`rt_a0ba9480bcf0aba0`) | HAUPT | 14.9 | 0.74 | 0.86 | 0.12 | 1.75 | 0.57 → 0.78 | 0.67 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569146,5931763]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.530230/10.043167) · [OSM](https://www.openstreetmap.org/?mlat=53.530230&mlon=10.043167#map=18/53.530230/10.043167) |
 | 8 | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Mitte (231 Tsd. m²) (`rt_3a0535e6b916dd87`) | HAUPT | 12.9 | 0.70 | 0.83 | 0.13 | 1.72 | 0.56 → 0.76 | 0.57 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564309,5933531]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.546728/9.970578) · [OSM](https://www.openstreetmap.org/?mlat=53.546728&mlon=9.970578#map=18/53.546728/9.970578) |
@@ -138,7 +138,7 @@ Rangfolge nach Handlungsbedarf-km = (score_soll − score_ist) × Länge in km (
 | 16 | Innenstadt (Rathausmarkt) – Umsteigeknoten Bergedorf (`rt_330eda61e65cb575`) | RSV | 18.9 | 0.64 | 0.71 | 0.07 | 1.37 | 0.63 → 0.73 | 0.74 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573715,5933042]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.541098/10.112394) · [OSM](https://www.openstreetmap.org/?mlat=53.541098&mlon=10.112394#map=18/53.541098/10.112394) |
 | 17 | Arbeitsplatzschwerpunkt Hamburg-Mitte (278 Tsd. m²) – Arbeitsplatzschwerpunkt Bergedorf (224 Tsd. m²) (`rt_5be88c5238ed113e`) | HAUPT | 7.1 | 0.66 | 0.85 | 0.19 | 1.37 | 0.45 → 0.81 | 0.50 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572709,5930397]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.517468/10.096597) · [OSM](https://www.openstreetmap.org/?mlat=53.517468&mlon=10.096597#map=18/53.517468/10.096597) |
 | 18 | Umsteigeknoten Neugraben – Arbeitsplatzschwerpunkt Hamburg-Mitte (231 Tsd. m²) (`rt_1f65359785a52cea`) | HAUPT | 10.2 | 0.73 | 0.86 | 0.13 | 1.36 | 0.62 → 0.82 | 0.58 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559820,5926567]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.484673/9.901500) · [OSM](https://www.openstreetmap.org/?mlat=53.484673&mlon=9.901500#map=18/53.484673/9.901500) |
-| 19 | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Bergedorf (549 Tsd. m²) (`rt_312c55eaf10e71ed`) | HAUPT | 12.0 | 0.70 | 0.81 | 0.11 | 1.34 | 0.55 → 0.75 | 0.66 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569982,5931778]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.530255/10.055787) · [OSM](https://www.openstreetmap.org/?mlat=53.530255&mlon=10.055787#map=18/53.530255/10.055787) |
+| 19 | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Bergedorf (549 Tsd. m²) (`rt_312c55eaf10e71ed`) | HAUPT | 12.0 | 0.70 | 0.81 | 0.11 | 1.35 | 0.55 → 0.75 | 0.65 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569982,5931778]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.530255/10.055787) · [OSM](https://www.openstreetmap.org/?mlat=53.530255&mlon=10.055787#map=18/53.530255/10.055787) |
 | 20 | Arbeitsplatzschwerpunkt Hamburg-Mitte (379 Tsd. m²) – Arbeitsplatzschwerpunkt Altona (226 Tsd. m²) (`rt_9fe1aad7bdd69990`) | HAUPT | 9.8 | 0.75 | 0.88 | 0.13 | 1.26 | 0.64 → 0.81 | 0.64 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560124,5935043]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.560821/9.907711) · [OSM](https://www.openstreetmap.org/?mlat=53.560821&mlon=9.907711#map=18/53.560821/9.907711) |
 | 21 | Arbeitsplatzschwerpunkt Bergedorf (549 Tsd. m²) – Arbeitsplatzschwerpunkt Hamburg-Mitte (278 Tsd. m²) (`rt_e3d331b9b5cc9556`) | HAUPT | 6.6 | 0.65 | 0.84 | 0.19 | 1.25 | 0.45 → 0.81 | 0.52 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572886,5930550]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.518820/10.099305) · [OSM](https://www.openstreetmap.org/?mlat=53.518820&mlon=10.099305#map=18/53.518820/10.099305) |
 | 22 | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Mitte (379 Tsd. m²) (`rt_11d6966950f5f77a`) | RSV | 15.0 | 0.58 | 0.67 | 0.08 | 1.24 | 0.57 → 0.72 | 0.80 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559566,5935498]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.564974/9.899373) · [OSM](https://www.openstreetmap.org/?mlat=53.564974&mlon=9.899373#map=18/53.564974/9.899373) |
@@ -151,7 +151,7 @@ Rangfolge nach Handlungsbedarf-km = (score_soll − score_ist) × Länge in km (
 | 29 | Innenstadt (Rathausmarkt) – Hochschule HAW - Life Sciences - Campus Bergedorf (`rt_45e1e9f969e39995`) | RSV | 18.1 | 0.64 | 0.70 | 0.06 | 1.12 | 0.64 → 0.73 | 0.80 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573408,5933202]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.542585/10.107802) · [OSM](https://www.openstreetmap.org/?mlat=53.542585&mlon=10.107802#map=18/53.542585/10.107802) |
 | 30 | Arbeitsplatzschwerpunkt Hamburg-Mitte (379 Tsd. m²) – Arbeitsplatzschwerpunkt Hamburg-Mitte (231 Tsd. m²) (`rt_9978d70cbf7eefbe`) | HAUPT | 6.9 | 0.73 | 0.89 | 0.16 | 1.11 | 0.55 → 0.83 | 0.67 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[558090,5932012]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.533804/9.876452) · [OSM](https://www.openstreetmap.org/?mlat=53.533804&mlon=9.876452#map=18/53.533804/9.876452) |
 
-Höchster Δ einer Route (ohne Längengewicht): 0.30; Routen mit Δ ≥ 0,2: 188.
+Höchster Δ einer Route (ohne Längengewicht): 0.30; Routen mit Δ ≥ 0,2: 189.
 
 ## Karten je Prinzip
 
@@ -177,7 +177,7 @@ Jedes Gewicht einzeln um ±20% verändert, die übrigen anteilig umgelegt (C-PRI
 | Zusammenhang | 0.200 | 0.240 | 29/30 | 0.998 |
 | Direktheit | 0.250 | 0.200 | 30/30 | 1.000 |
 | Direktheit | 0.250 | 0.300 | 30/30 | 1.000 |
-| Sicherheit | 0.300 | 0.240 | 29/30 | 0.996 |
+| Sicherheit | 0.300 | 0.240 | 29/30 | 0.995 |
 | Sicherheit | 0.300 | 0.360 | 29/30 | 0.997 |
 | Komfort | 0.150 | 0.120 | 29/30 | 0.999 |
 | Komfort | 0.150 | 0.180 | 29/30 | 0.999 |
@@ -193,7 +193,7 @@ Kleinste Überschneidung: 29/30.
 | Altona | 422 | 0.70 | 0.78 | 0.08 |
 | Bergedorf | 194 | 0.73 | 0.82 | 0.09 |
 | Eimsbüttel | 362 | 0.70 | 0.78 | 0.08 |
-| Hamburg-Mitte | 481 | 0.72 | 0.80 | 0.08 |
+| Hamburg-Mitte | 481 | 0.71 | 0.80 | 0.09 |
 | Hamburg-Nord | 418 | 0.70 | 0.78 | 0.08 |
 | Harburg | 266 | 0.69 | 0.79 | 0.10 |
 | Wandsbek | 820 | 0.71 | 0.80 | 0.08 |

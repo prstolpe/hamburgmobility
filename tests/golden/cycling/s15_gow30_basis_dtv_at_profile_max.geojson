@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow30_basis_dtv_at_profile_max",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow30_basis_dtv_at_profile_max",
+        "description": "G01: GOW30, Bezirksroute, DTV 10 000 = requirements.GOW30.profiles.wide.max_dtv (einschließlich) -> Radfahrstreifen",
+        "cat_final": "GOW30",
+        "cycle_cat": "BASIS",
+        "dtv": 10000,
+        "cyc_peak_h_oneway": 120,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": null,
+        "expected_facility": "cycle_lane",
+        "expected_width_refs": [
+          "widths_m.project_target.cycle_lane.BASIS"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "L-01"
+        ],
+        "forbidden_flags": [
+          "gow30_high_volume"
+        ],
+        "refs_used": [
+          "separation_matrix.GOW30.high_volume.dtv_above"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            566000.0,
+            5936000.0
+          ],
+          [
+            566120.0,
+            5936015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

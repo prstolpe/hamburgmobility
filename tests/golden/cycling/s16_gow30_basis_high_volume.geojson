@@ -1,0 +1,54 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow30_basis_high_volume",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow30_basis_high_volume",
+        "description": "G01: GOW30, Bezirksroute, DTV 10 001 > profiles.wide.max_dtv -> Radweg je Seite ohne Fallback, Flag gow30_high_volume (S-05)",
+        "cat_final": "GOW30",
+        "cycle_cat": "BASIS",
+        "dtv": 10001,
+        "cyc_peak_h_oneway": 120,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": null,
+        "expected_facility": "separated_oneway_both",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_oneway.BASIS"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "L-01",
+          "S-05"
+        ],
+        "expected_flags": [
+          "gow30_high_volume"
+        ],
+        "refs_used": [
+          "separation_matrix.GOW30.high_volume.dtv_above"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            566200.0,
+            5936000.0
+          ],
+          [
+            566320.0,
+            5936015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

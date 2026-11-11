@@ -15,7 +15,7 @@ import shapely
 from scipy.sparse.csgraph import dijkstra
 from scipy.spatial import cKDTree
 
-from config.schema.cycling_model import UPGRADE_CONDITION, CyclingRuleSet
+from config.schema.cycling_model import HIGH_VOLUME_KEY, RULES_REF_PREFIX, UPGRADE_CONDITION, CyclingRuleSet
 from config.schema.provenance import META_KEYS, is_active
 from config.schema.rules_model import RuleSet
 from pipeline.lib.cycle_graph import LANE_VALUES
@@ -26,6 +26,39 @@ RURAL = ("GOW80", "ETW60")
 ONEWAY_FACILITIES = frozenset({"separated_oneway_both", "cycle_lane"})
 _UPGRADE = UPGRADE_CONDITION  # half-open classes [min, max) (F27)
 _WIDTH = re.compile(r"^\s*(\d+(?:[.,]\d+)?)\s*(m)?\s*$")
+
+
+@dataclass(frozen=True)
+class HighVolume:
+    """Load-dependent matrix cell (separation_matrix.<cat>.high_volume, S-05, Review 2026-11 F01)."""
+    dtv_above: float     # inclusive maximum: the cell applies when dtv > dtv_above
+    facility: str
+    flag: str
+    rule: str | None
+
+
+def rules_ref(road: RuleSet, path: str):
+    """Value at a dotted path into config/rules.yaml ('rules.requirements.GOW30.profiles.wide.max_dtv')."""
+    node = road.model_dump(by_alias=True)
+    for key in path.removeprefix(RULES_REF_PREFIX).split("."):
+        node = node[key]
+    return node
+
+
+def high_volume_cells(cyc: CyclingRuleSet, road: RuleSet) -> dict[str, HighVolume]:
+    """high_volume cells per road category with the DTV limit resolved from rules.yaml."""
+    out = {}
+    for cat, row in cyc.separation_matrix.items():
+        if isinstance(row, dict) and HIGH_VOLUME_KEY in row:
+            cell = row[HIGH_VOLUME_KEY]
+            out[cat] = HighVolume(float(rules_ref(road, cell["dtv_above"])), cell["all"], cell["flag"], cell.get("rule"))
+    return out
+
+
+def cycle_street_motor_traffic(cyc: CyclingRuleSet) -> bool:
+    """C-FAC-04 cycle_street_motor_traffic (F18): Soll cycle streets carry motor traffic ("Kfz frei")."""
+    c04 = next(r for r in cyc.facility_assignment["rules"] if r["id"] == "C-FAC-04")
+    return bool(c04["cycle_street_motor_traffic"]["value"])
 
 
 @dataclass(frozen=True)
@@ -75,6 +108,8 @@ class PrincipleParams:
     top_n: int
     review_n: int
     review_seed: int
+    high_volume: dict            # road category -> HighVolume (S-05)
+    cs_motor_traffic: bool       # C-FAC-04 cycle_street_motor_traffic (F18)
 
     @classmethod
     def from_rules(cls, cyc: CyclingRuleSet, road: RuleSet) -> "PrincipleParams":
@@ -131,6 +166,8 @@ class PrincipleParams:
             top_n=int(r["C-PRI-14"]["top_n"]),
             review_n=int(r["C-PRI-15"]["review_n"]),
             review_seed=int(r["C-PRI-15"]["seed"]),
+            high_volume=high_volume_cells(cyc, road),
+            cs_motor_traffic=cycle_street_motor_traffic(cyc),
         )
 
     def checks_of(self, principle: str) -> list[str]:
@@ -199,10 +236,22 @@ def _cell(cell) -> tuple[str | None, str | None]:
     return cell.get("preferred"), cell.get("fallback")
 
 
-def soll_facility(cat_final, cycle_cat: str, p: PrincipleParams) -> tuple[str | None, str | None]:
-    """(preferred, fallback) facility of the separation matrix for a road category and cycle category."""
+def high_volume(cat_final, dtv, p) -> HighVolume | None:
+    """S-05 (F01): the high_volume cell of the row applies when dtv > its dtv_above; never without a DTV."""
+    hv = p.high_volume.get(cat_final) if isinstance(cat_final, str) else None
+    if hv is None or _nan(dtv):
+        return None
+    return hv if float(dtv) > hv.dtv_above else None
+
+
+def soll_facility(cat_final, cycle_cat: str, p: PrincipleParams, dtv=None) -> tuple[str | None, str | None]:
+    """(preferred, fallback) facility of the separation matrix for a road category and cycle category; a
+    high_volume cell of the row (S-05) is evaluated before the cycle category."""
     if not isinstance(cat_final, str):
         return None, None
+    hv = high_volume(cat_final, dtv, p)
+    if hv is not None:
+        return hv.facility, None
     if cat_final in RURAL:
         rural = p.matrix["rural"]
         return _cell(rural[cat_final]) if is_active(rural) else (None, None)  # inactive: no data basis (F28)
@@ -214,14 +263,16 @@ def soll_facility(cat_final, cycle_cat: str, p: PrincipleParams) -> tuple[str | 
     return _cell(row[cycle_cat])
 
 
-def edge_soll_facility(kind: str, cat_final, parent_cat, cycle_cat: str, p: PrincipleParams) -> tuple[str | None, str | None]:
-    """Soll facility per edge: sidepaths after their road, other own paths own_path, roads after cat_final."""
+def edge_soll_facility(kind: str, cat_final, parent_cat, cycle_cat: str, p: PrincipleParams,
+                       dtv=None) -> tuple[str | None, str | None]:
+    """Soll facility per edge: sidepaths after their road, other own paths own_path, roads after cat_final.
+    dtv = DTV of the road (of the parent road for sidepaths), for the high_volume cell (S-05)."""
     if kind == "path":
         if isinstance(parent_cat, str):
-            return soll_facility(parent_cat, cycle_cat, p)
+            return soll_facility(parent_cat, cycle_cat, p, dtv)
         return "own_path", None
     if kind == "road":
-        return soll_facility(cat_final, cycle_cat, p)
+        return soll_facility(cat_final, cycle_cat, p, dtv)
     return None, None
 
 
@@ -267,7 +318,8 @@ def required_width(facility, cycle_cat: str, peak_dir, peak_both, p: PrinciplePa
         return float("nan")
     t = p.project_target[key]
     if "value" in t:
-        base = t["value"]
+        # F18: a cycle street open to motor traffic needs the with_motor_traffic carriageway
+        base = t["with_motor_traffic"] if p.cs_motor_traffic and "with_motor_traffic" in t else t["value"]
     elif cycle_cat in t:
         base = t[cycle_cat]
     else:

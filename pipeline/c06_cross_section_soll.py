@@ -45,7 +45,8 @@ SAMPLE_SEED = 42
 CASE_LIST_N = 40
 CAT_ORDER = ["SW", "GOW80", "GOW50", "GOW30", "ETW60", "ETW30", "ETW_ERF"]
 FIT_DE = {"fits": "passt", "fits_after_degrade": "passt nach Abbau", "does_not_fit": "passt nicht", None: "nicht bewertet"}
-STEP_DE = {"D1": "Parken entfernen", "D2": "Baumstreifen → Baumscheiben", "fallback": "Fallback der Matrixzelle (Prompt 18)",
+STEP_DE = {"D1": "Parken entfernen", "D2": "neuer Baumstreifen → Baumscheiben im Trenn-/Seitenraum",
+           "fallback": "Fallback der Matrixzelle (Prompt 18)",
            "D3": "zweiten Kfz-Fahrstreifen streichen", "D4": "Rad- und Gehweg auf Mindestbreite",
            "D5": "Vorschlag GOW50 → GOW30 (C-G30-02)", "D6": "Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen",
            "D7": "Flag: Radroute auf Parallelstraße verlegen"}
@@ -57,8 +58,9 @@ FLAG_DE = {"width_unknown": "keine verfügbare Breite (width_p10_m fehlt)",
            "dtv_unknown": "DTV fehlt an GOW50 – Fahrstreifen = Ist (PRF-01), confidence low",
            "lanes_capped_l06": "Soll-Fahrstreifen auf Ist begrenzt (L-06, kein Override)",
            "pl02_unchecked": "Zweirichtungsradweg: Seitenbedingung PL-02 nicht prüfbar (PRF-07)",
-           "trees_in_parking_row": "Baumstreifen entfällt, Bäume als Baumscheiben (D2)",
-           "gow30_dtv_above_profile": "GOW30 mit DTV über dem breiten CROW-Profil",
+           pf.TREE_PITS_FLAG: "neuer Baumstreifen entfällt, Bäume als Baumscheiben im Trenn- oder Seitenraum (D2)",
+           "gow30_dtv_above_profile": "GOW30 mit DTV über dem breiten CROW-Profil (Soll-Führung Radweg, S-05)",
+           pf.CAPACITY_FLAG: "GOW30: Kfz-Menge über der Kapazität eines Fahrstreifens je Richtung – Reduktion nötig (L-07)",
            "D6": STEP_DE["D6"], "D7": STEP_DE["D7"]}
 
 
@@ -89,6 +91,23 @@ def lanes_for_segment(props: dict, design: DesignRuleSet, cycling: CyclingRuleSe
                       _params(design, cycling))
     return {"lanes_per_direction": r.lanes, "bus_lane": r.bus_lane, "median": r.median, "flags": r.flags,
             "rule_trace": r.trace}
+
+
+def profile_for_segment(props: dict, design: DesignRuleSet, cycling: CyclingRuleSet) -> dict:
+    """Golden-case API (Review 2026-11 G12): Soll profile from the case properties (facility and width from c05,
+    parking after PRF-03 parking_by_category), with ample space so no degrade step applies."""
+    from pipeline import c05_facility as c05
+    p = _params(design, cycling)
+    fac = c05.facility_for_segment(props, cycling)
+    peak_dir = props.get("cyc_peak_h_oneway")
+    seg = pf.SegmentInput(
+        cat=props["cat_final"], cycle_cat=props["cycle_cat"], facility=fac["cycle_facility"],
+        fallback=fac["cycle_facility_fallback"], cycle_width=fac["cycle_width_m"], peak_dir=peak_dir,
+        peak_both=props.get("cyc_peak_h", peak_dir), dtv=props.get("dtv"), bus_peak_dir=float(props.get("bus_peak_h_dir") or 0),
+        lanes_ist=props.get("lanes_ist"), oneway=False, parking_sides=pf.parking_sides_soll(props.get("parking"), props["cat_final"], p),
+        business=pf.is_business(props.get("shop_frontage_share"), p), tram=False)
+    res = pf.evaluate_profile(seg, props.get("available_m", 100.0), p)
+    return {"profile_elements": res.elements, "fit_class": res.fit_class, "flags": res.flags, "rule_trace": res.trace}
 
 
 # --- GTFS: buses and trams per peak hour and direction (PRF-02) ------------------------------------------------
@@ -133,7 +152,8 @@ def segment_input(f, c, bus, tram, p: pf.ProfileParams, lanes_override: tuple | 
         facility=_str_or_none(c["cycle_facility_soll"]), fallback=_str_or_none(c["cycle_facility_fallback"]),
         cycle_width=_num(c["cycle_width_soll_m"]), peak_dir=_num(c["cyc_peak_h_dir"]), peak_both=_num(c["cyc_peak_h"]),
         dtv=_num(f["dtv_official"]), bus_peak_dir=float(bus), lanes_ist=ist, oneway=oneway,
-        parking_sides=pf.parking_sides(f["parking"], p), business=pf.is_business(f["shop_frontage_share"], p),
+        parking_sides=pf.parking_sides_soll(f["parking"], _str_or_none(f["cat_final"]), p),
+        business=pf.is_business(f["shop_frontage_share"], p),
         tram=bool(tram), lanes_override=lanes_override)
 
 
@@ -157,12 +177,13 @@ def classify(final: pd.DataFrame, fac: pd.DataFrame, bus: np.ndarray, tram: np.n
             "lanes_source": "override" if seg.lanes_override is not None else "proposed",
             "oneway": seg.oneway, "bus_peak_h_dir": float(b), "tram_present": bool(t), "bus_lane_soll": res.bus_lane,
             "median_soll": res.median, "cycle_facility_final": res.cycle_facility, "cycle_width_final_m": res.cycle_width_m,
-            "cycle_side": res.cycle_side, "parking_sides_ist": seg.parking_sides, "business_use": seg.business,
+            "cycle_side": res.cycle_side, "parking_sides_ist": pf.parking_sides(f["parking"], p),
+            "parking_sides_soll": seg.parking_sides, "business_use": seg.business,
             "profile_elements": json.dumps(res.elements, ensure_ascii=False), "total_required_m": res.total_required_m,
             "available_m": res.available_m, "available_facade_m": facade.available_m, "fit_class": res.fit_class,
             "fit_class_facade": facade.fit_class, "degrade_steps_applied": "|".join(res.degrade_steps_applied) or None,
             "cat_change_proposal": res.cat_change_proposal, "profile_flags": "|".join(dict.fromkeys(res.flags)) or None,
-            "profile_confidence": pf.confidence(res, seg),
+            "profile_confidence": pf.confidence(res, seg), "capacity_reduction_dtv": res.reduction_dtv,
             "rule_trace_profile": json.dumps(trace, ensure_ascii=False, default=float)})
     return pd.DataFrame(rows).set_index("segment_id")
 
@@ -201,6 +222,10 @@ def _km(out, mask) -> float:
     return out.loc[mask, "length_m"].sum() / 1000
 
 
+def _cap(out: pd.DataFrame) -> pd.Series:
+    return out["profile_flags"].fillna("").str.split("|").apply(lambda xs: pf.CAPACITY_FLAG in xs)
+
+
 def _steps(out: pd.DataFrame) -> pd.Series:
     return out["degrade_steps_applied"].fillna("").str.split("|")
 
@@ -229,13 +254,15 @@ def write_report(out: gpd.GeoDataFrame, sel: pd.DataFrame, ctx: dict) -> None:
         "# Soll-Querschnitt: Fahrstreifen, Lage der Radanlagen, Raumaufteilung (Stufe c06)",
         "",
         f"Erzeugt {_now()} mit pipeline/c06_cross_section_soll.py · design_rules.yaml {ctx['design_version']} · "
-        f"cycling_rules.yaml {ctx['cycling_version']} · nicht amtlicher Entwurf. Regeln L-01…06, PL-01…06 und "
+        f"cycling_rules.yaml {ctx['cycling_version']} · nicht amtlicher Entwurf. Regeln L-01…07, PL-01…06 und "
         "PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.",
         "",
         "Verfügbare Breite = width_p10_m der Variante Verkehrsfläche (maßgeblich); die Variante Fassade zeigt das Potenzial "
         "inklusive Vorgärten. Das gewünschte Profil enthält Gehwege (Regelmaß), die Radanlage mit Sollbreite aus Prompt 18, "
         "ÖPNV, Fahrbahn, Trennstreifen, Bäume (GOW), Ladezone bei Geschäftsnutzung und Parken nur dort, wo OSM heute Parken "
-        "zeigt (Entscheidung 2026-11-06). Passt es nicht, gilt die Kaskade D1, D2, Fallback, D3, D4, D5, D6, D7 (PRF-06).",
+        "zeigt (Entscheidung 2026-11-06) und die Kategorie es erlaubt (PRF-03 parking_by_category: GOW50 und ETW_ERF keins, "
+        "GOW30 nur Parkstreifen, ETW30 wie Ist). Passt es nicht, gilt die Kaskade "
+        f"{', '.join('Fallback' if s == 'fallback' else s for s in ctx['cascade_order'])} (PRF-06).",
         "",
         "## Kurzfassung",
         "",
@@ -249,6 +276,9 @@ def write_report(out: gpd.GeoDataFrame, sel: pd.DataFrame, ctx: dict) -> None:
     d5 = out["cat_change_proposal"].notna()
     lines += [f"- Vorschlag GOW50 → GOW30 (D5): {_fmt(d5.sum())} Abschnitte, {_fmt(_km(out, d5), 1)} km – nicht übernommen, "
               "Entscheidung über overrides/overrides.csv.",
+              f"- GOW30 mit Kfz-Menge über der Kapazität eines Fahrstreifens je Richtung (L-07, capacity_reduction_needed): "
+              f"{_fmt(_cap(out).sum())} Abschnitte, {_fmt(_km(out, _cap(out)), 1)} km; nötige Reduktion im Median "
+              f"{_fmt(out.loc[_cap(out), 'capacity_reduction_dtv'].median(), 0)} Kfz/Tag.",
               f"- GTFS: repräsentativer Werktag {ctx['gtfs']['day']} ({ctx['gtfs']['file']}); Straßenbahnrouten im Feed: "
               f"{ctx['gtfs']['tram_routes']}. Busfahrstreifen Soll: {_fmt(_km(out, out['bus_lane_soll']), 1)} km.",
               "", "## km je fit_class und Straßenkategorie", "",
@@ -330,7 +360,8 @@ def write_report(out: gpd.GeoDataFrame, sel: pd.DataFrame, ctx: dict) -> None:
               "- Verfügbare Breite nur auf rund 58 % der Abschnitte (ALKIS-Verkehrsfläche); ohne Breite keine Passung.",
               "- Ist-Parken nur, wo OSM parking erfasst ist; ohne Angabe kein Parken im Soll-Profil (PRF-03).",
               "- Bushaltestellen (PL-05), Abbiegestreifen (L-05) und die Seitenbedingung PL-02 sind nicht im Streckenprofil.",
-              "- GOW30 mit Radfahrstreifen: Radfahrstreifen kommen zur CROW-Fahrbahnbreite hinzu (Annahme, offen).",
+              "- GOW30 mit Radfahrstreifen: die CROW-Spannen enthalten die Radfahrstreifen (Annahme A2, Original nicht geprüft; PRF-04).",
+              "- Bestandsbäume sind nicht erfasst; D2 betrifft nur den neuen Baumstreifen (Flag existing_trees_conflict fehlt, docs/open_questions.md).",
               "- Bei bahnigkeit 2 beschreibt das Profil den ganzen Straßenraum; beide Richtungsfahrbahnen bekommen dasselbe Profil.",
               "",
               "Quellen: OpenStreetMap-Mitwirkende (ODbL); Freie und Hansestadt Hamburg, ALKIS, Verkehrsmengen und Fahrstreifen "

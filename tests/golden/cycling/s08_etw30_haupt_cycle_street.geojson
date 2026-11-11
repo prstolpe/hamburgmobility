@@ -21,7 +21,7 @@
         "space_fits_preferred": true,
         "expected_facility": "cycle_street",
         "expected_width_refs": [
-          "widths_m.project_target.cycle_street_carriageway.value"
+          "widths_m.project_target.cycle_street_carriageway.with_motor_traffic"
         ],
         "expected_lanes_per_direction": "shared",
         "expected_bus_lane": false,

@@ -135,7 +135,7 @@ def test_every_matrix_facility_has_a_section_case():
             if isinstance(cell, str) and cell in FACILITIES:
                 used.add(cell)
             elif isinstance(cell, dict):
-                used |= {v for k, v in cell.items() if k in CELL_FACILITY_KEYS}
+                used |= {v for k, v in cell.items() if k in CELL_FACILITY_KEYS and v is not None}
     assert used <= {_props(p)["expected_facility"] for p in SECTION_FILES}
 
 
@@ -159,6 +159,18 @@ def test_golden_facility_and_width(path):
     assert result["cycle_facility"] == props["expected_facility"]
     width = expected_width(props)
     assert result["cycle_width_m"] == (pytest.approx(width) if width is not None else None)
+    # optional (Review 2026-11 G01): flags that must / must not be set
+    assert set(props.get("expected_flags", [])) <= set(result["flags"])
+    assert not set(props.get("forbidden_flags", [])) & set(result["flags"])
+
+
+@pytest.mark.parametrize("path", [p for p in SECTION_FILES if "forbidden_elements" in _props(p)], ids=lambda p: p.stem)
+def test_golden_profile_forbidden_elements(path):
+    """Review 2026-11 G12 (F11): the Soll profile contains no element the category forbids."""
+    props = _props(path)
+    result = _step("c06_cross_section_soll").profile_for_segment(props, DESIGN, CYCLING)
+    assert not set(props["forbidden_elements"]) & {e["element"] for e in result["profile_elements"]}
+    assert set(props["expected_rules"]) <= {s["id"] for s in result["rule_trace"]} | {"L-01", "L-02", "L-03"}
 
 
 def test_inactive_rural_matrix_gives_no_facility():

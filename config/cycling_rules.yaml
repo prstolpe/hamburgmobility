@@ -8,7 +8,7 @@
 # Klassentabellen (demand.intensity_classes_peak_h) sind halboffen [min, max): ein Wert auf der Grenze gehört zur
 #   oberen Klasse; intensity_upgrade greift darum ab der Untergrenze (>=) einer Klasse (F27).
 meta:
-  version: 0.8.0
+  version: 0.9.0
   date: 2026-11-08
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
@@ -164,6 +164,7 @@ principle_scoring:
     - id: C-PRI-08
       description: 'P-COM-01 Breite: Ist-Breite aus OSM (eigene Wege und begleitende Radwege: width, sonst est_width; Radweg oder Radfahrstreifen in der Straßenlinie: cycleway:width bzw. cycleway:both|right|left:width; Fahrradstraße: width der Fahrbahn) gegen widths_m.project_target der Ist-Führung und Radnetzkategorie plus intensity_upgrade (Spitzenstunde cyc_peak_h je Richtung bzw. beide Richtungen). Mischverkehr und Führungen ohne Sollbreite: nicht anwendbar; fehlende Breite = unbekannt. Soll = Sollbreite (Score 1)'
       required_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, own_path: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway}
+      cycle_street_note: 'Fahrradstraße: with_motor_traffic, wenn C-FAC-04 cycle_street_motor_traffic (Kfz frei) gilt, sonst value (seit 0.9.0, F18)'
       own_path_note: 'eigene Radtrassen wie Zweirichtungsradweg (Entscheidung prstolpe 2026-11-07, auch C-FAC-04)'
       status: draft
     - id: C-PRI-09
@@ -450,6 +451,15 @@ separation_matrix:
     BASIS: cycle_lane
     ERSCHL: cycle_lane
     none: cycle_lane
+    high_volume:   # vor der Radkategorie ausgewertet (S-05, Review 2026-11 F01)
+      rule: S-05
+      dtv_above: rules.requirements.GOW30.profiles.wide.max_dtv
+      all: separated_oneway_both
+      fallback: null          # kein Rückfall auf Radfahrstreifen
+      flag: gow30_high_volume
+      source: CROW_GOW30_2023
+      source_type: swov_crow
+      note: 'CROW: über 10 000 Kfz/Tag nur Profil mit Radweg (rules.yaml requirements.GOW30.profiles.track). dtv_above ist eine Obergrenze einschließlich (bis max_dtv Radfahrstreifen möglich, darüber, also dtv_official > max_dtv, Radweg); keine Klassentabelle im Sinne von F27'
   ETW30:
     RSV: cycle_street
     HAUPT: cycle_street
@@ -474,6 +484,8 @@ separation_matrix:
     - {id: S-03, rule: 'Zweirichtungsradweg innerorts nur einseitig an Straßen mit einseitiger Bebauung/Zielen oder wenigen Knoten', source_type: assumption, status: draft, scope: rural,
        note: 'Die Matrix vergibt innerorts nie separated_twoway; als Soll-Regel wirkt S-03 nur außerorts (F33). Bleibt draft, weil C-PRI-03 (partial_note) einen Ist-Zweirichtungsradweg mit S-03 als Teilerfüllung begründet'}
     - {id: S-04, rule: 'Mischverkehr auf Fahrbahn nur bei Kfz <= mixed_max_kfz_h', mixed_max_kfz_h: 700, condition: 'Fahrbahn < 6 m', source: ERA_2010, source_type: de_regelwerk, note: 'ERA S. 22 über Sekundärquelle; > 400 Kfz/h bei 6–7 m problematisch', status: draft}
+    - {id: S-05, rule: 'GOW30 mit dtv_official > rules.yaml requirements.GOW30.profiles.wide.max_dtv: Radweg je Seite (Zelle GOW30.high_volume, vor der Radkategorie), kein Fallback auf Radfahrstreifen, Flag gow30_high_volume', source: CROW_GOW30_2023, source_type: swov_crow, status: draft,
+       note: 'Review 2026-11 F01: Radfahrstreifen bei 20–40 Tsd. Kfz/Tag inkl. Bus/Lkw sicherheitlich nicht vertretbar; „Umfeld vor Verkehrsmenge“ (Kategorie) bleibt, korrigiert wird nur die Führungsform. Ohne DTV greift S-05 nicht'}
   mixed_rural_max_dtv: {value: 2500, source_type: assumption, note: 'nur außerorts (separation_matrix.rural, inaktiv)'}
 
 cycle_street:
@@ -490,7 +502,7 @@ facility_assignment:
   source_type: assumption
   rules:
     - id: C-FAC-01
-      description: 'Soll-Führung = separation_matrix[cat_final][cycle_cat_final] (außerorts separation_matrix.rural). Zelle mit preferred/fallback: preferred; fallback nur, wenn space_fits_preferred = false (Prompt 19). Ist der Raum noch nicht geprüft, bleibt preferred und das Flag fallback_check_p19 wird gesetzt. ETW60: fallback mixed nur bei DTV <= separation_matrix.mixed_rural_max_dtv. cycle_cat_final je Abschnitt = höchste Radkategorie seiner Straßenkanten und begleitenden Radwege (category_order), ohne Kante: none'
+      description: 'Soll-Führung = separation_matrix[cat_final][cycle_cat_final] (außerorts separation_matrix.rural); vorher die Zelle high_volume der Zeile, wenn dtv_official > deren dtv_above (S-05, GOW30). Zelle mit preferred/fallback: preferred; fallback nur, wenn space_fits_preferred = false (Prompt 19). Ist der Raum noch nicht geprüft, bleibt preferred und das Flag fallback_check_p19 wird gesetzt. ETW60: fallback mixed nur bei DTV <= separation_matrix.mixed_rural_max_dtv. cycle_cat_final je Abschnitt = höchste Radkategorie seiner Straßenkanten und begleitenden Radwege (category_order), ohne Kante: none'
       category_order: [RSV, HAUPT, BASIS, ERSCHL]
       status: draft
     - id: C-FAC-02
@@ -503,11 +515,13 @@ facility_assignment:
       dtv_missing_counts_as_met: true
       status: draft
     - id: C-FAC-04
-      description: 'Soll-Breite = widths_m.project_target der Führung und Radkategorie plus intensity_upgrade (oneway: cyc_peak_h je Richtung, twoway: beide Richtungen), nie unter der Untergrenze (floor). Mischverkehr ohne Sollbreite; eigene Trasse wie Zweirichtungsradweg (0.7.0). Vergleichswerte für den Steckbrief: DE-Regelmaß und NL-Hauptnetz. Pfade relativ zu widths_m'
+      description: 'Soll-Breite = widths_m.project_target der Führung und Radkategorie plus intensity_upgrade (oneway: cyc_peak_h je Richtung, twoway: beide Richtungen), nie unter der Untergrenze (floor). Mischverkehr ohne Sollbreite; eigene Trasse wie Zweirichtungsradweg (0.7.0); Fahrradstraße mit Kfz-Verkehr (cycle_street_motor_traffic) = cycle_street_carriageway.with_motor_traffic, ohne = value (F18). Vergleichswerte für den Steckbrief: DE-Regelmaß und NL-Hauptnetz. Pfade relativ zu widths_m'
+      cycle_street_motor_traffic: {value: true, source_type: assumption,
+        note: 'Kein Attribut sagt für eine Soll-Fahrradstraße, ob Kfz frei sind; Annahme Hamburger Regelfall „Kfz frei“ bzw. „Anlieger frei“ (Zusatzzeichen zu Z. 244.1). false = Fahrradstraße ohne Kfz (4,00 m). Review 2026-11 F18, docs/open_questions.md'}
       target_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway, own_path: separated_twoway}
       own_path_target_note: 'eigene Trasse wie Zweirichtungsradweg (Entscheidung prstolpe 2026-11-07, open_questions 108)'
-      floor: {separated_oneway_both: de.separated_oneway.min, separated_twoway: de.separated_twoway.min, cycle_lane: gow30_cycle_lane.min, own_path: de.separated_twoway.min}
-      floor_note: 'ERA nennt für Radfahrstreifen keinen Mindestwert in widths_m.de; Untergrenze daher CROW gow30_cycle_lane.min'
+      floor: {separated_oneway_both: de.separated_oneway.min, separated_twoway: de.separated_twoway.oneside_min, cycle_lane: gow30_cycle_lane.min, own_path: de.separated_twoway.oneside_min}
+      floor_note: 'ERA nennt für Radfahrstreifen keinen Mindestwert in widths_m.de; Untergrenze daher CROW gow30_cycle_lane.min. Zweirichtungsradweg und eigene Trasse: Untergrenze des einseitigen Zweirichtungsradwegs (oneside_min, seit 0.9.0, F20; bis 0.8.0 de.separated_twoway.min)'
       de_reference: {separated_oneway_both: de.separated_oneway.standard, separated_twoway: de.separated_twoway.standard, cycle_lane: de.cycle_lane.standard, own_path: de.separated_twoway.standard}
       nl_reference: {separated_oneway_both: nl.hoofdnet_oneway.standard, separated_twoway: nl.hoofdnet_twoway.standard, cycle_lane: nl.cycle_lane_hoofdnet.standard, own_path: nl.hoofdnet_twoway.standard}
       status: draft
@@ -550,7 +564,8 @@ widths_m:
     source: [ERA_2010, ERA_FORTSCHREIBUNG_2023]
     source_type: de_regelwerk
     separated_oneway: {standard: 2.00, min: 1.60}
-    separated_twoway: {standard: 2.50, min: 2.00, oneside_standard: 3.00}
+    separated_twoway: {standard: 2.50, min: 2.00, oneside_standard: 3.00, oneside_min: 2.50,
+                       note: 'oneside_* = einseitiger Zweirichtungsradweg (ERA unterscheidet einseitig und beidseitig, Annahme A6 der Review 2026-11) – am Original prüfen'}
     cycle_lane: {standard: 1.85, e_klima: 2.25, era_basis_2023: 2.00}
     advisory_lane: {standard: 1.50, min: 1.25}
     buffer_to_parking: {standard: 0.75, min: 0.50}
@@ -572,7 +587,9 @@ widths_m:
     separated_oneway: {RSV: 3.00, HAUPT: 2.50, BASIS: 2.00, ERSCHL: 2.00, none: 2.00}
     separated_twoway: {RSV: 4.00, HAUPT: 3.50, BASIS: 3.00, ERSCHL: 2.50, none: 2.50}
     cycle_lane: {HAUPT: 2.50, BASIS: 2.25, ERSCHL: 2.00, none: 2.00}
-    cycle_street_carriageway: {value: 4.00, note: 'Fahrradstraße ohne Mittellinie; Begegnung Rad nebeneinander'}
+    cycle_street_carriageway: {value: 4.00, with_motor_traffic: 4.75,
+      ref: {with_motor_traffic: design_rules.lanes.lane_width_m.ETW30_mixed.value},
+      note: 'Fahrradstraße ohne Mittellinie. Kfz frei: mindestens design_rules lane_width_m.ETW30_mixed (Begegnung Lkw/Pkw, RASt 06 Bild 17 laut design_rules – am Original prüfen; ref wird in tests/test_cycling_rules_schema.py nachgeprüft); ohne Kfz 4,00 m (Begegnung Rad nebeneinander). with_motor_traffic seit 0.9.0 (Review 2026-11 F18)'}
     intensity_upgrade:
       - {if: 'oneway peak_h >= 750', add_m: 0.50}  # ab Untergrenze der obersten Klasse (F27, bis 0.7.0: > 750)
       - {if: 'twoway peak_h >= 350', add_m: 0.50}

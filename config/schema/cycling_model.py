@@ -26,6 +26,10 @@ PRINCIPLES = {"cohesion", "directness", "safety", "comfort", "attractiveness"}
 RURAL_CATEGORIES = {"GOW80", "ETW60"}
 # Keys of a matrix cell given as a dict; the others are metadata or conditions.
 CELL_FACILITY_KEYS = {"preferred", "fallback", "all"}
+# Row key of a load-dependent cell evaluated before the cycle category (S-05, Review 2026-11 F01).
+HIGH_VOLUME_KEY = "high_volume"
+# Path prefix of high_volume.dtv_above: a value in config/rules.yaml (resolved in pipeline/lib/principles.py).
+RULES_REF_PREFIX = "rules."
 # Condition names of routing_impedance.ist_mapping; evaluated in pipeline/lib/cycle_graph.py.
 IMPEDANCE_CONDITIONS = {"cycle_street", "own_path", "separated_track", "low_speed_access_road", "low_speed_with_lane",
                         "low_speed_mixed", "other", "unpaved_or_cobbles"}
@@ -46,7 +50,7 @@ FACILITY_RULE_IDS = {f"C-FAC-0{i}" for i in range(1, 8)}
 IST_CLASSES = {"cycle_street", "track", "lane", "shared_lane", "no"}
 # Flags of pipeline/lib/facility.py that C-FAC-07 may name.
 FACILITY_FLAGS = {"dtv_unknown", "fallback_check_p19", "cycle_street_blocked", "mixed_over_s04", "no_target_width",
-                  "ist_width_unknown", "track_on_access_road"}
+                  "ist_width_unknown", "track_on_access_road", "existing_track_below_floor", "gow30_high_volume"}
 
 
 # widths_m.project_target.intensity_upgrade condition; half-open classes [min, max) (F27), so the upgrade starts at
@@ -75,7 +79,7 @@ def _cell_facilities(cell: Any, path: str) -> list[str]:
     if isinstance(cell, str):
         return [cell]
     if isinstance(cell, dict):
-        return [cell[k] for k in CELL_FACILITY_KEYS if k in cell]
+        return [cell[k] for k in CELL_FACILITY_KEYS if cell.get(k) is not None]
     raise ValueError(f"{path}: matrix cell must be a facility name or a dict")
 
 
@@ -90,8 +94,11 @@ def _check_matrix(matrix: dict) -> None:
         if "all" in row:
             cells = {"all": row}
         else:
-            cells = {k: v for k, v in row.items() if k not in META_KEYS}
-            if set(cells) != columns:
+            cells = {k: v for k, v in row.items() if k not in META_KEYS and k != HIGH_VOLUME_KEY}
+            if HIGH_VOLUME_KEY in row:
+                _check_high_volume(row[HIGH_VOLUME_KEY], f"separation_matrix.{cat}.{HIGH_VOLUME_KEY}")
+                cells[HIGH_VOLUME_KEY] = row[HIGH_VOLUME_KEY]
+            if set(cells) - {HIGH_VOLUME_KEY} != columns:
                 raise ValueError(f"separation_matrix.{cat}: cycle categories must be {sorted(columns)}, "
                                  f"got {sorted(cells)}")
         for col, cell in cells.items():
@@ -102,6 +109,18 @@ def _check_matrix(matrix: dict) -> None:
         for f in _cell_facilities(matrix["rural"][cat], f"separation_matrix.rural.{cat}"):
             if f not in FACILITIES:
                 raise ValueError(f"separation_matrix.rural.{cat}: unknown facility {f!r}")
+
+
+def _check_high_volume(cell: Any, path: str) -> None:
+    """S-05 (F01): a high_volume cell names one facility (all), no fallback, a flag and a rules.yaml DTV path."""
+    if not isinstance(cell, dict) or not isinstance(cell.get("all"), str):
+        raise ValueError(f"{path}: needs `all` (one facility)")
+    if cell.get("fallback") is not None:
+        raise ValueError(f"{path}: fallback must be null (no fallback to a cycle lane)")
+    if not isinstance(cell.get("flag"), str) or not cell["flag"]:
+        raise ValueError(f"{path}: flag required")
+    if not str(cell.get("dtv_above", "")).startswith(RULES_REF_PREFIX):
+        raise ValueError(f"{path}: dtv_above must be a path into rules.yaml ({RULES_REF_PREFIX}...)")
 
 
 def _check_project_target(target: dict) -> None:

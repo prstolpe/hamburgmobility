@@ -242,11 +242,12 @@ def edge_frame(net: gpd.GeoDataFrame, final: pd.DataFrame, tags: dict, p: pr.Pri
             lit[i] = b["lit"] if b["lit"] is not None else lit[i]
             from_side[i] = True
 
-    soll = [pr.edge_soll_facility(k, c, pc if s else None, cc, p)
-            for k, c, pc, s, cc in zip(kind, cat_final, parent_cat, is_side, cyc_cat)]
     seg_dtv = net["segment_id"].map(final["dtv_official"])
     side_dtv = side.map(final["dtv_official"])
     dtv = seg_dtv.fillna(side_dtv).to_numpy(dtype="float64")
+    # dtv of the road (sidepaths: of their road) for the high_volume cell of the matrix (S-05, F01)
+    soll = [pr.edge_soll_facility(k, c, pc if s else None, cc, p, d)
+            for k, c, pc, s, cc, d in zip(kind, cat_final, parent_cat, is_side, cyc_cat, dtv)]
     peak_dir = np.fmax(net["cyc_peak_h_fwd"].to_numpy(dtype="float64"), net["cyc_peak_h_bwd"].to_numpy(dtype="float64"))
     return pd.DataFrame({
         "kind": kind, "is_sidepath": is_side, "from_sidepath": from_side, "cat_final": cat_final, "parent_cat": parent_cat,

@@ -593,3 +593,39 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   277 → 1; LSA (signal_protected + cycle_crossing_signal) 708 → 892 (840 + 52); Turbokreisel 136 → 59; einstreifige
   Kreisverkehre 258 → 283; `not_applicable` 157; Gehwegüberfahrt 3 039 → 2 987; eingefärbte Vorfahrt 300 → 339;
   Handlungsbedarf 2 605 → 2 358; JC-01 394 → 283, JC-06 59 (davon 35 mit `turbo_grade_sep_check`).
+
+## cycling_rules.yaml 0.9.0, design_rules.yaml 0.9.0, plain_language.yaml 0.7.0 – 2026-11-08: Review 2026-11, Paket P3 (Soll-Querschnitt und Radanlage)
+- F01: Neue Zelle `separation_matrix.GOW30.high_volume` mit Regel S-05 (CROW_GOW30_2023, swov_crow): bei
+  `dtv_official > rules.yaml requirements.GOW30.profiles.wide.max_dtv` (10 000 Kfz/Tag, Grenze einschließlich) vor der
+  Radkategorie `separated_oneway_both`, kein Fallback auf Radfahrstreifen, Flag `gow30_high_volume`. Gilt in c05 und
+  für die Soll-Führung von P-SAF-01 (c04, DTV der Straße bzw. der Straße des begleitenden Radwegs). Schema prüft die
+  Zelle (`all`, `fallback: null`, `flag`, `dtv_above` als Pfad in rules.yaml). design_rules: neue Regel L-07 (GOW30,
+  Flag `capacity_reduction_needed`, Spalte `capacity_reduction_dtv` = DTV − L-02-Grenze 13 909 Kfz/Tag); PRF-04: GOW30
+  mit Radweg (auch S-05) Fahrbahn `requirements.GOW30.profiles.track.carriageway_min_m`, Radwege nach PL-01.
+  Datentests V-INV-04 (c05 und c06). Goldene Fälle s15/s16 (G01: 10 000 → cycle_lane, 10 001 → separated_oneway_both
+  + Flag).
+- F04: PRF-04 GOW30 mit Radfahrstreifen = max(untere Profilgrenze, Kernfahrbahn + 2 × Radfahrstreifen); Kernfahrbahn
+  schmal `centre_runner_max_m` (3,80 m), breit obere Grenze von `avoid_runner_m` (4,80 m), beide aus rules.yaml;
+  `lane_width_m.GOW30_*_profile.includes_cycle_lanes: true` (A2). Beispiele BASIS 8,30 m, HAUPT-Fallback 9,80 m.
+- F11: PRF-03 `parking_by_category` (GOW50 none, GOW30 [street_side], ETW30 as_ist, ETW_ERF none); c06 schreibt
+  `parking_sides_ist` (wie bisher) und neu `parking_sides_soll`. Datentest V-INV-03 (kein Parken/Radfahrstreifen an
+  GOW50, keine Mittellinie an GOW30; maßgeblich die D5-Kategorie, wo vorhanden). Goldener Fall s19 (G12) mit neuer
+  Golden-API `c06.profile_for_segment` und Prüfung `forbidden_elements`.
+- F17 (Q1 b): Abbaureihenfolge `cascade_order: [D1, D3, D2, fallback, D4, D5, D6, D7]`, Liste
+  `degrade_cascade_if_not_fit` entsprechend umsortiert. D2 = neuer Baumstreifen auf Baumscheiben im Trenn- oder
+  Seitenraum; Flag `trees_in_parking_row` heißt jetzt `trees_as_pits`. `existing_trees_conflict` nur als TODO (keine
+  Baumdaten, offene Frage). Unit-Test D3 vor D2 ersetzt den alten Test „D2 vor D3“.
+- F18: `widths_m.project_target.cycle_street_carriageway.with_motor_traffic` 4,75 m mit `ref` auf design_rules
+  `lane_width_m.ETW30_mixed.value` (Test `cycling_design_ref_mismatches`). C-FAC-04 `cycle_street_motor_traffic: true`
+  (assumption, Hamburger Regelfall „Kfz frei“, kein Attribut vorhanden); C-FAC-04 und C-PRI-08 lesen dann
+  `with_motor_traffic`. Goldener Fall s08 erwartet `with_motor_traffic` statt `value` (gewollte Änderung).
+- F20: `widths_m.de.separated_twoway.oneside_min` 2,50 m (A6, am Original prüfen); C-FAC-04 floor für
+  separated_twoway und own_path = `de.separated_twoway.oneside_min`.
+- G10: Goldene Fälle s17/s18 (GOW50, Ist 2: DTV 13 900 → 1, 14 000 → 2 je Richtung); L-02 ergibt 13 909 Kfz/Tag.
+- V-INV-05 als Datentest, auf realen Daten verletzt (1 069 Abschnitte, 134 km), xfail mit offener Frage.
+- Ergebnis (Lauf c04, c05, c06): `gow30_high_volume` 378,0 km von 513,5 km GOW30; Soll-Führung Radfahrstreifen
+  249,4 → 71,5 km, Radweg je Seite 506,5 → 684,4 km; fits 2 095,1 → 2 072,6 km, fits_after_degrade 788,1 → 779,7 km,
+  does_not_fit 978,0 → 1 008,9 km (GOW30 88,0 → 60,0 km, ETW30 884,7 → 943,6 km wegen Fahrradstraße 4,75 m); D6
+  6 191 → 6 328 Abschnitte, D7 549 → 339; D3 218 → 411, D2 2 550 → 1 878, fallback 639 → 244;
+  `capacity_reduction_needed` 3 272 Abschnitte (342,9 km), Reduktion im Median 12 091 Kfz/Tag. c07/c08 nicht neu
+  gerechnet (Datenträger voll, pyrosm konnte keine Zwischendateien schreiben).

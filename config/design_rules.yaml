@@ -5,7 +5,7 @@
 # scope: rural = Regel betrifft nur außerorts (Kennzeichnung, Review 2026-11 F33).
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.8.0
+  version: 0.9.0
   date: 2026-11-08
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
@@ -57,12 +57,21 @@ lanes:
       status: draft
       rule: 'Kein Fahrstreifenzuwachs gegenüber Ist ohne fachliche Freigabe (overrides/lane_overrides.csv seit 0.6.0; ein freigegebener Eintrag ersetzt L-02 bis L-06)'
       source_type: assumption
+    - id: L-07
+      status: draft
+      rule: 'GOW30: Flag capacity_reduction_needed, wenn peak_h_dir > lane_capacity_veh_h * target_vc (Werte aus L-02); reduction_dtv = DTV - (lane_capacity_veh_h * target_vc / peak_h_dir_from_dtv.factor)'
+      flag: capacity_reduction_needed
+      values_from: L-02
+      source_type: assumption
+      note: 'Review 2026-11 F01, E2 Option C (Kennzeichnung „Reduktion nötig“) als Rechenregel; GOW30 hat nach L-01 einen Fahrstreifen je Richtung. Mit den L-02-Werten liegt die Grenze bei 0,85 x 900 / 0,055 = rund 13 909 Kfz/Tag. Nur Kennzeichnung, keine Automatik (wie D6)'
   lane_width_m:
     GOW50: {general: 3.25, with_bus: 3.50, source: RAST_06, source_type: assumption}
     GOW50_2x1_carriageway: {value: 6.50, source: RAST_06, source_type: assumption}
     GOW50_bus_carriageway: {value: 7.00, source: CROW_GOW30_2023, source_type: swov_crow}
-    GOW30_narrow_profile: {carriageway_range: [5.80, 8.40], max_dtv: 6000, source: CROW_GOW30_2023, source_type: swov_crow}
-    GOW30_wide_profile: {carriageway_range: [8.40, 10.70], max_dtv: 10000, source: CROW_GOW30_2023, source_type: swov_crow}
+    GOW30_narrow_profile: {carriageway_range: [5.80, 8.40], max_dtv: 6000, includes_cycle_lanes: true, source: CROW_GOW30_2023, source_type: swov_crow,
+                           note: 'Spanne enthält die Radfahrstreifen (Annahme A2 der Review 2026-11, abgeleitet aus rules.yaml centre_runner_max_m/avoid_runner_m; Original nicht geprüft), PRF-04'}
+    GOW30_wide_profile: {carriageway_range: [8.40, 10.70], max_dtv: 10000, includes_cycle_lanes: true, source: CROW_GOW30_2023, source_type: swov_crow,
+                         note: 'wie GOW30_narrow_profile (A2)'}
     ETW30_mixed: {value: 4.75, bus: 6.50, source: RAST_06, source_type: de_regelwerk, note: 'Begegnung Lkw/Pkw bei verminderter Geschwindigkeit (RASt 06 Bild 17), aus Erinnerung – am Original prüfen. Bis 0.4.0 5,80 m (untere Grenze CROW-GOW30-Profil, nicht für Erschließungsstraßen). Busroute 6,50 m unverändert. Entscheidung prstolpe 2026-11-07 (open_questions 131)'}
     median_min_m: {value: 2.00, source_type: assumption}
 
@@ -107,9 +116,11 @@ cross_section_allocation:
     - loading_zones
     - parking
   degrade_cascade_if_not_fit:
+    # Reihenfolge der Liste = Abbaureihenfolge (PRF-06 cascade_order); D3 vor D2 seit 0.9.0 (Review 2026-11 F17, Entscheidung Q1 b)
     - {step: D1, action: 'Parken entfernen (Ladezonen behalten, wenn Geschäftsnutzung)'}
-    - {step: D2, action: 'Baumstreifen auf Baumscheiben in Parkreihe reduzieren'}
     - {step: D3, action: 'zweiten Kfz-Fahrstreifen streichen (L-02 neu prüfen, ggf. Busspur behalten)'}
+    - {step: D2, action: 'Neuen Baumstreifen auf Baumscheiben im Trenn- oder Seitenraum reduzieren; Bestandsbäume nicht entfernen (Flag existing_trees_conflict, sobald Baumdaten vorliegen)',
+       todo: 'existing_trees_conflict nicht umgesetzt: keine Baumdaten (sources.yaml street_trees ohne Endpunkt, docs/open_questions.md)'}
     - {step: D4, action: 'Radweg auf Mindestbreite, Gehweg auf Mindestbreite'}
     - {step: D5, action: 'Kategorie GOW50 -> GOW30 vorschlagen (C-G30-02) und Profil neu bilden'}
     - {step: D6, action: 'Kfz-Einrichtungsverkehr oder Kfz-Durchfahrtsunterbrechung prüfen (Flag, keine Automatik)'}
@@ -135,13 +146,19 @@ profile_assignment:
       tram_route_types: [0, 900, 901, 902, 903, 904, 905, 906]
       status: draft
     - id: PRF-03
-      description: 'Bausteine des gewünschten Profils je Kategorie: Gehwege beidseitig außer ETW_ERF (Mischfläche); Radanlage nach Führungsform (cycle_elements); Busfahrstreifen je Richtung bei bus_lane_soll; Straßenbahn nur, wenn vorhanden; Baumstreifen an tree_categories (tree_sides Seiten); Ladezone (loading_sides Seiten), wenn Geschäftsnutzung = shop_frontage_share >= rules.yaml C-G30-01 thresholds.frontage; Längsparken nur, wo OSM heute Parken am Fahrbahnrand zeigt (parking_positions), je Seite mit Parken (Wert no in der Liste = eine Seite ohne Parken)'
+      description: 'Bausteine des gewünschten Profils je Kategorie: Gehwege beidseitig außer ETW_ERF (Mischfläche); Radanlage nach Führungsform (cycle_elements); Busfahrstreifen je Richtung bei bus_lane_soll; Straßenbahn nur, wenn vorhanden; Baumstreifen an tree_categories (tree_sides Seiten); Ladezone (loading_sides Seiten), wenn Geschäftsnutzung = shop_frontage_share >= rules.yaml C-G30-01 thresholds.frontage; Längsparken nur, wo OSM heute Parken am Fahrbahnrand zeigt (parking_positions), je Seite mit Parken (Wert no in der Liste = eine Seite ohne Parken), und nur nach Kategorie (parking_by_category, seit 0.9.0): none = kein Parken, as_ist = alle parking_positions, Liste = nur diese Positionen (Seiten: alle Werte erlaubt -> 2, sonst 1)'
       sidewalk_sides: 2
       no_sidewalk_categories: [ETW_ERF]
       tree_categories: [GOW50, GOW30]
       tree_sides: 2
       loading_sides: 1
       parking_positions: [lane, street_side, on_kerb, half_on_kerb, shoulder]
+      parking_by_category:
+        GOW50: none            # rules.yaml requirements.GOW50.parking_along_carriageway: false
+        GOW30: [street_side]   # nur Parkstreifen, neben Radfahrstreifen mit buffer_to_parking (PL-03); requirements.GOW30.parking_on_carriageway: false
+        ETW30: as_ist
+        ETW_ERF: none
+      parking_by_category_note: 'Review 2026-11 F11: das Soll darf nicht enthalten, was die Kategorie verbietet (D-DES-01); Ladezonen bleiben'
       extra_elements: [cycle_lane, buffer_to_parking, carriageway, median, shared_surface]
       extra_elements_note: 'Bausteine ohne Eintrag in elements_min_m; Breiten aus cycling_rules (Prompt 18) bzw. lanes.lane_width_m (PRF-04)'
       cycle_elements:
@@ -153,15 +170,16 @@ profile_assignment:
         own_path: {element: null, cycle_side: own_path}
       status: draft
     - id: PRF-04
-      description: 'Fahrbahnbreite: GOW50 1 Fahrstreifen je Richtung = lane_width_m.GOW50_2x1_carriageway (mit Bus im Mischverkehr GOW50_bus_carriageway), 2 je Richtung = 4 x GOW50.general plus Mittelstreifen median_min_m (L-03), neben Busfahrstreifen GOW50.general je Richtung; GOW30 = untere Grenze von GOW30_narrow_profile bis dessen max_dtv (auch ohne DTV), sonst von GOW30_wide_profile (über dessen max_dtv Flag gow30_dtv_above_profile); Radfahrstreifen kommen zur GOW30-Fahrbahn hinzu; ETW30/ETW_ERF = ETW30_mixed (mit Bus ETW30_mixed.bus); Fahrradstraße = Sollbreite aus Prompt 18 (cycle_street_carriageway). Einrichtungsverkehr: GOW = GOW50.general (mit Bus with_bus) je Fahrstreifen, ETW = cycling_rules widths_m.project_target.cycle_street_carriageway (Kfz plus Rad in Gegenrichtung, PL-06). SW, GOW80, ETW60: keine Profilregeln (Flag no_profile_rules)'
+      description: 'Fahrbahnbreite: GOW50 1 Fahrstreifen je Richtung = lane_width_m.GOW50_2x1_carriageway (mit Bus im Mischverkehr GOW50_bus_carriageway), 2 je Richtung = 4 x GOW50.general plus Mittelstreifen median_min_m (L-03), neben Busfahrstreifen GOW50.general je Richtung; GOW30 mit Radfahrstreifen (seit 0.9.0, F04; die CROW-Spannen enthalten die Radfahrstreifen, includes_cycle_lanes) = max(untere Grenze des Profils, Kernfahrbahn + 2 x Radfahrstreifen-Sollbreite); schmales Profil (GOW30_narrow_profile) bis dessen max_dtv (auch ohne DTV) mit Kernfahrbahn = rules.yaml requirements.GOW30.profiles.narrow.centre_runner_max_m, sonst breites Profil (GOW30_wide_profile) mit Kernfahrbahn = obere Grenze von avoid_runner_m (Bereich avoid_runner_m meiden; über dessen max_dtv Flag gow30_dtv_above_profile); im Profil steht die Kernfahrbahn als carriageway, die Radfahrstreifen als eigene Bausteine. GOW30 mit Radweg (separated_*, auch bei gow30_high_volume aus S-05, F01) = rules.yaml requirements.GOW30.profiles.track.carriageway_min_m, Radwege nach PL-01; ETW30/ETW_ERF = ETW30_mixed (mit Bus ETW30_mixed.bus); Fahrradstraße = Sollbreite aus Prompt 18 (cycle_street_carriageway, mit Kfz-Verkehr with_motor_traffic, F18). Einrichtungsverkehr: GOW = GOW50.general (mit Bus with_bus) je Fahrstreifen, ETW = cycling_rules widths_m.project_target.cycle_street_carriageway (Kfz plus Rad in Gegenrichtung, PL-06). SW, GOW80, ETW60: keine Profilregeln (Flag no_profile_rules)'
       no_profile_categories: [SW, GOW80, ETW60]
       status: draft
     - id: PRF-05
       description: 'Gewünschtes Profil = alle Bausteine aus PRF-03 in der Reihenfolge cross_section_allocation.fill_order mit Regelmaß (Gehweg standard, Radanlage Sollbreite aus Prompt 18, übrige elements_min_m). Passt, wenn total_required_m <= available_m. Maßgeblich ist width_p10_m (Variante Verkehrsfläche, S-XS-02); facade_width_p10_m (S-XS-03) wird gleich gerechnet und zeigt das Potenzial inkl. Vorgärten. Ohne Breite: fit_class leer, Flag width_unknown'
       status: draft
     - id: PRF-06
-      description: 'Passt das Profil nicht, werden die Schritte in cascade_order nacheinander angewendet und nach jedem Schritt neu geprüft; ein Schritt ohne Wirkung zählt nicht als angewendet. fallback = Fallback der Matrixzelle aus Prompt 18 (C-FAC-01, space_fits_preferred = false) mit dessen Sollbreite. D1 entfernt Parken (Ladezone bleibt, sie gibt es nur bei Geschäftsnutzung); D2 setzt Baumstreifen auf 0 (Baumscheiben in der Parkreihe, Flag); D3 streicht den zweiten Kfz-Fahrstreifen und den Mittelstreifen (Busfahrstreifen bleibt); D4 setzt Radanlage auf die Untergrenze aus C-FAC-04 floor und Gehweg auf min; D5 nur GOW50: Vorschlag GOW30 (C-G30-02) in cat_change_proposal, Profil mit GOW30-Fahrbahn und Führung der GOW30-Matrixzelle neu bilden, cat_final bleibt; D6 und D7 nur als Flag, wenn danach nicht passt (D7 nur im Radnetz, cycle_cat_final != none, und nur wenn die Radanlage eigene Breite im Profil belegt – Radweg oder Radfahrstreifen; bei Mischverkehr und Fahrradstraße bringt eine Verlegung keinen Platz). fit_class: fits ohne Schritt, fits_after_degrade nach D1-D5 oder fallback, sonst does_not_fit'
-      cascade_order: [D1, D2, fallback, D3, D4, D5, D6, D7]
+      description: 'Passt das Profil nicht, werden die Schritte in cascade_order nacheinander angewendet und nach jedem Schritt neu geprüft; ein Schritt ohne Wirkung zählt nicht als angewendet. fallback = Fallback der Matrixzelle aus Prompt 18 (C-FAC-01, space_fits_preferred = false) mit dessen Sollbreite. D1 entfernt Parken (Ladezone bleibt, sie gibt es nur bei Geschäftsnutzung); D3 streicht den zweiten Kfz-Fahrstreifen und den Mittelstreifen (Busfahrstreifen bleibt); D2 setzt den neuen Baumstreifen auf 0 (Baumscheiben im Trenn- oder Seitenraum, Flag trees_as_pits; Bestandsbäume nicht erfasst, TODO existing_trees_conflict); D4 setzt Radanlage auf die Untergrenze aus C-FAC-04 floor und Gehweg auf min; D5 nur GOW50: Vorschlag GOW30 (C-G30-02) in cat_change_proposal, Profil mit GOW30-Fahrbahn und Führung der GOW30-Matrixzelle neu bilden, cat_final bleibt; D6 und D7 nur als Flag, wenn danach nicht passt (D7 nur im Radnetz, cycle_cat_final != none, und nur wenn die Radanlage eigene Breite im Profil belegt – Radweg oder Radfahrstreifen; bei Mischverkehr und Fahrradstraße bringt eine Verlegung keinen Platz). fit_class: fits ohne Schritt, fits_after_degrade nach D1-D5 oder fallback, sonst does_not_fit'
+      cascade_order: [D1, D3, D2, fallback, D4, D5, D6, D7]
+      cascade_order_note: 'Seit 0.9.0 D3 vor D2 und fallback nach D2 (Review 2026-11 F17, Q1 b): „so wenige Fahrstreifen wie möglich“ – der zweite Kfz-Streifen fällt vor dem Grün; bis 0.8.0 [D1, D2, fallback, D3, ...]'
       flag_only_steps: [D6, D7]
       status: draft
     - id: PRF-07

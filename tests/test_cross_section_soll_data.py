@@ -78,3 +78,61 @@ def test_every_profile_has_trace(out):
     for t in rated["rule_trace_profile"].sample(min(200, len(rated)), random_state=1):
         ids = {s["id"] for s in json.loads(t)}
         assert {"PRF-05", "PRF-06"} <= ids
+
+
+def _effective_cat(out):
+    """Category the profile was built for: the D5 proposal (GOW30) where present, else cat_final."""
+    return out["cat_change_proposal"].fillna(out["cat_final"])
+
+
+def test_v_inv_03_no_element_the_category_forbids(out):
+    """V-INV-03 (Review 2026-11 F11): no parking and no cycle lane in GOW50 profiles, no centre line (second lane or
+    median) on GOW30 (rules.yaml requirements: parking_along_carriageway, cycle_lanes_allowed, centre_line)."""
+    cat = _effective_cat(out)
+    elements = out["profile_elements"].map(lambda s: {e["element"] for e in json.loads(s)} if isinstance(s, str) else set())
+    gow50 = cat == "GOW50"
+    assert not elements[gow50].map(lambda e: "parking_parallel" in e or "cycle_lane" in e).any()
+    gow30 = cat == "GOW30"
+    assert (out.loc[gow30, "lanes_per_dir_soll"] == "1").all()
+    assert not out.loc[gow30, "median_soll"].astype(bool).any()
+    assert not elements[gow30].map(lambda e: "median" in e).any()
+
+
+def test_v_inv_04_no_cycle_lane_on_high_volume_gow30(out):
+    """V-INV-04 (F01): the final facility after the cascade is never a cycle lane on GOW30 above wide.max_dtv."""
+    final = pd.read_parquet(FINAL, columns=["segment_id", "dtv_official"]).set_index("segment_id")
+    dtv = out["segment_id"].map(final["dtv_official"])
+    high = (_effective_cat(out) == "GOW30") & (dtv > P.fp.high_volume["GOW30"].dtv_above)
+    assert not (high & (out["cycle_facility_final"] == "cycle_lane")).any()
+
+
+def test_l07_reduction_only_on_gow30(out):
+    flagged = out["profile_flags"].fillna("").str.split("|").apply(lambda xs: pf.CAPACITY_FLAG in xs)
+    assert (out.loc[flagged, "cat_final"] == "GOW30").all()
+    assert (out.loc[flagged, "capacity_reduction_dtv"] > 0).all()
+    assert out.loc[~flagged, "capacity_reduction_dtv"].isna().all()
+
+
+V_INV_05_STEPS = {"D1", "D2", "D3", "fallback", "D4"}
+
+
+def v_inv_05_violations(out) -> pd.DataFrame:
+    """Segments that fit in S-XS-06 (feasibility of their category) but not in c06 after at most D4."""
+    target = {"GOW50": "feasibility_GOW50", "GOW30": "feasibility_GOW30_narrow", "ETW30": "feasibility_ETW30"}
+    final = pd.read_parquet(FINAL, columns=["segment_id", *target.values()]).set_index("segment_id")
+    feas = pd.Series(None, index=out.index, dtype=object)
+    for cat, col in target.items():
+        m = out["cat_final"] == cat
+        feas[m] = out.loc[m, "segment_id"].map(final[col]).to_numpy()
+    rated = out["fit_class"].notna() & (feas == "fits")
+    steps = out["degrade_steps_applied"].fillna("").str.split("|").map(lambda xs: {x for x in xs if x} - {"D6", "D7"})
+    ok = out["fit_class"].isin(["fits", "fits_after_degrade"]) & steps.map(lambda s: s <= V_INV_05_STEPS)
+    return out[rated & ~ok]
+
+
+@pytest.mark.xfail(reason="V-INV-05 auf realen Daten verletzt (1 069 Abschnitte, 134 km): Ladezone baut keine Stufe ab, "
+                          "Busfahrbahn ETW30 6,50 m und GOW30-Profil mit Radweg/Radfahrstreifen sind breiter als required_width; "
+                          "docs/open_questions.md, Review 2026-11 P3 V-INV-05", strict=True)
+def test_v_inv_05_fits_in_s_xs_06_fits_after_d4(out):
+    """V-INV-05 (Review 2026-11 F05): fits in S-XS-06 => c06 fits or fits_after_degrade with steps up to D4."""
+    assert v_inv_05_violations(out).empty

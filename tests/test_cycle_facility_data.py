@@ -62,3 +62,12 @@ def test_every_row_has_a_trace(out):
     for t in out["rule_trace_facility"].sample(200, random_state=0):
         ids = {s["id"] for s in json.loads(t)}
         assert {"C-FAC-01", "C-FAC-05", "C-FAC-06"} <= ids
+
+
+def test_v_inv_04_no_cycle_lane_on_high_volume_gow30(out):
+    """V-INV-04 (Review 2026-11 F01): no Soll cycle_lane on GOW30 with DTV above profiles.wide.max_dtv."""
+    limit = P.high_volume["GOW30"].dtv_above
+    high = (out["cat_final"] == "GOW30") & (out["dtv_official"] > limit)
+    assert not (high & (out["cycle_facility_soll"] == "cycle_lane")).any()
+    flagged = out["facility_flags"].fillna("").str.split("|").apply(lambda xs: "gow30_high_volume" in xs)
+    assert (flagged == high).all()

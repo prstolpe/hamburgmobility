@@ -50,7 +50,9 @@ FLAG_DE = {"dtv_unknown": "Kfz-Menge unbekannt – Bedingung vorläufig erfüllt
            "mixed_over_s04": "Mischverkehr über S-04 (Kfz/h zu hoch)",
            "no_target_width": "keine Sollbreite für Führung × Radkategorie",
            "ist_width_unknown": "Ist-Breite unbekannt (OSM)",
-           "track_on_access_road": "Radweg an Erschließungsstraße mit Soll-Fahrradstraße – Straßenkategorie prüfen (C-FAC-06)"}
+           "track_on_access_road": "Radweg an Erschließungsstraße mit Soll-Fahrradstraße – Straßenkategorie prüfen (C-FAC-06)",
+           "gow30_high_volume": "GOW30 über dem breiten CROW-Profil (DTV > max_dtv): Radweg je Seite statt Radfahrstreifen (S-05)",
+           fa.TRACK_BELOW_FLOOR_FLAG: "heutiger Radweg schmaler als die Untergrenze aus C-FAC-04 (F06)"}
 CAT_ORDER = ["SW", "GOW80", "GOW50", "GOW30", "ETW60", "ETW30", "ETW_ERF"]
 CYC_ORDER = ["RSV", "HAUPT", "BASIS", "ERSCHL", NO_CYCLE_CATEGORY]
 # OSM width keys (as C-PRI-08)
@@ -245,6 +247,8 @@ def write_report(out: gpd.GeoDataFrame, version: str, p: fa.FacilityParams) -> N
         f"Abschnitte, {_fmt(km(flags.str.contains('cycle_street_blocked')), 1)} km.",
         f"- Kfz-Menge unbekannt (vorläufig erfüllt): {_fmt(km(flags.str.contains('dtv_unknown')), 0)} km; "
         f"Fallback in Prompt 19 zu prüfen: {_fmt(km(flags.str.contains('fallback_check_p19')), 0)} km.",
+        f"- GOW30 über dem breiten CROW-Profil (S-05, Flag gow30_high_volume, Soll Radweg je Seite ohne Fallback): "
+        f"{_fmt(km(flags.str.contains('gow30_high_volume')), 0)} km von {_fmt(km(out['cat_final'] == 'GOW30'), 0)} km GOW30.",
         "",
         "## km je Führungsform: Soll und Ist",
         "",

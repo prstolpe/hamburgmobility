@@ -26,6 +26,8 @@ _LEG_TOKEN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 TYPE_KEYS = ("then", "else_then", "otherwise", "fallback")
 # Rules of profile_assignment read by pipeline/lib/profile.py (prompt 19).
 PROFILE_RULE_IDS = {"PRF-01", "PRF-02", "PRF-03", "PRF-04", "PRF-05", "PRF-06", "PRF-07"}
+# Values of PRF-03 parking_by_category besides a list of parking positions (Review 2026-11 F11).
+PARKING_BY_CATEGORY_WORDS = {"none", "as_ist"}
 # Cascade step that switches to the fallback facility of the matrix cell (not a degrade step).
 FALLBACK_STEP = "fallback"
 # Method rules of the junction step read by pipeline/lib/junctions.py (prompt 20).
@@ -194,6 +196,13 @@ def _check_profile(profile: dict, allocation: dict) -> None:
         for key in ("element", "buffer"):
             if cell.get(key) is not None and cell[key] not in elements:
                 raise ValueError(f"PRF-03.cycle_elements.{fac}.{key}: unknown element {cell[key]!r}")
+    positions = set(prf03["parking_positions"])
+    for cat, v in (prf03.get("parking_by_category") or {}).items():
+        if cat not in EXPECTED_CATEGORIES:
+            raise ValueError(f"PRF-03.parking_by_category: unknown category {cat!r}")
+        if not ((isinstance(v, str) and v in PARKING_BY_CATEGORY_WORDS) or (isinstance(v, list) and set(v) <= positions)):
+            raise ValueError(f"PRF-03.parking_by_category.{cat}: must be {sorted(PARKING_BY_CATEGORY_WORDS)} "
+                             f"or a list of parking_positions, got {v!r}")
     for rule_id, key in (("PRF-03", "no_sidewalk_categories"), ("PRF-03", "tree_categories"),
                          ("PRF-04", "no_profile_categories")):
         unknown = set(rules[rule_id][key]) - EXPECTED_CATEGORIES

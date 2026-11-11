@@ -58,6 +58,9 @@ class ProfileParams:
     gow50_bus_cw: float
     gow30_narrow: tuple          # (lower bound of carriageway range, max_dtv)
     gow30_wide: tuple
+    gow30_core_narrow: float     # core carriageway of the narrow profile (rules.yaml centre_runner_max_m), F04
+    gow30_core_wide: float       # core carriageway of the wide profile (upper bound of avoid_runner_m), F04
+    gow30_track_cw: float        # GOW30 with cycle tracks (rules.yaml profiles.track.carriageway_min_m), F01/F04
     etw_mixed: float
     etw_mixed_bus: float
     median_min: float
@@ -73,6 +76,7 @@ class ProfileParams:
     tree_sides: int
     loading_sides: int
     parking_positions: frozenset
+    parking_by_category: dict    # cat -> frozenset of allowed positions (PRF-03, F11); missing cat = all
     cycle_elements: dict
     no_profile: frozenset
     cascade_order: tuple
@@ -93,8 +97,12 @@ class ProfileParams:
         alloc = design.cross_section_allocation
         em = alloc["elements_min_m"]
         prf = {r["id"]: r for r in design.profile_assignment["rules"]}
-        fp = fa.FacilityParams.from_rules(cycling)
+        fp = fa.FacilityParams.from_rules(cycling, rules)
         elements = {k: _value(v) for k, v in em.items() if not isinstance(v, str) and k != "sidewalk"}
+        gow30 = rules.requirements["GOW30"]["profiles"]
+        positions = frozenset(prf["PRF-03"]["parking_positions"])
+        by_cat = {cat: (frozenset() if v == "none" else positions if v == "as_ist" else frozenset(v))
+                  for cat, v in prf["PRF-03"].get("parking_by_category", {}).items()}
         return cls(
             dtv_factor=float(lr["L-02"]["peak_h_dir_from_dtv"]["factor"]),
             lane_capacity=float(lr["L-02"]["lane_capacity_veh_h"]["value"]),
@@ -109,6 +117,9 @@ class ProfileParams:
             gow50_bus_cw=_value(lw["GOW50_bus_carriageway"]),
             gow30_narrow=(float(lw["GOW30_narrow_profile"]["carriageway_range"][0]), float(lw["GOW30_narrow_profile"]["max_dtv"])),
             gow30_wide=(float(lw["GOW30_wide_profile"]["carriageway_range"][0]), float(lw["GOW30_wide_profile"]["max_dtv"])),
+            gow30_core_narrow=float(gow30["narrow"]["centre_runner_max_m"]),
+            gow30_core_wide=float(gow30["narrow"]["avoid_runner_m"][1]),
+            gow30_track_cw=float(gow30["track"]["carriageway_min_m"]),
             etw_mixed=_value(lw["ETW30_mixed"]),
             etw_mixed_bus=float(lw["ETW30_mixed"]["bus"]),
             median_min=_value(lw["median_min_m"]),
@@ -124,7 +135,8 @@ class ProfileParams:
             tree_categories=frozenset(prf["PRF-03"]["tree_categories"]),
             tree_sides=int(prf["PRF-03"]["tree_sides"]),
             loading_sides=int(prf["PRF-03"]["loading_sides"]),
-            parking_positions=frozenset(prf["PRF-03"]["parking_positions"]),
+            parking_positions=positions,
+            parking_by_category=by_cat,
             cycle_elements=dict(prf["PRF-03"]["cycle_elements"]),
             no_profile=frozenset(prf["PRF-04"]["no_profile_categories"]),
             cascade_order=tuple(prf["PRF-06"]["cascade_order"]),
@@ -146,6 +158,20 @@ def parking_sides(parking, p: ProfileParams) -> int:
     if not values & p.parking_positions:
         return 0
     return 1 if "no" in values else 2
+
+
+def parking_sides_soll(parking, cat, p: ProfileParams) -> int:
+    """Sides with parking in the Soll profile (PRF-03 parking_by_category, F11): only positions the category allows;
+    two sides if every Ist value is allowed, one if only some are, none if none is."""
+    allowed = p.parking_by_category.get(cat, p.parking_positions) if isinstance(cat, str) else p.parking_positions
+    if allowed == p.parking_positions:
+        return parking_sides(parking, p)
+    if not isinstance(parking, str) or not parking or not allowed:
+        return 0
+    values = set(parking.split("|"))
+    if not values & allowed:
+        return 0
+    return 2 if values <= allowed else 1
 
 
 def is_business(shop_frontage_share, p: ProfileParams) -> bool:
@@ -178,7 +204,7 @@ class SegmentInput:
     bus_peak_dir: float | None
     lanes_ist: int | None
     oneway: bool
-    parking_sides: int
+    parking_sides: int            # Soll sides with parking (parking_sides_soll, PRF-03 parking_by_category)
     business: bool
     tram: bool
     lanes_override: tuple | None = None  # (lanes, bus_lane) from overrides/lane_overrides.csv (approved)
@@ -195,6 +221,24 @@ class LanesResult:
     low_confidence: bool = False
     flags: list = field(default_factory=list)
     trace: list = field(default_factory=list)
+    reduction_dtv: float | None = None   # L-07: DTV above the capacity of one lane per direction
+
+
+CAPACITY_FLAG = "capacity_reduction_needed"
+TREE_PITS_FLAG = "trees_as_pits"
+
+
+def capacity_reduction(dtv, p: ProfileParams) -> tuple[bool, float | None, dict]:
+    """L-07 (F01): GOW30 needs less motor traffic when peak_h_dir > lane_capacity x target_vc (L-02 values);
+    reduction_dtv = DTV - limit / factor. Unknown without DTV."""
+    dtv = _num(dtv)
+    limit = p.lane_capacity * p.target_vc
+    if dtv is None:
+        return False, None, {"dtv": None}
+    peak = dtv * p.dtv_factor
+    need = peak > limit
+    red = dtv - limit / p.dtv_factor if need else None
+    return need, red, {"dtv": dtv, "peak_h_dir": peak, "limit_veh_h": limit, "factor": p.dtv_factor, "reduction_dtv": red}
 
 
 def lanes_soll(cat, dtv, bus_peak_dir, lanes_ist_dir, p: ProfileParams, override: tuple | None = None) -> LanesResult:
@@ -213,6 +257,12 @@ def lanes_soll(cat, dtv, bus_peak_dir, lanes_ist_dir, p: ProfileParams, override
         return res
     if default == "shared" or cat == "GOW30":
         res.trace.append({"id": "L-01", "result": default, "values": {"cat": cat}})
+        if cat == "GOW30":
+            need, red, values = capacity_reduction(dtv, p)
+            res.trace.append({"id": "L-07", "result": need, "values": values})
+            if need:
+                res.flags.append(CAPACITY_FLAG)
+                res.reduction_dtv = red
         return res
     dtv, bus, ist = _num(dtv), _num(bus_peak_dir) or 0.0, _num(lanes_ist_dir)
     ist = None if ist is None or ist <= 0 else int(ist)
@@ -276,7 +326,7 @@ def _carriageway(st: _State, seg: SegmentInput, p: ProfileParams, flags: list) -
     """Centre elements (PRF-04)."""
     bus = (_num(seg.bus_peak_dir) or 0) > 0 and not st.bus_lane
     if st.facility == "cycle_street":
-        return [("carriageway", st.cycle_width or p.cycle_street_carriageway)]
+        return [("carriageway", st.cycle_width or facility_width("cycle_street", seg, p) or p.cycle_street_carriageway)]
     if st.cat == "ETW_ERF":
         return [("shared_surface", p.etw_mixed_bus if bus else p.etw_mixed)]
     if st.cat == "ETW30":
@@ -287,12 +337,7 @@ def _carriageway(st: _State, seg: SegmentInput, p: ProfileParams, flags: list) -
     if st.cat == "GOW30":
         if seg.oneway:
             return [("carriageway", lane)]
-        dtv = _num(seg.dtv)
-        if dtv is None or dtv <= p.gow30_narrow[1]:
-            return [("carriageway", p.gow30_narrow[0])]
-        if dtv > p.gow30_wide[1] and "gow30_dtv_above_profile" not in flags:
-            flags.append("gow30_dtv_above_profile")
-        return [("carriageway", p.gow30_wide[0])]
+        return [("carriageway", gow30_core_carriageway(st, seg, p, flags))]
     # GOW50
     n = st.lanes if isinstance(st.lanes, int) else 1
     if seg.oneway:
@@ -304,6 +349,24 @@ def _carriageway(st: _State, seg: SegmentInput, p: ProfileParams, flags: list) -
     if st.bus_lane:
         return [("carriageway", 2 * p.gow50_general)]
     return [("carriageway", p.gow50_bus_cw if bus else p.gow50_2x1)]
+
+
+def gow30_core_carriageway(st: _State, seg: SegmentInput, p: ProfileParams, flags: list) -> float:
+    """GOW30 carriageway element without the cycle lanes (PRF-04, F04/F01).
+
+    With cycle tracks: profiles.track.carriageway_min_m. With cycle lanes the CROW range includes them
+    (includes_cycle_lanes): total = max(lower bound, core + 2 x cycle lane), the element is total - 2 x cycle lane.
+    """
+    cell = p.cycle_elements.get(st.facility) or {}
+    dtv = _num(seg.dtv)
+    if dtv is not None and dtv > p.gow30_wide[1] and "gow30_dtv_above_profile" not in flags:
+        flags.append("gow30_dtv_above_profile")
+    if cell.get("element") == "cycle_track":
+        return p.gow30_track_cw
+    narrow = dtv is None or dtv <= p.gow30_narrow[1]
+    lower, core = (p.gow30_narrow[0], p.gow30_core_narrow) if narrow else (p.gow30_wide[0], p.gow30_core_wide)
+    lanes = cell.get("sides", 0) * (st.cycle_width or 0.0) if cell.get("element") == "cycle_lane" else 0.0
+    return max(lower, core + lanes) - lanes
 
 
 def _side(st: _State, seg: SegmentInput, p: ProfileParams, left: bool) -> list[tuple[str, float]]:
@@ -364,6 +427,7 @@ class ProfileResult:
     low_confidence: bool
     flags: list
     trace: list
+    reduction_dtv: float | None = None   # L-07
 
 
 def _apply(step: str, st: _State, seg: SegmentInput, p: ProfileParams, flags: list) -> tuple[_State, dict]:
@@ -371,9 +435,11 @@ def _apply(step: str, st: _State, seg: SegmentInput, p: ProfileParams, flags: li
     if step == "D1":
         return replace(st, parking_sides=0), {"parking_sides": st.parking_sides, "loading_kept": seg.business}
     if step == "D2":
+        # F17: new tree strip -> tree pits in the buffer or side space; existing trees are not in the data
+        # (TODO existing_trees_conflict once tree data exist, docs/open_questions.md)
         has = st.trees and st.cat in p.tree_categories
-        if has and "trees_in_parking_row" not in flags:
-            flags.append("trees_in_parking_row")
+        if has and TREE_PITS_FLAG not in flags:
+            flags.append(TREE_PITS_FLAG)
         return replace(st, trees=False), {"tree_strip": has}
     if step == FALLBACK_STEP:
         if seg.fallback is None or st.facility != seg.facility:
@@ -421,7 +487,7 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
         trace.append({"id": "PRF-04", "result": None, "values": {"cat": seg.cat}})
         return ProfileResult([], None, available, None, [], None, seg.facility, seg.cycle_width,
                              _cycle_side(seg.facility, p), lanes.lanes, lanes.bus_lane, lanes.median,
-                             lanes.low_confidence, flags, trace)
+                             lanes.low_confidence, flags, trace, lanes.reduction_dtv)
     st = _State(seg.cat, seg.facility, _num(seg.cycle_width), p.sidewalk_std, lanes.lanes, lanes.bus_lane,
                 lanes.median, seg.parking_sides, True)
     cell = p.cycle_elements.get(seg.facility) or {}
@@ -473,7 +539,8 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
         trace.append({"id": "PRF-06", "result": fit, "values": {"steps": applied, "total_required_m": total,
                                                                   "available_m": available}})
     return ProfileResult(elements, total, available, fit, applied, proposal, st.facility, st.cycle_width,
-                         _cycle_side(st.facility, p), st.lanes, st.bus_lane, st.median, lanes.low_confidence, flags, trace)
+                         _cycle_side(st.facility, p), st.lanes, st.bus_lane, st.median, lanes.low_confidence, flags, trace,
+                         lanes.reduction_dtv)
 
 
 def confidence(res: ProfileResult, seg: SegmentInput) -> str:

@@ -175,3 +175,30 @@ def required_width_formula_mismatches(rules: RuleSet, cycling: CyclingRuleSet, d
         if entry.value is None or abs(entry.value - got) > tol:
             out.append(f"required_width.{key} = {entry.value}, formula = {got:g}")
     return out
+
+
+def cycling_design_ref_mismatches(cycling: CyclingRuleSet, design: DesignRuleSet) -> list[str]:
+    """F18: widths_m entries with ref: point to design_rules.yaml (e.g. cycle_street_carriageway.with_motor_traffic ->
+    lane_width_m.ETW30_mixed.value); returns every field whose value differs from the referenced one."""
+    root = design.model_dump(by_alias=True)
+    out = []
+
+    def walk(node, path):
+        if not isinstance(node, dict):
+            return
+        for field, ref in (node.get("ref") or {}).items():
+            target = root
+            try:
+                for step in ref.removeprefix("design_rules.").split("."):
+                    target = target[step]
+            except (KeyError, TypeError):
+                out.append(f"{path}.{field}: {ref} not found")
+                continue
+            if target != node.get(field):
+                out.append(f"{path}.{field} = {node.get(field)}, {ref} = {target}")
+        for k, v in node.items():
+            if k != "ref":
+                walk(v, f"{path}.{k}")
+
+    walk(cycling.widths_m, "widths_m")
+    return out

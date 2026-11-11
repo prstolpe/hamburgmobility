@@ -1,0 +1,57 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_parking_ist",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_parking_ist",
+        "description": "G12: GOW50 mit Ist-Parken auf beiden Seiten (OSM parking lane) -> Soll-Profil ohne Parken (PRF-03 parking_by_category)",
+        "cat_final": "GOW50",
+        "cycle_cat": "HAUPT",
+        "dtv": 12000,
+        "cyc_peak_h_oneway": 120,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": null,
+        "lanes_ist": 1,
+        "parking": "lane",
+        "shop_frontage_share": 0.0,
+        "expected_facility": "separated_oneway_both",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_oneway.HAUPT"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "PRF-03"
+        ],
+        "forbidden_elements": [
+          "parking_parallel",
+          "cycle_lane"
+        ],
+        "refs_used": [
+          "profile_assignment.rules[PRF-03].parking_by_category.GOW50"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            566800.0,
+            5936000.0
+          ],
+          [
+            566920.0,
+            5936015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

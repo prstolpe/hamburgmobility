@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "name": "gow50_dtv_below_second_lane",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "gow50_dtv_below_second_lane",
+        "description": "G10: GOW50, DTV 13 900 < L-02-Grenze 900 x 0,85 / 0,055 = 13 909, Ist 2 Fahrstreifen -> Soll 1 je Richtung",
+        "cat_final": "GOW50",
+        "cycle_cat": "none",
+        "dtv": 13900,
+        "cyc_peak_h_oneway": 120,
+        "bus_peak_h_dir": 0,
+        "space_fits_preferred": null,
+        "lanes_ist": 2,
+        "expected_facility": "separated_oneway_both",
+        "expected_width_refs": [
+          "widths_m.project_target.separated_oneway.none"
+        ],
+        "expected_lanes_per_direction": 1,
+        "expected_bus_lane": false,
+        "expected_rules": [
+          "L-02"
+        ],
+        "refs_used": [
+          "lanes.rules[L-02].lane_capacity_veh_h.value",
+          "lanes.rules[L-02].target_vc.value",
+          "lanes.rules[L-02].peak_h_dir_from_dtv.factor"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            566400.0,
+            5936000.0
+          ],
+          [
+            566520.0,
+            5936015.0
+          ]
+        ]
+      }
+    }
+  ]
+}

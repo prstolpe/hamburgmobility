@@ -125,12 +125,25 @@ pipeline/c05_facility.py je Straßenabschnitt, Regeln C-FAC-01…07 in `facility
   Für die Ortsgrenze gibt es keine Datenquelle (rules.yaml C-RUR-01, ebenfalls inaktiv), GOW80/ETW60 erhalten daher keine
   Soll-Führung. S-03 und design_rules PL-02 betreffen nur Zweirichtungsradwege, die die Matrix ausschließlich außerorts
   vergibt; sie sind als außerorts gekennzeichnet (`scope: rural`, PL-02 inaktiv) [B].
+- **GOW30 mit hoher Belastung (S-05, seit cycling_rules 0.9.0, Review 2026-11 F01):** Liegt das DTV über
+  `requirements.GOW30.profiles.wide.max_dtv` in rules.yaml (10 000 Kfz/Tag, Grenze einschließlich: 10 000 →
+  Radfahrstreifen, 10 001 → Radweg), gilt vor der Radkategorie die Zelle `GOW30.high_volume`: Radweg je Seite, kein
+  Rückfall auf Radfahrstreifen, Flag `gow30_high_volume`. CROW sieht über 10 000 Kfz/Tag nur das Profil mit Radweg vor;
+  Radfahrstreifen bei 20–40 Tsd. Kfz/Tag mit Bus und Lkw sind nicht vertretbar [F CROW 2023]. Die Kategorie bleibt
+  („Umfeld vor Verkehrsmenge“); ohne DTV greift S-05 nicht [B].
 - **Fahrradstraße** nur bei höchstens 2 500 Kfz/Tag und Radverkehr ≥ Kfz in der Spitzenstunde, sonst Mischverkehr mit dem
   Hinweis „Kfz-Menge reduzieren (Filter) oder Route verlegen“. **S-04:** Mischverkehr bis 700 Kfz/h (DTV × 0,10) [B].
   Kfz-Mengen gibt es nur für Hauptverkehrsstraßen; ohne Zählung gelten beide Bedingungen vorläufig als erfüllt
   (Entscheidung 2026-11-06, Flag dtv_unknown) [B].
 - **Sollbreite** = Projekt-Soll plus Verbreiterung nach Spitzenstunde, nie unter dem deutschen Mindestmaß; DE-Regelmaß und
-  NL-Hauptnetz werden als Vergleich mitgeführt. Mischverkehr und eigene Trasse ohne Sollbreite [B].
+  NL-Hauptnetz werden als Vergleich mitgeführt. Mischverkehr ohne Sollbreite; eigene Trasse wie Zweirichtungsradweg [B].
+  Untergrenze für Zweirichtungsradweg und eigene Trasse ist seit 0.9.0 das Mindestmaß des einseitigen
+  Zweirichtungsradwegs (`de.separated_twoway.oneside_min` 2,50 m statt 2,00 m; ERA unterscheidet einseitig und
+  beidseitig, aus dem Gedächtnis – am Original prüfen, Review 2026-11 F20) [B].
+- **Fahrbahn der Fahrradstraße** (F18): mit Kfz-Verkehr („Kfz frei“) 4,75 m = design_rules `ETW30_mixed`
+  (Begegnung Lkw/Pkw), ohne Kfz 4,00 m. Für Soll-Fahrradstraßen gibt es kein Attribut zur Kfz-Freigabe; angenommen ist
+  der Hamburger Regelfall „Kfz frei“ (C-FAC-04 `cycle_street_motor_traffic`). Dieselbe Breite gilt für die Ist-Prüfung
+  P-COM-01 (C-PRI-08) [B].
 - **Ist-Führung** aus OSM (Fahrradstraße, Radweg, Streifen, Sharrow/Busspur, keine) und **Lücke**: fehlt, falscher Typ,
   zu schmal (nur wo OSM eine Breite hat) [B].
 - Ergebnis, Matrix Straßen- × Radkategorie, Lückenliste und 30 Stichproben je Führungsform: reports/cycle_facility.md.
@@ -177,18 +190,32 @@ Zweirichtung ≥ 350 Rad/h; bis cycling_rules 0.7.0 erst darüber) [B].
 
 ### 5.1 Soll-Querschnitt (Prompt 19, umgesetzt)
 
-pipeline/c06_cross_section_soll.py je Straßenabschnitt, Regeln L-01…06, PL-01…06 und `profile_assignment` PRF-01…07
+pipeline/c06_cross_section_soll.py je Straßenabschnitt, Regeln L-01…07, PL-01…06 und `profile_assignment` PRF-01…07
 in design_rules.yaml 0.2.0 (Setzungen sind Annahmen, status draft):
 
 - **Fahrstreifen:** Ist aus den amtlichen Fahrstreifen je Richtung (sonst OSM lanes); Soll nach L-01/L-02, ohne DTV
-  = Ist mit niedriger confidence; nie mehr als im Ist (L-06) [B].
+  = Ist mit niedriger confidence; nie mehr als im Ist (L-06) [B]. Mit den L-02-Werten liegt die Grenze für den zweiten
+  Fahrstreifen bei 900 × 0,85 / 0,055 ≈ 13 909 Kfz/Tag (DTV 13 900 → 1, 14 000 → 2 je Richtung) [B].
+- **Kapazität GOW30 (L-07, seit design_rules 0.9.0, F01):** Überschreitet die Spitzenstunde je Richtung die Kapazität
+  eines Fahrstreifens (L-02-Werte), Flag `capacity_reduction_needed` mit der nötigen Reduktion
+  `capacity_reduction_dtv` = DTV − 13 909 Kfz/Tag. Nur Kennzeichnung (E2 Option C), keine Automatik [B].
 - **Busfahrstreifen** statt zweitem Kfz-Streifen ab 20 Bussen je Spitzenstunde und Richtung; die Spitzenstunde kommt aus
   dem HVV-GTFS (stärkste Abfahrtsstunde der stärkeren Richtung, Entscheidung 2026-11-06) [B].
 - **Profil:** Gehwege, Radanlage (Lage nach PL-01…03), ÖPNV, Fahrbahn, Trennstreifen, Bäume an GOW, Ladezone bei
-  Geschäftsnutzung und Parken nur, wo es heute Parken gibt. Verfügbar = width_p10_m (Verkehrsfläche); die Fassadenbreite
-  zeigt das Potenzial [B].
-- **Abbau:** D1 Parken, D2 Bäume, dann Fallback der Matrixzelle aus Prompt 18, D3 zweiter Fahrstreifen, D4 Mindestbreiten,
-  D5 Vorschlag GOW50 → GOW30 (nicht übernommen), D6/D7 nur als Hinweis (D7 nur, wo die Radanlage eigene Breite belegt) [B].
+  Geschäftsnutzung und Parken nur, wo es heute Parken gibt und die Kategorie es erlaubt (PRF-03 `parking_by_category`,
+  seit 0.9.0, F11): GOW50 und ETW_ERF kein Parken, GOW30 nur Parkstreifen (`street_side`, neben Radfahrstreifen mit
+  Sicherheitsraum), ETW30 wie heute. Verfügbar = width_p10_m (Verkehrsfläche); die Fassadenbreite zeigt das Potenzial [B].
+- **GOW30-Fahrbahn (PRF-04, F04):** Die CROW-Spannen 5,80–8,40 m (schmal, bis 6 000 Kfz/Tag) und 8,40–10,70 m (breit)
+  enthalten die Radfahrstreifen (Annahme A2, aus `centre_runner_max_m`/`avoid_runner_m` abgeleitet, Original nicht
+  geprüft). Fahrbahn mit Radfahrstreifen = max(untere Profilgrenze, Kernfahrbahn + 2 × Radfahrstreifen); Kernfahrbahn
+  schmal 3,80 m, breit 4,80 m (Bereich 3,80–4,80 m meiden). Beispiele: BASIS 3,80 + 2 × 2,25 = 8,30 m; HAUPT-Fallback
+  4,80 + 2 × 2,50 = 9,80 m (bis 0.8.0 kamen die Radfahrstreifen hinzu: 10,30 m). GOW30 mit Radweg (auch S-05):
+  Fahrbahn `profiles.track.carriageway_min_m` 5,80 m [B].
+- **Abbau (seit 0.9.0, F17, Entscheidung Q1 b):** D1 Parken, D3 zweiter Fahrstreifen, D2 neuer Baumstreifen → Baumscheiben
+  im Trenn- oder Seitenraum, dann Fallback der Matrixzelle aus Prompt 18, D4 Mindestbreiten, D5 Vorschlag GOW50 → GOW30
+  (nicht übernommen), D6/D7 nur als Hinweis (D7 nur, wo die Radanlage eigene Breite belegt). „So wenige Fahrstreifen wie
+  möglich“: der zweite Kfz-Streifen fällt vor dem Grün. Bestandsbäume sind kein frei verfügbarer Raum; das Flag
+  `existing_trees_conflict` folgt, sobald Baumdaten vorliegen (Straßenbaumkataster ohne Endpunkt, offene Frage) [B].
 - Ergebnis, Abbaustufen, Fahrstreifen Ist → Soll und Querschnitts-Skizzen: reports/cross_section_soll.md,
   reports/profiles_sample/*.svg.
 

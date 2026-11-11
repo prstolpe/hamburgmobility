@@ -458,3 +458,42 @@ def test_intensity_classes_half_open(cyc):
         {"if": "oneway peak_h > 750"})), "peak_h >= N")
     _rejects(CyclingRuleSet, _mutated(cyc, lambda d: d["widths_m"]["project_target"]["intensity_upgrade"][0].update(
         {"if": "oneway peak_h >= 700"})), "class boundary")
+
+
+# --- Review 2026-11 P3 (F01, F11, F17, F18) -------------------------------------------------------------
+
+
+def test_cycle_street_with_motor_traffic_matches_design_ref():
+    """F18: cycle_street_carriageway.with_motor_traffic = design_rules lane_width_m.ETW30_mixed (ref)."""
+    from pipeline.lib.rules import cycling_design_ref_mismatches
+    cyc, des = load_cycling_rules(), load_design_rules()
+    assert cycling_design_ref_mismatches(cyc, des) == []
+    t = cyc.widths_m["project_target"]["cycle_street_carriageway"]
+    assert t["with_motor_traffic"] == des.lanes.lane_width_m["ETW30_mixed"]["value"]
+
+
+def test_high_volume_cell_points_into_rules_yaml():
+    cell = load_cycling_rules().separation_matrix["GOW30"]["high_volume"]
+    from pipeline.lib.principles import rules_ref
+    assert isinstance(rules_ref(load_rules(), cell["dtv_above"]), (int, float))
+    assert cell["fallback"] is None and cell["source_type"] == "swov_crow"
+    assert cell["rule"] in {r["id"] for r in load_cycling_rules().separation_matrix["rules"]}
+
+
+@pytest.mark.parametrize("key,value,match", [("fallback", "cycle_lane", "fallback"), ("dtv_above", "10000", "dtv_above"),
+                                             ("flag", "", "flag")])
+def test_rejects_bad_high_volume_cell(cyc, key, value, match):
+    def mutate(d):
+        d["separation_matrix"]["GOW30"]["high_volume"][key] = value
+    _rejects(CyclingRuleSet, _mutated(cyc, mutate), match)
+
+
+def test_rejects_unknown_parking_by_category(des):
+    def mutate(d):
+        _prf(d, "PRF-03")["parking_by_category"]["GOW30"] = ["hover_parking"]
+    _rejects(DesignRuleSet, _mutated(des, mutate), "parking_by_category")
+
+
+def test_cascade_d3_before_d2():
+    order = _by_id(load_design_rules().profile_assignment["rules"], "PRF-06")["cascade_order"]
+    assert order == ["D1", "D3", "D2", "fallback", "D4", "D5", "D6", "D7"]

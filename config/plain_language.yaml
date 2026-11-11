@@ -5,7 +5,7 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.6.0
+  version: 0.7.0
   date: 2026-11-08
 
 categories:
@@ -235,13 +235,15 @@ cycling:
     ist_width_unknown: "heutige Breite in OpenStreetMap nicht erfasst"
     track_on_access_road: "Radweg an einer Erschließungsstraße – Straßenkategorie prüfen"
     existing_track_below_floor: "heutiger Radweg schmaler als die Untergrenze – zählt nicht als sicherer Radweg (C-G30-02)"
+    gow30_high_volume: "viel Kfz-Verkehr für Tempo 30 – Radweg statt Radfahrstreifen"
   profile_flags:
     width_unknown: "Straßenraumbreite nicht gemessen"
     no_profile_rules: "für diese Straßenkategorie kein Soll-Profil"
     dtv_unknown: "Kfz-Menge fehlt – Fahrstreifen wie heute angenommen"
     lanes_capped_l06: "nicht mehr Fahrstreifen als heute (L-06)"
     pl02_unchecked: "Lage des Zweirichtungsradwegs nicht prüfbar"
-    trees_in_parking_row: "Bäume in Baumscheiben in der Parkreihe statt Baumstreifen"
+    trees_as_pits: "neue Bäume in Baumscheiben im Trenn- oder Seitenraum statt Baumstreifen"
+    capacity_reduction_needed: "mehr Kfz-Verkehr als ein Fahrstreifen je Richtung trägt – Verkehrsmenge senken"
     gow30_dtv_above_profile: "Kfz-Menge über dem breiten Profil für Tempo 30"
     D6: "Einrichtungsverkehr oder Durchfahrtssperre für Kfz prüfen"
     D7: "Radroute auf eine Parallelstraße verlegen prüfen"

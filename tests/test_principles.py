@@ -3,6 +3,7 @@
 Values are taken from config/cycling_rules.yaml through PrincipleParams, so no threshold is copied here.
 """
 
+import dataclasses
 import math
 
 import numpy as np
@@ -157,7 +158,23 @@ def test_required_width_from_project_target():
     t = cyc.widths_m["project_target"]
     assert pr.required_width("separated_oneway_both", "HAUPT", 0, 0, P) == t["separated_oneway"]["HAUPT"]
     assert pr.required_width("separated_twoway", "RSV", 0, 0, P) == t["separated_twoway"]["RSV"]
-    assert pr.required_width("cycle_street", "HAUPT", 0, 0, P) == t["cycle_street_carriageway"]["value"]
+    # F18: Soll cycle streets carry motor traffic ("Kfz frei", C-FAC-04 cycle_street_motor_traffic)
+    assert P.cs_motor_traffic
+    assert pr.required_width("cycle_street", "HAUPT", 0, 0, P) == t["cycle_street_carriageway"]["with_motor_traffic"]
+    without = dataclasses.replace(P, cs_motor_traffic=False)
+    assert pr.required_width("cycle_street", "HAUPT", 0, 0, without) == t["cycle_street_carriageway"]["value"]
+
+
+def test_high_volume_cell_before_cycle_category():
+    """S-05 (F01): GOW30 above requirements.GOW30.profiles.wide.max_dtv -> separated, no fallback; strictly greater."""
+    limit = load_rules().requirements["GOW30"]["profiles"]["wide"]["max_dtv"]
+    assert P.high_volume["GOW30"].dtv_above == limit
+    assert pr.soll_facility("GOW30", "BASIS", P, limit) == ("cycle_lane", None)
+    assert pr.soll_facility("GOW30", "BASIS", P, limit + 1) == ("separated_oneway_both", None)
+    assert pr.soll_facility("GOW30", "HAUPT", P, limit + 1) == ("separated_oneway_both", None)
+    assert pr.soll_facility("GOW30", "HAUPT", P, None) == ("separated_oneway_both", "cycle_lane")
+    assert pr.edge_soll_facility("path", None, "GOW30", "ERSCHL", P, limit + 1) == ("separated_oneway_both", None)
+    assert pr.soll_facility("GOW50", "BASIS", P, limit + 1) == ("separated_oneway_both", None)
 
 
 def test_required_width_not_applicable():
@@ -382,6 +399,6 @@ def test_soll_facility_matches_golden_cases(props):
     """P-SAF-01 Soll lookup: preferred facility when the space fits, otherwise the fallback (prompt 18 decides space)."""
     params = (pr.PrincipleParams.from_rules(cycling_with_blocks_activated(load_cycling_rules(), props["activate"]),
                                             load_rules()) if props.get("activate") else P)
-    preferred, fallback = pr.soll_facility(props["cat_final"], props["cycle_cat"] or "none", params)
+    preferred, fallback = pr.soll_facility(props["cat_final"], props["cycle_cat"] or "none", params, props.get("dtv"))
     expected = preferred if props.get("space_fits_preferred", True) or fallback is None else fallback
     assert expected == props["expected_facility"]

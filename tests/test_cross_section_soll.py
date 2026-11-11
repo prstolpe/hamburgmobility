@@ -200,7 +200,7 @@ def test_d1_skipped_without_parking_then_d2_trees():
     res = pf.evaluate_profile(seg, full - 0.1, P)
     assert res.degrade_steps_applied == ["D2"]
     assert all(e["width_m"] == 0 for e in _elements(res, "tree_strip")) or not _elements(res, "tree_strip")
-    assert "trees_in_parking_row" in res.flags
+    assert pf.TREE_PITS_FLAG in res.flags
 
 
 def test_loading_zone_kept_by_d1():
@@ -220,13 +220,18 @@ def test_fallback_after_d2_before_d3():
     assert res.cycle_width_m == pytest.approx(pf.facility_width("cycle_lane", seg, P))
 
 
-def test_d3_drops_second_lane_keeps_bus_lane():
+def test_d3_drops_second_lane_before_trees():
+    """F17 (Q1 b): the second car lane goes before the tree strip (cascade D1, D3, D2, ...)."""
+    assert P.cascade_order[:4] == ("D1", "D3", "D2", "fallback")
     seg = _seg(dtv=DTV_TWO)
     full = pf.evaluate_profile(seg, 100.0, P)
-    no_trees = full.total_required_m - sum(e["width_m"] for e in _elements(full, "tree_strip"))
-    res = pf.evaluate_profile(seg, no_trees - 0.1, P)
-    assert res.degrade_steps_applied == ["D2", "D3"]
+    res = pf.evaluate_profile(seg, full.total_required_m - 0.1, P)
+    assert res.degrade_steps_applied == ["D3"]
     assert res.lanes == 1 and not res.median
+    assert len(_elements(res, "tree_strip")) == P.tree_sides and all(e["width_m"] > 0 for e in _elements(res, "tree_strip"))
+
+
+def test_d3_keeps_bus_lane():
     bus = _seg(dtv=DTV_TWO, bus_peak_dir=P.bus_lane_trigger)
     tight = pf.evaluate_profile(bus, 1.0, P, stop_before="D5")
     assert tight.bus_lane and "D3" not in tight.degrade_steps_applied
@@ -385,3 +390,71 @@ def test_lane_override_validation_and_apply():
 def test_lane_override_file_has_header():
     from pipeline.lib import overrides as ov
     assert list(ov.read_overrides(ov.LANE_OVERRIDES_PATH).columns) == ov.LANE_COLUMNS
+
+
+# --- Review 2026-11 P3: F01 (L-07, track carriageway), F04, F11, G10 ---------------------------------------
+
+
+def _cw(res) -> float:
+    return sum(e["width_m"] for e in _elements(res, "carriageway"))
+
+
+def test_gow30_cycle_lanes_inside_crow_range():
+    """F04: GOW30 with cycle lanes = max(lower profile bound, core + 2 x cycle lane); review examples
+    BASIS narrow core + 2 x 2.25 and HAUPT fallback wide core + 2 x 2.50."""
+    basis_w, haupt_w = 2.25, 2.50
+    narrow = pf.evaluate_profile(_seg(cat="GOW30", cycle_cat="BASIS", facility="cycle_lane", cycle_width=basis_w,
+                                      dtv=P.gow30_narrow[1]), 100.0, P)
+    total = _cw(narrow) + sum(e["width_m"] for e in _elements(narrow, "cycle_lane"))
+    assert total == pytest.approx(max(P.gow30_narrow[0], P.gow30_core_narrow + 2 * basis_w))
+    assert total == pytest.approx(8.30)   # review example (rules values 3.80 + 2 x 2.25)
+    wide = pf.evaluate_profile(_seg(cat="GOW30", cycle_cat="HAUPT", facility="cycle_lane", cycle_width=haupt_w,
+                                    dtv=P.gow30_narrow[1] + 1), 100.0, P)
+    total = _cw(wide) + sum(e["width_m"] for e in _elements(wide, "cycle_lane"))
+    assert total == pytest.approx(max(P.gow30_wide[0], P.gow30_core_wide + 2 * haupt_w))
+    assert total == pytest.approx(9.80)
+    # narrow cycle lanes: the lower bound of the profile holds
+    thin = pf.evaluate_profile(_seg(cat="GOW30", facility="cycle_lane", cycle_width=0.5, dtv=P.gow30_narrow[1] + 1), 100.0, P)
+    assert _cw(thin) + 2 * 0.5 == pytest.approx(P.gow30_wide[0])
+
+
+def test_gow30_with_tracks_uses_track_carriageway():
+    """F01/F04: GOW30 with cycle tracks (also gow30_high_volume) = profiles.track.carriageway_min_m, tracks per PL-01."""
+    res = pf.evaluate_profile(_seg(cat="GOW30", facility="separated_oneway_both", dtv=P.gow30_wide[1] + 1), 100.0, P)
+    assert _cw(res) == pytest.approx(P.gow30_track_cw)
+    assert len(_elements(res, "cycle_track")) == 2 and "PL-01" in _ids(res.trace)
+
+
+def test_l07_capacity_reduction_on_gow30():
+    """L-07: flag and reduction DTV when peak_h_dir > L-02 limit (one lane per direction on GOW30)."""
+    below = pf.lanes_soll("GOW30", P.second_lane_dtv, 0, 1, P)
+    assert "capacity_reduction_needed" not in below.flags and below.reduction_dtv is None
+    dtv = P.second_lane_dtv + 1000
+    above = pf.lanes_soll("GOW30", dtv, 0, 1, P)
+    assert above.lanes == 1 and "capacity_reduction_needed" in above.flags
+    assert above.reduction_dtv == pytest.approx(1000)
+    assert "L-07" in _ids(above.trace)
+    res = pf.evaluate_profile(_seg(cat="GOW30", facility="separated_oneway_both", dtv=dtv), 100.0, P)
+    assert res.reduction_dtv == pytest.approx(1000) and "capacity_reduction_needed" in res.flags
+    assert pf.lanes_soll("GOW30", None, 0, 1, P).reduction_dtv is None
+    assert "capacity_reduction_needed" not in pf.lanes_soll("GOW50", dtv, 0, 2, P).flags
+
+
+def test_g10_second_lane_boundary():
+    """G10: L-02 limit = 900 x 0.85 / 0.055 = 13 909 Kfz/Tag, so DTV 13 900 -> 1 and 14 000 -> 2 lanes (Ist 2)."""
+    assert 13900 < P.second_lane_dtv < 14000
+    assert pf.lanes_soll("GOW50", 13900, 0, 2, P).lanes == 1
+    assert pf.lanes_soll("GOW50", 14000, 0, 2, P).lanes == 2
+
+
+@pytest.mark.parametrize("parking,cat,expected", [
+    ("lane", "GOW50", 0), ("street_side", "GOW50", 0), ("street_side", "ETW_ERF", 0),
+    ("street_side", "GOW30", 2), ("no|street_side", "GOW30", 1), ("lane|street_side", "GOW30", 1), ("lane", "GOW30", 0),
+    ("lane", "ETW30", 2), ("lane|no", "ETW30", 1), ("no", "ETW30", 0), (None, "ETW30", 0)])
+def test_parking_by_category(parking, cat, expected):
+    """F11: GOW50 none, GOW30 only parking bays (street_side), ETW30 as Ist, ETW_ERF none."""
+    assert pf.parking_sides_soll(parking, cat, P) == expected
+
+
+def test_parking_by_category_keeps_ist_count():
+    assert pf.parking_sides("lane", P) == 2   # Ist count unchanged (parking_sides_ist)

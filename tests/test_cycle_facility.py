@@ -254,3 +254,36 @@ def test_existing_track_below_floor():
     assert not fa.track_below_floor("lane", "cycle_lane", 0.5, P)
     assert fa.TRACK_BELOW_FLOOR_FLAG == "existing_track_below_floor"
 
+
+
+# --- Review 2026-11 P3: F01 (S-05), F18, F20 ----------------------------------------------------------------
+
+
+def test_gow30_high_volume_before_cycle_category():
+    """F01/S-05: above requirements.GOW30.profiles.wide.max_dtv separated tracks, no fallback, flag (strictly >)."""
+    limit = P.high_volume["GOW30"].dtv_above
+    at = fa.soll_facility("GOW30", "BASIS", limit, 100, None, P)
+    assert at.facility == "cycle_lane" and "gow30_high_volume" not in at.flags
+    above = fa.soll_facility("GOW30", "BASIS", limit + 1, 100, None, P)
+    assert above.facility == "separated_oneway_both" and above.fallback is None
+    assert "gow30_high_volume" in above.flags and "S-05" in _ids(above.trace)
+    # no fallback to a cycle lane even when space does not fit (HAUPT cell has one below the limit)
+    haupt = fa.soll_facility("GOW30", "HAUPT", limit + 1, 100, False, P)
+    assert haupt.facility == "separated_oneway_both" and "fallback_check_p19" not in haupt.flags
+    # without a DTV S-05 does not apply
+    assert fa.soll_facility("GOW30", "BASIS", None, 100, None, P).facility == "cycle_lane"
+
+
+def test_cycle_street_width_with_motor_traffic():
+    """F18: Soll cycle street open to motor traffic = cycle_street_carriageway.with_motor_traffic."""
+    t = TARGET["cycle_street_carriageway"]
+    assert fa.target_width("cycle_street", "HAUPT", 0, 0, P).width == t["with_motor_traffic"]
+    no_motor = dataclasses.replace(P, cs_motor_traffic=False)
+    assert fa.target_width("cycle_street", "HAUPT", 0, 0, no_motor).width == t["value"]
+
+
+def test_floor_twoway_and_own_path_oneside_min():
+    """F20: separated_twoway and own_path never below de.separated_twoway.oneside_min."""
+    oneside = CYC.widths_m["de"]["separated_twoway"]["oneside_min"]
+    assert P.floor["separated_twoway"] == oneside and P.floor["own_path"] == oneside
+    assert oneside > CYC.widths_m["de"]["separated_twoway"]["min"]
