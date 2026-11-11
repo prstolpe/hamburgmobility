@@ -5,13 +5,13 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.9.0
-  date: 2026-11-08
+  version: 0.9.1
+  date: 2026-11-11
 
 categories:
   SW: "Schnellverkehrsstraße – anbaufrei, nur für Kraftfahrzeuge; Fuß- und Radverkehr getrennt geführt"
   GOW50: "Stadtmagistrale – verbindet Stadtteile, Tempo 50, Radverkehr auf baulich getrenntem Radweg"
-  GOW30: "Stadtstraße 30 – verbindet Quartiere, Tempo 30, Radverkehr auf Radfahrstreifen oder vorhandenem Radweg"
+  GOW30: "Stadtstraße 30 – verbindet Quartiere, Tempo 30, Radverkehr auf Radfahrstreifen, bei viel Kfz-Verkehr auf baulichem Radweg"
   ETW30: "Quartiersstraße – erschließt das Quartier, Tempo 30, Radverkehr gemeinsam mit dem Kfz-Verkehr"
   ETW_ERF: "Aufenthaltsstraße – Schrittgeschwindigkeit, Aufenthalt und Fußverkehr haben Vorrang"
   GOW80: "Landstraße (Verbindung) – außerorts, Tempo 80"

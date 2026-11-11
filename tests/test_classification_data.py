@@ -38,7 +38,8 @@ def test_only_work_area_classified(out):
 
 
 def test_hvs_is_never_etw(out):
-    """HVS as ETW must be justified one by one (guide 7.1): only allowed with an approved override."""
+    """HVS as ETW must be justified one by one (guide 7.1): only allowed with an approved override. Cascade part of
+    invariant V-INV-09 (cat_proposed before harmonisation); cat_final in tests/test_invariants_data.py."""
     from pipeline.lib.overrides import APPLIED_STATUS, read_overrides
     ov = read_overrides()
     justified = set(ov.loc[ov["review_status"] == APPLIED_STATUS, "segment_id"])

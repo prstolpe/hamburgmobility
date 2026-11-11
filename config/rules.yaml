@@ -7,8 +7,8 @@
 #   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
 #   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.20.0
-  date: 2026-11-08
+  version: 0.21.0
+  date: 2026-11-11
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
   note: "Schwellen mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen."
@@ -945,3 +945,87 @@ validation:
         max_missing_speed_share: {value: 0.05, unit: "Anteil 0-1", source_type: assumption, check: "guide.md 3.4"}
       source_type: assumption
       status: draft
+
+  # Ausführbare Invarianten (seit 0.21.0, Review 2026-11, strukturelle Empfehlung 6, docs/review/2026-11/04_review_regelwerk.md):
+  # Querbeziehungen zwischen rules.yaml, cycling_rules.yaml und design_rules.yaml. pipeline/lib/invariants.py prüft sie
+  # auf data/interim; das Ergebnis steht je Lauf in reports/validation.md (Abschnitt „Invarianten“).
+  # expected: holds = muss gelten (Test grün); violated = bekannte Verletzung mit offener Frage in docs/open_questions.md
+  # (Test strict xfail, bis die Frage entschieden ist). tested_in: Tests, die die Invariante prüfen (Datei nennt die ID).
+  invariants:
+    - id: V-INV-01
+      text: >-
+        Jede cat_final hat eine aktive Zeile in cycling_rules separation_matrix und eine Profilregel (design_rules PRF-03
+        parking_by_category) oder steht in design_rules PRF-04 no_profile_categories (SW, GOW80, ETW60)
+      finding: [F28]
+      expected: holds
+      tested_in: [tests/test_invariants.py::test_v_inv_01_every_category_has_matrix_and_profile,
+                  tests/test_invariants_data.py::test_v_inv_01_cat_final_has_matrix_and_profile]
+      source_type: assumption
+      status: draft
+      note: "no_profile_categories steht nur in design_rules PRF-04 (eine Quelle); außerorts ist die Matrix inaktiv (F28)"
+    - id: V-INV-02
+      text: "Kein Knotenpunkt ohne Soll-Typ (kein Flag no_rule); Autobahnknoten tragen not_applicable (J-10d)"
+      finding: [F10]
+      expected: holds
+      tested_in: [tests/test_junctions_data.py::test_v_inv_02_every_junction_has_a_soll_type]
+      source_type: assumption
+      status: draft
+    - id: V-INV-03
+      text: >-
+        Soll-Profil enthält kein Element, das requirements[cat] verbietet: kein Parken und kein Radfahrstreifen an GOW50,
+        kein zweiter Fahrstreifen und kein Mittelstreifen an GOW30 (maßgeblich die D5-Kategorie, wo vorhanden)
+      finding: [F11]
+      expected: holds
+      tested_in: [tests/test_cross_section_soll_data.py::test_v_inv_03_no_element_the_category_forbids]
+      source_type: assumption
+      status: draft
+    - id: V-INV-04
+      text: "Keine Soll-Führung cycle_lane an GOW30 mit DTV über profiles.wide.max_dtv (c05 und nach der Abbaukaskade c06)"
+      finding: [F01]
+      expected: holds
+      tested_in: [tests/test_cycle_facility_data.py::test_v_inv_04_no_cycle_lane_on_high_volume_gow30,
+                  tests/test_cross_section_soll_data.py::test_v_inv_04_no_cycle_lane_on_high_volume_gow30]
+      source_type: assumption
+      status: draft
+    - id: V-INV-05
+      text: "fits in S-XS-06 ⇒ c06 fits oder fits_after_degrade mit Abbaustufen höchstens bis D4"
+      finding: [F05]
+      expected: violated
+      tested_in: [tests/test_cross_section_soll_data.py::test_v_inv_05_fits_in_s_xs_06_fits_after_d4]
+      source_type: assumption
+      status: draft
+      note: "Verletzt seit Paket P3 (Ladezone, Busfahrbahn ETW30, GOW30-Profil breiter als required_width); offene Frage V-INV-05"
+    - id: V-INV-06
+      text: "value = berechnete formula für alle required_width.* mit formula"
+      finding: [F05]
+      expected: holds
+      tested_in: [tests/test_rules_schema.py::test_required_width_value_equals_formula]
+      source_type: assumption
+      status: draft
+    - id: V-INV-07
+      text: "Rad-Vorrang (cyclist_treatment JC-01) nur an einstreifigen Kreisverkehren; Turbokreisel tragen JC-06"
+      finding: [F02]
+      expected: holds
+      tested_in: [tests/test_junctions_data.py::test_v_inv_07_cyclist_priority_only_at_single_lane_roundabouts]
+      source_type: assumption
+      status: draft
+    - id: V-INV-08
+      text: "Ist-Führung in s08 (Diskrepanz), c04 (Prinzipien) und c05 (Führungsform) identisch mit S-FEAT-13 (c03b)"
+      finding: [F26]
+      expected: holds
+      tested_in: [tests/test_ist_facility_data.py::test_v_inv_08_c05, tests/test_ist_facility_data.py::test_v_inv_08_s08,
+                  tests/test_ist_facility_data.py::test_v_inv_08_c04]
+      source_type: assumption
+      status: draft
+    - id: V-INV-09
+      text: "Kein HVS-Abschnitt hat cat_final ETW30 oder ETW_ERF ohne approved Override (overrides/overrides.csv)"
+      finding: [F29]
+      expected: violated
+      tested_in: [tests/test_invariants_data.py::test_v_inv_09_hvs_never_etw_without_override,
+                  tests/test_classification_data.py::test_hvs_is_never_etw]
+      source_type: assumption
+      status: draft
+      note: >-
+        Die Kaskade (cat_cascade, tests/test_classification_data.py) hält die Invariante ein; cat_final verletzt sie bei
+        20 HVS-Abschnitten (0,8 km), die die Harmonisierung H-STR-01 Schritt (2) „GOW zwischen zwei ETW30-Läufen ->
+        ETW30“ herabstuft. Offene Frage V-INV-09 (Review 2026-11 P6); die Regel bleibt bis zur Entscheidung unverändert.

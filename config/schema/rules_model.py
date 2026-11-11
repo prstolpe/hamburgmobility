@@ -511,8 +511,24 @@ class ValidationRule(_Strict):
     note: str | None = None
 
 
+class InvariantRule(_Strict):
+    """Executable invariant across rules, cycling_rules and design_rules (Review 2026-11, structural rec. 6).
+    expected: holds = must hold on the data (test green); violated = known violation with an open question
+    (test strict xfail). tested_in: tests as 'tests/file.py::test_name'; each file must mention the id."""
+    id: str = Field(pattern=r"^V-INV-\d{2}$")
+    text: str
+    finding: list[str] = Field(min_length=1)
+    expected: Literal["holds", "violated"]
+    tested_in: list[str] = Field(min_length=1)
+    source_type: SourceType
+    status: Status
+    source: str | list[str] | None = None
+    note: str | None = None
+
+
 class Validation(_Strict):
     rules: list[ValidationRule] = Field(min_length=1)
+    invariants: list[InvariantRule] = []
 
     def rule(self, rule_id: str) -> ValidationRule:
         return next(r for r in self.rules if r.id == rule_id)
@@ -588,7 +604,8 @@ class RuleSet(_Strict):
                + [self.discrepancy.speed.id, self.discrepancy.design.id, self.discrepancy.use.id,
                   self.discrepancy.type_rule.id, self.priority.risk.id]
                + [r.id for r in self.harmonisation.rules]
-               + [r.id for r in self.validation.rules])
+               + [r.id for r in self.validation.rules]
+               + [r.id for r in self.validation.invariants])
         duplicates = sorted({i for i in ids if ids.count(i) > 1})
         if duplicates:
             raise ValueError(f"duplicate rule ids: {duplicates}")
@@ -636,6 +653,12 @@ class RuleSet(_Strict):
                        + [(f"crosssection.rules[{r.id}]", r) for r in self.crosssection.rules]
                        + [(f"harmonisation.rules[{r.id}]", r) for r in self.harmonisation.rules]
                        + [(f"validation.rules[{r.id}]", r) for r in self.validation.rules])
+        for rule in self.validation.invariants:
+            _check_provenance(rule.model_dump(include={"source", "source_type"}),
+                              f"validation.invariants[{rule.id}]", source_ids)
+            bad = [t for t in rule.tested_in if not re.fullmatch(r"tests/[\w/]+\.py::\w+", t)]
+            if bad:
+                raise ValueError(f"validation.invariants[{rule.id}].tested_in: expected 'tests/file.py::test_name', got {bad}")
         for path, rule in stage_rules:
             _check_provenance(rule.model_dump(include={"source", "source_type"}), path, source_ids)
             for name, threshold in rule.thresholds.items():

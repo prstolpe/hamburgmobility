@@ -8,8 +8,8 @@
 # Klassentabellen (demand.intensity_classes_peak_h) sind halboffen [min, max): ein Wert auf der Grenze gehört zur
 #   oberen Klasse; intensity_upgrade greift darum ab der Untergrenze (>=) einer Klasse (F27).
 meta:
-  version: 0.11.0
-  date: 2026-11-08
+  version: 0.11.1
+  date: 2026-11-11
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
 
@@ -408,7 +408,7 @@ network_design:
       description: 'RSV: zusammenhängende Läufe eines Korridors mit cyc_calibrated >= RSV demand_trigger_cyclists_weekday; Lücken bis gap_max_m werden überbrückt; Läufe ab RSV min_route_length_km werden RSV, der übrige Korridor HAUPT'
       gap_max_m: 500
       demand_band_factor: {value: 2.0, source_type: assumption,
-                           note: 'RSV-Lauf mit cyc_calibrated < trigger x factor (längengewichteter Median des Laufs): rsv_confidence low, sonst high (Kalibrierung: 52 % der Querschnitte innerhalb Faktor 2; Review 2026-11 F12)'}
+                           note: 'RSV-Lauf mit cyc_calibrated < trigger x factor (längengewichteter Median des Laufs): rsv_confidence low, sonst high (Kalibrierung c02 seit 0.10.0: 48 % der Querschnitte innerhalb Faktor 2, Spearman 0,57, reports/cycle_demand.md; Review 2026-11 F12)'}
       status: draft
     - id: C-NET-07
       description: 'Maschen: Polygonisierung des Netzes einer Ebene (mit höheren Ebenen) zusammen mit Barrierelinien und der Landesgrenze; Größe = Seitenlänge des flächengleichen Quadrats der Masche ohne Ausschlussflächen. Maschen mit Mittelpunkt in ländlichen Stadtteilen (project.yaml rural_exclude) werden nicht geprüft'

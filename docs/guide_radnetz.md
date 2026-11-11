@@ -55,8 +55,8 @@ die Bezeichnung lautet „Radvorrangroute / Radroute+“. Die FGSV-Hinweise zu R
 Länge und ≥ 2.000 Rad/24 h an (aus dem Gedächtnis, am Original prüfen; Annahme A5). Jeder RSV-Lauf wird darum zusätzlich
 gekennzeichnet: **FGSV-Kandidat** (`fgsv_rsv_candidate`), wenn der Lauf ≥ 10 km lang ist und auf mehr als der Hälfte seiner
 Länge die Modellnachfrage den Auslöser erreicht; **rsv_confidence low** (C-NET-06 `demand_band_factor` 2,0), wenn der
-längengewichtete Median der Modellnachfrage unter Auslöser × 2 liegt. Hintergrund: Nur 52 % der Zählquerschnitte liegen
-innerhalb Faktor 2 des Modells, eine absolute Schwelle auf Modellwerte ist dort instabil. Beides steht im Steckbrief und
+längengewichtete Median der Modellnachfrage unter Auslöser × 2 liegt. Hintergrund: Nur 48 % der Zählquerschnitte liegen
+innerhalb Faktor 2 des Modells (Spearman 0,57, Kalibrierung seit cycling_rules 0.10.0, reports/cycle_demand.md), eine absolute Schwelle auf Modellwerte ist dort instabil. Beides steht im Steckbrief und
 ändert keine Kategorie [B].
 
 ## 3. Netzentwurf in fünf Schritten

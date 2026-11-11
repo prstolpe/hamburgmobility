@@ -479,6 +479,7 @@ Der Entwurf gilt erst als veröffentlichungsreif, wenn vier Prüfungen dokumenti
 | Stichproben vor Ort | 30 Abschnitte je Kategorie im Pilotbezirk, Begehung mit Prüfbogen (Funktion, Nutzung, Querschnitt, Gestaltung) | Fehlerrate je Kategorie; Ziel: unter 15 % fachlich strittig (Annahme) |
 | Sensitivitätsanalyse | jede Schwelle ± 20 %, Gewichte der Priorisierung variiert; Monte-Carlo über alle Annahmen | Anteil der Abschnitte, die die Kategorie wechseln; Abschnitte, die oft wechseln, werden als „unsicher“ markiert |
 | Datenqualität | Vollständigkeit OSM-Tags je Bezirk, Conflation-Trefferquote, fehlende DTV | in Karte als Unsicherheit sichtbar |
+| Invarianten (seit rules.yaml 0.21.0, Review 2026-11) | Querbeziehungen zwischen rules, cycling_rules und design_rules als ausführbare Prüfungen V-INV-01…09 (`validation.invariants`, pipeline/lib/invariants.py), Ergebnis je Lauf in reports/validation.md | jede Invariante gilt; bekannte Verletzungen (`expected: violated`) stehen mit offener Frage in docs/open_questions.md und als strict xfail in den Tests |
 | Ortskundige | moderierte Durchsicht mit Bezirksgruppen der Verbände, Feuerwehr, Busbetrieben (Bericht 2: Deventer-Verfahren) | jede Rückmeldung erhält Antwort und Status; Übernahme nur mit Begründung |
 | Externe Fachprüfung | Review durch Hochschule oder Planungsbüro | schriftliche Stellungnahme vor Veröffentlichung |
 

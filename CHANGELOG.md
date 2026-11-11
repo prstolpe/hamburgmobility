@@ -686,3 +686,26 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   197,5 → 87,4 km. Radweg-Tag ohne Radgraph 107,7 km (1 592 Abschnitte; ETW30 42,7, GOW30 37,4, GOW50 27,2 km), jetzt
   überall Radweg; Ist-Führung in c04 auf 151 km Kanten geändert (davon zweiseitige Zweirichtungs-Seitenwege → Radweg
   je Seite 73,6 km Abschnitte), c05 unverändert. Priorität geändert bei 829 Abschnitten, Top 30: 7 neue Einträge.
+
+## rules.yaml 0.21.0, cycling_rules.yaml 0.11.1, plain_language.yaml 0.9.1 – 2026-11-11: Review 2026-11, Paket P6 (Invarianten, Export, Reststand)
+- Strukturempfehlung 6: neuer Block `validation.invariants` mit V-INV-01…09 (id, text, finding, expected
+  holds/violated, tested_in, source_type assumption, status draft); Schema `InvariantRule` (IDs in der
+  Dublettenprüfung, Format von tested_in). pipeline/lib/invariants.py prüft alle neun auf data/interim;
+  pipeline/validate.py schreibt sie in reports/validation.md (Abschnitt „Invarianten“, Kurzfassung) und in
+  validation_metrics.json. Keine Regel- oder Schwellenänderung.
+- Neue Tests: tests/test_invariants.py (jede V-INV-ID nennt Tests, die existieren und die ID erwähnen; keine
+  unbekannte V-INV-ID in tests/; V-INV-01 auf den Regeldateien), tests/test_invariants_data.py (jede Prüfung gegen
+  `expected`; V-INV-01 und V-INV-09 auf final.parquet). V-INV-05-Prüfung nach pipeline/lib/invariants.py verschoben.
+- V-INV-01 (F28): `no_profile_categories` steht bereits in design_rules PRF-04 (SW, GOW80, ETW60) und wird nur dort
+  geführt; Profilregel = Eintrag in PRF-03 `parking_by_category`. Erfüllt.
+- V-INV-09 (F29): auf cat_final **verletzt** – 20 HVS-Abschnitte (0,8 km) werden durch H-STR-01 Schritt (2) („GOW
+  zwischen zwei ETW30-Läufen → ETW30“) zu ETW30; die Kaskade allein hält die Invariante ein. Regel unverändert,
+  Test strict xfail, offene Frage (Optionen a–c). Ergebnis: 7 erfüllt, 2 verletzt (V-INV-05 1 075 Abschnitte /
+  135,1 km, V-INV-09), beide wie erwartet.
+- Veraltete Texte: Kalibrierung „52 %“ → 48 % innerhalb Faktor 2, Spearman 0,57 (cycling_rules C-NET-06
+  `demand_band_factor.note`, c03-Berichtstext, guide_radnetz.md 2); GOW30-Beschreibung in plain_language.yaml nennt
+  den Radweg bei viel Kfz-Verkehr (F01) statt „Radfahrstreifen oder vorhandenem Radweg“; guide.md 7.1 nennt die
+  Invarianten. Zwei erledigte offene Fragen abgehakt (source_type der Gewichte seit P0, J-03 mit DTV-Grenzen).
+- Neu gerechnet: validate, c08, Export und Website (erstmals seit vor P0); make test und make a11y grün.
+- docs/review/2026-11/05_reststand.md: Umsetzungsstand F01–F38 und Strukturempfehlungen 1–10, Abweichungen,
+  offene Fragen gruppiert, Kandidaten für V-SENS-01, nächste Schritte.

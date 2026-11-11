@@ -272,7 +272,7 @@ Zusätzliche Soll-RSV/HAUPT-Straßen ohne amtlichen Bestand (Top 15 nach Länge)
 
 ## RSV-Läufe: FGSV-Kandidat und Unsicherheit (F12)
 
-RSV heißt seit cycling_rules.yaml 0.10.0 „Radvorrangroute / Radroute+“: Der Code bleibt, die Kategorie ist aber keine Radschnellverbindung im Sinne der FGSV. FGSV-Kandidat = Lauf ≥ 10 km mit ≥ 2 000 Rad/Werktag auf mehr als 50% der Länge (Annahme A5, FGSV-Hinweise am Original prüfen). rsv_confidence low = längengewichteter Median des Laufs unter 2 000 × 2 = 4 000 Rad/Werktag (Kalibrierung: 52 % der Zählquerschnitte innerhalb Faktor 2).
+RSV heißt seit cycling_rules.yaml 0.10.0 „Radvorrangroute / Radroute+“: Der Code bleibt, die Kategorie ist aber keine Radschnellverbindung im Sinne der FGSV. FGSV-Kandidat = Lauf ≥ 10 km mit ≥ 2 000 Rad/Werktag auf mehr als 50% der Länge (Annahme A5, FGSV-Hinweise am Original prüfen). rsv_confidence low = längengewichteter Median des Laufs unter 2 000 × 2 = 4 000 Rad/Werktag (Kalibrierung c02: 48 % der Zählquerschnitte innerhalb Faktor 2, Spearman 0,57; Stand cycling_rules 0.10.0, reports/cycle_demand.md).
 
 - RSV-Läufe (verschieden, über alle Korridore): 17, davon FGSV-Kandidaten 1, rsv_confidence low 7.
 - RSV-km: 72.8, davon low 28.5, FGSV-Kandidat 11.5, ohne Lauf (Kontinuität/Override) 0.1.

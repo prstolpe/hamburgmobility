@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-11T21:13:41+00:00",
-  "rules_version": "0.20.0",
+  "generated": "2026-11-11T21:42:43+00:00",
+  "rules_version": "0.21.0",
   "runs": 500,
   "seed": 20261104,
   "hvs_km": 690.830212,
@@ -25,6 +25,13 @@
   "classification_reviewed": 0,
   "transects_measured": 0,
   "overrides": 7,
+  "invariants_ok": 7,
+  "invariants_violated": 2,
+  "invariants_violated_ids": [
+    "V-INV-05",
+    "V-INV-09"
+  ],
+  "invariants_unexpected": [],
   "oat_km": {
     "thresholds.conn_gow:-": 321.29,
     "thresholds.conn_gow:+": 83.355,

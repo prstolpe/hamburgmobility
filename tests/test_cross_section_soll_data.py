@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from config.schema.cycling_model import FACILITIES
+from pipeline.lib import invariants as iv
 from pipeline.lib import profile as pf
 from pipeline.lib.manifest import REPO_ROOT
 from pipeline.lib.rules import load_cycling_rules, load_design_rules, load_rules
@@ -113,24 +114,14 @@ def test_l07_reduction_only_on_gow30(out):
     assert out.loc[~flagged, "capacity_reduction_dtv"].isna().all()
 
 
-V_INV_05_STEPS = {"D1", "D2", "D3", "fallback", "D4"}
-
-
 def v_inv_05_violations(out) -> pd.DataFrame:
-    """Segments that fit in S-XS-06 (feasibility of their category) but not in c06 after at most D4."""
-    target = {"GOW50": "feasibility_GOW50", "GOW30": "feasibility_GOW30_narrow", "ETW30": "feasibility_ETW30"}
-    final = pd.read_parquet(FINAL, columns=["segment_id", *target.values()]).set_index("segment_id")
-    feas = pd.Series(None, index=out.index, dtype=object)
-    for cat, col in target.items():
-        m = out["cat_final"] == cat
-        feas[m] = out.loc[m, "segment_id"].map(final[col]).to_numpy()
-    rated = out["fit_class"].notna() & (feas == "fits")
-    steps = out["degrade_steps_applied"].fillna("").str.split("|").map(lambda xs: {x for x in xs if x} - {"D6", "D7"})
-    ok = out["fit_class"].isin(["fits", "fits_after_degrade"]) & steps.map(lambda s: s <= V_INV_05_STEPS)
-    return out[rated & ~ok]
+    """Segments that fit in S-XS-06 but not in c06 after at most D4 (logic in pipeline/lib/invariants.py)."""
+    final = pd.read_parquet(FINAL, columns=["segment_id", "feasibility_GOW50", "feasibility_GOW30_narrow",
+                                            "feasibility_ETW30"])
+    return iv.v_inv_05_violations(out, final)
 
 
-@pytest.mark.xfail(reason="V-INV-05 auf realen Daten verletzt (1 069 Abschnitte, 134 km): Ladezone baut keine Stufe ab, "
+@pytest.mark.xfail(reason="V-INV-05 auf realen Daten verletzt (Stand P6: 1 075 Abschnitte, 135 km): Ladezone baut keine Stufe ab, "
                           "Busfahrbahn ETW30 6,50 m und GOW30-Profil mit Radweg/Radfahrstreifen sind breiter als required_width; "
                           "docs/open_questions.md, Review 2026-11 P3 V-INV-05", strict=True)
 def test_v_inv_05_fits_in_s_xs_06_fits_after_d4(out):

@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 
 from pipeline.lib.area import area_label, district_names, sample_by_district
+from pipeline.lib import invariants as inv
 from pipeline.lib import sensitivity as sens
 from pipeline.lib import validation as val
 from pipeline.lib.crs import WORK_CRS
@@ -518,6 +519,36 @@ def section_limits(area: pd.DataFrame, metrics: dict) -> list[str]:
             "- Die Monte-Carlo-Faktoren sind unabhängig und gleichverteilt; Abhängigkeiten zwischen Annahmen sind nicht abgebildet.", ""]
 
 
+INV_STATUS = {"ok": "ok", "violated": "**verletzt**", "not_checked": "nicht geprüft"}
+
+
+def section_invariants(rules) -> tuple[list[str], dict]:
+    """Invariants V-INV-01..09 (rules.yaml validation.invariants, Review 2026-11 structural rec. 6)."""
+    results = {r.id: r for r in inv.run_all(rules)}
+    lines = ["## Invarianten (rules.yaml validation.invariants)", "",
+             "Querbeziehungen zwischen rules.yaml, cycling_rules.yaml und design_rules.yaml, geprüft auf den aktuellen "
+             "Dateien in data/interim (pipeline/lib/invariants.py). „erwartet verletzt“ = bekannte Verletzung mit offener "
+             "Frage (Test strict xfail). Die Radnetzstufen (c04–c07) laufen bei `make rerun` parallel zu dieser Stufe; "
+             "maßgeblich ist der Stand der genannten Dateien.", "",
+             "| ID | Invariante | Befund | erwartet | Ergebnis | Detail | Eingang (Stand) |",
+             "| --- | --- | --- | --- | --- | --- | --- |"]
+    for i in rules.validation.invariants:
+        r = results[i.id]
+        exp = "gilt" if i.expected == "holds" else "verletzt"
+        lines.append(f"| {i.id} | {i.text} | {', '.join(i.finding)} | {exp} | {INV_STATUS[r.status]} | {r.detail} | "
+                     f"{inv.file_times(r.inputs) or 'Regeldateien'} |")
+    n_ok = sum(r.ok for r in results.values())
+    n_bad = sum(r.status == "violated" for r in results.values())
+    unexpected = [i.id for i in rules.validation.invariants
+                  if results[i.id].status != "not_checked" and results[i.id].ok != (i.expected == "holds")]
+    lines += ["", f"Ergebnis: {n_ok} erfüllt, {n_bad} verletzt, {len(results) - n_ok - n_bad} nicht geprüft"
+              + (f"; **abweichend von der Erwartung: {', '.join(unexpected)}**" if unexpected else
+                 "; alle wie erwartet") + ".", ""]
+    return lines, {"invariants_ok": n_ok, "invariants_violated": n_bad,
+                   "invariants_violated_ids": [k for k, r in results.items() if r.status == "violated"],
+                   "invariants_unexpected": unexpected}
+
+
 def section_open_questions() -> list[str]:
     lines = ["## Offene Fragen (docs/open_questions.md)", "", "Alle noch offenen Punkte, nach Abschnitt:", ""]
     if not OPEN_QUESTIONS.exists():
@@ -541,6 +572,8 @@ def write_report(parts: list[list[str]], checks: list[dict], rules, metrics: dic
             f"{_p(metrics['top30_mean_overlap'])} gleich.",
             f"- Datenqualität: Conflation-Treffer {_p(metrics['conflation_hit_km'])} der km, OSM-Gestaltungsmerkmale im Mittel "
             f"{_p(metrics['osm_tags_mean'])} bekannt, ohne Ist-Tempo {_p(metrics['missing_speed'])}.",
+            f"- Invarianten: {metrics['invariants_ok']} erfüllt, {metrics['invariants_violated']} verletzt "
+            f"({', '.join(metrics['invariants_violated_ids']) or 'keine'}; Abschnitt „Invarianten“).",
             "- Manuelle Stichproben, Rückmelderunde und externe Prüfung sind offen.", ""]
     if previous:
         prev = previous.get("hvs_gow_share")
@@ -591,8 +624,9 @@ def main() -> int:
     sens_lines, m3 = section_sensitivity(area, rules, res, districts, viewers, geoms)
     dq_lines, m4 = section_quality(area, rules)
     sample_lines, m5 = section_samples(rules)
-    metrics = {**m1, **m2, **m3, **m4, **m5}
-    parts = [section_status(m5), hvs_lines, tempo_lines, sens_lines, dq_lines, sample_lines, section_baseline(area),
+    inv_lines, m6 = section_invariants(rules)
+    metrics = {**m1, **m2, **m3, **m4, **m5, **m6}
+    parts = [section_status(m5), inv_lines, hvs_lines, tempo_lines, sens_lines, dq_lines, sample_lines, section_baseline(area),
              section_limits(area, metrics), section_open_questions()]
     previous = json.loads(METRICS_PATH.read_text(encoding="utf-8")) if METRICS_PATH.exists() else None
     write_report(parts, checks, rules, metrics, previous)

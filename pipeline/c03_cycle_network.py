@@ -460,7 +460,7 @@ def write_report(ctx: dict) -> None:
               f"{p.fgsv_min_length_m / 1000:.0f} km mit ≥ {_fmt(p.rsv_trigger)} Rad/Werktag auf mehr als {p.fgsv_predominant_share:.0%} "
               "der Länge (Annahme A5, FGSV-Hinweise am Original prüfen). rsv_confidence low = längengewichteter Median des Laufs "
               f"unter {_fmt(p.rsv_trigger)} × {p.rsv_band_factor:g} = {_fmt(p.rsv_trigger * p.rsv_band_factor)} Rad/Werktag "
-              "(Kalibrierung: 52 % der Zählquerschnitte innerhalb Faktor 2).", "",
+              "(Kalibrierung c02: 48 % der Zählquerschnitte innerhalb Faktor 2, Spearman 0,57; Stand cycling_rules 0.10.0, reports/cycle_demand.md).", "",
               f"- RSV-Läufe (verschieden, über alle Korridore): {len(runs)}, davon FGSV-Kandidaten {n_fgsv}, "
               f"rsv_confidence low {n_low}.",
               f"- RSV-km: {_fmt(rsv_km.sum(), 1)}, davon low {_fmt(rsv_km[conf.eq('low').to_numpy()].sum(), 1)}, "
