@@ -1,6 +1,6 @@
 # Knotenpunkte: Soll-Knotentyp und Radverkehrsführung (Stufe c07)
 
-Erzeugt 2026-11-08T14:59:06+00:00 mit pipeline/c07_junctions.py · design_rules.yaml 0.8.0 · nicht amtlicher Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.
+Erzeugt 2026-11-11T12:49:28+00:00 mit pipeline/c07_junctions.py · design_rules.yaml 0.9.0 · nicht amtlicher Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.
 
 ## Kurzfassung
 
@@ -68,7 +68,7 @@ Zeilen Ist aus OSM, Spalten Soll. Geschützte Kreuzung, eingefärbte Fläche, Ge
 | `dtv_partial` | DTV fehlt an einem GOW/SW-Arm; Zufluss ist eine Untergrenze | 698 |
 | `dtv_unknown` | DTV fehlt an allen GOW/SW-Armen | 665 |
 | `space_unknown` | keine ALKIS-Verkehrsfläche am Knoten; Platz unbekannt | 678 |
-| `condition_unknown` | Bedingung wegen fehlender Werte unbekannt; Typ nach J-M-05.on_unknown | 36 |
+| `condition_unknown` | Bedingung wegen fehlender Werte unbekannt; Typ nach J-M-05.on_unknown | 37 |
 | `category_alias` | Kategorie über category_alias abgebildet (ETW_ERF → ETW30) | 730 |
 | `cycle_path_ignored` | eigenständiger Radweg an einem Straßenknoten; Paar aus Straßen gebildet | 323 |
 | `no_rule` | keine Zeile der Entscheidungstabelle passt | 0 |
