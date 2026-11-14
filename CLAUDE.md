@@ -51,7 +51,9 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
 - Erweiterung ab Prompt 14 (prompts/14_cycling_setup.md bis 21_web_validation_cycling.md):
   hierarchisches Radnetz nach den fünf Prinzipien, Führungsform/Breite, Soll-Querschnitt, Knotenpunkte.
 - Folgeaufträge (noch offen): prompts/22_target_scenario.md (Zielszenario statt heutiger Mengen),
-  prompts/23_junction_performance.md (Wartezeiten an Knotenpunkten Ist/Soll).
+  prompts/23_junction_performance.md (Wartezeiten an Knotenpunkten Ist/Soll),
+  prompts/24_redesign_swiss_plain_language.md (Redesign der Webseite, einfache Sprache, schlankere Regeln;
+  Teil A in docs/redesign/, Teil B erst nach docs/redesign/decisions.md).
 - docs/guide_radnetz.md – Methodik mit Quellen. Bei Fachfragen zum Radnetz zuerst hier nachsehen.
 - config/cycling_rules.yaml – Radnetzkategorien, Prinzipien, Trennungsmatrix, Breiten.
 - config/design_rules.yaml – Fahrstreifen, Lage der Radanlagen, Raumaufteilung, Knotenpunkte.

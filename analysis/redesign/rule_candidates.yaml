@@ -1,0 +1,92 @@
+# Kandidaten für Vereinfachung, Zusammenlegung oder Streichung (Prompt 24, A1.5 / A6).
+# Nicht aufgeführte Regeln: keep. Belege (Zahlen aus dem aktuellen Lauf) stehen in docs/redesign/01_rules_inventory.csv
+# und docs/redesign/06_rule_consolidation.md. group = Vorschlag in 06_rule_consolidation.md.
+
+N7:
+  action: merge
+  group: K1
+  reason: "Markiert genau dieselben 74 Abschnitte wie N2 (Jaccard 1,00); N7 ist nur der Glättungsvorschlag zur N2-Insel. Zusammenlegen: N2 meldet die Insel samt vorgeschlagener Kategorie."
+N2:
+  action: merge
+  group: K1
+  reason: "Nimmt N7 auf (siehe N7)."
+JC-05:
+  action: merge
+  group: K2
+  reason: "Gleiches applies_to wie JC-02 (signal_protected); an allen 840 Knoten gemeinsam vergeben (Jaccard 1,00). Als Baustein der geschützten Kreuzung in JC-02 aufnehmen; source_type des Bausteins bleibt assumption."
+JC-02:
+  action: merge
+  group: K2
+  reason: "Nimmt JC-05 auf (siehe JC-05)."
+J-02:
+  action: merge
+  group: K3
+  reason: "same_as J-01 und in evaluation_order direkt nach J-01; nur das Armpaar unterscheidet sich (GOW50+GOW30). Als legs 'GOW50+GOW50|GOW30' in J-01 aufnehmen."
+J-01:
+  action: merge
+  group: K3
+  reason: "Nimmt J-02 auf (siehe J-02)."
+C-IMP-06:
+  action: merge
+  group: K4
+  reason: "Gleicher Faktor wie C-IMP-05 (gow30_cycle_lane); die Notiz nennt C-IMP-06 selbst eine vorläufige Kopie. Eine Regel ‚Hauptstraße bis Tempo 30‘ mit und ohne Radstreifen."
+C-IMP-05:
+  action: merge
+  group: K4
+  reason: "Nimmt C-IMP-06 auf (siehe C-IMP-06)."
+C-FAC-03:
+  action: merge
+  group: K5
+  reason: "Beschreibt nur, wie S-04 geprüft wird (Spitzenstundenanteil); erscheint nie in rule_trace, dort steht immer S-04. Wert motor_peak_hour_share zu S-04 verschieben."
+S-04:
+  action: merge
+  group: K5
+  reason: "Nimmt C-FAC-03 auf (siehe C-FAC-03)."
+N6:
+  action: remove
+  group: K6
+  reason: "Seit Review 2026-11 F09 nur noch ein Verweis auf design_rules.junctions; greift im Lauf nie selbst. category_rank zu J-M-04 verschieben, der Berichtsteil bleibt in reports/junctions.md."
+PRF-07:
+  action: remove
+  group: K7
+  reason: "Keine Regel, sondern ein Hinweis, dass PL-02 und PL-05 nicht prüfbar sind; PL-02 ist inaktiv, das Flag pl02_unchecked tritt nie auf. Hinweis in die note von PL-05 verschieben."
+J-11:
+  action: remove
+  group: K8
+  reason: "Hamburg hat keine Straßenbahn (GTFS ohne Straßenbahnrouten, reports/junctions.md); greift nie (0 Knoten). Ohne Straßenbahn auch kein Bedarf an der Zeile."
+P-COM-03:
+  action: simplify
+  group: K9
+  reason: "Ohne Datengrundlage (kein Höhenmodell, C-PRI-16 unavailable); wird nie berechnet. status inactive statt draft, auf der Webseite nicht als Prüfung zeigen."
+P-ATT-02:
+  action: simplify
+  group: K9
+  reason: "Ohne Datengrundlage (keine Lärmkarte, C-PRI-16 unavailable); wird nie berechnet. status inactive statt draft."
+C-NET-11:
+  action: remove
+  group: K10
+  reason: "Entscheidet an 5 Kanten (0,1 km) die Radnetzkategorie; eigener Code und Test. Kontinuität (P-COH-04) wird weiter gemessen und gemeldet."
+C-NET-10:
+  action: simplify
+  group: K11
+  reason: "Parallelregel: entscheidet an 10 Kanten (1,3 km), feuert an 20; aufwendiger Wegsuch-Code. Vorschlag: nur noch melden (Flag), nicht mehr umlegen."
+
+# Bewusst behalten (greifen im aktuellen Lauf nie oder selten, decken aber einen Fall ab)
+C-RUR-01:
+  action: keep
+  reason: "Inaktiv (keine Datenquelle für außerorts); bleibt für GOW80/ETW60 nach CLAUDE.md-Ziel. Auf der Webseite nur auf Ebene 3."
+PL-02:
+  action: keep
+  reason: "Inaktiv wie die außerorts-Matrix; bleibt für die Aktivierung außerorts."
+J-10:
+  action: keep
+  reason: "Greift im Lauf nie, deckt aber planfreie Querung einer Hauptroute an einer Schnellstraße ab (sicherheitsrelevant)."
+J-15:
+  action: keep
+  reason: "Greift im Lauf nie, deckt aber einen eigenständigen Radweg an einer GOW50 ab (sicherheitsrelevant)."
+J-09:
+  action: keep
+  reason: "Entscheidet nur 1 Knoten, betrifft aber planfreie Querungen bei sehr hoher Belastung."
+J-08:
+  action: keep
+  reason: "Entscheidet 6 Knoten; einzige Zeile für einen eigenständigen Radweg, der eine GOW30 quert."
