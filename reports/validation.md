@@ -1,6 +1,6 @@
 # Validierung und Sensitivität
 
-Erzeugt: 2026-11-11T21:42:43+00:00 von `pipeline/validate.py`, rules.yaml 0.21.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
+Erzeugt: 2026-11-14T22:28:36+00:00 von `pipeline/validate.py`, rules.yaml 0.21.1. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
 
 ## Kurzfassung
 
@@ -11,7 +11,7 @@ Erzeugt: 2026-11-11T21:42:43+00:00 von `pipeline/validate.py`, rules.yaml 0.21.0
 - Invarianten: 7 erfüllt, 2 verletzt (V-INV-05, V-INV-09; Abschnitt „Invarianten“).
 - Manuelle Stichproben, Rückmelderunde und externe Prüfung sind offen.
 
-Vergleich mit dem vorigen Lauf (2026-11-11T21:26:50+00:00, rules.yaml 0.21.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 213 → 2 213 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
+Vergleich mit dem vorigen Lauf (2026-11-14T22:11:26+00:00, rules.yaml 0.21.1): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 213 → 2 213 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
 
 ## Prüfungen dieses Laufs
 
@@ -239,7 +239,7 @@ Mögliche Datenfehler nach Straße (längste zuerst, höchstens 30):
 
 ## 3. Sensitivitätsanalyse
 
-Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01 je Lauf); fachliche Korrekturen bleiben außen vor. Basis: rules.yaml 0.21.0, 34 702 Abschnitte, 4387,3 km.
+Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01 je Lauf); fachliche Korrekturen bleiben außen vor. Basis: rules.yaml 0.21.1, 34 702 Abschnitte, 4387,3 km.
 
 ### 3.1 Einzelvariation (V-SENS-01): jede Annahme ±20 %
 

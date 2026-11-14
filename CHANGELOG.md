@@ -719,3 +719,16 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   sie nach `meta.json` (`glossary`), Kategorienamen in `meta.categories[*].label` kommen von dort (`label_de` bleibt).
 - Export: `districts/<bezirk>.json` (Kennzahlen und Top-5-Listen), `search_junctions.json`, `cycle_mesh_gaps.geojson`;
   Anzeigeparameter in `config/project.yaml` `web.overview`.
+
+## rules.yaml 0.21.1, cycling_rules.yaml 0.11.2, design_rules.yaml 0.9.1 – 2026-11-14 (Redesign 2026-11, Paket 4)
+- Nur Text, keine Bedingung und kein Wert geändert (Entscheidung E5 c): neue Felder `label_plain`, `explain_plain`,
+  `why` an allen 196 Regeln, `label_plain`/`explain_plain` an den 7 Kategorien, `label_plain` an den 58 Schwellen.
+- Versionsgeschichte aus `description`/`note` von 60 Regeln in ein neues Feld `history` verschoben; der fachliche
+  Inhalt bleibt in `description`/`note`.
+- Schema (`config/schema/rules_model.py`) und Herkunftsprüfung (`provenance.py`): die vier Felder sind reiner Text.
+- Export: der Hinweis für Radfahrende im Kreuzungs-Steckbrief kommt aus `explain_plain` von JC-01…JC-06 (vorher Text im
+  Code, `pipeline/lib/junctions.py`, bleibt als Rückfall).
+- Glossar: oberste Radnetzstufe heißt „Radvorrangroute“ (vorher „Radschnellweg“; sie ist keine Radschnellverbindung
+  nach FGSV, siehe cycle_categories.RSV.label_note).
+- Nachweis: Neurechnung ab `network` mit den neuen Dateien, alle Dateien in `data/interim` hashgleich
+  (docs/redesign/impl_rule_language.md).

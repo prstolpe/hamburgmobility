@@ -66,7 +66,7 @@ function cyclingGroups(layer, meta) {
       })));
     case "coff":
       return [
-        { key: "ref", label: "Radnetz im Ziel: Radschnellwege und Radrouten (Entwurf, zum Vergleich)", color: REFERENCE_COLOR, width: 2, dash: null,
+        { key: "ref", label: "Radnetz im Ziel: Radvorrangrouten und Radrouten (Entwurf, zum Vergleich)", color: REFERENCE_COLOR, width: 2, dash: null,
           reference: true, src: "cyc", srcLayer: "cycle_network", filter: ["in", ["get", "cc"], ["literal", ["RSV", "HAUPT"]]] },
         ...at(styled(OFFICIAL_STYLE, "grp", c.official_status)),
       ];

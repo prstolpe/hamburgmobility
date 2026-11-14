@@ -79,13 +79,19 @@ class Labels:
     cycle_cats: dict            # code -> label_de (cycling_rules.yaml)
     degrade: dict               # D1..D7 -> action (design_rules.yaml)
     rows: dict                  # J-01.. -> decision table row
+    treatments: dict = None     # JC-01.. -> explain_plain (design_rules.yaml; redesign E5: text only in the rule file)
 
     @classmethod
     def from_rules(cls, texts: dict, cyc: CyclingRuleSet, des: DesignRuleSet) -> "Labels":
         degrade = {d["step"]: d["action"] for d in des.cross_section_allocation["degrade_cascade_if_not_fit"]}
         rows = {r.id: r.model_dump(by_alias=True) for r in des.junctions.decision_table.rows}
         cats = {c: cyc.cycle_categories[c]["label_de"] for c in CYCLE_CATS}
-        return cls(t=texts["cycling"], cycle_cats=cats, degrade=degrade, rows=rows)
+        treatments = {}
+        for jc in des.junctions.cyclist_treatment:
+            d = jc.model_dump(by_alias=True) if hasattr(jc, "model_dump") else dict(jc)
+            if d.get("explain_plain"):
+                treatments[d["id"]] = d["explain_plain"]
+        return cls(t=texts["cycling"], cycle_cats=cats, degrade=degrade, rows=rows, treatments=treatments)
 
     def cat(self, code) -> dict:
         code = code if isinstance(code, str) else NO_CYCLE_CATEGORY
@@ -283,7 +289,9 @@ def junction_profile(r: pd.Series, labels: Labels, version: str) -> dict:
         "action_needed": bool(r["action_needed"]) if not _missing(r["action_needed"]) else False,
         "priority_rank": _int(r["priority_rank"]),
         "rule": _rule_text(r, labels),
-        "treatment": _str(r["treatment_text"]), "treatment_ids": _split(r["cyclist_treatment"]),
+        "treatment": " ".join(labels.treatments[i] for i in _split(r["cyclist_treatment"]) if i in (labels.treatments or {}))
+                     or _str(r["treatment_text"]),
+        "treatment_ids": _split(r["cyclist_treatment"]),
         "conflicts": [t["junction_flags"].get(k, k) for k in _split(r["conflict_flags"])],
         "confidence": {"code": _str(r["confidence"]), "text": labels.text("confidence", r["confidence"])},
         "top_cycle_cat": labels.cat(r["top_cycle_cat"]),

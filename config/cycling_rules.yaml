@@ -8,8 +8,8 @@
 # Klassentabellen (demand.intensity_classes_peak_h) sind halboffen [min, max): ein Wert auf der Grenze gehört zur
 #   oberen Klasse; intensity_upgrade greift darum ab der Untergrenze (>=) einer Klasse (F27).
 meta:
-  version: 0.11.1
-  date: 2026-11-11
+  version: 0.11.2
+  date: 2026-11-14
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
 
@@ -73,43 +73,43 @@ principles:
     source: [DCE_INFRA, CROW_OW_2016]
     source_type: swov_crow
     checks:
-      - {id: P-COH-01, metric: 'max_mesh_side_m je Kategorie', rule: 'Masche > mesh_m.max -> Lückenflag', source_type: swov_crow, status: draft}
-      - {id: P-COH-02, metric: 'connected_components', rule: 'jede Kategorie-Ebene inkl. höherer Ebenen zusammenhängend', source_type: swov_crow, status: draft}
-      - {id: P-COH-03, metric: 'destination_coverage', rule: 'Anteil Ziele (Schulen, Zentren, Schnellbahnhalte) <= coverage_m vom HAUPT/RSV-Netz', coverage_m: 300, source_type: assumption, status: draft}
-      - {id: P-COH-04, metric: 'category_continuity', rule: 'Route behält Kategorie und Führungsform über Knoten; Wechsel nur an Knoten mit sicherer Überleitung', source_type: swov_crow, status: draft}
+      - {id: P-COH-01, label_plain: "Netz dicht genug", explain_plain: "Lücke, wenn die Maschen des Radnetzes größer sind als vorgesehen.", why: "Die niederländische Quelle gibt je Stufe eine Maschenweite vor. Größere Maschen zeigen eine Lücke.", metric: 'max_mesh_side_m je Kategorie', rule: 'Masche > mesh_m.max -> Lückenflag', source_type: swov_crow, status: draft}
+      - {id: P-COH-02, label_plain: "Netz hängt zusammen", explain_plain: "Jede Stufe des Radnetzes muss zusammenhängen.", why: "Ein Netz mit getrennten Teilen führt nicht überall hin. Darum muss jede Stufe zusammenhängen.", metric: 'connected_components', rule: 'jede Kategorie-Ebene inkl. höherer Ebenen zusammenhängend', source_type: swov_crow, status: draft}
+      - {id: P-COH-03, label_plain: "Ziele erreichbar", explain_plain: "Anteil der Schulen, Zentren und Bahnhöfe höchstens 300 Meter von einer Radroute.", why: "Das Netz soll Schulen, Zentren und Bahnhöfe erreichen. Die 300 Meter hat das Projekt gesetzt.", metric: 'destination_coverage', rule: 'Anteil Ziele (Schulen, Zentren, Schnellbahnhalte) <= coverage_m vom HAUPT/RSV-Netz', coverage_m: 300, source_type: assumption, status: draft}
+      - {id: P-COH-04, label_plain: "Route bleibt gleich", explain_plain: "Eine Route behält ihre Stufe und die Art des Radwegs über Kreuzungen hinweg.", why: "Eine Route soll ihre Stufe und Führung nur an sicheren Übergängen wechseln.", metric: 'category_continuity', rule: 'Route behält Kategorie und Führungsform über Knoten; Wechsel nur an Knoten mit sicherer Überleitung', source_type: swov_crow, status: draft}
   directness:
     description: 'Kurze Wege und Zeiten: geringe Umwege, wenig Halte'
     source: [DCE_INFRA, HESSEN_QS_2019]
     source_type: swov_crow
     checks:
-      - {id: P-DIR-01, metric: 'detour_factor (Netzweg / kürzester Weg auf allen befahrbaren Wegen)', thresholds: {RSV: 1.1, HAUPT: 1.2, BASIS: 1.3}, source_type: assumption, note: 'Werte als Annahme; CROW-Original prüfen', status: draft}
-      - {id: P-DIR-02, metric: 'stops_per_km (LSA, Wartepflicht)', thresholds: {RSV: 0.5, HAUPT: 1.0, BASIS: 2.0}, source_type: assumption, status: draft}
-      - {id: P-DIR-03, metric: 'time_loss_s_per_km', thresholds: {RSV: 30, HAUPT: 30}, source: HESSEN_QS_2019, source_type: de_regelwerk, status: draft}
+      - {id: P-DIR-01, label_plain: "Kein großer Umweg", explain_plain: "Verhältnis von Route zu kürzestem Weg; ein großer Umweg zählt schlecht.", why: "Das Netz soll kurze Wege bieten. Die Grenzen je Stufe hat das Projekt gesetzt.", metric: 'detour_factor (Netzweg / kürzester Weg auf allen befahrbaren Wegen)', thresholds: {RSV: 1.1, HAUPT: 1.2, BASIS: 1.3}, source_type: assumption, note: 'Werte als Annahme; CROW-Original prüfen', status: draft}
+      - {id: P-DIR-02, label_plain: "Wenige Halte", explain_plain: "Wie oft man je Kilometer an Ampeln oder Vorfahrtstraßen anhalten muss.", why: "Das Netz soll wenig Halte haben. Die Grenzen je Stufe hat das Projekt gesetzt.", metric: 'stops_per_km (LSA, Wartepflicht)', thresholds: {RSV: 0.5, HAUPT: 1.0, BASIS: 2.0}, source_type: assumption, status: draft}
+      - {id: P-DIR-03, label_plain: "Wenig Zeitverlust", explain_plain: "Wie viele Sekunden je Kilometer man durch Halte verliert.", why: "Der Zeitverlust zeigt, wie zügig man vorankommt. Die Grenze von 30 Sekunden stammt aus Hessen.", metric: 'time_loss_s_per_km', thresholds: {RSV: 30, HAUPT: 30}, source: HESSEN_QS_2019, source_type: de_regelwerk, status: draft}
   safety:
     description: 'Verkehrssicherheit und soziale Sicherheit: Trennung bei Tempo- und Massendifferenz, sichere Knoten, belebte und beleuchtete Wege'
     source: [DCE_INFRA, SWOV_ROT_2022, CROW_GOW30_2023]
     source_type: swov_crow
     checks:
-      - {id: P-SAF-01, metric: 'facility_matches_separation_matrix', rule: 'Führungsform entspricht separation_matrix', source_type: swov_crow, status: draft}
-      - {id: P-SAF-02, metric: 'junction_type_matches', rule: 'Knotentyp entspricht design_rules.junctions', source_type: swov_crow, status: draft}
-      - {id: P-SAF-03, metric: 'social_safety', rule: 'beleuchtet und mit Sichtbezug zu Bebauung, sonst Flag bei Nutzung nachts', source_type: assumption, status: draft}
-      - {id: P-SAF-04, metric: 'injury_crashes_cyclists_per_km_5y', rule: 'Gewicht in Priorisierung', source_type: assumption, status: draft}
+      - {id: P-SAF-01, label_plain: "Passender Radweg", explain_plain: "Ob der Radweg zur Tabelle passt: welcher Radweg zu welcher Straße.", why: "Je nach Straße braucht das Rad eine andere Führung. Die Tabelle legt fest, welche passt.", metric: 'facility_matches_separation_matrix', rule: 'Führungsform entspricht separation_matrix', source_type: swov_crow, status: draft}
+      - {id: P-SAF-02, label_plain: "Passende Kreuzung", explain_plain: "Ob die Art der Kreuzung zum Ziel passt; derzeit nicht berechnet.", why: "Der Kreuzungstyp soll zur Zielregel für Kreuzungen passen.", metric: 'junction_type_matches', rule: 'Knotentyp entspricht design_rules.junctions', source_type: swov_crow, status: draft}
+      - {id: P-SAF-03, label_plain: "Beleuchtet", explain_plain: "Ob die Route beleuchtet ist.", why: "Beleuchtete Wege zählen zur sozialen Sicherheit. Diese Prüfung hat das Projekt gesetzt.", metric: 'social_safety', rule: 'beleuchtet und mit Sichtbezug zu Bebauung, sonst Flag bei Nutzung nachts', source_type: assumption, status: draft}
+      - {id: P-SAF-04, label_plain: "Unfälle", explain_plain: "Unfälle mit Radbeteiligung je Kilometer.", why: "Die Unfälle fließen in die Priorität ein. Diese Prüfung hat das Projekt gesetzt.", metric: 'injury_crashes_cyclists_per_km_5y', rule: 'Gewicht in Priorisierung', source_type: assumption, status: draft}
   comfort:
     description: 'Wenig Halte und Störungen, glatte Oberfläche, ausreichende Breite, geringe Steigungen, klare Wegweisung'
     source: [DCE_INFRA]
     source_type: swov_crow
     checks:
-      - {id: P-COM-01, metric: 'width_ok (Breite >= erforderliche Breite)', source_type: swov_crow, status: draft}
-      - {id: P-COM-02, metric: 'surface_smooth (asphalt/concrete)', rule: 'RSV/HAUPT: geschlossene Decke', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft}
-      - {id: P-COM-03, metric: 'max_gradient_pct', thresholds: {RSV: 4, HAUPT: 5}, source_type: assumption, note: 'Hamburg flach; nur Brücken/Rampen relevant', status: draft}
+      - {id: P-COM-01, label_plain: "Breit genug", explain_plain: "Ob der Radweg so breit ist wie nötig.", why: "Der Radweg soll mindestens so breit sein wie die Sollbreite seiner Führung.", metric: 'width_ok (Breite >= erforderliche Breite)', source_type: swov_crow, status: draft}
+      - {id: P-COM-02, label_plain: "Glatter Belag", explain_plain: "Ob die Route eine glatte Decke hat, etwa Asphalt.", why: "Auf wichtigen Routen soll eine geschlossene Decke liegen. Das nennt eine niederländische Gemeinde.", metric: 'surface_smooth (asphalt/concrete)', rule: 'RSV/HAUPT: geschlossene Decke', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft}
+      - {id: P-COM-03, label_plain: "Keine steilen Steigungen", explain_plain: "Steigung je Route; derzeit ohne Daten.", why: "Die Grenzen hat das Projekt gesetzt. Es gibt noch keine Höhendaten.", metric: 'max_gradient_pct', thresholds: {RSV: 4, HAUPT: 5}, source_type: assumption, note: 'Hamburg flach; nur Brücken/Rampen relevant', status: draft}
   attractiveness:
     description: 'Grün, ruhig, angenehm; nicht parallel zu sehr belasteten Hauptstraßen, wenn gleichwertige Alternative besteht'
     source: [DCE_INFRA]
     source_type: swov_crow
     checks:
-      - {id: P-ATT-01, metric: 'green_share (Bäume/Grünflächen im 20-m-Puffer)', source_type: assumption, status: draft}
-      - {id: P-ATT-02, metric: 'noise_exposure (Lärmkarte Lden)', source_type: assumption, status: draft}
-      - {id: P-ATT-03, metric: 'parallel_to_high_volume', rule: 'Route liegt an Straße mit DTV > 15000 und Parallelweg <= 200 m mit detour_factor <= Schwelle -> Alternativvorschlag', dtv: 15000, parallel_max_m: 200, source_type: assumption, status: draft}
+      - {id: P-ATT-01, label_plain: "Grün am Weg", explain_plain: "Anteil von Bäumen und Grün entlang der Route.", why: "Grün gehört zu den Merkmalen angenehmer Routen. Das Projekt misst es im Umkreis von 20 Metern.", metric: 'green_share (Bäume/Grünflächen im 20-m-Puffer)', source_type: assumption, status: draft}
+      - {id: P-ATT-02, label_plain: "Wenig Lärm", explain_plain: "Lärm entlang der Route; derzeit ohne Daten.", why: "Ruhe gehört zu den Merkmalen angenehmer Routen. Es fehlt noch eine Lärmkarte.", metric: 'noise_exposure (Lärmkarte Lden)', source_type: assumption, status: draft}
+      - {id: P-ATT-03, label_plain: "Nicht an lauten Hauptstraßen", explain_plain: "Hinweis, wenn eine Route an einer stark befahrenen Straße liegt und es einen ruhigen Weg daneben gibt.", why: "Routen sollen nicht an stark belasteten Straßen liegen, wenn es eine gleichwertige Alternative gibt.", metric: 'parallel_to_high_volume', rule: 'Route liegt an Straße mit DTV > 15000 und Parallelweg <= 200 m mit detour_factor <= Schwelle -> Alternativvorschlag', dtv: 15000, parallel_max_m: 200, source_type: assumption, status: draft}
 
 # Gewichte für den Routen-Gesamtscore (Annahme, Sensitivitätsanalyse)
 principle_weights: {cohesion: 0.2, directness: 0.25, safety: 0.3, comfort: 0.15, attractiveness: 0.1, source_type: assumption}
@@ -122,14 +122,31 @@ principle_scoring:
   source_type: assumption
   rules:
     - id: C-PRI-01
+      label_plain: "Punkte je Prinzip"
+      explain_plain: "Jede Prüfung gibt 0 bis 1 Punkt; daraus werden Punkte je Prinzip und eine Gesamtzahl."
+      why: "Die einzelnen Prüfungen haben verschiedene Einheiten. Mit Punkten lassen sie sich zusammenfassen."
       description: 'Score je Prüfung 0–1 nach score_forms; Prinzip-Score = Mittel der bewerteten Prüfungen (gleiches Gewicht); Gesamtscore mit principle_weights, umgelegt auf die Prinzipien mit Score. Fehlende Daten: die Prüfung zählt nicht zum Score und senkt die confidence (C-PRI-13). Nicht anwendbar (z. B. P-DIR-03 ohne Schwelle für BASIS, P-COM-01 bei Mischverkehr) zählt weder zum Score noch zur confidence. Routenwerte sind längengewichtete Mittel der Kanten mit Wert'
       score_forms: {P-COH-01: share, P-COH-02: share, P-COH-03: share, P-COH-04: inverse_ratio, P-DIR-01: excess, P-DIR-02: inverse_ratio, P-DIR-03: inverse_ratio, P-SAF-01: share, P-SAF-02: share, P-SAF-03: share, P-SAF-04: percentile_inverse, P-COM-01: ratio, P-COM-02: share, P-COM-03: inverse_ratio, P-ATT-01: ratio, P-ATT-02: share, P-ATT-03: share}
       forms_note: 'share = Wert selbst (Anteil 0–1); ratio = min(Wert / Sollwert, 1); inverse_ratio = min(Schwelle / Wert, 1), Wert 0 -> 1; excess = 1 - (Wert - Schwelle) / (Schwelle - 1), begrenzt auf 0–1 (Umwegfaktor bis zur Schwelle -> 1, doppelte Überschreitung -> 0); percentile_inverse = 1 - Perzentilrang unter allen Routen bzw. Kanten des Soll-Netzes'
       network_only: [P-COH-03]
       status: draft
     - id: C-PRI-02
-      description: 'Ist-Führung je Kante: Straßenkanten und ihre begleitenden Radwege (sidepath_of) übernehmen die Ist-Führung ihres Abschnitts aus rules.yaml S-FEAT-13 (Stufe c03b, Regeln von C-FAC-05, seit 0.11.0). Übrige Kanten (eigenständige Wege, Kanten ohne Abschnitt) aus der Bedingung der Ist-Widerstandsregel (C-IMP-xx, when, by_condition) und den OSM-cycleway-Werten; begleitende Radwege ohne Abschnittswert: Einrichtungsradweg, wenn nur eine Richtung befahrbar ist, sonst Zweirichtungsradweg. Eine Straßenkante mit begleitendem Radweg übernimmt dessen Breite, Belag und Beleuchtung (Radfahrende nutzen den Radweg). Fähren und Straßenkanten ohne Ist-Regel: unbekannt'
-      note: 'Review 2026-11 F26 (E9): bis 0.10.0 eigene Definition aus dem Radgraphen (jeder in beiden Richtungen befahrbare begleitende Radweg = Zweirichtungsradweg; Radweg-Tag ohne begleitenden Radweg = Fahrbahnführung); jetzt eine Ist-Führung je Abschnitt für c04, c05 und s08 (Invariante V-INV-08)'
+      label_plain: "Radweg heute je Wegstück"
+      explain_plain: "Für jedes Wegstück wird die heutige Art des Radwegs bestimmt, wie beim Straßenstück."
+      why: "Das Straßenstück und das Wegstück sollen gleich bewertet werden. Nur so sind die Ergebnisse vergleichbar."
+      description: >-
+        Ist-Führung je Kante: Straßenkanten und ihre begleitenden Radwege (sidepath_of) übernehmen die Ist-Führung
+        ihres Abschnitts aus rules.yaml S-FEAT-13 (Stufe c03b, Regeln von C-FAC-05). Übrige Kanten (eigenständige
+        Wege, Kanten ohne Abschnitt) aus der Bedingung der Ist-Widerstandsregel (C-IMP-xx, when, by_condition) und den
+        OSM-cycleway-Werten; begleitende Radwege ohne Abschnittswert: Einrichtungsradweg, wenn nur eine Richtung
+        befahrbar ist, sonst Zweirichtungsradweg. Eine Straßenkante mit begleitendem Radweg übernimmt dessen Breite,
+        Belag und Beleuchtung (Radfahrende nutzen den Radweg). Fähren und Straßenkanten ohne Ist-Regel: unbekannt
+      note: >-
+        Eine Ist-Führung je Abschnitt für c04, c05 und s08 (Invariante V-INV-08)
+      history:
+        - "seit 0.11.0: Ist-Führung der Straßenkanten aus S-FEAT-13 (Regeln von C-FAC-05)"
+        - "bis 0.10.0: eigene Definition aus dem Radgraphen (jeder in beiden Richtungen befahrbare begleitende Radweg = Zweirichtungsradweg; Radweg-Tag ohne begleitenden Radweg = Fahrbahnführung)"
+        - "Review 2026-11 F26 (E9): eine Ist-Führung je Abschnitt"
       by_condition: {cycle_street: cycle_street, own_path: own_path, separated_track: separated_oneway_both, low_speed_access_road: mixed, low_speed_with_lane: cycle_lane, low_speed_mixed: mixed, other: mixed}
       lane_upgrade: cycle_lane
       lane_upgrade_note: 'Straßenkante mit cycleway*=lane|opposite_lane (Wert im impedance_trace) wird cycle_lane, auch bei Ist-Tempo > 30 (C-IMP-07)'
@@ -137,6 +154,9 @@ principle_scoring:
       sidepath_twoway: separated_twoway
       status: draft
     - id: C-PRI-03
+      label_plain: "Punkte: passender Radweg"
+      explain_plain: "Ein Radweg, der zur Tabelle passt, gibt volle Punkte; teilweise passend gibt weniger."
+      why: "Die Tabelle legt fest, welche Führung passt. Der Punktwert zeigt, wie gut die heutige dazu passt."
       description: 'P-SAF-01: Ist-Führung gegen die Soll-Führung der Trennungsmatrix (cat_final x cycle_cat_final; begleitende Radwege nach ihrer Straße, eigenständige Wege own_path). Voll erfüllt (satisfies) -> 1, teilweise (partial oder Ist = fallback der Zelle) -> partial_score, sonst 0. Soll-Führung = preferred bzw. all der Zelle'
       partial_score: 0.5
       satisfies:
@@ -153,63 +173,116 @@ principle_scoring:
       partial_note: 'Zweirichtungsradweg statt beidseitiger Einrichtungsradwege (S-03); Mischverkehr oder baulicher Radweg statt Fahrradstraße auf einer ETW30-Hauptroute (Radweg: Entscheidung prstolpe 2026-11-07, open_questions 125); Radweg neben der Straße statt eigener Trasse (SW, RSV in Fußgängerzonen). Radfahrstreifen erfüllen Mischverkehr nicht (S-02)'
       status: draft
     - id: C-PRI-04
+      label_plain: "Punkte: Umweg"
+      explain_plain: "Umweg je Route und für zufällige Wege im Netz."
+      why: "Der Umweg wird je Route und für zufällige Wege im Netz gemessen. So lässt sich die Grenze der Stufe prüfen."
       description: 'P-DIR-01 Umwegfaktor (Länge, ungerichtet, gleich für Ist und Soll): (a) je Route Länge der Route / kürzester Weg zwischen ihren Enden auf allen befahrbaren Kanten der Hauptkomponente; verzweigte Routen ohne Wert. (b) Netz: od_pairs_per_category zufällige OD-Paare je Kategorie (RSV, HAUPT, BASIS) zwischen Knoten des Netzes dieser Ebene mit höheren Ebenen, Luftlinie im Band cycle_categories.<Kategorie>.trip_length_km; Netzweg auf dieser Ebene / kürzester Weg auf allen befahrbaren Kanten'
       od_pairs_per_category: 200
       seed: 42
       status: draft
     - id: C-PRI-05
-      description: 'P-DIR-02/03 Halte und Zeitverlust je Route: ein Halt an jeder LSA (OSM highway=traffic_signals) an Knoten der Route und an inneren Knoten ihrer Kanten, und an jedem Knoten ohne LSA, an dem eine vorfahrtberechtigte Straße (C-GRAPH-05) anliegt, wenn mindestens eine der Routenkanten dort (an den Routenenden: die eine Kante) nicht vorfahrtberechtigt ist, wie die Knotenwartezeiten im Radgraphen; begleitende Radwege haben den Vorrang ihrer Straße. Zeitverlust = Halte x routing_impedance.factors signal_delay_s bzw. give_way_delay_s. Kanten: Halte der Kante (LSA, Wartepflicht an beiden Enden) je km. Soll = Ist bis Prompt 20 (Soll-Knotentypen)'
+      label_plain: "Punkte: Halte"
+      explain_plain: "Halte und Zeitverlust je Route an Ampeln und Vorfahrtstraßen."
+      why: "Halte und Zeitverlust werden gezählt. So lassen sich die Grenzen der Stufen prüfen."
+      description: >-
+        P-DIR-02/03 Halte und Zeitverlust je Route: ein Halt an jeder LSA (OSM highway=traffic_signals) an Knoten der
+        Route und an inneren Knoten ihrer Kanten, und an jedem Knoten ohne LSA, an dem eine vorfahrtberechtigte Straße
+        (C-GRAPH-05) anliegt, wenn mindestens eine der Routenkanten dort (an den Routenenden: die eine Kante) nicht
+        vorfahrtberechtigt ist, wie die Knotenwartezeiten im Radgraphen; begleitende Radwege haben den Vorrang ihrer
+        Straße. Zeitverlust = Halte x routing_impedance.factors signal_delay_s bzw. give_way_delay_s. Kanten: Halte
+        der Kante (LSA, Wartepflicht an beiden Enden) je km. Soll = Ist
+      history:
+        - "Soll = Ist bis Prompt 20 (Soll-Knotentypen)"
       status: draft
     - id: C-PRI-06
+      label_plain: "Punkte: Licht"
+      explain_plain: "Anteil der beleuchteten Strecke."
+      why: "Der Punktwert zeigt, wie viel der Strecke beleuchtet ist. Der Sichtbezug zu Gebäuden wird nicht geprüft."
       description: 'P-SAF-03 soziale Sicherheit: Anteil beleuchteter Länge an der Länge mit bekanntem OSM-lit-Wert; Sichtbezug zu Bebauung wird nicht geprüft. Soll: beleuchtet (soll_lit)'
       lit_values: ['yes', '24/7', automatic, limited, interval, sunset-sunrise, dusk-dawn]
       unlit_values: ['no', disused]
       soll_lit: true
       status: draft
     - id: C-PRI-07
+      label_plain: "Punkte: Unfälle"
+      explain_plain: "Unfälle mit Radbeteiligung je Kilometer im Vergleich zu allen anderen Routen."
+      why: "Der Wert bleibt ein Hinweis auf Unfallhäufungen. Er sagt nichts über die Wirkung eines Umbaus."
       description: 'P-SAF-04 Unfälle: Unfälle mit Radbeteiligung (Unfallatlas IstRad, alle Schweregrade, Jahre aus sources.yaml) je Kante, Zuordnung zum nächsten Kantenstück höchstens rules.yaml P-RISK-01 snap_m entfernt; je km (Länge mindestens P-RISK-01 min_length_m) über den Zeitraum. Score = 1 - Perzentilrang. Soll = Ist (keine Prognose der Wirkung; der Wert bleibt Hinweis auf Unfallhäufungen). Nur Summen je Kante und Route werden gespeichert'
       status: draft
     - id: C-PRI-08
+      label_plain: "Punkte: Breite"
+      explain_plain: "Heutige Breite des Radwegs im Vergleich zur nötigen Breite."
+      why: "Die Sollbreite hängt von Führung, Stufe und Radverkehr ab. Der Vergleich zeigt zu schmale Radwege."
       description: 'P-COM-01 Breite: Ist-Breite aus OSM (eigene Wege und begleitende Radwege: width, sonst est_width; Radweg oder Radfahrstreifen in der Straßenlinie: cycleway:width bzw. cycleway:both|right|left:width; Fahrradstraße: width der Fahrbahn) gegen widths_m.project_target der Ist-Führung und Radnetzkategorie plus intensity_upgrade (Spitzenstunde cyc_peak_h je Richtung bzw. beide Richtungen). Mischverkehr und Führungen ohne Sollbreite: nicht anwendbar; fehlende Breite = unbekannt. Soll = Sollbreite (Score 1)'
       required_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, own_path: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway}
       cycle_street_note: 'Fahrradstraße: with_motor_traffic, wenn C-FAC-04 cycle_street_motor_traffic (Kfz frei) gilt, sonst value (seit 0.9.0, F18)'
       own_path_note: 'eigene Radtrassen wie Zweirichtungsradweg (Entscheidung prstolpe 2026-11-07, auch C-FAC-04)'
       status: draft
     - id: C-PRI-09
+      label_plain: "Punkte: Belag"
+      explain_plain: "Anteil der Strecke mit glatter Decke; bei kleinen Routen zählt: ohne groben Belag."
+      why: "Der Punktwert zeigt, wie viel der Strecke eine geschlossene Decke hat."
       description: 'P-COM-02 Belag: RSV/HAUPT Anteil der Länge mit geschlossener Decke (smooth_surfaces); BASIS/ERSCHL Anteil der Länge ohne unbefestigte oder grobe Beläge (routing_impedance.ist_mapping.unpaved_surfaces). OSM surface (Radweg in der Straßenlinie: cycleway:surface bzw. cycleway:both|right|left:surface, sonst surface der Straße); fehlender Belag = unbekannt. Soll: geschlossene Decke (Score 1)'
       smooth_surfaces: [asphalt, concrete, 'concrete:plates', 'concrete:lanes']
       status: draft
     - id: C-PRI-10
-      description: 'P-ATT-01 Grünanteil im Puffer buffer_m um die Kante: Fläche aus ALKIS-Nutzung (nutzart in green_nutzart) und OSM-Bäumen (natural=tree als Kreis mit tree_crown_radius_m, natural=tree_row als Linie mit demselben Puffer), ohne Doppelzählung. Score = min(Grünanteil / target_share, 1). Kein Straßenbaumkataster (sources.yaml street_trees ohne Endpunkt, Entscheidung 2026-11-06). Soll = Ist'
+      label_plain: "Punkte: Grün"
+      explain_plain: "Anteil von Grün und Bäumen entlang des Wegs."
+      why: "Der Punktwert zeigt, wie nah der Grünanteil dem Zielwert von 30 Prozent kommt."
+      description: >-
+        P-ATT-01 Grünanteil im Puffer buffer_m um die Kante: Fläche aus ALKIS-Nutzung (nutzart in green_nutzart) und
+        OSM-Bäumen (natural=tree als Kreis mit tree_crown_radius_m, natural=tree_row als Linie mit demselben Puffer),
+        ohne Doppelzählung. Score = min(Grünanteil / target_share, 1). Kein Straßenbaumkataster (sources.yaml
+        street_trees ohne Endpunkt). Soll = Ist
+      history:
+        - "Entscheidung 2026-11-06: ohne Straßenbaumkataster rechnen"
       buffer_m: 20
       green_nutzart: [Wald, Gehoelz, Sport Freizeit Und Erholungsflaeche, Friedhof, Landwirtschaft, Heide, Moor, Sumpf]
       tree_crown_radius_m: 4
       target_share: 0.3
       status: draft
     - id: C-PRI-11
+      label_plain: "Punkte: ruhige Lage"
+      explain_plain: "Anteil der Strecke abseits stark befahrener Straßen."
+      why: "Der Punktwert zeigt, wie viel der Strecke nicht an stark befahrenen Straßen liegt."
       description: 'P-ATT-03 Parallelität: Anteil der Länge nicht an Straßen mit DTV > P-ATT-03 dtv (DTV der Straße bzw. bei begleitenden Radwegen der Straße daneben; ohne DTV-Wert gilt die Straße als nicht belastet, DTV liegt nur für Hauptverkehrsstraßen vor). Soll = Ist (die Alternativen hat c03 bereits übernommen)'
       status: draft
     - id: C-PRI-12
+      label_plain: "Punkte: Zusammenhang"
+      explain_plain: "Lücken, Zusammenhang und Wechsel je Route."
+      why: "Der Punktwert fasst Lücken, Zusammenhang und Wechsel der Führung je Route zusammen."
       description: 'Zusammenhang je Route: P-COH-01 Anteil der Länge, der nicht am Rand einer zu großen Masche der eigenen oder einer niedrigeren Ebene liegt (cycle_mesh_gaps.parquet, Rand +- gap_edge_buffer_m); P-COH-02 1, wenn die Route in der größten zusammenhängenden Komponente ihrer Ebene (mit höheren Ebenen) liegt, sonst 0; P-COH-04 Wechsel je km gegen max_changes_per_km: Ist = Wechsel der Ist-Führung entlang der Route, Soll = Wechsel der Soll-Führung plus Kategoriewechsel (cycle_routes.n_category_changes). P-COH-01/02 gleich für Ist und Soll'
       gap_edge_buffer_m: 2
       max_changes_per_km: 1.0
       status: draft
     - id: C-PRI-13
+      label_plain: "Datenlage je Route"
+      explain_plain: "Wie vollständig die Daten für die Prüfungen einer Route sind."
+      why: "Nicht jede Route hat vollständige Daten. So sieht man, wie verlässlich ein Punktwert ist."
       description: 'confidence je Route bzw. Kante und Sicht: Summe über die Prinzipien von principle_weight x mittlerer Datenanteil der anwendbaren Prüfungen (Datenanteil = Längenanteil mit Wert, 0 bei unavailable); Klasse high ab high, medium ab medium, sonst low'
       high: 0.8
       medium: 0.6
       status: draft
     - id: C-PRI-14
+      label_plain: "Gewichte prüfen"
+      explain_plain: "Wie sich die Rangfolge ändert, wenn man die Gewichte der Prinzipien verändert."
+      why: "Die Gewichte sind eine Annahme. So lässt sich prüfen, ob die Rangfolge davon abhängt."
       description: 'Gewichts-Sensitivität: jedes principle_weight einzeln um +-delta (relativ) verändert, die übrigen anteilig umgelegt (Summe 1); verglichen werden die Top-top_n-Routen nach Handlungsbedarf-km = (score_soll - score_ist) x Länge in km (Rangfolge im Report; sonst stehen sehr kurze Verdichtungsstücke vorn)'
       delta: 0.2
       top_n: 30
       status: draft
     - id: C-PRI-15
+      label_plain: "Stichprobe für Ortskundige"
+      explain_plain: "Zufällige Auswahl von Routen zur Prüfung vor Ort."
+      why: "Die Stichprobe ist nach Stufe geschichtet. Ortskundige prüfen sie vor Ort."
       description: 'Stichprobe für die Durchsicht mit Ortskundigen: review_n Routen, nach Kategorie geschichtet (Anteile nach Routenzahl, mindestens eine je Kategorie), Seed seed'
       review_n: 20
       seed: 42
       status: draft
     - id: C-PRI-16
+      label_plain: "Prüfungen ohne Daten"
+      explain_plain: "Prüfungen ohne Datengrundlage zählen nicht und senken die Datenlage."
+      why: "Eine Prüfung ohne Daten wäre geraten. Darum zählt sie nicht, und die Datenlage sinkt."
       description: 'Prüfungen ohne Datengrundlage im aktuellen Lauf: unbekannt für Ist und Soll, senken die confidence'
       unavailable:
         P-SAF-02: 'Knotentypen erst mit Prompt 20 (pipeline/c07_junctions.py)'
@@ -241,16 +314,16 @@ routing_impedance:
   ist_mapping:
     source_type: assumption
     rules:
-      - {id: C-IMP-01, when: cycle_street, factor: separated_track_or_cycle_street, status: draft, description: 'Fahrradstraße (amtlich oder OSM bicycle_road=yes / cyclestreet=yes)'}
-      - {id: C-IMP-02, when: own_path, factor: separated_track_or_cycle_street, status: draft, description: 'eigenständiger Rad- oder Fußweg mit Radfreigabe (C-GRAPH-01)'}
-      - {id: C-IMP-03, when: separated_track, factor: gow50_separated_track, status: draft, description: 'Radweg am Fahrbahnrand in derselben OSM-Linie (cycleway*=track|opposite_track); getrennt erfasste Radwege (cycleway=separate) sind eigene Kanten'}
-      - {id: C-IMP-04, when: low_speed_access_road, factor: etw30_mixed, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh und Erschließungsstraße (cat_final in access_categories, ohne cat_final highway in access_highways); highway in factor_by_highway (Schrittgeschwindigkeit) unabhängig vom Ist-Tempo mit dem dort genannten Faktor',
+      - {id: C-IMP-01, label_plain: "Routenwahl: Fahrradstraße", explain_plain: "Fahrradstraßen zählen bei der Routenwahl als besonders angenehm.", why: "Fahrradstraßen bekommen den günstigsten Faktor. Die Faktoren hat das Projekt nach dem Stressniveau gesetzt.", when: cycle_street, factor: separated_track_or_cycle_street, status: draft, description: 'Fahrradstraße (amtlich oder OSM bicycle_road=yes / cyclestreet=yes)'}
+      - {id: C-IMP-02, label_plain: "Routenwahl: eigener Weg", explain_plain: "Eigenständige Rad- und Fußwege zählen als angenehm.", why: "Eigene Wege bekommen denselben günstigsten Faktor wie Fahrradstraßen. Das hat das Projekt gesetzt.", when: own_path, factor: separated_track_or_cycle_street, status: draft, description: 'eigenständiger Rad- oder Fußweg mit Radfreigabe (C-GRAPH-01)'}
+      - {id: C-IMP-03, label_plain: "Routenwahl: Radweg an der Straße", explain_plain: "Radwege neben der Fahrbahn zählen als angenehm.", why: "Ein Radweg am Fahrbahnrand bekommt einen etwas höheren Faktor als eine Fahrradstraße. Das hat das Projekt gesetzt.", when: separated_track, factor: gow50_separated_track, status: draft, description: 'Radweg am Fahrbahnrand in derselben OSM-Linie (cycleway*=track|opposite_track); getrennt erfasste Radwege (cycleway=separate) sind eigene Kanten'}
+      - {id: C-IMP-04, label_plain: "Routenwahl: ruhige Wohnstraße", explain_plain: "Wohnstraßen bis Tempo 30 zählen fast so gut; Fußgängerzonen zählen als langsam.", why: "Auf Wohnstraßen bekommt das Rad fast den günstigsten Faktor. In Fußgängerzonen gilt Schritttempo.", history: ["seit 0.10.0 (Review 2026-11 F15): Schrittgeschwindigkeit; vorher etw30_mixed"], when: low_speed_access_road, factor: etw30_mixed, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh und Erschließungsstraße (cat_final in access_categories, ohne cat_final highway in access_highways); highway in factor_by_highway (Schrittgeschwindigkeit) unabhängig vom Ist-Tempo mit dem dort genannten Faktor',
          factor_by_highway: {living_street: walking_pace_area, pedestrian: walking_pace_area},
-         note: 'Seit 0.10.0 (Review 2026-11 F15): verkehrsberuhigter Bereich (Z. 325.1) und Fußgängerzone mit Radfreigabe nur in Schrittgeschwindigkeit; vorher etw30_mixed'}
-      - {id: C-IMP-05, when: low_speed_with_lane, factor: gow30_cycle_lane, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh, Hauptstraße mit Radfahr- oder Schutzstreifen'}
-      - {id: C-IMP-06, when: low_speed_mixed, factor: gow30_cycle_lane, status: draft, note: 'Lücke: routing_impedance hat keinen Faktor für Hauptstraße Tempo 30 ohne Radstreifen; vorläufig wie C-IMP-05 (docs/open_questions.md)'}
-      - {id: C-IMP-07, when: other, factor: gow50_cycle_lane_or_mixed, status: draft, description: 'alle übrigen befahrbaren Straßen (Ist-Tempo > low_speed_max_kmh)'}
-      - {id: C-IMP-08, when: unpaved_or_cobbles, multiply: unpaved_or_cobbles, status: draft, description: 'zusätzlich bei surface in unpaved_surfaces'}
+         note: "Verkehrsberuhigter Bereich (Z. 325.1) und Fußgängerzone mit Radfreigabe nur in Schrittgeschwindigkeit."}
+      - {id: C-IMP-05, label_plain: "Routenwahl: Hauptstraße 30 mit Radstreifen", explain_plain: "Hauptstraßen bis Tempo 30 mit Radstreifen zählen mittel.", why: "Hauptstraßen mit Tempo 30 und Radstreifen bekommen einen mittleren Faktor. Das hat das Projekt gesetzt.", when: low_speed_with_lane, factor: gow30_cycle_lane, status: draft, description: 'Ist-Tempo <= low_speed_max_kmh, Hauptstraße mit Radfahr- oder Schutzstreifen'}
+      - {id: C-IMP-06, label_plain: "Routenwahl: Hauptstraße 30 ohne Radstreifen", explain_plain: "Hauptstraßen bis Tempo 30 ohne Radstreifen zählen vorläufig wie mit Radstreifen.", why: "Für diesen Fall gibt es keinen eigenen Faktor. Vorläufig gilt derselbe Wert wie mit Radstreifen.", when: low_speed_mixed, factor: gow30_cycle_lane, status: draft, note: 'Lücke: routing_impedance hat keinen Faktor für Hauptstraße Tempo 30 ohne Radstreifen; vorläufig wie C-IMP-05 (docs/open_questions.md)'}
+      - {id: C-IMP-07, label_plain: "Routenwahl: übrige Straßen", explain_plain: "Alle Straßen über Tempo 30 zählen als unangenehm.", why: "Alle übrigen Straßen bekommen den Faktor 1,5. Der Wert wurde an Zählstellen angepasst.", when: other, factor: gow50_cycle_lane_or_mixed, status: draft, description: 'alle übrigen befahrbaren Straßen (Ist-Tempo > low_speed_max_kmh)'}
+      - {id: C-IMP-08, label_plain: "Routenwahl: schlechter Belag", explain_plain: "Kopfsteinpflaster und unbefestigte Wege zählen zusätzlich als unangenehm.", why: "Bei schlechtem Belag wird der Widerstand mit 1,3 multipliziert. Das hat das Projekt gesetzt.", when: unpaved_or_cobbles, multiply: unpaved_or_cobbles, status: draft, description: 'zusätzlich bei surface in unpaved_surfaces'}
     low_speed_max_kmh: 30
     speed_fallback: 'speed_ist_kmh, sonst travel_speed_kmh (S-FEAT-02)'
     access_categories: [ETW30, ETW_ERF, ETW60]
@@ -264,6 +337,9 @@ cycle_graph:
   source_type: assumption
   rules:
     - id: C-GRAPH-01
+      label_plain: "Wo man Rad fahren darf"
+      explain_plain: "Zum Netz gehören Straßen ohne Radverbot, Radwege und Wege mit Radfreigabe, aber keine Kraftfahrstraßen."
+      why: "Das Netz soll nur Wege zeigen, die Räder wirklich nutzen dürfen."
       description: 'Kanten: Straßenabschnitte (segments.parquet) außer Kfz-Straßen und Radverbot; dazu highway=cycleway sowie Fuß- und sonstige Wege mit Radfreigabe'
       exclude_highways: [motorway, motorway_link]
       exclude_motorroad: true
@@ -273,9 +349,15 @@ cycle_graph:
       note: 'highway=pedestrian (auch als Straßenabschnitt) nur mit bicycle_allowed. bicycle=use_sidepath sperrt die Fahrbahn nicht (Netz bleibt zusammenhängend); der parallele Radweg ist günstiger (C-IMP-02).'
       status: draft
     - id: C-GRAPH-02
+      label_plain: "Einbahnstraßen"
+      explain_plain: "Gegen die Einbahnrichtung darf man nur fahren, wenn es für Räder freigegeben ist."
+      why: "Gegen die Einbahnstraße zu fahren ist nur erlaubt, wenn es freigegeben ist."
       description: 'Einbahnstraßen (oneway=yes|-1, auch Radwege): Gegenrichtung nur mit oneway:bicycle=no'
       status: draft
     - id: C-GRAPH-03
+      label_plain: "Fähren"
+      explain_plain: "Fähren mit Radmitnahme gehören zum Netz, mit einer Wartezeit."
+      why: "Fähren mit Radmitnahme verbinden Teile des Netzes. Die Wartezeit nimmt das Projekt als halben 15-Minuten-Takt an."
       description: 'Fähren mit Radmitnahme (route=ferry, bicycle in ferry_bicycle_allowed) als Kanten; Enden an den nächsten Graphknoten angebunden; Widerstand = Länge + Wartezeit'
       ferry_bicycle_allowed: ['yes', designated, customers]
       ferry_wait_s: 450
@@ -283,14 +365,23 @@ cycle_graph:
       note: 'Wartezeit = halber 15-Minuten-Takt (Annahme); aus GTFS ableitbar (offene Frage). Anleger liegen bis rund 400 m vom Radgraph entfernt (Pontons ohne Radfreigabe); die Anbindungsstrecke zählt zum Widerstand (Schieben).'
       status: draft
     - id: C-GRAPH-04
+      label_plain: "Wartezeit an Ampeln"
+      explain_plain: "An jeder Ampel kommt eine feste Wartezeit dazu."
+      why: "An Ampeln müssen Räder wirklich warten. Die Zeit gehört zur Reisezeit."
       description: 'Wartezeit signal_delay_s auf jedem Bogen, der in einen Knoten mit highway=traffic_signals (OSM) führt'
       status: draft
     - id: C-GRAPH-05
+      label_plain: "Wartezeit an Vorfahrtstraßen"
+      explain_plain: "Wer aus einer Nebenstraße auf eine Hauptstraße trifft, wartet eine feste Zeit."
+      why: "So zählt auch die Wartezeit ohne Ampel zur Reisezeit."
       description: 'Wartezeit give_way_delay_s auf Bögen von Erschließungsstraßen und eigenständigen Wegen in einen Knoten ohne LSA, an dem eine Hauptstraße liegt'
       priority_categories: [SW, GOW80, GOW50, GOW30]
       priority_highways_without_category: [trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link]
       status: draft
     - id: C-GRAPH-06
+      label_plain: "Radweg gehört zur Straße"
+      explain_plain: "Ein eigenständiger Radweg wird der Straße daneben zugeordnet."
+      why: "Der Radweg neben der Straße hat dieselbe Aufgabe wie die Straße. Beide sollen zusammen bewertet werden."
       description: 'Bezug eigenständiger Wege zu einem Straßenabschnitt (sidepath_of): nächster Abschnitt im Puffer mit kleinem Richtungswinkel und ausreichender Überdeckung'
       buffer_m: 15
       max_angle_deg: 20
@@ -307,16 +398,25 @@ demand_model:
   source_type: assumption
   rules:
     - id: C-DEM-01
+      label_plain: "Woher die Wege kommen"
+      explain_plain: "Hamburg wird in Quadrate geteilt; die Einwohner sind die Startpunkte."
+      why: "Ohne Startpunkte lässt sich keine Radmenge schätzen. Die Einwohner sind der Ausgangspunkt jeder Fahrt."
       description: 'Zonen: Zensus-Gitter 100 m zu Quadraten von zone_m im Gitter EPSG:3035 zusammengefasst; Quellstärke = Einwohner'
       zone_m: 500
       status: draft
     - id: C-DEM-02
+      label_plain: "Wohin die Wege gehen"
+      explain_plain: "Ziele sind Arbeitsplätze, Schulen, Hochschulen, Läden und Bahnhöfe, unterschiedlich gewichtet."
+      why: "Das Modell braucht Ziele für die Wege. Die Gewichte hat das Projekt gesetzt."
       description: 'Zielstärke je Zone = Summe über Zieltypen von Gewicht x Anteil der Zone an der Hamburger Summe des Typs'
       weights: {jobs_floor_area: 0.40, shops: 0.20, schools: 0.15, universities: 0.10, rapid_transit_stops: 0.15}
       rapid_transit_route_types: [1, 2, 109, 402]
       rapid_transit_note: 'Schnellbahnhalte = Stationen (parent_station) mit Fahrten dieser route_type; HVV-GTFS nutzt erweiterte Typen: 109 S-Bahn, 402 U-Bahn, 2 AKN/Regionalbahn (routes.txt 2026-04-08)'
       status: draft
     - id: C-DEM-03
+      label_plain: "Arbeitsplätze schätzen"
+      explain_plain: "Arbeitsplätze werden aus der Fläche der Gebäude ohne Wohnungen geschätzt."
+      why: "Es gibt keine Zahl der Arbeitsplätze je Gebäude. Die Fläche ist eine Schätzung."
       description: 'Arbeitsplatz-Proxy: Geschossfläche oberirdischer ALKIS-Gebäude (Grundfläche x anzahlgs, fehlend 1) ohne excluded_functions (Wohn- und Nebengebäude); gemischte Gebäude mit Wohnen nur mit mixed_use_storeys Geschossen'
       alkis_gebnutzbez: [Gebaeude]
       alkis_rellage_excluded: ['Unter der Erdoberfläche']
@@ -326,11 +426,17 @@ demand_model:
       note: 'excluded_functions: Wohngebäude und Nebengebäude ohne Arbeitsplätze (Liste nach S-FEAT-05 alkis_ancillary_functions); nur Werte, die in den Daten vorkommen'
       status: draft
     - id: C-DEM-04
+      label_plain: "Wege verteilen"
+      explain_plain: "Je näher ein Ziel liegt, desto mehr Wege führen dorthin."
+      why: "Das Modell verteilt die Wege nach der Entfernung. Der Wert dafür ist eine Annahme."
       description: 'Produktionsgebundenes Gravitationsmodell T_ij = P_i x A_j f(d_ij) / Summe_k A_k f(d_ik), f(d) = exp(-beta d), d = wahrgenommener Widerstand in km; nur Relationen im Distanzband'
       beta_per_km: 0.25
       distance_band_km: [0.5, 15]
       status: draft
     - id: C-DEM-05
+      label_plain: "Wege aufs Netz legen"
+      explain_plain: "Die Wege werden auf die angenehmsten Routen gelegt, mehrmals mit kleinen Zufallsabweichungen."
+      why: "Die Wege laufen über die Routen mit dem kleinsten Widerstand. So zeigt das Modell, wo viele Räder fahren würden."
       description: 'Umlegung auf kürzeste Wege nach Widerstand; stochastic = Mittel aus iterations Läufen mit log-normal gestörten Widerständen (sigma), aon = ein Lauf ohne Störung'
       method: stochastic
       iterations: 3
@@ -338,6 +444,9 @@ demand_model:
       seed: 42
       status: draft
     - id: C-DEM-06
+      label_plain: "An Zählstellen anpassen"
+      explain_plain: "Das Modell wird mit einem Faktor an die Rad-Zählstellen von 2025 angepasst."
+      why: "Ein Modell kann falsch liegen. Echte Zählungen bringen es näher an die Wirklichkeit."
       description: 'Kalibrierung: ein Skalierungsfaktor k für Hamburg = geometrisches Mittel von Zählwert/Modellwert an den Querschnitten; Zählwert = Mittel Mo-Fr 2025 der Zählstellen ohne Richtung (= Summe beider Richtungen), Tage mit count > 0; Modellwert = Summe beider Richtungen aller Kanten, die ein Querschnitt von transect_half_m quer zur nächsten Kante (höchstens counter_snap_m entfernt) in einem Winkel von mindestens transect_min_angle_deg schneidet'
       scope: global
       min_valid_weekdays: 150
@@ -348,6 +457,9 @@ demand_model:
       note: 'DB Rad+ nur Plausibilitätsvergleich, nicht zur Kalibrierung (nicht repräsentativ)'
       status: draft
     - id: C-DEM-07
+      label_plain: "Wie sicher ist die Radmenge?"
+      explain_plain: "Hoch nahe an gut passenden Zählstellen; niedrig am Stadtrand und bei wenig Radverkehr."
+      why: "Nicht jede Schätzung ist gleich gut. So sieht man, wo die Zahlen unsicherer sind."
       description: 'demand_confidence: hoch = höchstens high_radius_m von einem Querschnitt, dessen Verhältnis Zählwert/kalibrierter Modellwert in high_ratio_band liegt; niedrig = höchstens border_m von der Landesgrenze, in ländlichen Stadtteilen oder unter low_flow_day Rad/Tag; sonst mittel; hoch hat Vorrang vor niedrig, außer ohne Modellwert (nicht im Hauptnetz)'
       high_radius_m: 500
       high_ratio_band: [0.5, 2.0]
@@ -364,7 +476,14 @@ network_design:
   source_type: assumption
   rules:
     - id: C-NET-01
-      description: 'Korridorpunkte: Innenstadt, Schnellbahn-Umsteigeknoten, Hochschulen, Arbeitsplatzschwerpunkte; Punkte näher als merge_m werden zusammengefasst. Bezirks- und Stadtteilzentren fehlen (Quelle centres ohne Endpunkt, Entscheidung 2026-11-06: ohne Zentren rechnen)'
+      label_plain: "Wichtige Ziele"
+      explain_plain: "Ausgangspunkte des Netzes sind Innenstadt, Umsteigebahnhöfe, Hochschulen und Arbeitsplatzschwerpunkte."
+      why: "Das Netz braucht Orte, die es verbindet. Zentren fehlen noch, weil die Datenquelle fehlt."
+      description: >-
+        Korridorpunkte: Innenstadt, Schnellbahn-Umsteigeknoten, Hochschulen, Arbeitsplatzschwerpunkte; Punkte näher
+        als merge_m werden zusammengefasst. Bezirks- und Stadtteilzentren fehlen (Quelle centres ohne Endpunkt)
+      history:
+        - "Entscheidung 2026-11-06: ohne Zentren rechnen"
       innenstadt: {label: Rathausmarkt, lat: 53.5503, lon: 9.9925}
       hub_min_modes: 2
       hub_radius_m: 250
@@ -377,11 +496,17 @@ network_design:
       todo: 'centres: Hamburger Zentrenkonzept (sources.yaml centres, url null) ergänzen, sobald ein Endpunkt bekannt ist'
       status: draft
     - id: C-NET-02
+      label_plain: "Verbindungen zwischen Zielen"
+      explain_plain: "Jedes Ziel wird mit seinen nächsten Zielen und mit der Innenstadt verbunden."
+      why: "Die Paare legen fest, welche Verbindungen das Netz braucht."
       description: 'Korridorpaare: jeder Punkt mit seinen k_nearest nächsten Punkten (Luftlinie bis max_pair_km) und jeder Punkt mit der Innenstadt'
       k_nearest: 4
       max_pair_km: 15
       status: draft
     - id: C-NET-03
+      label_plain: "Wege im Ziel bewerten"
+      explain_plain: "Für die Netzplanung zählt jeder Weg so, als hätte er schon den passenden Radweg."
+      why: "Das Netz soll zeigen, wo Radfahren sinnvoll wäre, nicht nur wo es heute gut geht."
       description: 'Soll-Widerstand: Länge x Faktor der regelkonformen Führung (Annahme: die Route wird nach Trennungsmatrix ausgebaut, mit geschlossener Decke nach P-COM-02, daher ohne Zuschlag für unbefestigte Beläge) plus die Wartezeiten des Ist-Zustands. Führung = preferred der Matrixzelle separation_matrix[cat_final][Ebene] einschließlich der Zelle high_volume (S-05, wenn dtv_official bekannt), Faktor aus soll_factor_by_facility; soll_factor_by_category geht vor (path = eigenständige Wege, ETW_ERF = Schrittgeschwindigkeit). Kanten ohne cat_final, ohne aktive Matrixzeile (außerorts, F28) und Fähren behalten den Ist-Widerstand'
       soll_factor_by_facility: {separated_oneway_both: gow50_separated_track, separated_twoway: gow50_separated_track,
                                 cycle_lane: gow30_cycle_lane, cycle_street: separated_track_or_cycle_street,
@@ -390,14 +515,28 @@ network_design:
       levels: [HAUPT, BASIS]
       facility_level_note: 'Führung = preferred der Matrixzelle für die Ebene, die gerade entworfen wird (HAUPT-Zelle für Korridore, RSV, HAUPT-Verdichtung und Parallelregel; BASIS-Zelle für BASIS-Anbindung und -Verdichtung). Review 2026-11 F16'
       category_note: 'ETW_ERF: Die Matrix bevorzugt für RSV/HAUPT eine eigene Trasse (F15), der Entwurf rechnet aber mit Schrittgeschwindigkeit, damit Hauptrouten Fußgängerzonen ausweichen, wo eine Alternative besteht; ob eine eigene Trasse möglich ist, prüft erst die Raumprüfung (fallback_check_p19)'
-      note: 'Faktoren aus routing_impedance.factors; keine neuen Zahlen. Netzentwurf ungerichtet (günstigere Richtung). Bis 0.9.0 soll_factors je cat_final (GOW30 immer gow30_cycle_lane, ETW_ERF etw30_mixed)'
+      note: >-
+        Faktoren aus routing_impedance.factors; keine neuen Zahlen. Netzentwurf ungerichtet (günstigere Richtung).
+      history:
+        - "bis 0.9.0: soll_factors je cat_final (GOW30 immer gow30_cycle_lane, ETW_ERF etw30_mixed)"
       status: draft
     - id: C-NET-04
+      label_plain: "Vorrang für viel Radverkehr"
+      explain_plain: "Wege mit viel Radverkehr werden bevorzugt."
+      why: "Der Bonus senkt den Widerstand um bis zu 30 Prozent. Das Netz soll dort verlaufen, wo viel Radverkehr geschätzt wird."
       description: 'Bonus für Kanten mit hoher Nachfrage: Widerstand x (1 - max_reduction x min(cyc_calibrated / Bezugswert, 1)); Bezugswert = RSV demand_trigger_cyclists_weekday'
       max_reduction: 0.3
       status: draft
     - id: C-NET-05
-      description: 'Bonus für Kanten des amtlichen Radnetzes (alle Status): Widerstand x multiplier, wenn mindestens min_overlap der Kantenlänge im Puffer match_buffer_m um das amtliche Radnetz liegt. Vergleich im Report: official_status = amtliches Netz, planned_status = geplant (Entscheidung 2026-11-06)'
+      label_plain: "Vorrang für das amtliche Radnetz"
+      explain_plain: "Wege des amtlichen Radnetzes werden bevorzugt."
+      why: "Kanten des amtlichen Radnetzes bekommen einen Bonus. So baut der Vorschlag darauf auf."
+      description: >-
+        Bonus für Kanten des amtlichen Radnetzes (alle Status): Widerstand x multiplier, wenn mindestens min_overlap
+        der Kantenlänge im Puffer match_buffer_m um das amtliche Radnetz liegt. Vergleich im Report: official_status =
+        amtliches Netz, planned_status = geplant
+      history:
+        - "Entscheidung 2026-11-06: Vergleich amtliches Netz gegen geplant im Report"
       multiplier: 0.8
       match_buffer_m: 15
       min_overlap: 0.5
@@ -405,12 +544,18 @@ network_design:
       planned_status: [In Arbeit, Priorisierte Netzergänzungen/Netzverbesserungen, Netzbedeutende Abschnitte mit Verbesserungspotential]
       status: draft
     - id: C-NET-06
+      label_plain: "Radvorrangroute festlegen"
+      explain_plain: "Lange Strecken mit sehr viel Radverkehr werden zur Radvorrangroute."
+      why: "Die Mindestwerte für Länge und Radverkehr stammen aus niederländischen und hessischen Quellen."
       description: 'RSV: zusammenhängende Läufe eines Korridors mit cyc_calibrated >= RSV demand_trigger_cyclists_weekday; Lücken bis gap_max_m werden überbrückt; Läufe ab RSV min_route_length_km werden RSV, der übrige Korridor HAUPT'
       gap_max_m: 500
       demand_band_factor: {value: 2.0, source_type: assumption,
                            note: 'RSV-Lauf mit cyc_calibrated < trigger x factor (längengewichteter Median des Laufs): rsv_confidence low, sonst high (Kalibrierung c02 seit 0.10.0: 48 % der Querschnitte innerhalb Faktor 2, Spearman 0,57, reports/cycle_demand.md; Review 2026-11 F12)'}
       status: draft
     - id: C-NET-07
+      label_plain: "Netzlücken messen"
+      explain_plain: "Das Netz wird in Maschen geteilt; ihre Größe zeigt Lücken."
+      why: "Ohne Messung sieht man nicht, wo das Netz Lücken hat."
       description: 'Maschen: Polygonisierung des Netzes einer Ebene (mit höheren Ebenen) zusammen mit Barrierelinien und der Landesgrenze; Größe = Seitenlänge des flächengleichen Quadrats der Masche ohne Ausschlussflächen. Maschen mit Mittelpunkt in ländlichen Stadtteilen (project.yaml rural_exclude) werden nicht geprüft'
       barrier_lines: {railway: [rail, light_rail, subway], waterway: [river, canal]}
       barrier_exclude_tunnel: true
@@ -424,6 +569,9 @@ network_design:
         decision: 'Entscheidung prstolpe 2026-11-07: Delfter Maschenweite nur in der dichten Stadt (docs/open_questions.md, Prompt 16)'
       status: draft
     - id: C-NET-08
+      label_plain: "Lücken schließen"
+      explain_plain: "Zu große Maschen werden durch neue Routen geteilt, dort wo viel Radverkehr ist."
+      why: "Die Quelle gibt je Stufe eine Maschenweite vor. Neue Routen teilen zu große Maschen."
       description: 'Verdichtung: Masche größer als mesh_m.max der Ebene wird geteilt. Startkante = Kante mit der höchsten Nachfrage im Kernbereich der Masche (Abstand der Kantenmitte zum Außenrand >= seed_core_share x größter Abstand aller Kandidaten; teilt keine davon, die übrige Masche); von ihren Enden je der günstigste Soll-Weg (mit Bonus) innerhalb der Masche zu zwei verschiedenen Netzknoten am Rand; wiederholen bis keine Masche zu groß ist, keine Teilung möglich ist oder max_rounds erreicht ist'
       seed_core_share: 0.5
       seed_core_note: 'Kernbereich, damit die Teilung die Masche etwa halbiert; ohne ihn schneidet die Kante mit der höchsten Nachfrage oft nur einen schmalen Streifen am Rand ab (Lauf 2026-11-06: nach 40 Runden noch so viele zu große Maschen wie am Anfang). Gemessen als Tiefe (Abstand zum Außenrand), weil die Mitte konkaver Maschen außerhalb oder in Wald/Park liegen kann'
@@ -431,24 +579,39 @@ network_design:
       min_split_route_m: 50
       status: draft
     - id: C-NET-09
+      label_plain: "Schulen und Läden anbinden"
+      explain_plain: "Schulen und Läden weit weg vom Netz bekommen eine Bezirksroute."
+      why: "Schulen und Läden sollen am Netz liegen. Den Abstand von 150 Metern hat das Projekt gesetzt."
       description: 'BASIS-Anbindung: Schulen und Nahversorgung weiter als binding_radius_m vom BASIS-, HAUPT- oder RSV-Netz erhalten den günstigsten Soll-Weg vom nächsten Graphknoten zum Netz als BASIS'
       binding_radius_m: 150
       nahversorgung_shops: [supermarket, convenience, bakery, butcher, greengrocer, chemist]
       status: draft
     - id: C-NET-10
+      label_plain: "Ruhiger Weg statt Hauptstraße"
+      explain_plain: "Liegt eine Route lange an einer stark befahrenen Straße, wird ein Weg daneben gewählt. Er darf kaum länger sein."
+      why: "Routen sollen nicht an stark belasteten Straßen liegen, wenn es eine gleichwertige Alternative gibt."
       description: 'Parallelregel (P-ATT-03): Lauf einer RSV/HAUPT-Route ab min_run_m an Straßen mit DTV > P-ATT-03 dtv (auch begleitende Radwege, sidepath_of): günstigster Weg zwischen Anfang und Ende des Laufs über Kanten, deren Mitte im Puffer P-ATT-03 parallel_max_m liegt, mit möglichst wenig Länge an diesen Straßen (höchstens max_on_main_m zum Anschließen und Queren); wenn Länge Alternative / Länge Lauf <= P-DIR-01 der Kategorie, übernimmt die Alternative die Kategorie und die Hauptstraße wird BASIS'
       min_run_m: 300
       max_on_main_m: 60
       max_on_main_note: 'Begleitende Radwege sind nur über die Hauptstraße (Querung, Knotenpunkt) mit den Nebenstraßen verbunden; ohne diese Länge findet die Regel fast nie eine Alternative (Lauf 2026-11-06: 8 von 395 Läufen)'
       status: draft
     - id: C-NET-11
+      label_plain: "Route durchgehend"
+      explain_plain: "Kurze schwächere Stücke zwischen zwei gleichen Stücken einer Route werden angehoben."
+      why: "Eine Route soll ihre Stufe über kurze Lücken bis 200 Meter halten."
       description: 'Kontinuität (P-COH-04): niedrigere Läufe entlang einer Route zwischen zwei Läufen derselben höheren Kategorie bis max_gap_m werden angehoben (nicht bei Overrides und P-ATT-03); übrige Kategoriewechsel werden je Route gezählt und gemeldet'
       max_gap_m: 200
       status: draft
     - id: C-NET-12
+      label_plain: "Übrige Wege"
+      explain_plain: "Alle anderen Wege gehören zu den übrigen Wegen."
+      why: "Jeder Weg braucht eine Stufe. Was sonst nirgends passt, bleibt bei den übrigen Wegen."
       description: 'ERSCHL: alle übrigen Kanten des Radgraphen (auch außerhalb der Hauptkomponente)'
       status: draft
     - id: C-NET-13
+      label_plain: "Vergleich mit dem amtlichen Radnetz"
+      explain_plain: "Wie viel des Vorschlags im amtlichen Radnetz liegt und umgekehrt."
+      why: "So lässt sich prüfen, ob der Vorschlag zum amtlichen Plan passt."
       description: 'Vergleich mit dem amtlichen Radnetz: Überdeckung = Länge im Puffer compare_buffer_m um das jeweils andere Netz'
       compare_buffer_m: 20
       status: draft
@@ -501,13 +664,13 @@ separation_matrix:
     GOW80: separated_twoway
     ETW60: {preferred: separated_twoway, fallback: mixed, condition: 'mixed nur bei DTV <= mixed_rural_max_dtv'}
   rules:
-    - {id: S-01, rule: 'Kein Radfahr- oder Schutzstreifen an GOW50', source: CROW_GOW30_2023, source_type: swov_crow, status: draft}
-    - {id: S-02, rule: 'Kein Radstreifen auf ETW30; Hauptroute auf ETW als Fahrradstraße', source: CROW_GOW30_2023, source_type: swov_crow, status: draft}
-    - {id: S-03, rule: 'Zweirichtungsradweg innerorts nur einseitig an Straßen mit einseitiger Bebauung/Zielen oder wenigen Knoten', source_type: assumption, status: draft, scope: rural,
-       note: 'Die Matrix vergibt innerorts nie separated_twoway; als Soll-Regel wirkt S-03 nur außerorts (F33). Bleibt draft, weil C-PRI-03 (partial_note) einen Ist-Zweirichtungsradweg mit S-03 als Teilerfüllung begründet'}
-    - {id: S-04, rule: 'Mischverkehr auf Fahrbahn nur bei Kfz <= mixed_max_kfz_h', mixed_max_kfz_h: 700, condition: 'Fahrbahn < 6 m', source: ERA_2010, source_type: de_regelwerk, note: 'ERA S. 22 über Sekundärquelle; > 400 Kfz/h bei 6–7 m problematisch', status: draft}
-    - {id: S-05, rule: 'GOW30 mit dtv_official > rules.yaml requirements.GOW30.profiles.wide.max_dtv: Radweg je Seite (Zelle GOW30.high_volume, vor der Radkategorie), kein Fallback auf Radfahrstreifen, Flag gow30_high_volume', source: CROW_GOW30_2023, source_type: swov_crow, status: draft,
-       note: 'Review 2026-11 F01: Radfahrstreifen bei 20–40 Tsd. Kfz/Tag inkl. Bus/Lkw sicherheitlich nicht vertretbar; „Umfeld vor Verkehrsmenge“ (Kategorie) bleibt, korrigiert wird nur die Führungsform. Ohne DTV greift S-05 nicht'}
+    - {id: S-01, label_plain: "Kein Radstreifen bei Tempo 50", explain_plain: "An Hauptstraßen mit Tempo 50 braucht das Rad einen eigenen Radweg, keinen Streifen.", why: "Das niederländische Regelwerk (CROW) trennt hier immer baulich.", rule: 'Kein Radfahr- oder Schutzstreifen an GOW50', source: CROW_GOW30_2023, source_type: swov_crow, status: draft}
+    - {id: S-02, label_plain: "Kein Radstreifen in Wohnstraßen", explain_plain: "In Wohnstraßen fährt das Rad auf der Fahrbahn; wichtige Routen werden Fahrradstraße.", why: "Auf Wohnstraßen fahren Rad und Auto gemischt. Wichtige Routen werden Fahrradstraße (CROW).", rule: 'Kein Radstreifen auf ETW30; Hauptroute auf ETW als Fahrradstraße', source: CROW_GOW30_2023, source_type: swov_crow, status: draft}
+    - {id: S-03, label_plain: "Radweg für beide Richtungen nur selten", explain_plain: "Radweg für beide Richtungen nur einseitig und bei wenigen Kreuzungen; wirkt nur außerorts.", why: "Die Bedingung hat das Projekt gesetzt; sie wird noch geprüft. Sie wirkt nur außerorts.", history: ["F33: Soll-Wirkung nur außerorts"], rule: 'Zweirichtungsradweg innerorts nur einseitig an Straßen mit einseitiger Bebauung/Zielen oder wenigen Knoten', source_type: assumption, status: draft, scope: rural,
+       note: "Die Matrix vergibt innerorts nie separated_twoway; als Soll-Regel wirkt S-03 nur außerorts. Bleibt draft, weil C-PRI-03 (partial_note) einen Ist-Zweirichtungsradweg mit S-03 als Teilerfüllung begründet"}
+    - {id: S-04, label_plain: "Auf der Fahrbahn nur bei wenig Autos", explain_plain: "Rad auf der Fahrbahn nur bis 700 Autos je Stunde.", why: "Die Grenze von 700 Autos je Stunde stammt aus den Empfehlungen für Radverkehrsanlagen.", rule: 'Mischverkehr auf Fahrbahn nur bei Kfz <= mixed_max_kfz_h', mixed_max_kfz_h: 700, condition: 'Fahrbahn < 6 m', source: ERA_2010, source_type: de_regelwerk, note: 'ERA S. 22 über Sekundärquelle; > 400 Kfz/h bei 6–7 m problematisch', status: draft}
+    - {id: S-05, label_plain: "Viel Autoverkehr: eigener Radweg", explain_plain: "Hauptstraßen mit Tempo 30 und sehr viel Autoverkehr bekommen einen eigenen Radweg statt Streifen.", why: "Bei mehr als 10 000 Autos am Tag nennt CROW nur ein Profil mit Radweg.", history: ["Review 2026-11 F01"], rule: 'GOW30 mit dtv_official > rules.yaml requirements.GOW30.profiles.wide.max_dtv: Radweg je Seite (Zelle GOW30.high_volume, vor der Radkategorie), kein Fallback auf Radfahrstreifen, Flag gow30_high_volume', source: CROW_GOW30_2023, source_type: swov_crow, status: draft,
+       note: "Radfahrstreifen bei 20–40 Tsd. Kfz/Tag inkl. Bus/Lkw sind sicherheitlich nicht vertretbar; „Umfeld vor Verkehrsmenge“ (Kategorie) bleibt, korrigiert wird nur die Führungsform. Ohne DTV greift S-05 nicht"}
   mixed_rural_max_dtv: {value: 2500, source_type: assumption, note: 'nur außerorts (separation_matrix.rural, inaktiv)'}
 
 cycle_street:
@@ -524,13 +687,36 @@ facility_assignment:
   source_type: assumption
   rules:
     - id: C-FAC-01
-      description: 'Soll-Führung = separation_matrix[cat_final][cycle_cat_final] (außerorts separation_matrix.rural); vorher die Zelle high_volume der Zeile, wenn dtv_official > deren dtv_above (S-05, GOW30). Zelle mit preferred/fallback: preferred; fallback nur, wenn space_fits_preferred = false (Prompt 19). Ist der Raum noch nicht geprüft, bleibt preferred und das Flag fallback_check_p19 wird gesetzt. ETW60: fallback mixed nur bei DTV <= separation_matrix.mixed_rural_max_dtv. cycle_cat_final je Abschnitt = höchste Radkategorie seiner Straßenkanten und begleitenden Radwege (category_order), ohne Kante: none. Parallelroute wie D-DES-01 (parallel_route): ohne baulichen Radweg (S-FEAT-13) und mit Parallelroute im Soll-Radnetz (rules.yaml S-FEAT-11) Flag parallel_route.flag; die Soll-Führung bleibt'
+      label_plain: "Art des Radwegs im Ziel"
+      explain_plain: "Die Art des Radwegs kommt aus der Tabelle: Aufgabe der Straße mal Stufe im Radnetz."
+      why: "Welche Radführung passt, hängt von der Straße und der Wichtigkeit der Route ab. Eine Tabelle macht das klar."
+      description: >-
+        Soll-Führung = separation_matrix[cat_final][cycle_cat_final] (außerorts separation_matrix.rural); vorher die
+        Zelle high_volume der Zeile, wenn dtv_official > deren dtv_above (S-05, GOW30). Zelle mit preferred/fallback:
+        preferred; fallback nur, wenn space_fits_preferred = false. Ist der Raum noch nicht geprüft, bleibt preferred
+        und das Flag fallback_check_p19 wird gesetzt. ETW60: fallback mixed nur bei DTV <=
+        separation_matrix.mixed_rural_max_dtv. cycle_cat_final je Abschnitt = höchste Radkategorie seiner
+        Straßenkanten und begleitenden Radwege (category_order), ohne Kante: none. Parallelroute wie D-DES-01
+        (parallel_route): ohne baulichen Radweg (S-FEAT-13) und mit Parallelroute im Soll-Radnetz (rules.yaml
+        S-FEAT-11) Flag parallel_route.flag; die Soll-Führung bleibt
+      history:
+        - "Prompt 19: Raumprüfung space_fits_preferred für fallback"
       category_order: [RSV, HAUPT, BASIS, ERSCHL]
       parallel_route: {feature: parallel_cycle_route_present, flag: parallel_cycle_route, source_type: assumption,
         note: 'Review 2026-11 F21 (seit 0.11.0): Ziele liegen an der Magistrale (guide_radnetz 3.2); die Parallelroute mildert die Lücke (D-DES-01 severity_if 0,5), ersetzt den Radweg aber nicht'}
       status: draft
     - id: C-FAC-02
-      description: 'Fahrradstraße nur, wenn Kfz/Tag <= cycle_street.max_motor_vehicles_day und Radverkehr in der Spitzenstunde (cyc_peak_h, beide Richtungen) >= Kfz in der Spitzenstunde (DTV x motor_peak_hour_share). Sonst Soll mixed und Flag cycle_street_blocked („Kfz-Menge reduzieren (Filter) oder Route verlegen“). Fehlt das DTV: Bedingung vorläufig erfüllt, Flag dtv_unknown (Entscheidung Projektteam 2026-11-06: Erschließungsstraßen ohne Zählung gelten als schwach belastet). Ausnahme dtv_proxy: dann Bedingung unbekannt (Trace-Ergebnis null), Soll bleibt, Flag filter_needed'
+      label_plain: "Wann Fahrradstraße?"
+      explain_plain: "Fahrradstraße nur bei höchstens 2500 Autos am Tag. Zur Spitzenstunde müssen Räder mindestens so zahlreich sein wie Autos."
+      why: "Die Grenzen hat das Projekt gesetzt; sie werden noch geprüft. Sonst bleibt es Mischverkehr."
+      description: >-
+        Fahrradstraße nur, wenn Kfz/Tag <= cycle_street.max_motor_vehicles_day und Radverkehr in der Spitzenstunde
+        (cyc_peak_h, beide Richtungen) >= Kfz in der Spitzenstunde (DTV x motor_peak_hour_share). Sonst Soll mixed und
+        Flag cycle_street_blocked („Kfz-Menge reduzieren (Filter) oder Route verlegen“). Fehlt das DTV: Bedingung
+        vorläufig erfüllt, Flag dtv_unknown (Erschließungsstraßen ohne Zählung gelten als schwach belastet). Ausnahme
+        dtv_proxy: dann Bedingung unbekannt (Trace-Ergebnis null), Soll bleibt, Flag filter_needed
+      history:
+        - "Entscheidung Projektteam 2026-11-06: Erschließungsstraßen ohne Zählung gelten als schwach belastet"
       dtv_missing_counts_as_met: true
       dtv_proxy:
         rule: 'DTV fehlt und (Flag N4_shortcut oder betweenness_norm >= proxy_betweenness): Bedingung unbekannt, Flag filter_needed („Durchgangsverkehr wahrscheinlich, Filter prüfen“); gilt für C-FAC-02 und C-FAC-03'
@@ -544,12 +730,32 @@ facility_assignment:
         note: 'Review 2026-11 F19: Die Entscheidung vom 06.11. (schwach belastet bis zum Beweis des Gegenteils) bleibt; Abschnitte mit Hinweisen auf Durchgangsverkehr werden sichtbar (Liste für modale Filter). Keine Kategorie- oder Führungsänderung. VwV-StVO zu Z. 244.1 lässt Fahrradstraßen auch bei hoher Netzbedeutung zu (Fassung prüfen, Annahme A7)'
       status: draft
     - id: C-FAC-03
-      description: 'Prüfung S-04 bei Soll mixed: Kfz/h = DTV x motor_peak_hour_share (beide Richtungen) gegen separation_matrix S-04 mixed_max_kfz_h; überschritten: Flag mixed_over_s04 (Soll bleibt mixed, Maßnahme Verkehrsmenge senken). Fahrbahnbreite (width_median_m) wird nur protokolliert. Fehlt das DTV: vorläufig erfüllt, Flag dtv_unknown; trifft C-FAC-02 dtv_proxy zu: Bedingung unbekannt, Flag filter_needed (F19)'
+      label_plain: "Wenige Autos? So wird gezählt"
+      explain_plain: "Autos pro Stunde aus Autos pro Tag, um die Grenze für Rad auf der Fahrbahn zu prüfen."
+      why: "Die Grenze gilt je Stunde, die Daten gelten je Tag. Damit beides vergleichbar ist, wird umgerechnet."
+      description: >-
+        Prüfung S-04 bei Soll mixed: Kfz/h = DTV x motor_peak_hour_share (beide Richtungen) gegen separation_matrix
+        S-04 mixed_max_kfz_h; überschritten: Flag mixed_over_s04 (Soll bleibt mixed, Maßnahme Verkehrsmenge senken).
+        Fahrbahnbreite (width_median_m) wird nur protokolliert. Fehlt das DTV: vorläufig erfüllt, Flag dtv_unknown;
+        trifft C-FAC-02 dtv_proxy zu: Bedingung unbekannt, Flag filter_needed
+      history:
+        - "F19: Flag filter_needed bei dtv_proxy"
       motor_peak_hour_share: {value: 0.10, note: 'Spitzenstundenanteil Kfz, aus der Notiz zu design_rules L-02 (0,10 x 0,55 Lastrichtung); HBS prüfen'}
       dtv_missing_counts_as_met: true
       status: draft
     - id: C-FAC-04
-      description: 'Soll-Breite = widths_m.project_target der Führung und Radkategorie plus intensity_upgrade (oneway: cyc_peak_h je Richtung, twoway: beide Richtungen), nie unter der Untergrenze (floor). Mischverkehr ohne Sollbreite; eigene Trasse wie Zweirichtungsradweg (0.7.0); Fahrradstraße mit Kfz-Verkehr (cycle_street_motor_traffic) = cycle_street_carriageway.with_motor_traffic, ohne = value (F18). Vergleichswerte für den Steckbrief: DE-Regelmaß und NL-Hauptnetz. Pfade relativ zu widths_m'
+      label_plain: "Breite des Radwegs"
+      explain_plain: "Wie breit der Radweg im Ziel sein soll, je nach Art, Netzstufe und Radverkehr."
+      why: "Wichtige Routen und viel Radverkehr brauchen mehr Breite. Die Sollwerte hat das Projekt gesetzt."
+      description: >-
+        Soll-Breite = widths_m.project_target der Führung und Radkategorie plus intensity_upgrade (oneway: cyc_peak_h
+        je Richtung, twoway: beide Richtungen), nie unter der Untergrenze (floor). Mischverkehr ohne Sollbreite;
+        eigene Trasse wie Zweirichtungsradweg; Fahrradstraße mit Kfz-Verkehr (cycle_street_motor_traffic) =
+        cycle_street_carriageway.with_motor_traffic, ohne = value. Vergleichswerte für den Steckbrief: DE-Regelmaß und
+        NL-Hauptnetz. Pfade relativ zu widths_m
+      history:
+        - "seit 0.7.0: eigene Trasse wie Zweirichtungsradweg"
+        - "F18: Fahrradstraße mit Kfz-Verkehr = with_motor_traffic, ohne = value"
       cycle_street_motor_traffic: {value: true, source_type: assumption,
         note: 'Kein Attribut sagt für eine Soll-Fahrradstraße, ob Kfz frei sind; Annahme Hamburger Regelfall „Kfz frei“ bzw. „Anlieger frei“ (Zusatzzeichen zu Z. 244.1). false = Fahrradstraße ohne Kfz (4,00 m). Review 2026-11 F18, docs/open_questions.md'}
       target_by_facility: {separated_oneway_both: separated_oneway, separated_twoway: separated_twoway, cycle_lane: cycle_lane, cycle_street: cycle_street_carriageway, own_path: separated_twoway}
@@ -560,7 +766,20 @@ facility_assignment:
       nl_reference: {separated_oneway_both: nl.hoofdnet_oneway.standard, separated_twoway: nl.hoofdnet_twoway.standard, cycle_lane: nl.cycle_lane_hoofdnet.standard, own_path: nl.hoofdnet_twoway.standard}
       status: draft
     - id: C-FAC-05
-      description: 'Ist-Führung aus OSM je Abschnitt, erste zutreffende Klasse in Reihenfolge von ist_classes: cycle_street (fahrradstrasse_official oder OSM bicycle_road/cyclestreet = yes), track (cycleway*-Wert in track_values, Radweg-Tag cycle_track_tag nach rules.yaml S-FEAT-10 oder begleitender Radweg sidepath_of), lane (lane_values oder cycle_lane_present), shared_lane (shared_values), sonst no (auch ohne cycleway-Tag). Abbildung auf die Führungsnamen mit to_facility; begleitende Radwege auf beiden Straßenseiten -> separated_oneway_both, nur auf einer Seite und in beiden Richtungen befahrbar -> twoway_track_facility. Berechnet einmal je Abschnitt in der Stufe c03b als rules.yaml S-FEAT-13 (seit 0.11.0, F26/E9); c04 (C-PRI-02), c05 und s08 lesen das Ergebnis. Ist-Breite (in c05) aus OSM wie C-PRI-08'
+      label_plain: "Radweg heute"
+      explain_plain: "Welche Art von Radweg es heute gibt, aus OpenStreetMap."
+      why: "Ohne den heutigen Radweg lässt sich kein Unterschied zum Ziel zeigen."
+      description: >-
+        Ist-Führung aus OSM je Abschnitt, erste zutreffende Klasse in Reihenfolge von ist_classes: cycle_street
+        (fahrradstrasse_official oder OSM bicycle_road/cyclestreet = yes), track (cycleway*-Wert in track_values,
+        Radweg-Tag cycle_track_tag nach rules.yaml S-FEAT-10 oder begleitender Radweg sidepath_of), lane (lane_values
+        oder cycle_lane_present), shared_lane (shared_values), sonst no (auch ohne cycleway-Tag). Abbildung auf die
+        Führungsnamen mit to_facility; begleitende Radwege auf beiden Straßenseiten -> separated_oneway_both, nur auf
+        einer Seite und in beiden Richtungen befahrbar -> twoway_track_facility. Berechnet einmal je Abschnitt in der
+        Stufe c03b als rules.yaml S-FEAT-13; c04 (C-PRI-02), c05 und s08 lesen das Ergebnis. Ist-Breite (in c05) aus
+        OSM wie C-PRI-08
+      history:
+        - "seit 0.11.0 (F26/E9): einmal je Abschnitt in c03b als S-FEAT-13"
       ist_classes: [cycle_street, track, lane, shared_lane, 'no']
       track_values: [track, opposite_track, separate]
       track_note: 'separate = getrennt erfasster Radweg; auch wenn kein sidepath_of gefunden wurde, als track gewertet'
@@ -570,6 +789,9 @@ facility_assignment:
       twoway_track_facility: separated_twoway
       status: draft
     - id: C-FAC-06
+      label_plain: "Fehlt der Radweg?"
+      explain_plain: "Vergleich von heute und Ziel: fehlt, anders, zu schmal oder passt."
+      why: "So sieht man, wo ein Radweg fehlt, anders sein sollte oder zu schmal ist."
       description: 'facility_gap, erste zutreffende Stufe: not_assessed (kein Soll oder Soll in not_assessed_soll), missing (Ist erfüllt das Soll nach C-PRI-03 satisfies nicht und Ist-Klasse in missing_classes), partial (Ist ist Teilerfüllung nach C-PRI-03 partial oder fallback der Zelle), wrong_type (Ist erfüllt das Soll nicht), too_narrow (Ist-Breite bekannt und < Soll-Breite), sonst none. gap_partial = Ist ist Teilerfüllung (C-PRI-03 partial) oder fallback der Zelle'
       missing_classes: ['no', shared_lane]
       not_assessed_soll: [own_path]
@@ -578,6 +800,9 @@ facility_assignment:
       not_assessed_note: 'own_path = eigene Trasse abseits der Straße (SW, RSV statt Fußgängerzone); die Ist-Führung auf der Straße sagt darüber nichts'
       status: draft
     - id: C-FAC-07
+      label_plain: "Datenlage Radweg"
+      explain_plain: "Wie sicher die Angabe zum Radweg ist."
+      why: "Die Angaben zum Radweg sind nicht überall gleich gut. So sieht man, wie verlässlich der Vergleich ist."
       description: 'facility_confidence: low ohne cat_final, medium bei einem Flag aus lowers_confidence, sonst high'
       lowers_confidence: [dtv_unknown, fallback_check_p19]
       status: draft

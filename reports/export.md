@@ -1,6 +1,6 @@
 # Export – Stufe 9
 
-Erzeugt: 2026-11-14T20:47:58+00:00 von `pipeline/s09_export.py`, Version 0.21.0+2026-10-28. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-14T22:30:38+00:00 von `pipeline/s09_export.py`, Version 0.21.1+2026-10-28. Nicht amtlicher Entwurf.
 
 ## Prüfungen
 
@@ -19,7 +19,7 @@ Erzeugt: 2026-11-14T20:47:58+00:00 von `pipeline/s09_export.py`, Version 0.21.0+
 | Radnetz-Kacheln | ok | tiles/cycling.pmtiles, tiles/junctions.pmtiles |
 | Radnetz-Robustheit aus c08 übernommen | ok | 52770 Einträge |
 | Radnetz-Downloads ohne Rohspuren | ok | Spalten aus plain_language.yaml cycling.columns |
-| Robustheit aus make validate übernommen | ok | 33712/33712 Abschnitte, rules.yaml 0.21.0 |
+| Robustheit aus make validate übernommen | ok | 33712/33712 Abschnitte, rules.yaml 0.21.1 |
 
 ## Kennzahlen
 
@@ -62,13 +62,13 @@ Erzeugt: 2026-11-14T20:47:58+00:00 von `pipeline/s09_export.py`, Version 0.21.0+
 | `data/out/downloads/cycle_network.parquet` | 9.38 MB |
 | `data/out/downloads/cycle_segments.geojson` | 38.40 MB |
 | `data/out/downloads/cycle_segments.parquet` | 6.03 MB |
-| `data/out/downloads/cycling_rules.yaml` | 0.06 MB |
+| `data/out/downloads/cycling_rules.yaml` | 0.08 MB |
 | `data/out/downloads/datenbeschreibung.md` | 0.01 MB |
-| `data/out/downloads/design_rules.yaml` | 0.04 MB |
+| `data/out/downloads/design_rules.yaml` | 0.05 MB |
 | `data/out/downloads/junctions.geojson` | 12.60 MB |
 | `data/out/downloads/junctions.parquet` | 0.96 MB |
 | `data/out/downloads/overrides.csv` | 0.00 MB |
-| `data/out/downloads/rules.yaml` | 0.07 MB |
+| `data/out/downloads/rules.yaml` | 0.09 MB |
 | `data/out/downloads/segments.csv` | 15.47 MB |
 | `data/out/downloads/segments.geojson` | 58.35 MB |
 | `data/out/downloads/segments.parquet` | 8.16 MB |
@@ -81,7 +81,7 @@ Erzeugt: 2026-11-14T20:47:58+00:00 von `pipeline/s09_export.py`, Version 0.21.0+
 | `data/out/tiles/junctions.pmtiles` | 3.08 MB |
 | `data/out/tiles/segments.pmtiles` | 13.58 MB |
 | `data/out/basemap/fonts/ (768 Glyphen-Dateien)` | 11.08 MB |
-| `data/out/junctions/ (16244 Knoten-Steckbriefe)` | 26.29 MB |
+| `data/out/junctions/ (16244 Knoten-Steckbriefe)` | 25.65 MB |
 | `data/out/table/ (7 Dateien, je Bezirk)` | 5.68 MB |
 
 ## Stichprobe (30 zufällige Steckbriefe, Seed 42)

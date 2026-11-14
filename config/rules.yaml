@@ -7,8 +7,8 @@
 #   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
 #   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.21.0
-  date: 2026-11-11
+  version: 0.21.1
+  date: 2026-11-14
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
   note: "Schwellen mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen."
@@ -30,19 +30,22 @@ sources:
 
 # Kategorien nach Duurzaam Veilig; speed_kmh = Soll-Tempo der Kategorie (Herkunft je Kategorie, seit 0.17.0)
 categories:
-  SW:      {label_de: "Schnellverkehrsstraße", class_report2: null, speed_kmh: null, nl: "stroomweg", source: SWOV_FS_2023, source_type: swov_crow}
-  GOW50:   {label_de: "Stadtmagistrale",        class_report2: K1,  speed_kmh: 50, nl: "gebiedsontsluitingsweg 50", source: SWOV_FS_2023, source_type: swov_crow}
-  GOW30:   {label_de: "Stadtstraße 30",         class_report2: K2,  speed_kmh: 30, nl: "gebiedsontsluitingsweg 30", source: [SWOV_FS_2023, CROW_GOW30_2023], source_type: swov_crow}
-  ETW30:   {label_de: "Quartiersstraße",        class_report2: K3,  speed_kmh: 30, nl: "erftoegangsweg 30", source: SWOV_FS_2023, source_type: swov_crow}
-  ETW_ERF: {label_de: "Aufenthaltsstraße",      class_report2: K4,  speed_kmh: 7,  nl: "erf", source_type: assumption, note: "Schrittgeschwindigkeit; 7 nur als Rechenwert (eigene Setzung, kein Wert aus SWOV/CROW)"}
-  GOW80:   {label_de: "Landstraße (Verbindung)", rural: true, speed_kmh: 80, source: SWOV_FS_2023, source_type: swov_crow}
-  ETW60:   {label_de: "Landstraße (Erschließung)", rural: true, speed_kmh: 60, source: SWOV_FS_2023, source_type: swov_crow}
+  SW:      {label_plain: "Schnellstraße", explain_plain: "Autobahn oder Kraftfahrstraße: nur für Autos, ohne Häuser direkt an der Straße.", label_de: "Schnellverkehrsstraße", class_report2: null, speed_kmh: null, nl: "stroomweg", source: SWOV_FS_2023, source_type: swov_crow}
+  GOW50:   {label_plain: "Hauptstraße mit Tempo 50", explain_plain: "Verbindet Stadtteile; Autos fahren 50 km/h, das Rad hat einen eigenen Radweg.", label_de: "Stadtmagistrale",        class_report2: K1,  speed_kmh: 50, nl: "gebiedsontsluitingsweg 50", source: SWOV_FS_2023, source_type: swov_crow}
+  GOW30:   {label_plain: "Hauptstraße mit Tempo 30", explain_plain: "Verbindet Stadtteile, hat aber viel Leben am Rand; darum gilt Tempo 30.", label_de: "Stadtstraße 30",         class_report2: K2,  speed_kmh: 30, nl: "gebiedsontsluitingsweg 30", source: [SWOV_FS_2023, CROW_GOW30_2023], source_type: swov_crow}
+  ETW30:   {label_plain: "Wohnstraße mit Tempo 30", explain_plain: "Führt zu den Häusern im Viertel; Rad und Auto teilen sich die Fahrbahn.", label_de: "Quartiersstraße",        class_report2: K3,  speed_kmh: 30, nl: "erftoegangsweg 30", source: SWOV_FS_2023, source_type: swov_crow}
+  ETW_ERF: {label_plain: "Fußgängerzone oder Spielstraße", explain_plain: "Menschen zu Fuß haben Vorrang; Autos fahren höchstens Schritttempo.", label_de: "Aufenthaltsstraße",      class_report2: K4,  speed_kmh: 7,  nl: "erf", source_type: assumption, note: "Schrittgeschwindigkeit; 7 nur als Rechenwert (eigene Setzung, kein Wert aus SWOV/CROW)"}
+  GOW80:   {label_plain: "Landstraße mit Tempo 80", explain_plain: "Verbindet Orte außerhalb der Stadt; derzeit nicht bewertet.", label_de: "Landstraße (Verbindung)", rural: true, speed_kmh: 80, source: SWOV_FS_2023, source_type: swov_crow}
+  ETW60:   {label_plain: "Zufahrtsstraße auf dem Land mit Tempo 60", explain_plain: "Führt außerhalb der Stadt zu Höfen und Orten; derzeit nicht bewertet.", label_de: "Landstraße (Erschließung)", rural: true, speed_kmh: 60, source: SWOV_FS_2023, source_type: swov_crow}
 
 # ---------------------------------------------------------------
 # Klassifikationskaskade: Reihenfolge = Priorität. Erste zutreffende Endregel gewinnt.
 # ---------------------------------------------------------------
 classification:
   - id: C-SW-01
+    label_plain: "Autobahn wird Schnellstraße"
+    explain_plain: "Autobahnen und Kraftfahrstraßen nur für Autos werden Schnellstraßen."
+    why: "Schnellstraßen haben eine eigene Aufgabe. Sie passen nicht in die Regeln für Stadtstraßen."
     if: "highway in [motorway, motorway_link, trunk] and access_motor_only"
     then: SW
     source: SWOV_FS_2023
@@ -51,17 +54,25 @@ classification:
     note: "Stroomwegen nur anbaufrei; in Hamburg v. a. Autobahnen."
 
   - id: C-RUR-01
+    label_plain: "Außerorts: Landstraße"
+    explain_plain: "Außerhalb von Ortschaften würde eine Straße Landstraße mit Tempo 80 oder 60; die Regel ist abgeschaltet, weil Daten fehlen."
+    why: "Für außerorts gibt es keine Datenquelle. Darum greift die Regel nie."
     if: "outside_builtup_area"
     then: "GOW80 if conn_score >= thresholds.conn_gow else ETW60"
     source: SWOV_FS_2023
     source_type: swov_crow
     status: inactive
     note: >-
-      Inaktiv seit 0.17.0 (F28): Für outside_builtup_area gibt es keine Datenquelle (C-MISS-01); die Regel greift nie
-      und senkt confidence nicht. Bei Aktivierung `or in_hvs` ergänzen (wie C-GOW-01), sonst wird eine HVS außerorts
-      mit niedrigem conn_score ETW60.
+      Inaktiv: Für outside_builtup_area gibt es keine Datenquelle (C-MISS-01); die Regel greift nie und senkt
+      confidence nicht. Bei Aktivierung `or in_hvs` ergänzen (wie C-GOW-01), sonst wird eine HVS außerorts mit
+      niedrigem conn_score ETW60.
+    history:
+      - "inaktiv seit 0.17.0 (F28)"
 
   - id: C-ERF-01
+    label_plain: "Fußgängerzone bleibt Fußgängerzone"
+    explain_plain: "Verkehrsberuhigte Bereiche, Fußgängerzonen und eingetragene Schulstraßen werden Fußgängerzone oder Spielstraße."
+    why: "Diese Orte sind für Menschen zu Fuß gedacht. Sie bekommen darum eine eigene Kategorie."
     if: "ist_verkehrsberuhigt or pedestrian_zone or override_school_street"
     then: ETW_ERF
     source: SWOV_FS_2023
@@ -69,57 +80,78 @@ classification:
     status: draft
 
   - id: C-GOW-01
+    label_plain: "Verbindet die Straße Stadtteile?"
+    explain_plain: "Eine Straße wird Hauptstraße, wenn sie auf der Liste der Hauptverkehrsstraßen steht oder ihr Verbindungswert hoch ist."
+    why: "Nach Duurzaam Veilig hat jede Straße genau eine Aufgabe. Straßen, die Stadtteile verbinden, brauchen eine andere Gestaltung als Straßen im Wohngebiet."
     description: "Verbindungsfunktion hoch → Gebiedsontsluitingsweg"
     if: "conn_score >= thresholds.conn_gow or in_hvs"
     then: "GOW (weiter mit C-G30-*)"
     thresholds:
-      conn_gow: {value: 0.87, unit: "score 0-1", source_type: assumption, check: "Sensitivität ±20 %, Abgleich HVS; Stichprobe nach der Neukalibrierung (F13)"}
+      conn_gow: {label_plain: "Verbindungswert ab dem eine Straße Hauptstraße wird", value: 0.87, unit: "score 0-1", source_type: assumption, check: "Sensitivität ±20 %, Abgleich HVS; Stichprobe nach der Neukalibrierung (F13)"}
     note: >-
-      in_hvs wirkt nur noch als eigener Auslöser, nicht mehr im conn_score (F13, Entscheidung Q3 b 2026-11-08).
-      conn_gow 0,87 ist neu kalibriert (vorher 0,6 mit in_hvs im Score): gewählt ist der zweistellige Wert, bei dem die
-      km der Abschnitte ohne HVS, die die Kaskade zu GOW macht (cat_proposed GOW50/GOW30, in_hvs false, Arbeitsgebiet),
-      dem Lauf 0.17.0 (= 0.16.0) am nächsten kommen: 78,0 km vorher, 82,6 km mit 0,87 (0,88: 67,8 km). Rechnung mit den
-      Normwerten aus features.parquet, danach Kontrolllauf der Kaskade; Ergebnis im CHANGELOG 0.18.0.
+      in_hvs wirkt nur als eigener Auslöser, nicht im conn_score. conn_gow 0,87 ist kalibriert: gewählt ist der
+      zweistellige Wert, bei dem die km der Abschnitte ohne HVS, die die Kaskade zu GOW macht (cat_proposed
+      GOW50/GOW30, in_hvs false, Arbeitsgebiet), dem Lauf 0.17.0 (= 0.16.0) am nächsten kommen: 82,6 km mit 0,87
+      (0,88: 67,8 km). Rechnung mit den Normwerten aus features.parquet, danach Kontrolllauf der Kaskade; Ergebnis im
+      CHANGELOG 0.18.0.
+    history:
+      - "seit 0.18.0 (F13, Entscheidung Q3 b 2026-11-08): in_hvs wirkt nur noch als eigener Auslöser, nicht mehr im conn_score"
+      - "seit 0.18.0 (F13, Entscheidung Q3 b 2026-11-08): conn_gow neu kalibriert auf 0,87 (vorher 0,6 mit in_hvs im Score; Vergleichswert vorher: 78,0 km)"
     source: [SWOV_FS_2023, HH_HVS_2023]
     source_type: swov_crow
     status: draft
 
   - id: C-G30-01
+    label_plain: "Tempo 30 wegen Schule oder Läden"
+    explain_plain: "Eine Hauptstraße bekommt Tempo 30, wenn eine Schule oder Kita direkt an ihr liegt oder viele Läden an ihr sind."
+    why: "Schulen, Kitas und viele Läden bedeuten viel Leben am Rand. Das niederländische Regelwerk (CROW) nennt das Umfeld als Auslöser für Tempo 30."
     description: "GOW30-Auslöser a: Umfeld spricht für 30 (Schule/Kita am Abschnitt, Leben, Querbarkeit)"
     applies_to: GOW
     if: "school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high"
     then: GOW30
     thresholds:
-      access_radius: {value: 50, unit: m, source_type: assumption,
+      access_radius: {label_plain: "größter Abstand zum Grundstück einer Schule oder Kita", value: 50, unit: m, source_type: assumption,
                       check: "Abstand Grundstück der Einrichtung (allgemeinbildende Schule, Kita) zum Abschnitt; StVO § 45 (9) S. 4 Nr. 6 'unmittelbarer Bereich' (Wortlaut am Original prüfen); 50 m ist eigene Setzung (F07, Q2 b)"}
-      frontage:         {value: 0.4, unit: "Anteil Erdgeschoss mit Publikumsnutzung", source_type: assumption}
+      frontage:         {label_plain: "Anteil Gebäude mit Läden ab dem Tempo 30 gilt", value: 0.4, unit: "Anteil Erdgeschoss mit Publikumsnutzung", source_type: assumption}
     note: >-
-      Umfeld vor heutiger Verkehrsmenge: keine DTV-Obergrenze (Obergrenze aus 0.14.0 zurückgenommen, Entscheidung
-      prstolpe 2026-11-07). GOW30 über dem CROW-Profil zeigt der Soll-Querschnitt mit Flag gow30_dtv_above_profile
-      (setzt weniger Kfz-Verkehr voraus). Seit 0.18.0 (F07, Entscheidung Q2 b 2026-11-08) löst nur eine Schule oder Kita
-      mit Grundstück höchstens access_radius vom Abschnitt aus (vorher jede im Umkreis sensitive_radius 150 m); die
-      150 m gelten nur noch für die Priorität (P-RISK-01 school_kita_radius_m). Näherung: Schulen und Kitas kommen aus
-      OSM (Fläche oder Punkt); gemessen wird der Abstand zur Fläche, bei Punkten zum Punkt (S-FEAT-06,
-      docs/open_questions.md). Der Teil crossing_demand ist stillgelegt (C-MISS-01, status inactive, F25).
+      Umfeld vor heutiger Verkehrsmenge: keine DTV-Obergrenze. GOW30 über dem CROW-Profil zeigt der Soll-Querschnitt
+      mit Flag gow30_dtv_above_profile (setzt weniger Kfz-Verkehr voraus). Es löst nur eine Schule oder Kita mit
+      Grundstück höchstens access_radius vom Abschnitt aus; die 150 m (sensitive_radius) gelten nur für die Priorität
+      (P-RISK-01 school_kita_radius_m). Näherung: Schulen und Kitas kommen aus OSM (Fläche oder Punkt); gemessen wird
+      der Abstand zur Fläche, bei Punkten zum Punkt (S-FEAT-06, docs/open_questions.md). Der Teil crossing_demand ist
+      stillgelegt (C-MISS-01, status inactive).
+    history:
+      - "0.14.0: DTV-Obergrenze eingeführt; zurückgenommen (Entscheidung prstolpe 2026-11-07)"
+      - "seit 0.18.0 (F07, Entscheidung Q2 b 2026-11-08): nur Schule oder Kita mit Grundstück höchstens access_radius vom Abschnitt; vorher jede im Umkreis sensitive_radius 150 m"
+      - "seit 0.18.0 (F07, Entscheidung Q2 b 2026-11-08): die 150 m gelten nur noch für die Priorität"
+      - "crossing_demand stillgelegt (F25)"
     source: [CROW_AFW30_2021, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
 
   - id: C-G30-02
+    label_plain: "Tempo 30, wenn Platz für den Radweg fehlt"
+    explain_plain: "Ist die Straße zu schmal für Tempo 50 mit Radweg, wird es Tempo 30."
+    why: "Bei Tempo 50 braucht das Rad einen getrennten Radweg. Passt er nicht in die Straße, ist Tempo 50 nicht sicher zu gestalten."
     description: "GOW30-Auslöser b: 50 nicht sicher gestaltbar (kein ausreichender getrennter Radweg möglich)"
     applies_to: GOW
     if: "(not bus_route and width_p10_m < required_width.GOW50) or (bus_route and width_p10_m < required_width.GOW50_bus)"
     then: GOW30
     note: >-
-      Seit 0.18.0 (F06): nur über den Raum. Ein vorhandener Radweg zählt nicht (CROW-Auslöser b fragt, ob ein
-      ausreichender Radweg realisierbar ist). bus_route = Busse je Spitzenstunde und Richtung nach PRF-02 >=
-      S-FEAT-08 bus_route_min_peak_h_dir (s04). Flag existing_track_below_floor (c05), wenn die Ist-Breite des Radwegs
-      bekannt ist und unter der Untergrenze C-FAC-04 floor liegt.
+      Nur über den Raum. Ein vorhandener Radweg zählt nicht (CROW-Auslöser b fragt, ob ein ausreichender Radweg
+      realisierbar ist). bus_route = Busse je Spitzenstunde und Richtung nach PRF-02 >= S-FEAT-08
+      bus_route_min_peak_h_dir (s04). Flag existing_track_below_floor (c05), wenn die Ist-Breite des Radwegs bekannt
+      ist und unter der Untergrenze C-FAC-04 floor liegt.
+    history:
+      - "seit 0.18.0 (F06): nur über den Raum"
     source: [SWOV_FS_2023, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
 
   - id: C-G50-01
+    label_plain: "Sonst Hauptstraße mit Tempo 50"
+    explain_plain: "Trifft keiner der Gründe für Tempo 30 zu, bleibt die Hauptstraße bei Tempo 50."
+    why: "Tempo 30 braucht einen Grund. Fehlt er, bleibt eine Hauptstraße schnell und wird dafür gut getrennt."
     applies_to: GOW
     if: "no C-G30-* passed"
     then: GOW50
@@ -128,6 +160,9 @@ classification:
     status: draft
 
   - id: C-ETW-01
+    label_plain: "Alle übrigen: Wohnstraße"
+    explain_plain: "Alle anderen Straßen werden Wohnstraßen mit Tempo 30."
+    why: "Jede Straße braucht eine Aufgabe. Straßen ohne andere Aufgabe führen zu den Häusern im Viertel."
     if: "default"
     then: ETW30
     source: SWOV_FS_2023
@@ -139,6 +174,9 @@ classification:
 # ---------------------------------------------------------------
 classification_policy:
   - id: C-MISS-01
+    label_plain: "Umgang mit fehlenden Werten"
+    explain_plain: "Fehlt ein Wert, greift eine Regel nur, wenn ihr Ergebnis trotzdem feststeht; sonst gilt die Einstufung als unsicher."
+    why: "Daten sind oft lückenhaft. So wird nichts geraten, und unsichere Fälle bleiben sichtbar."
     description: >-
       Fehlende Werte: dreiwertige Logik (Kleene). Ein Vergleich mit einem fehlenden Wert ist unbekannt; „oder“ ist wahr,
       sobald ein Teil wahr ist, „und“ ist falsch, sobald ein Teil falsch ist. Eine Regel greift nur, wenn ihre Bedingung
@@ -150,15 +188,22 @@ classification_policy:
                         note: "Q2 b (2026-11-08): place_score als Auslöser erst nach Kalibrierung an den E1-Stichproben prüfen. Stillgelegt (F25): der Wert ist immer not_assessed (zählt als nicht high), auch wenn eine Eingabe vorliegt; senkt confidence nicht und zählt in Berichten nicht als abgedeckt"}
     source_type: assumption
     status: draft
-    note: "Entscheidung Projektteam 2026-10-28. Defaults gelten nur für fehlende Werte und zählen als Fallback-Quelle (C-CONF-01), außer sie stehen in C-CONF-01 global_caveats. Ein Default mit status inactive ersetzt jeden Wert (stillgelegter Teil einer Bedingung)."
+    note: >-
+      Defaults gelten nur für fehlende Werte und zählen als Fallback-Quelle (C-CONF-01), außer sie stehen in C-CONF-01
+      global_caveats. Ein Default mit status inactive ersetzt jeden Wert (stillgelegter Teil einer Bedingung).
+    history:
+      - "Entscheidung Projektteam 2026-10-28"
 
   - id: C-CONF-01
+    label_plain: "Wie gut ist die Datenlage?"
+    explain_plain: "Die Datenlage ist niedrig, wenn ein entscheidender Wert fehlt oder knapp an einem Grenzwert liegt, und mittel bei Ersatzwerten."
+    why: "Nicht jede Einstufung ist gleich sicher. So sehen Fachleute, wo sie genauer hinschauen müssen."
     description: >-
       confidence je Abschnitt: niedrig, wenn ein entscheidender Eingangswert fehlt oder innerhalb ±near_threshold
       einer Schwelle (thresholds.* oder required_width.*) liegt; mittel, wenn ein entscheidender Eingangswert aus einer
       Fallback-Quelle stammt oder ein Default aus C-MISS-01 ist; sonst hoch.
     thresholds:
-      near_threshold: {value: 0.10, unit: "Anteil der Schwelle (±)", source_type: assumption}
+      near_threshold: {label_plain: "Spanne um einen Grenzwert, in der ein Wert als knapp gilt", value: 0.10, unit: "Anteil der Schwelle (±)", source_type: assumption}
     fallback_inputs:
       school_or_kita_access_m: {note: "Schulen/Kitas aus OSM amenity=school/kindergarten statt amtlicher Quelle (sources.yaml fallback_osm)"}
       in_hvs: {note: "DTV-Linien HVS 2019 statt HVS-Karte 2023 (S-CONF-04)"}
@@ -171,10 +216,12 @@ classification_policy:
     source_type: assumption
     status: draft
     note: >-
-      Prompt 08, Entscheidung Projektteam 2026-10-28. Es zählen nur Eingangswerte, die das Ergebnis einer Regel bestimmt
-      haben: bei wahrem „oder“ der sicherste wahre Teil, bei falschem „und“ der sicherste falsche Teil, sonst alle Teile.
-      Die confidence des Abschnitts ist das Minimum über alle geprüften Regeln des Entscheidungswegs. Ist die
-      when-Bedingung einer Fallback-Quelle unbekannt, zählt der Wert als Fallback.
+      Es zählen nur Eingangswerte, die das Ergebnis einer Regel bestimmt haben: bei wahrem „oder“ der sicherste wahre
+      Teil, bei falschem „und“ der sicherste falsche Teil, sonst alle Teile. Die confidence des Abschnitts ist das
+      Minimum über alle geprüften Regeln des Entscheidungswegs. Ist die when-Bedingung einer Fallback-Quelle
+      unbekannt, zählt der Wert als Fallback.
+    history:
+      - "Prompt 08, Entscheidung Projektteam 2026-10-28"
 
 # Verbindungs- und Aufenthaltsscore (gewichtete Summe normierter Merkmale)
 scores:
@@ -269,25 +316,40 @@ network:
     note: "guide.md 3.2: Klassen bis living_street, ohne service. *_link mitgeführt (Annahme); pedestrian als eigene Abschnitte, weil sie ETW_ERF werden können (prompts/04_network.md). Nicht enthalten: service, road, busway, track."
   rules:
     - id: S-NET-01
+      label_plain: "Straßenstück endet an Kreuzungen"
+      explain_plain: "Ein Straßenstück endet an jeder Kreuzung, Einmündung und Sackgasse."
+      why: "So bekommt jedes Stück zwischen zwei Kreuzungen eine eigene Einstufung."
       description: "Abschnittsende an jedem Knoten mit Grad != 2 (Kreuzung, Einmündung, Sackgassenende)"
       source_type: assumption
       status: draft
       note: "guide.md 3.2 Stufe 2"
     - id: S-NET-02
+      label_plain: "Straßenstück endet beim Wechsel der Straßenart"
+      explain_plain: "Ein Straßenstück endet auch dort, wo sich die Art der Straße in OpenStreetMap ändert."
+      why: "Jedes Straßenstück soll genau eine Straßenart haben. Fußgängerzonen werden so eigene Stücke."
       description: "Abschnittsende an Knoten mit Grad 2, an denen sich die highway-Klasse ändert"
       attribute: highway
       source_type: assumption
       status: draft
       note: "Jeder Abschnitt hat genau eine highway-Klasse; Fußgängerzonen werden so eigene Abschnitte."
     - id: S-NET-03
+      label_plain: "Teilen beim Tempowechsel"
+      explain_plain: "Lange Straßenstücke über 400 Meter werden geteilt, wo sich das erlaubte Tempo ändert."
+      why: "Ein Wechsel des Tempos soll sich im Ergebnis zeigen."
       description: "Abschnitte länger als min_length_m an Knoten teilen, an denen sich maxspeed ändert (nur Wechsel zwischen zwei bekannten Werten)"
       attribute: maxspeed
       thresholds:
-        min_length_m: {value: 400, unit: m, source_type: assumption, check: "fachlich freigeben (docs/open_questions.md)"}
+        min_length_m: {label_plain: "Mindestlänge für das Teilen beim Tempowechsel", value: 400, unit: m, source_type: assumption, check: "fachlich freigeben (docs/open_questions.md)"}
       source_type: assumption
       status: draft
-      note: "guide.md 3.2 Stufe 2 nennt auch Querschnittswechsel; Querschnittsdaten liegen erst nach Prompt 07 vor."
+      note: >-
+        guide.md 3.2 Stufe 2 nennt auch Querschnittswechsel.
+      history:
+        - "Querschnittsdaten liegen erst nach Prompt 07 vor"
     - id: S-NET-04
+      label_plain: "Benannte Zufahrten gehören dazu"
+      explain_plain: "Benannte Zufahrten und Wirtschaftswege mit Autoverkehr kommen ins Netz, Fußwege und Parkplatzgassen nicht."
+      why: "Benannte Zufahrten gehören ins Netz. Reine Fußwege und Parkplatzgassen bleiben draußen."
       description: >-
         Benannte Zufahrten zusätzlich ins Netz: highway=service ohne service-Untertyp oder mit service=alley und
         highway=track mit Kfz-Zugang (erster bekannter Wert aus motor_access_keys in motor_access_values oder ohne Angabe);
@@ -301,9 +363,11 @@ network:
       source_type: assumption
       status: draft
       note: >-
-        Entscheidung Projektteam 2026-11-04 (z. B. Amselweg in Eimsbüttel: track, vehicle=destination). Neue Einmündungen
-        teilen bestehende Abschnitte; deren segment_id ändert sich einmalig (overrides.csv war leer). Nicht in der
-        Betweenness (S-FEAT-02 exclude_highway), weil es kein Standardtempo für diese Klassen gibt.
+        Beispiel: Amselweg in Eimsbüttel (track, vehicle=destination). Neue Einmündungen teilen bestehende Abschnitte.
+        Nicht in der Betweenness (S-FEAT-02 exclude_highway), weil es kein Standardtempo für diese Klassen gibt.
+      history:
+        - "Entscheidung Projektteam 2026-11-04: benannte Zufahrten ins Netz (Beispiel Amselweg)"
+        - "bei Einführung: deren segment_id änderte sich einmalig (overrides.csv war leer)"
 
 # ---------------------------------------------------------------
 # Conflation amtlich <-> OSM (pipeline/s03_conflate.py, guide.md 3.2 Stufe 3, prompts/05)
@@ -311,11 +375,14 @@ network:
 conflation:
   rules:
     - id: S-CONF-01
+      label_plain: "Amtliche Linien zuordnen"
+      explain_plain: "Amtliche Linien, etwa das Tempo, werden dem passenden Straßenstück zugeordnet, nach Lage, Richtung und Überdeckung."
+      why: "Amtliche Daten und die Karte stammen aus verschiedenen Quellen. Damit sie zusammenpassen, braucht es eine Zuordnung."
       description: "Linienabgleich amtlich -> Abschnitt: Kandidaten im Puffer, Filter nach Richtungswinkel und Überdeckungsanteil, Zuordnung nach Hausdorff-Abstand"
       thresholds:
-        buffer_m:          {value: 15,  unit: m, source_type: assumption, check: "per Stichprobe kalibrieren (reports/conflation_sample.csv)"}
-        max_angle_deg:     {value: 20,  unit: "Grad (ungerichtet, 0-90)", source_type: assumption, check: "per Stichprobe kalibrieren"}
-        min_overlap_share: {value: 0.6, unit: "Anteil 0-1", source_type: assumption, check: "per Stichprobe kalibrieren"}
+        buffer_m:          {label_plain: "Suchabstand für amtliche Linien", value: 15,  unit: m, source_type: assumption, check: "per Stichprobe kalibrieren (reports/conflation_sample.csv)"}
+        max_angle_deg:     {label_plain: "größter Richtungsunterschied beim Zuordnen", value: 20,  unit: "Grad (ungerichtet, 0-90)", source_type: assumption, check: "per Stichprobe kalibrieren"}
+        min_overlap_share: {label_plain: "nötige Überdeckung beim Zuordnen", value: 0.6, unit: "Anteil 0-1", source_type: assumption, check: "per Stichprobe kalibrieren"}
       source_type: assumption
       status: draft
       note: >-
@@ -326,9 +393,12 @@ conflation:
         none = kein gültiger Kandidat. Attribute vom gültigen Kandidaten mit kleinstem Hausdorff-Abstand.
         Definition exact/partial ist Vorschlag (docs/open_questions.md).
     - id: S-CONF-02
+      label_plain: "Tempo-30-Zonen zuordnen"
+      explain_plain: "Ein Straßenstück gehört zu einer Zone, wenn mindestens die Hälfte an deren Linien liegt."
+      why: "Die Zonen liegen als Linien vor, nicht als Flächen. Darum zählt der Längenanteil."
       description: "Zonen (Tempo 30, Tempo 20, verkehrsberuhigte Bereiche) über Längenanteil zuordnen"
       thresholds:
-        min_length_share: {value: 0.5, unit: "Anteil 0-1 der Abschnittslänge", source_type: assumption, check: "per Stichprobe kalibrieren"}
+        min_length_share: {label_plain: "nötiger Längenanteil in einer Zone", value: 0.5, unit: "Anteil 0-1 der Abschnittslänge", source_type: assumption, check: "per Stichprobe kalibrieren"}
       source_type: assumption
       status: draft
       note: >-
@@ -336,6 +406,9 @@ conflation:
         Anteil der Abschnittslänge im Puffer (buffer_m aus S-CONF-01) der richtungsgleichen Zonenlinien
         (max_angle_deg aus S-CONF-01), damit Querstraßen an Knoten nicht zählen. Anteil >= min_length_share: Zone gilt.
     - id: S-CONF-03
+      label_plain: "Zeitweise Tempolimits getrennt"
+      explain_plain: "Tempolimits, die nur zu bestimmten Zeiten gelten, werden getrennt gespeichert und nicht als normales Tempo gezählt."
+      why: "Zeitweises Tempo gilt nicht immer. Es würde das normale Tempo verfälschen."
       description: "Zeitlich begrenzte Regelungen (sonderregelung) getrennt speichern, nie als Regeltempo"
       text_values: {"5-7 km/h": 7}  # verkehrsberuhigt = Rechenwert von ETW_ERF (categories.ETW_ERF.speed_kmh); seit 0.16.0
       source: HH_TEMPO
@@ -346,13 +419,22 @@ conflation:
         Regeltempo das Feld geschwindigkeit, wenn es davon abweicht, sonst unbekannt. Mehrdeutige Fälle siehe
         docs/open_questions.md.
     - id: S-CONF-04
-      description: "in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist. Seit 0.16.0: partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist (in_hvs_source neighbour); Wege aus S-NET-04 (service, track) nie"
+      label_plain: "Hauptverkehrsstraßen aus der Karte 2019"
+      explain_plain: "Ob eine Straße Hauptverkehrsstraße ist, kommt aus der Verkehrsmengenkarte 2019, weil die aktuelle Karte nicht als Daten vorliegt."
+      why: "Die aktuelle Karte liegt nicht als Daten vor. Darum dient die Karte von 2019 als Ersatz."
+      description: >-
+        in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar
+        ist. partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist
+        (in_hvs_source neighbour); Wege aus S-NET-04 (service, track) nie
       source: HH_DTV_HVS_2019
       source_type: hamburg
       status: draft
       note: >-
-        Ersatz für die HVS-Karte 2023 (HH_HVS_2023, nur PDF) und den WFS Strategisches Straßennetz (HTTP 404).
-        Stand 2019; Abweichungen zur Karte 2023 sind möglich. Entscheidung Projektteam 2026-10-28.
+        Ersatz für die HVS-Karte 2023 (HH_HVS_2023, nur PDF) und den WFS Strategisches Straßennetz (HTTP 404). Stand
+        2019; Abweichungen zur Karte 2023 sind möglich.
+      history:
+        - "seit 0.16.0: partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist (in_hvs_source neighbour)"
+        - "Entscheidung Projektteam 2026-10-28: DTV-Linien 2019 als Ersatzquelle"
 
 # ---------------------------------------------------------------
 # Merkmale je Abschnitt (pipeline/s04_features.py, guide.md 3.2 Stufe 4, prompts/06)
@@ -361,39 +443,47 @@ conflation:
 features:
   rules:
     - id: S-FEAT-01
+      label_plain: "Werte vergleichbar machen"
+      explain_plain: "Merkmale werden in eine Rangzahl von 0 bis 1 umgerechnet, damit man sie zusammenzählen kann."
+      why: "Die Merkmale haben ganz unterschiedliche Einheiten. Erst mit gleicher Skala lassen sie sich vergleichen."
       description: "Normierung auf 0-1 als Perzentilrang (empirische Verteilungsfunktion) über alle Abschnitte im Arbeitsgebiet mit bekanntem Wert"
       method: percentile_rank
       ties: min
       source_type: assumption
       status: draft
       note: >-
-        Gleiche Werte erhalten den kleinsten Rang ihrer Gruppe (seit 0.5.0; vorher mittlerer Rang), damit der kleinste
-        Wert auf 0 fällt: ohne Bus (rund 70 % der Abschnitte) bus_trips_weekday_norm 0 statt 0,35, Sackgassen mit
-        Betweenness 0 ebenso. Ohne Streuung (ein Wert oder alle gleich) ist der Normwert 0. in_hvs geht als 0/1 ein, shop_frontage_share ist schon ein Anteil
-        0-1 und wird nicht umgerechnet. Folge: conn_gow 0,6 bedeutet bei einem einzelnen Merkmal 'oberste 40 %'.
-        Seit 0.13.0 ist das Arbeitsgebiet ganz Hamburg (ohne Neuwerk und ohne die ländlichen Stadtteile aus
-        config/project.yaml): Der Rang gilt stadtweit, damit derselbe Abschnitt in jedem Bezirk gleich bewertet wird
-        (Entscheidung Projektteam 2026-11-04). Schwellen wie conn_gow sind unverändert, wirken aber auf die stadtweite
-        Verteilung.
-        Entscheidung Projektteam 2026-10-28.
+        Gleiche Werte erhalten den kleinsten Rang ihrer Gruppe, damit der kleinste Wert auf 0 fällt: ohne Bus (rund 70
+        % der Abschnitte) bus_trips_weekday_norm 0, Sackgassen mit Betweenness 0 ebenso. Ohne Streuung (ein Wert oder
+        alle gleich) ist der Normwert 0. in_hvs geht als 0/1 ein, shop_frontage_share ist schon ein Anteil 0-1 und
+        wird nicht umgerechnet. Folge: conn_gow 0,6 bedeutet bei einem einzelnen Merkmal 'oberste 40 %'. Das
+        Arbeitsgebiet ist ganz Hamburg (ohne Neuwerk und ohne die ländlichen Stadtteile aus config/project.yaml): Der
+        Rang gilt stadtweit, damit derselbe Abschnitt in jedem Bezirk gleich bewertet wird. Schwellen wie conn_gow
+        wirken auf die stadtweite Verteilung.
+      history:
+        - "seit 0.5.0: gleiche Werte erhalten den kleinsten Rang ihrer Gruppe; vorher mittlerer Rang (ohne Bus bus_trips_weekday_norm 0,35 statt 0)"
+        - "seit 0.13.0 (Entscheidung Projektteam 2026-11-04): Arbeitsgebiet ganz Hamburg, Rang stadtweit; Schwellen wie conn_gow unverändert"
+        - "Entscheidung Projektteam 2026-10-28"
     - id: S-FEAT-02
+      label_plain: "Wie viele Wege durch die Straße führen"
+      explain_plain: "Gezählt wird, wie viele schnellste Autowege durch ganz Hamburg über das Straßenstück führen."
+      why: "Eine Straße, durch die viele Wege führen, verbindet Stadtteile. Das zeigt ihre Aufgabe."
       description: "Edge betweenness, zeitgewichtet: Reisezeit = Länge / Tempo; Tempo amtlich vor OSM maxspeed vor Standardwert je highway-Klasse"
       method: igraph_edge_betweenness_undirected
       exclude_highway: [pedestrian, service, track]
       thresholds:
-        default_speed_motorway:       {value: 100, unit: km/h, source_type: assumption}
-        default_speed_motorway_link:  {value: 60,  unit: km/h, source_type: assumption}
-        default_speed_trunk:          {value: 70,  unit: km/h, source_type: assumption}
-        default_speed_trunk_link:     {value: 50,  unit: km/h, source_type: assumption}
-        default_speed_primary:        {value: 50,  unit: km/h, source_type: assumption}
-        default_speed_primary_link:   {value: 50,  unit: km/h, source_type: assumption}
-        default_speed_secondary:      {value: 50,  unit: km/h, source_type: assumption}
-        default_speed_secondary_link: {value: 50,  unit: km/h, source_type: assumption}
-        default_speed_tertiary:       {value: 50,  unit: km/h, source_type: assumption}
-        default_speed_tertiary_link:  {value: 50,  unit: km/h, source_type: assumption}
-        default_speed_unclassified:   {value: 50,  unit: km/h, source_type: assumption}
-        default_speed_residential:    {value: 30,  unit: km/h, source_type: assumption}
-        default_speed_living_street:  {value: 7,   unit: km/h, source_type: assumption, check: "Rechenwert wie categories.ETW_ERF"}
+        default_speed_motorway:       {label_plain: "Standardtempo Autobahn", value: 100, unit: km/h, source_type: assumption}
+        default_speed_motorway_link:  {label_plain: "Standardtempo Autobahnauffahrt", value: 60,  unit: km/h, source_type: assumption}
+        default_speed_trunk:          {label_plain: "Standardtempo Kraftfahrstraße", value: 70,  unit: km/h, source_type: assumption}
+        default_speed_trunk_link:     {label_plain: "Standardtempo Auffahrt Kraftfahrstraße", value: 50,  unit: km/h, source_type: assumption}
+        default_speed_primary:        {label_plain: "Standardtempo Hauptstraße", value: 50,  unit: km/h, source_type: assumption}
+        default_speed_primary_link:   {label_plain: "Standardtempo Zufahrt Hauptstraße", value: 50,  unit: km/h, source_type: assumption}
+        default_speed_secondary:      {label_plain: "Standardtempo Nebenhauptstraße", value: 50,  unit: km/h, source_type: assumption}
+        default_speed_secondary_link: {label_plain: "Standardtempo Zufahrt Nebenhauptstraße", value: 50,  unit: km/h, source_type: assumption}
+        default_speed_tertiary:       {label_plain: "Standardtempo Sammelstraße", value: 50,  unit: km/h, source_type: assumption}
+        default_speed_tertiary_link:  {label_plain: "Standardtempo Zufahrt Sammelstraße", value: 50,  unit: km/h, source_type: assumption}
+        default_speed_unclassified:   {label_plain: "Standardtempo sonstige Straße", value: 50,  unit: km/h, source_type: assumption}
+        default_speed_residential:    {label_plain: "Standardtempo Wohnstraße", value: 30,  unit: km/h, source_type: assumption}
+        default_speed_living_street:  {label_plain: "Standardtempo Spielstraße", value: 7,   unit: km/h, source_type: assumption, check: "Rechenwert wie categories.ETW_ERF"}
       source_type: assumption
       status: draft
       note: >-
@@ -402,27 +492,46 @@ features:
         Vollständige Berechnung ohne Stichprobe (Laufzeit ca. 1 min). Standardtempo nur, wenn weder amtliches noch
         OSM-Tempo bekannt ist (docs/open_questions.md).
     - id: S-FEAT-03
+      label_plain: "Gebäudedichte"
+      explain_plain: "Anteil der Fläche um die Straße, der mit Gebäuden bebaut ist."
+      why: "Das Umfeld der Straße geht in einen Ortswert ein. Eine Regel nutzt diesen Wert derzeit nicht."
       description: "Gebäudedichte = Grundfläche der ALKIS-Gebäude (oberirdisch) im Puffer / Pufferfläche"
       thresholds:
-        buffer_m: {value: 50, unit: m, source_type: assumption}
+        buffer_m: {label_plain: "Abstand für die Gebäudedichte", value: 50, unit: m, source_type: assumption}
       alkis_gebnutzbez: [Gebaeude]
       alkis_rellage_excluded: ["Unter der Erdoberfläche"]
       source_type: assumption
       status: draft
       note: >-
-        Seit 0.6.0 ALKIS (WFS_HH_ALKIS_vereinfacht, ave:GebaeudeBauwerk) statt OSM. Nur gebnutzbez Gebaeude (Bauteile
-        liegen in Gebäuden und würden doppelt zählen), ohne unterirdische Objekte (Tiefgaragen, Bunker). Puffer mit runden Enden.
+        Gebäude aus ALKIS (WFS_HH_ALKIS_vereinfacht, ave:GebaeudeBauwerk). Nur gebnutzbez Gebaeude (Bauteile liegen in
+        Gebäuden und würden doppelt zählen), ohne unterirdische Objekte (Tiefgaragen, Bunker). Puffer mit runden
+        Enden.
+      history:
+        - "seit 0.6.0: ALKIS statt OSM"
     - id: S-FEAT-04
+      label_plain: "Einwohner in der Nähe"
+      explain_plain: "Zahl der Menschen, die nahe an der Straße wohnen (Zensus 2022)."
+      why: "Die Einwohnerzahl geht in das Risiko und in den Ortswert ein."
       description: "Einwohner im Puffer, flächenanteilig aus dem Zensus-Gitter 100 m"
       thresholds:
-        buffer_m: {value: 100, unit: m, source_type: assumption, check: "Name population_100m aus scores/priority"}
+        buffer_m: {label_plain: "Abstand für die Einwohner", value: 100, unit: m, source_type: assumption, check: "Name population_100m aus scores/priority"}
       source_type: assumption
       status: draft
-      note: "Zensus-Gitter 2022 (sources.yaml population_grid, Abruf 2026-10-28) liegt in data/raw und wird genutzt; Abschnitte ohne Zelle im Puffer haben 0 Einwohner (Zellen ohne Einwohner fehlen in der Datei). Notiz aktualisiert in 0.17.0 (F31)."
+      note: >-
+        Zensus-Gitter 2022 (sources.yaml population_grid, Abruf 2026-10-28) liegt in data/raw und wird genutzt;
+        Abschnitte ohne Zelle im Puffer haben 0 Einwohner (Zellen ohne Einwohner fehlen in der Datei).
+      history:
+        - "Notiz aktualisiert in 0.17.0 (F31)"
     - id: S-FEAT-05
-      description: "Anteil Erdgeschoss mit Publikumsnutzung = Anteil der ALKIS-Gebäude im Puffer mit Publikumsnutzung (Gebäudefunktion oder OSM-shop/amenity-Punkt im Gebäude); Nebengebäude zählen nicht; ohne Gebäude im Puffer 0 (keine Publikumsnutzung, seit 0.16.0, Entscheidung prstolpe 2026-11-07)"
+      label_plain: "Läden und Publikumsverkehr"
+      explain_plain: "Anteil der Gebäude an der Straße mit Läden, Gastronomie oder anderem Publikumsverkehr."
+      why: "Viele Läden am Rand sind ein Grund für Tempo 30 auf Hauptstraßen."
+      description: >-
+        Anteil Erdgeschoss mit Publikumsnutzung = Anteil der ALKIS-Gebäude im Puffer mit Publikumsnutzung
+        (Gebäudefunktion oder OSM-shop/amenity-Punkt im Gebäude); Nebengebäude zählen nicht; ohne Gebäude im Puffer 0
+        (keine Publikumsnutzung)
       thresholds:
-        buffer_m: {value: 20, unit: m, source_type: assumption}
+        buffer_m: {label_plain: "Abstand für Läden", value: 20, unit: m, source_type: assumption}
       alkis_public_functions:
         - "Wohngebäude mit Handel und Dienstleistungen"
         - "Gebäude für Handel und Dienstleistungen"
@@ -484,26 +593,40 @@ features:
       source_type: assumption
       status: draft
       note: >-
-        Seit 0.6.0 ALKIS-Gebäude (Auswahl wie S-FEAT-03) mit Gebäudefunktion `funktion`; die Listen enthalten nur Werte,
-        die in den Daten vorkommen (Abruf 2026-10-28). Schulen und Kitas zählen hier nicht, weil sie über S-FEAT-06 schon
-        in place_score eingehen. Bürogebäude zählen nicht (kein Publikumsverkehr). Zählt Gebäude, nicht Fassadenlänge;
+        ALKIS-Gebäude (Auswahl wie S-FEAT-03) mit Gebäudefunktion `funktion`; die Listen enthalten nur Werte, die in
+        den Daten vorkommen (Abruf 2026-10-28). Schulen und Kitas zählen hier nicht, weil sie über S-FEAT-06 schon in
+        place_score eingehen. Bürogebäude zählen nicht (kein Publikumsverkehr). Zählt Gebäude, nicht Fassadenlänge;
         das Geschoss von OSM-POIs wird nicht geprüft. amenity_excluded: Stadtmöblierung ohne Publikumsverkehr.
+      history:
+        - "seit 0.16.0 (Entscheidung prstolpe 2026-11-07): ohne Gebäude im Puffer 0"
+        - "seit 0.6.0: ALKIS-Gebäude"
     - id: S-FEAT-06
+      label_plain: "Abstand zu Schule oder Kita"
+      explain_plain: "Abstand vom Straßenstück zum nächsten Grundstück einer Schule oder Kita."
+      why: "Eine Schule oder Kita nahe der Straße ist ein Grund für Tempo 30. Sie zählt auch beim Risiko."
       description: "Entfernung zur nächsten Schule oder Kita (OSM amenity=school/kindergarten, Fläche oder Punkt); Normierung über den Perzentilrang der negativen Entfernung. school_or_kita_access_m: Abstand vom Abschnitt zum Grundstück der nächsten Einrichtung (C-G30-01)"
       source_type: assumption
       status: draft
       note: >-
-        Seit 0.18.0 (F07) zwei Spalten mit derselben Rechnung: schools_or_kitas_within_m (place_score, P-RISK-01) und
+        Zwei Spalten mit derselben Rechnung: schools_or_kitas_within_m (place_score, P-RISK-01) und
         school_or_kita_access_m (C-G30-01, access_radius). Näherung für den Zugang: Eingänge sind nicht erfasst, die
-        amtliche Quelle fehlt (sources.yaml schools/kitas ohne Endpunkt). OSM-Flächen sind meist das Schulgrundstück, bei
-        Kitas teils nur das Gebäude; Punkte (Schulen 58 von 558, Kitas 434 von 987, Abruf 2026-11-04) zählen mit dem
-        Abstand zum Punkt. amenity=school umfasst auch berufsbildende Schulen (docs/open_questions.md).
+        amtliche Quelle fehlt (sources.yaml schools/kitas ohne Endpunkt). OSM-Flächen sind meist das Schulgrundstück,
+        bei Kitas teils nur das Gebäude; Punkte (Schulen 58 von 558, Kitas 434 von 987, Abruf 2026-11-04) zählen mit
+        dem Abstand zum Punkt. amenity=school umfasst auch berufsbildende Schulen (docs/open_questions.md).
+      history:
+        - "seit 0.18.0 (F07): zwei Spalten statt einer (neu school_or_kita_access_m für C-G30-01)"
     - id: S-FEAT-07
+      label_plain: "Liegt am amtlichen Radnetz"
+      explain_plain: "Ob das Straßenstück zum amtlichen Radnetz Hamburg gehört."
+      why: "Die Zugehörigkeit zum amtlichen Radnetz geht in die Priorität ein."
       description: "Zugehörigkeit zum Radnetz über den Längenanteil wie S-CONF-02 (Puffer, Winkel und Mindestanteil von dort)"
       source_type: assumption
       status: draft
       note: "Radnetz aus OSM-Relationen cycle_network=DE:HH:Radnetz_Hamburg (Fallback in sources.yaml)."
     - id: S-FEAT-08
+      label_plain: "Busverkehr"
+      explain_plain: "Wie viele Busse an einem Werktag fahren, aus dem Fahrplan des HVV."
+      why: "Die Busfahrten bestimmen mit, ob eine Straße Busstrecke ist. Das ändert die nötige Breite."
       description: "Busfahrten pro Werktag aus GTFS: repräsentativer Werktag, Fahrten je shape, Zuordnung shape -> Abschnitt über den Längenanteil wie S-CONF-02"
       route_types: [3, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714, 715, 716]
       source_type: assumption
@@ -512,30 +635,45 @@ features:
         Repräsentativer Werktag = der Dienstag, Mittwoch oder Donnerstag in der Gültigkeit des Feeds mit den meisten
         aktiven service_id (calendar und calendar_dates). route_types: 3 und 7xx (Bus) nach GTFS-Spezifikation bzw.
         erweiterten Routentypen. GTFS des HVV (sources.yaml gtfs_hvv, Abruf 2026-10-28) liegt in data/raw und wird
-        genutzt; fehlt der Datensatz, ist bus_trips_weekday null. Notiz aktualisiert in 0.17.0 (F31).
-        Seit 0.18.0 (F06) zusätzlich bus_peak_h_dir = Busse je Spitzenstunde und Richtung nach design_rules PRF-02
-        (gleiche Rechnung wie c06) und bus_route = bus_peak_h_dir >= bus_route_min_peak_h_dir (C-G30-02).
+        genutzt; fehlt der Datensatz, ist bus_trips_weekday null. Zusätzlich bus_peak_h_dir = Busse je Spitzenstunde
+        und Richtung nach design_rules PRF-02 (gleiche Rechnung wie c06) und bus_route = bus_peak_h_dir >=
+        bus_route_min_peak_h_dir (C-G30-02).
+      history:
+        - "Notiz aktualisiert in 0.17.0 (F31)"
+        - "seit 0.18.0 (F06): zusätzlich bus_peak_h_dir und bus_route"
       thresholds:
-        bus_route_min_peak_h_dir: {value: 1, unit: "Busse je Spitzenstunde und Richtung", source_type: assumption,
+        bus_route_min_peak_h_dir: {label_plain: "Busse je Stunde ab denen eine Straße Busstrecke ist", value: 1, unit: "Busse je Spitzenstunde und Richtung", source_type: assumption,
                                    check: "Busroute nach PRF-02 (Review 2026-11 F06: bus_per_peak_h_dir >= 1)"}
     - id: S-FEAT-09
+      label_plain: "Tempo heute"
+      explain_plain: "Das heutige Tempo kommt aus den amtlichen Daten, sonst aus OpenStreetMap."
+      why: "Ohne das heutige Tempo lässt sich kein Unterschied zum Ziel zeigen."
       description: "Ist-Tempo: amtliches Regeltempo vor OSM maxspeed; beide bekannt und verschieden -> speed_sources_conflict"
       source: HH_TEMPO
       source_type: hamburg
       status: draft
     - id: S-FEAT-10
+      label_plain: "Gestaltung aus OpenStreetMap"
+      explain_plain: "Radwege, Mittellinie und Parken werden aus OpenStreetMap gelesen."
+      why: "Der heutige Zustand ist die Basis für den Vergleich mit dem Ziel."
       description: "Ist-Gestaltung aus OSM-Tags: Mehrheitswert über die Ways des Abschnitts, gewichtet mit der Länge im Abschnitt; ohne Tag null"
       source_type: assumption
       status: draft
       note: >-
-        cycle_track_tag (bis 0.19.0 separated_cycle_track_present): cycleway[:both|left|right] = track oder separate,
-        oder bicycle = use_sidepath; nur Eingang für S-FEAT-13 (Review 2026-11 F26). cycle_lane_present: cycleway… = lane. centre_line: lane_markings. parking: parking:[both|left|right] bzw.
-        parking:lane:… (altes Schema). crossings/traffic_calming: Knoten highway=crossing bzw. traffic_calming=* höchstens
-        node_snap_m vom Abschnitt. Fehlende Tags heißen 'unbekannt', nicht 'nein'.
+        cycle_track_tag: cycleway[:both|left|right] = track oder separate, oder bicycle = use_sidepath; nur Eingang
+        für S-FEAT-13. cycle_lane_present: cycleway… = lane. centre_line: lane_markings. parking:
+        parking:[both|left|right] bzw. parking:lane:… (altes Schema). crossings/traffic_calming: Knoten
+        highway=crossing bzw. traffic_calming=* höchstens node_snap_m vom Abschnitt. Fehlende Tags heißen 'unbekannt',
+        nicht 'nein'.
+      history:
+        - "bis 0.19.0: separated_cycle_track_present (statt cycle_track_tag); seit 0.20.0 nur Eingang für S-FEAT-13 (Review 2026-11 F26)"
       thresholds:
-        node_snap_m: {value: 1, unit: m, source_type: assumption}
+        node_snap_m: {label_plain: "Fangabstand für Knoten aus OpenStreetMap", value: 1, unit: m, source_type: assumption}
 
     - id: S-FEAT-11
+      label_plain: "Radroute daneben?"
+      explain_plain: "Ob parallel eine Radroute des Entwurfs ohne großen Umweg verläuft."
+      why: "Eine Parallelroute mildert einen fehlenden Radweg an Hauptstraßen mit Tempo 50. Sie ersetzt ihn nicht."
       description: >-
         parallel_cycle_route_present: mindestens min_length_share (S-CONF-02) des Abschnitts liegt im Puffer buffer_m von
         gleich gerichteten Kanten (Winkel wie S-CONF-01) des Soll-Radnetzes (Stufe c03) mit cycle_cat_final in
@@ -545,7 +683,7 @@ features:
         Schwelle der untersten Ebene; eine bestandene Ebene genügt. Kanten des Abschnitts selbst und aller Abschnitte mit
         gleichem Straßennamen (Straßenkante und begleitende Radwege) zählen nicht.
       thresholds:
-        buffer_m: {value: 200, unit: m, source_type: assumption, check: "gleich cycling_rules.yaml P-ATT-03 parallel_max_m"}
+        buffer_m: {label_plain: "Suchabstand für eine Radroute daneben", value: 200, unit: m, source_type: assumption, check: "gleich cycling_rules.yaml P-ATT-03 parallel_max_m"}
       qualifying_cycle_categories: [RSV, HAUPT, BASIS]
       detour_check: P-DIR-01
       applies_to_requirement: separated_track_or_parallel_route
@@ -553,27 +691,35 @@ features:
       status: draft
       note: >-
         Für D-DES-01 (GOW50: Parallelroute mildert, ersetzt aber nicht) und C-FAC-01 (Flag parallel_cycle_route).
-        Berechnet nur für Abschnitte, deren Soll-Kategorie die Anforderung applies_to_requirement hat (requirements.*.cycling).
-        Seit 0.20.0 (Review 2026-11 F21): nur das Soll-Radnetz RSV/HAUPT/BASIS mit Umweg <= P-DIR-01 statt jedes
-        OSM-Radwegs und des amtlichen Radnetzes im 200-m-Puffer (Parkwege dienten bisher als Ersatz); berechnet in der
-        Stufe c03b nach dem Soll-Radnetz.
+        Berechnet nur für Abschnitte, deren Soll-Kategorie die Anforderung applies_to_requirement hat
+        (requirements.*.cycling). Gezählt wird nur das Soll-Radnetz RSV/HAUPT/BASIS mit Umweg <= P-DIR-01; berechnet
+        in der Stufe c03b nach dem Soll-Radnetz.
+      history:
+        - "seit 0.20.0 (Review 2026-11 F21): nur das Soll-Radnetz RSV/HAUPT/BASIS mit Umweg <= P-DIR-01 statt jedes OSM-Radwegs und des amtlichen Radnetzes im 200-m-Puffer (Parkwege dienten bisher als Ersatz)"
 
     - id: S-FEAT-12
+      label_plain: "Straße ohne Häuser am Rand"
+      explain_plain: "Ob an einem Großteil der Straße keine Häuser und keine Einmündungen liegen."
+      why: "Die Angabe ist nur ein Hinweis im Steckbrief. Die Kategorie ändert sich dadurch nicht."
       description: "anbaufrei: Anteil der Abschnittslänge ohne Gebäude (ALKIS, Auswahl wie S-FEAT-03) und ohne Einmündung (Knoten mit Grad >= 3, S-NET-01) im Puffer buffer_m >= min_share"
       thresholds:
-        buffer_m: {value: 30, unit: m, source_type: assumption}
-        min_share: {value: 0.8, unit: "Anteil 0-1", source_type: assumption}
+        buffer_m: {label_plain: "Abstand für Häuser am Rand", value: 30, unit: m, source_type: assumption}
+        min_share: {label_plain: "Anteil ohne Häuser, ab dem eine Straße anbaufrei ist", value: 0.8, unit: "Anteil 0-1", source_type: assumption}
       source_type: assumption
       status: draft
       note: >-
-        Seit 0.18.0 (F23, Entscheidung Q4 a 2026-11-08). Anbaufreie Hauptverkehrsstraßen innerorts (RIN VS II-III, keine
-        Kraftfahrstraße) bleiben GOW50; keine eigene Kategorie. Nutzung nur als Flag gow50_anbaufrei (cat_final GOW50 und
-        anbaufrei) im Steckbrief und in D-SPD-01 (Hinweis statt Stärke bei Ist-Tempo >= anbaufrei_hint.min_ist_kmh).
-        Gemessen wird die Länge des Abschnitts außerhalb der Vereinigung aller Gebäude- und Knotenpuffer; die eigenen
-        Endknoten zählen mit, wenn sie Einmündungen sind. Nach den E1-Stichproben prüfen, ob der Umfang eine Kategorie
-        rechtfertigt.
+        Anbaufreie Hauptverkehrsstraßen innerorts (RIN VS II-III, keine Kraftfahrstraße) bleiben GOW50; keine eigene
+        Kategorie. Nutzung nur als Flag gow50_anbaufrei (cat_final GOW50 und anbaufrei) im Steckbrief und in D-SPD-01
+        (Hinweis statt Stärke bei Ist-Tempo >= anbaufrei_hint.min_ist_kmh). Gemessen wird die Länge des Abschnitts
+        außerhalb der Vereinigung aller Gebäude- und Knotenpuffer; die eigenen Endknoten zählen mit, wenn sie
+        Einmündungen sind. Nach den E1-Stichproben prüfen, ob der Umfang eine Kategorie rechtfertigt.
+      history:
+        - "seit 0.18.0 (F23, Entscheidung Q4 a 2026-11-08): anbaufrei als Flag, keine eigene Kategorie"
 
     - id: S-FEAT-13
+      label_plain: "Radweg heute"
+      explain_plain: "Welche Art von Radweg es heute gibt, einmal je Straßenstück berechnet."
+      why: "Alle Schritte sollen vom selben Radweg heute ausgehen. So widersprechen sich die Ergebnisse nicht."
       description: >-
         ist_facility je Abschnitt einmal berechnen (Regeln von cycling_rules C-FAC-05 inkl. begleitender Radwege je Seite,
         E9); separated_cycle_track_present = ist_facility in track_facilities; C-PRI-02 (c04) und C-FAC-05 (c05)
@@ -582,13 +728,15 @@ features:
       source_type: assumption
       status: draft
       note: >-
-        Seit 0.20.0 (Review 2026-11 F26, Entscheidungsvorlage E9). Stufe c03b (pipeline/c03b_ist_facility.py) nach dem
-        Radgraphen; vorher gab es drei Definitionen (S-FEAT-10 Tag, C-PRI-02 Radgraph, C-FAC-05). Eingänge: S-FEAT-10
-        cycle_track_tag und cycle_lane_present, amtliche Fahrradstraßen, cycleway-Werte der Straßenkanten und begleitende
-        Radwege (sidepath_of) des Radgraphen. separated_cycle_track_present bleibt dreiwertig (S-FEAT-10): unbekannt, wenn
-        die Ist-Klasse no nur aus fehlenden OSM-Angaben folgt (kein cycleway-Tag, kein begleitender Radweg, keine
-        Fahrradstraße). Abschnitte mit Radweg-Tag, aber ohne begleitenden Radweg im Radgraphen (Kante mit C-IMP-07 statt
-        C-IMP-03) zählen nach C-FAC-05 als Radweg und stehen als Prüfliste in reports/ist_facility.md (Flag track_tag_only).
+        Stufe c03b (pipeline/c03b_ist_facility.py) nach dem Radgraphen. Eingänge: S-FEAT-10 cycle_track_tag und
+        cycle_lane_present, amtliche Fahrradstraßen, cycleway-Werte der Straßenkanten und begleitende Radwege
+        (sidepath_of) des Radgraphen. separated_cycle_track_present bleibt dreiwertig (S-FEAT-10): unbekannt, wenn die
+        Ist-Klasse no nur aus fehlenden OSM-Angaben folgt (kein cycleway-Tag, kein begleitender Radweg, keine
+        Fahrradstraße). Abschnitte mit Radweg-Tag, aber ohne begleitenden Radweg im Radgraphen (Kante mit C-IMP-07
+        statt C-IMP-03) zählen nach C-FAC-05 als Radweg und stehen als Prüfliste in reports/ist_facility.md (Flag
+        track_tag_only).
+      history:
+        - "seit 0.20.0 (Review 2026-11 F26, Entscheidungsvorlage E9): ist_facility einmal je Abschnitt; vorher gab es drei Definitionen (S-FEAT-10 Tag, C-PRI-02 Radgraph, C-FAC-05)"
 
 # ---------------------------------------------------------------
 # Querschnitt: Straßenraumbreite und Machbarkeit (pipeline/s07_crosssection.py, guide.md 4.3 a und c, prompts/07)
@@ -596,16 +744,22 @@ features:
 crosssection:
   rules:
     - id: S-XS-01
+      label_plain: "Breite messen: Querlinien"
+      explain_plain: "Quer zur Straße werden in festen Abständen Linien gezogen, um die Breite zu messen."
+      why: "Die Breite ist nicht überall gleich. Mehrere Messungen zeigen, wie die Straße wirklich aussieht."
       description: "Transekte: Mittellinie glätten, in festem Abstand Senkrechte nach beiden Seiten, Richtung aus der über ein Stück gemittelten Tangente"
       thresholds:
-        simplify_m:     {value: 2,  unit: m, source_type: assumption}
-        spacing_m:      {value: 20, unit: m, source_type: assumption}
-        half_length_m:  {value: 40, unit: m, source_type: assumption}
-        tangent_half_m: {value: 10, unit: m, source_type: assumption}
+        simplify_m:     {label_plain: "Glättung der Mittellinie", value: 2,  unit: m, source_type: assumption}
+        spacing_m:      {label_plain: "Abstand der Messlinien", value: 20, unit: m, source_type: assumption}
+        half_length_m:  {label_plain: "Länge der Messlinien je Seite", value: 40, unit: m, source_type: assumption}
+        tangent_half_m: {label_plain: "Strecke für die Richtung der Messlinie", value: 10, unit: m, source_type: assumption}
       source_type: assumption
       status: draft
       note: "Werte aus guide.md 4.3 a. Erstes Transekt bei spacing_m/2 vom Abschnittsanfang, damit auch kurze Abschnitte eines bekommen."
     - id: S-XS-02
+      label_plain: "Breite der Straßenfläche"
+      explain_plain: "Breite zwischen den Grenzen der Straßenfläche im Kataster."
+      why: "Die Straßenfläche zeigt, wie viel Platz im Querschnitt zur Verfügung steht."
       description: "Variante Verkehrsfläche: zusammenhängender Teil des Transekts in ALKIS-Flächen der tatsächlichen Nutzung Straßenverkehr, Weg, Platz um den Mittelpunkt; Breite = Abstand der ersten Grenzen links und rechts"
       alkis_nutzart: [Strassenverkehr, Weg, Platz]
       source_type: assumption
@@ -615,26 +769,38 @@ crosssection:
         einer dieser Flächen, wird das Transekt für diese Variante verworfen (Flag centre_outside). width_p10_m für C-G30-02
         kommt aus dieser Variante, weil required_width als Breite Grenze zu Grenze definiert ist.
     - id: S-XS-03
+      label_plain: "Abstand zwischen den Häusern"
+      explain_plain: "Breite zwischen den Hauswänden links und rechts."
+      why: "Das ist die zweite Messvariante. Sie zeigt das Potenzial bis zu den Hauswänden."
       description: "Variante Fassade: Abstand der ersten oberirdischen ALKIS-Gebäude links und rechts (Gebäudeauswahl wie S-FEAT-03)"
       source_type: assumption
       status: draft
       note: "Liegt der Mittelpunkt in einem Gebäude (Durchfahrt, Arkade), wird das Transekt für diese Variante verworfen (Flag centre_in_building)."
     - id: S-XS-04
+      label_plain: "Sonderfälle beim Messen"
+      explain_plain: "Messungen an Kreuzungen, auf Brücken und in Tunneln zählen nicht."
+      why: "An Kreuzungen und Brücken ist die Breite nicht typisch. Solche Werte würden das Ergebnis verfälschen."
       description: "Sonderfälle: Transekte nahe Knoten verwerfen; ohne Grenze innerhalb half_length_m auf einer Seite Flag open_space; Brücken und Tunnel (OSM bridge/tunnel) ausschließen"
       thresholds:
-        node_exclusion_m: {value: 20, unit: m, source_type: assumption}
+        node_exclusion_m: {label_plain: "Abstand zu Kreuzungen ohne Messung", value: 20, unit: m, source_type: assumption}
       source_type: assumption
       status: draft
       note: "Knoten = Abschnittsenden mit Grad ≠ 2 (wie S-NET-01). open_space-Transekte gehen nicht in die Breitenstatistik ein."
     - id: S-XS-05
+      label_plain: "Engste Stelle bestimmen"
+      explain_plain: "Aus den Messungen werden die typische Breite und die engste Stelle berechnet."
+      why: "Die enge Breite entscheidet, ob die Aufgabe passt."
       description: "Aggregation je Abschnitt: Median, Quantil (p10), Minimum; Engstelle = mindestens min_run aufeinanderfolgende gültige Transekte unter dem p10 des Abschnitts"
       thresholds:
-        quantile: {value: 0.1, unit: "Anteil 0-1", source_type: assumption}
-        min_run:  {value: 3,   unit: "Transekte (Anzahl)", source_type: assumption}
+        quantile: {label_plain: "Anteil für die engste typische Breite", value: 0.1, unit: "Anteil 0-1", source_type: assumption}
+        min_run:  {label_plain: "Messlinien in Folge für eine Engstelle", value: 3,   unit: "Transekte (Anzahl)", source_type: assumption}
       source_type: assumption
       status: draft
       note: "guide.md 4.3 a Schritt 4. Ein ungültiges Transekt unterbricht eine Engstelle."
     - id: S-XS-06
+      label_plain: "Passt die Aufgabe in die Breite?"
+      explain_plain: "Die gemessene Breite wird mit der Breite verglichen, die die Aufgabe braucht."
+      why: "So zeigt sich, wo der Platz für die Aufgabe der Straße nicht reicht."
       description: "Machbarkeit: width_ratio = width_p10_m / required_width je möglicher Soll-Kategorie, Klassen aus feasibility_classes"
       targets: [GOW50, GOW30_narrow, ETW30]
       range_reference: min
@@ -642,10 +808,16 @@ crosssection:
       status: draft
       note: "Bei Bereichen (GOW30_narrow 10,80-13,40 m) gilt die Untergrenze als erforderliche Breite (range_reference: min)."
     - id: S-XS-07
+      label_plain: "Breite vom Nachbarstück"
+      explain_plain: "Fehlt die Breite, wird sie vom angrenzenden Stück derselben Straße übernommen."
+      why: "Kurze Knotenstücke haben oft keinen Messwert. Das Nachbarstück gleichen Namens füllt die Lücke."
       description: "Abschnitt ohne Breite übernimmt sie vom angrenzenden Abschnitt gleichen Namens (gemeinsamer Endknoten; der längste mit Wert gewinnt; schrittweise, also vom nächstgelegenen). Flag width_from_neighbour; gilt in C-CONF-01 als Fallback-Quelle"
       source_type: assumption
       status: draft
-      note: "Entscheidung prstolpe 2026-11-07 (Stapel 5, open_questions Querschnitt): v. a. kurze Knotenstücke, deren Transekte alle verworfen werden. Ohne Namen bleibt die Breite leer."
+      note: >-
+        Betrifft v. a. kurze Knotenstücke, deren Transekte alle verworfen werden. Ohne Namen bleibt die Breite leer.
+      history:
+        - "Entscheidung prstolpe 2026-11-07 (Stapel 5, open_questions Querschnitt)"
 
 # ---------------------------------------------------------------
 # Netzkohärenz
@@ -656,6 +828,9 @@ coherence:
   # Zusammenfassen getrennter Richtungsfahrbahnen (Entscheidung Projektteam 2026-10-28).
   # Neue Parameter ab 0.9.0 stehen unter thresholds und sind Annahmen.
   - id: N1
+    label_plain: "Hauptstraßen führen irgendwo hin"
+    explain_plain: "Hinweis, wenn eine Hauptstraße im Nichts endet, nicht an einer Hauptstraße oder Stadtgrenze."
+    why: "Eine Hauptstraße soll Stadtteile verbinden. Endet sie im Nichts, stimmt die Einstufung wahrscheinlich nicht."
     rule: "GOW-Züge enden an GOW, SW oder Stadtgrenze"
     source: SWOV_FS_2023
     source_type: swov_crow
@@ -664,8 +839,11 @@ coherence:
     gow_categories: [GOW80, GOW50, GOW30]
     end_ok_categories: [SW]
     thresholds:
-      boundary_tolerance_m: {value: 50, unit: m, source_type: assumption, check: "Stadtgrenze = OSM admin_level 4 Hamburg"}
+      boundary_tolerance_m: {label_plain: "Abstand zur Stadtgrenze, der als Ende zählt", value: 50, unit: m, source_type: assumption, check: "Stadtgrenze = OSM admin_level 4 Hamburg"}
   - id: N2
+    label_plain: "Kurze Inseln melden"
+    explain_plain: "Hinweis, wenn ein kurzes Stück eine andere Aufgabe hat als die Straße davor und dahinter."
+    why: "Eine kurze Insel in einem gleichen Straßenzug fällt auf. Der Hinweis lenkt den Blick darauf."
     rule: "Kategoriewechsel < min_run_m zwischen gleichen Kategorien markieren"
     min_run_m: 200
     source_type: assumption
@@ -675,9 +853,12 @@ coherence:
       kleinsten Richtungsänderung, wenn beide Abschnitte sich gegenseitig wählen und die Änderung höchstens
       max_deflection_deg beträgt. Die Richtung wird über die ersten bearing_sample_m des Abschnitts bestimmt.
     thresholds:
-      max_deflection_deg: {value: 30, unit: "°", source_type: assumption}
-      bearing_sample_m: {value: 15, unit: m, source_type: assumption}
+      max_deflection_deg: {label_plain: "größter Knick, bei dem eine Straße weiterläuft", value: 30, unit: "°", source_type: assumption}
+      bearing_sample_m: {label_plain: "Strecke für die Richtung eines Straßenstücks", value: 15, unit: m, source_type: assumption}
   - id: N3
+    label_plain: "Zu kleine Wohngebiete"
+    explain_plain: "Hinweis, wenn Hauptstraßen ein sehr kleines Wohngebiet umschließen."
+    why: "Der Hinweis zeigt Wohngebiete unter 25 Hektar. Dort lohnt sich ein Blick auf die Hauptstraßen."
     rule: "Aufenthaltsbereiche (von GOW/SW umschlossen) < min_area_ha markieren"
     min_area_ha: 25
     barrier_lines: {railway: [rail, light_rail, subway], waterway: [river, canal]}
@@ -688,11 +869,15 @@ coherence:
     status: draft
     note: >-
       Barrieren (Bahn, Flüsse/Kanäle, ohne Tunnel) begrenzen Flächen wie GOW/SW-Linien; gleiche Werte wie
-      cycling_rules.yaml C-NET-07 (Entscheidung prstolpe 2026-11-07, Stapel 5).
-      Flächen aus GOW/SW-Linien und Stadtgrenze; Flächen am Rand des Arbeitsgebiets sind unvollständig und werden
-      nicht markiert. Für „sehr lange Grenze im Verhältnis zur Fläche“ (guide.md 1.5) gibt es keine Schwelle;
-      die Kompaktheit wird nur berichtet (docs/open_questions.md).
+      cycling_rules.yaml C-NET-07. Flächen aus GOW/SW-Linien und Stadtgrenze; Flächen am Rand des Arbeitsgebiets sind
+      unvollständig und werden nicht markiert. Für „sehr lange Grenze im Verhältnis zur Fläche“ (guide.md 1.5) gibt es
+      keine Schwelle; die Kompaktheit wird nur berichtet (docs/open_questions.md).
+    history:
+      - "Barrieren wie C-NET-07: Entscheidung prstolpe 2026-11-07 (Stapel 5)"
   - id: N4
+    label_plain: "Schleichverkehr möglich"
+    explain_plain: "Hinweis, wenn der kürzeste Weg zwischen Hauptstraßen lange durch Wohnstraßen führt."
+    why: "Der Hinweis zeigt Wege durch Wohnstraßen, die länger als 300 Meter sind. Dort ist Schleichverkehr möglich."
     rule: "Kürzester Weg zwischen GOW-Knoten nutzt > max_etw_m ETW -> Schleichverkehrsflag"
     max_etw_m: 300
     source: SWOV_FS_2023
@@ -707,34 +892,47 @@ coherence:
     etw_categories: [ETW30, ETW_ERF, ETW60]
     restricted_categories: [SW, GOW80, GOW50, GOW30]
   - id: N5
+    label_plain: "Übergang braucht einen Eingang"
+    explain_plain: "Hinweis bei Übergängen von Hauptstraße zu Tempo-30-Straße oder Wohnstraße. Von Tempo 70 oder mehr direkt auf 30 geht nicht."
+    why: "Das niederländische Regelwerk (CROW) verlangt an solchen Übergängen einen deutlichen Eingang."
     rule: "Übergang GOW50->GOW30 und GOW->ETW braucht Torsituation; kein direkter Übergang 70/80->30"
     source: CROW_GOW30_2023
     source_type: swov_crow
     status: draft
     note: >-
-      Übergänge werden je Knoten gelistet; ob eine Torsituation vorhanden ist, lässt sich aus den Daten nicht
-      ablesen (docs/open_questions.md). Direkter Übergang: Abschnitt mit Tempo >= min_speed_kmh (Soll-Tempo, bei SW
-      travel_speed_kmh) trifft auf eine Kategorie mit Soll-Tempo target_speed_kmh. GOW80 und ETW60 in
-      gate_transitions sind außerorts und ohne Wirkung, solange C-RUR-01 inaktiv ist (F28, 0.17.0).
+      Übergänge werden je Knoten gelistet; ob eine Torsituation vorhanden ist, lässt sich aus den Daten nicht ablesen
+      (docs/open_questions.md). Direkter Übergang: Abschnitt mit Tempo >= min_speed_kmh (Soll-Tempo, bei SW
+      travel_speed_kmh) trifft auf eine Kategorie mit Soll-Tempo target_speed_kmh. GOW80 und ETW60 in gate_transitions
+      sind außerorts und ohne Wirkung, solange C-RUR-01 inaktiv ist.
+    history:
+      - "seit 0.17.0 (F28): C-RUR-01 inaktiv, daher GOW80/ETW60 in gate_transitions ohne Wirkung"
     gate_transitions:
       - {from: [GOW50], to: [GOW30]}
       - {from: [GOW80, GOW50, GOW30], to: [ETW30, ETW_ERF, ETW60]}
     thresholds:
-      min_speed_kmh: {value: 70, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
-      target_speed_kmh: {value: 30, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
+      min_speed_kmh: {label_plain: "Tempo ab dem ein Übergang als schnell gilt", value: 70, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
+      target_speed_kmh: {label_plain: "Tempo der Straße nach dem Übergang", value: 30, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
   - id: N6
+    label_plain: "Kreuzungsart aus der Kreuzungstabelle"
+    explain_plain: "Verweis: Die Art der Kreuzung kommt aus der Kreuzungstabelle."
+    why: "Die Kreuzungsart steht schon in einer eigenen Tabelle. Der Verweis verhindert zwei verschiedene Ergebnisse."
     rule: "Soll-Knotentyp aus design_rules.junctions (c07, junction_type_soll); N6 listet nur Knotenpunkte ohne Soll-Typ und Übergänge nach N5"
     source: [SWOV_FS_2023, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
     source_of_truth: design_rules.junctions.decision_table
     note: >-
-      Review 2026-11 F09: eine Wahrheit für den Soll-Knotentyp. Der Typ kommt aus der Stufe c07
-      (pipeline/c07_junctions.py, design_rules.yaml junctions); der N6-Teil des Berichts läuft darum nach c07 und steht
-      in reports/junctions.md (Abschnitt N6). node_types, ist_check und thresholds.signal_radius_m entfallen
-      (signal_radius_m jetzt design_rules J-M-06). category_rank bleibt, J-M-04 verweist darauf.
+      Eine Wahrheit für den Soll-Knotentyp. Der Typ kommt aus der Stufe c07 (pipeline/c07_junctions.py,
+      design_rules.yaml junctions); der N6-Teil des Berichts läuft darum nach c07 und steht in reports/junctions.md
+      (Abschnitt N6). signal_radius_m steht jetzt in design_rules J-M-06. category_rank bleibt, J-M-04 verweist
+      darauf.
+    history:
+      - "Review 2026-11 F09: eine Wahrheit für den Soll-Knotentyp; node_types, ist_check und thresholds.signal_radius_m entfallen (signal_radius_m jetzt design_rules J-M-06)"
     category_rank: [SW, GOW80, GOW50, GOW30, ETW60, ETW30, ETW_ERF]
   - id: N7
+    label_plain: "Vorschlag zum Angleichen"
+    explain_plain: "Vorschlag, eine kurze Insel an ihre gleichen Nachbarn anzugleichen; gilt erst nach fachlicher Freigabe."
+    why: "Die Insel soll die Kategorie ihrer gleichen Nachbarn bekommen. Das gilt nur nach einer Freigabe."
     rule: "Glättungsvorschlag: Insel aus N2 erhält die Kategorie der gleichen Nachbarn (nur Vorschlag, keine Umklassifizierung)"
     source_type: assumption
     status: draft
@@ -749,6 +947,9 @@ coherence:
 discrepancy:
   speed:
     id: D-SPD-01
+    label_plain: "Tempo zu hoch?"
+    explain_plain: "Abweichung, wenn heute schneller gefahren werden darf als im Ziel."
+    why: "Das Soll-Tempo gehört zur Kategorie. Der Vergleich zeigt, wo heute schneller erlaubt ist."
     rule: "excess_kmh = speed_ist_kmh - categories[cat_final].speed_kmh; Stärke = höchste Stufe mit excess_kmh >= min_excess_kmh"
     levels:
       - {severity: 1, min_excess_kmh: 1, source_type: assumption, check: "In 0.9.0 nicht festgelegt; jede Überschreitung unter 20 km/h. Als Arbeitswert freigegeben (Entscheidung Projektteam 2026-10-28)"}
@@ -772,6 +973,9 @@ discrepancy:
         automatisch eine Diskrepanz.
   design:
     id: D-DES-01
+    label_plain: "Gestaltung passt nicht?"
+    explain_plain: "Abweichung, wenn die Gestaltung nicht zur Aufgabe passt, zum Beispiel kein Radweg bei Tempo 50."
+    why: "Eine Straße soll so aussehen, wie es ihre Aufgabe verlangt. Der Vergleich zeigt, wo das nicht gilt."
     checks: [cycling, cycle_lanes_allowed, centre_line, parking_along_carriageway, median_if_lanes_per_dir_gte]
     severity: "Summe der Gewichte verletzter Anforderungen, gekappt bei max_severity; Gewicht 1, mit severity_if das Gewicht der ersten zutreffenden Bedingung (seit 0.20.0, F21)"
     max_severity: 3
@@ -808,6 +1012,9 @@ discrepancy:
     status: draft
   use:
     id: D-USE-01
+    label_plain: "Zu viel Autoverkehr?"
+    explain_plain: "Abweichung, wenn auf einer Hauptstraße mit Tempo 30 mehr Autos fahren als erlaubt."
+    why: "Das niederländische Regelwerk (CROW) nennt für Hauptstraßen mit Tempo 30 eine Obergrenze. Der Vergleich zeigt Überschreitungen."
     rule: "dtv_official > factor * requirements[cat_final].profiles[profile].max_dtv"
     profile_if_track: track     # separated_cycle_track_present (S-FEAT-13) -> Profil track (ohne max_dtv: kein Verstoß)
     profile_default: wide       # sonst das großzügigere Profil
@@ -827,6 +1034,9 @@ discrepancy:
     D3: "Mischform mit Merkmalen beider Kategorien"
   type_rule:
     id: D-TYPE-01
+    label_plain: "Art der Abweichung"
+    explain_plain: "Ordnet die Abweichung ein: gebaut wie eine Hauptstraße, zu sparsam gestaltet oder beides."
+    why: "Verschiedene Abweichungen brauchen verschiedene Maßnahmen. Die Einordnung hilft bei der Auswahl."
     rule: "nur Verstöße mit direction flow -> D1; nur sparse -> D2; beide -> D3; ohne Verstoß null"
     source_type: assumption
     status: draft
@@ -842,6 +1052,9 @@ priority:
     school_kita_within_150m: 0.2
   risk:
     id: P-RISK-01
+    label_plain: "Risiko"
+    explain_plain: "Risiko aus Unfällen mit Fuß- und Radbeteiligung, Radnetz, Einwohnern und Schulen in der Nähe."
+    why: "Nicht alles kann gleichzeitig umgebaut werden. Das Risiko zeigt, wo Handeln am dringendsten ist."
     description: >-
       risk = gewichtete Summe der Komponenten (risk_weights) mit Umlegung fehlender Gewichte wie conn_score.
       Unfälle mit Fuß- oder Radbeteiligung (Unfallatlas IstFuss/IstRad), Unfälle mit Getöteten oder
@@ -854,13 +1067,17 @@ priority:
       school_kita_within_150m: school_kita_near
     severe_weight_key: severe_or_fatal_weight
     thresholds:
-      snap_m: {value: 15, unit: m, source_type: assumption, check: "wie buffer_m in S-CONF-01; Unfallorte liegen laut Datensatzbeschreibung auf dem Straßenabschnitt. Freigegeben (Entscheidung Projektteam 2026-10-28)"}
-      min_length_m: {value: 100, unit: m, source_type: assumption, check: "verhindert sehr hohe Werte je km auf kurzen Knotenstücken. Freigegeben (Entscheidung Projektteam 2026-10-28)"}
-      school_kita_radius_m: {value: 150, unit: m, source_type: assumption, check: "Wert des früheren sensitive_radius aus C-G30-01 (bis 0.17.0); bleibt für die Priorität erhalten (F07)"}
-      period_years: {value: 5, unit: Jahre, source_type: assumption, check: "prompts/10; guide.md 3.2 nennt 3-5 Jahre"}
+      snap_m: {label_plain: "größter Abstand eines Unfalls zur Straße", value: 15, unit: m, source_type: assumption, check: "wie buffer_m in S-CONF-01; Unfallorte liegen laut Datensatzbeschreibung auf dem Straßenabschnitt. Freigegeben (Entscheidung Projektteam 2026-10-28)"}
+      min_length_m: {label_plain: "Mindestlänge für Unfälle je Kilometer", value: 100, unit: m, source_type: assumption, check: "verhindert sehr hohe Werte je km auf kurzen Knotenstücken. Freigegeben (Entscheidung Projektteam 2026-10-28)"}
+      school_kita_radius_m: {label_plain: "Umkreis für Schulen und Kitas beim Risiko", value: 150, unit: m, source_type: assumption, check: "Wert des früheren sensitive_radius aus C-G30-01 (bis 0.17.0); bleibt für die Priorität erhalten (F07)"}
+      period_years: {label_plain: "Zeitraum der Unfalldaten", value: 5, unit: Jahre, source_type: assumption, check: "prompts/10; guide.md 3.2 nennt 3-5 Jahre"}
     source_type: assumption
     status: draft
-    note: "Unfälle an Knoten gehen an genau einen der anliegenden Abschnitte (den nächsten); vorerst so belassen, mit der Webkarte erneut prüfen (Entscheidung Projektteam 2026-10-28). Nur aggregiert je Abschnitt gespeichert."
+    note: >-
+      Unfälle an Knoten gehen an genau einen der anliegenden Abschnitte (den nächsten); vorerst so belassen, mit der
+      Webkarte erneut prüfen. Nur aggregiert je Abschnitt gespeichert.
+    history:
+      - "Entscheidung Projektteam 2026-10-28: Knotenunfälle dem nächsten Abschnitt zuordnen"
 
 # ---------------------------------------------------------------
 # Harmonisierung je Straßenzug (pipeline/s05b_harmonise.py, nach der Kaskade, vor der Netzkohärenz)
@@ -868,16 +1085,19 @@ priority:
 harmonisation:
   rules:
     - id: H-STR-01
+      label_plain: "Kurze Stücke angleichen"
+      explain_plain: "Kurze Stücke bekommen die Aufgabe der Straße davor und dahinter; trifft 50 auf 30, gewinnt 30."
+      why: "Ein Straßenzug soll auf langer Strecke dieselbe Kategorie haben. Das nennt SWOV Homogenität."
       description: >-
-        Kurze Läufe (unter min_run_m aus N2) auf einem Straßenzug angleichen, wiederholt bis nichts mehr wechselt:
-        (1) ETW30 zwischen zwei GOW-Läufen -> GOW (niedrigeres Soll-Tempo der Nachbarn); (2) GOW zwischen zwei
-        ETW30-Läufen -> ETW30; (3) GOW50 zwischen zwei GOW30-Läufen oder am Zugende neben GOW30 -> GOW30;
-        (4) GOW30 zwischen GOW50 (oder am Zugende neben GOW50) bleibt und wird in die angrenzenden GOW50-Abschnitte
-        verlängert (kürzerer Nachbar zuerst), bis min_run_m erreicht ist. Lückenschluss (seit 0.18.0, F07): ein
-        GOW50-Lauf zwischen zwei GOW30-Läufen wird GOW30, wenn er kürzer als gap_close_m ist (statt min_run_m).
+        Kurze Läufe (unter min_run_m aus N2) auf einem Straßenzug angleichen, wiederholt bis nichts mehr wechselt: (1)
+        ETW30 zwischen zwei GOW-Läufen -> GOW (niedrigeres Soll-Tempo der Nachbarn); (2) GOW zwischen zwei
+        ETW30-Läufen -> ETW30; (3) GOW50 zwischen zwei GOW30-Läufen oder am Zugende neben GOW30 -> GOW30; (4) GOW30
+        zwischen GOW50 (oder am Zugende neben GOW50) bleibt und wird in die angrenzenden GOW50-Abschnitte verlängert
+        (kürzerer Nachbar zuerst), bis min_run_m erreicht ist. Lückenschluss: ein GOW50-Lauf zwischen zwei
+        GOW30-Läufen wird GOW30, wenn er kürzer als gap_close_m ist (statt min_run_m).
       min_run_from: N2
       thresholds:
-        gap_close_m: {value: 500, unit: m, source: STVO_2024, source_type: de_regelwerk,
+        gap_close_m: {label_plain: "größte Lücke, die beim Angleichen geschlossen wird", value: 500, unit: m, source: STVO_2024, source_type: de_regelwerk,
                       check: "Lückenschluss zwischen Tempo-30-Strecken (StVO-Novelle 2024, Fassung prüfen)"}
       max_passes: 20
       locked_categories: [SW, ETW_ERF, GOW80, ETW60]
@@ -885,12 +1105,15 @@ harmonisation:
       source_type: assumption
       status: draft
       note: >-
-        Homogenität des Straßenzugs (SWOV); bei 50 gegen 30 gewinnt das niedrigere Tempo. Entscheidung Projektteam
-        2026-11-04. Straßenzug wie N2. Abschnitte mit approved override werden nicht verändert. max_passes ist nur eine
-        technische Grenze. Das Ergebnis der Kaskade bleibt als cat_cascade erhalten. gap_close_m (F07, Q2 b): Der Review
-        nennt den Lückenschluss bei Regel (4); umgesetzt ist er beim Fall „GOW50 zwischen zwei GOW30“ (Schritt 3), weil
-        nur dort eine Lücke zwischen zwei Tempo-30-Strecken geschlossen wird; Regel (4) verlängert kurze GOW30-Läufe und
-        behält min_run_m. Am Zugende gilt weiter min_run_m.
+        Homogenität des Straßenzugs (SWOV); bei 50 gegen 30 gewinnt das niedrigere Tempo. Straßenzug wie N2.
+        Abschnitte mit approved override werden nicht verändert. max_passes ist nur eine technische Grenze. Das
+        Ergebnis der Kaskade bleibt als cat_cascade erhalten. gap_close_m: Der Review nennt den Lückenschluss bei
+        Regel (4); umgesetzt ist er beim Fall „GOW50 zwischen zwei GOW30“ (Schritt 3), weil nur dort eine Lücke
+        zwischen zwei Tempo-30-Strecken geschlossen wird; Regel (4) verlängert kurze GOW30-Läufe und behält min_run_m.
+        Am Zugende gilt weiter min_run_m.
+      history:
+        - "seit 0.18.0 (F07, Q2 b): Lückenschluss mit gap_close_m"
+        - "Entscheidung Projektteam 2026-11-04: Harmonisierung entlang des Straßenzugs"
 
 # ---------------------------------------------------------------
 # Validierung und Sensitivität (pipeline/validate.py, guide.md Teil 7, prompts/12_validation.md)
@@ -899,12 +1122,15 @@ harmonisation:
 validation:
   rules:
     - id: V-SENS-01
+      label_plain: "Jede Annahme einzeln ändern"
+      explain_plain: "Jeder angenommene Grenzwert wird einzeln etwas höher und niedriger gesetzt, um seine Wirkung zu sehen."
+      why: "Manche Grenzwerte sind Annahmen. So sieht man, welche davon das Ergebnis stark ändern."
       description: >-
         Einzelvariation: jede Schwelle mit source_type assumption, die die Kaskade oder die confidence liest
         (thresholds.* der Kaskade und von classification_policy, required_width.* in Bedingungen der Kaskade),
         einzeln um -delta und +delta; Wirkung = km mit anderer Kategorie als cat_proposed
       thresholds:
-        delta: {value: 0.2, unit: "Anteil der Schwelle (±)", source_type: assumption, check: "guide.md 7.1 und prompts/12: ±20 %"}
+        delta: {label_plain: "Änderung je Annahme bei der Einzelprüfung", value: 0.2, unit: "Anteil der Schwelle (±)", source_type: assumption, check: "guide.md 7.1 und prompts/12: ±20 %"}
       source_type: assumption
       status: draft
       note: >-
@@ -912,6 +1138,9 @@ validation:
         dieser Stufen; Diskrepanz-, Kohärenz- und Machbarkeitsschwellen ändern die Kategorie nicht. Sie werden im
         Bericht aufgelistet, aber nicht variiert.
     - id: V-SENS-02
+      label_plain: "500 Läufe mit zufälligen Annahmen"
+      explain_plain: "Alle Annahmen werden zusammen zufällig verändert und der Entwurf 500-mal neu berechnet."
+      why: "Mehrere Annahmen wirken zusammen. Viele Läufe zeigen, wie stabil das Ergebnis insgesamt ist."
       description: >-
         Monte-Carlo: runs Läufe; je Lauf wird jedes Gewicht (scores.conn_score.weights, priority.risk_weights) und
         jede Schwelle aus V-SENS-01 unabhängig mit einem Faktor multipliziert, gleichverteilt in [1-delta, 1+delta]
@@ -919,7 +1148,7 @@ validation:
       seed: 20261104
       vary: [weights, thresholds]
       thresholds:
-        delta: {value: 0.2, unit: "Anteil (±)", source_type: assumption, check: "prompts/12: Gewichte ±20 %"}
+        delta: {label_plain: "größte zufällige Änderung je Annahme", value: 0.2, unit: "Anteil (±)", source_type: assumption, check: "prompts/12: Gewichte ±20 %"}
       source_type: assumption
       status: draft
       note: >-
@@ -928,21 +1157,30 @@ validation:
         Lauf neu berechnet (Gewichte fehlender Merkmale umgelegt wie scores.conn_score.missing_value_policy). Die
         Priorität wird mit den Diskrepanzen des Basislaufs neu berechnet (nur risk ändert sich).
     - id: V-UNC-01
+      label_plain: "Wann ist eine Einstufung unsicher?"
+      explain_plain: "Unsicher, wenn die Aufgabe in mindestens 30 von 100 Läufen wechselt."
+      why: "Nicht jede Einstufung ist gleich stabil. So lassen sich unsichere Straßenstücke finden."
       description: "Abschnitt „unsicher“, wenn die Kategorie in mindestens min_change_rate der Läufe aus V-SENS-02 von cat_proposed abweicht"
       thresholds:
-        min_change_rate: {value: 0.3, unit: "Anteil der Läufe 0-1", source_type: assumption, check: "prompts/12: ab 0,3; guide.md P11 nennt > 0,3"}
+        min_change_rate: {label_plain: "Anteil der Läufe, ab dem eine Einstufung unsicher ist", value: 0.3, unit: "Anteil der Läufe 0-1", source_type: assumption, check: "prompts/12: ab 0,3; guide.md P11 nennt > 0,3"}
       source_type: assumption
       status: draft
     - id: V-SAMP-01
+      label_plain: "Stichproben prüfen"
+      explain_plain: "Fachleute prüfen Stichproben; der Anteil strittiger Fälle soll klein bleiben."
+      why: "Rechnen allein reicht nicht. Menschen mit Fachwissen prüfen, ob die Ergebnisse stimmen."
       description: "Stichproben vor Ort bzw. am Bildschirm: Anteil fachlich strittiger Abschnitte je Kategorie unter max_disputed_share"
       thresholds:
-        max_disputed_share: {value: 0.15, unit: "Anteil 0-1", source_type: assumption, check: "guide.md 7.1"}
+        max_disputed_share: {label_plain: "größter Anteil strittiger Stichproben", value: 0.15, unit: "Anteil 0-1", source_type: assumption, check: "guide.md 7.1"}
       source_type: assumption
       status: draft
     - id: V-DQ-01
+      label_plain: "Datenqualität beim Tempo"
+      explain_plain: "Für fast alle Straßenstücke muss das heutige Tempo bekannt sein."
+      why: "Das Tempo heute geht in die Abweichung beim Tempo ein. So fällt eine schlechte Datenlage früh auf."
       description: "Datenqualität: Anteil der Abschnitte ohne Ist-Tempo unter max_missing_speed_share"
       thresholds:
-        max_missing_speed_share: {value: 0.05, unit: "Anteil 0-1", source_type: assumption, check: "guide.md 3.4"}
+        max_missing_speed_share: {label_plain: "größter Anteil ohne bekanntes Tempo", value: 0.05, unit: "Anteil 0-1", source_type: assumption, check: "guide.md 3.4"}
       source_type: assumption
       status: draft
 
@@ -953,6 +1191,9 @@ validation:
   # (Test strict xfail, bis die Frage entschieden ist). tested_in: Tests, die die Invariante prüfen (Datei nennt die ID).
   invariants:
     - id: V-INV-01
+      label_plain: "Prüfung: jede Aufgabe hat Regeln"
+      explain_plain: "Jede Aufgabe hat eine Zeile in der Radweg-Tabelle und Regeln für die Aufteilung der Straße."
+      why: "So lässt sich prüfen, ob für jede Aufgabe alle Regeln vorhanden sind. Eine Lücke würde Fehler bringen."
       text: >-
         Jede cat_final hat eine aktive Zeile in cycling_rules separation_matrix und eine Profilregel (design_rules PRF-03
         parking_by_category) oder steht in design_rules PRF-04 no_profile_categories (SW, GOW80, ETW60)
@@ -962,8 +1203,14 @@ validation:
                   tests/test_invariants_data.py::test_v_inv_01_cat_final_has_matrix_and_profile]
       source_type: assumption
       status: draft
-      note: "no_profile_categories steht nur in design_rules PRF-04 (eine Quelle); außerorts ist die Matrix inaktiv (F28)"
+      note: >-
+        no_profile_categories steht nur in design_rules PRF-04 (eine Quelle); außerorts ist die Matrix inaktiv
+      history:
+        - "außerorts Matrix inaktiv (F28)"
     - id: V-INV-02
+      label_plain: "Prüfung: jede Kreuzung hat ein Ziel"
+      explain_plain: "Keine Kreuzung bleibt ohne Ziel; Autobahnknoten sind ausdrücklich ausgenommen."
+      why: "Eine Kreuzung ohne Ziel wäre ein Loch im Plan. Die Prüfung findet solche Lücken."
       text: "Kein Knotenpunkt ohne Soll-Typ (kein Flag no_rule); Autobahnknoten tragen not_applicable (J-10d)"
       finding: [F10]
       expected: holds
@@ -971,6 +1218,9 @@ validation:
       source_type: assumption
       status: draft
     - id: V-INV-03
+      label_plain: "Prüfung: Ziel ohne verbotene Teile"
+      explain_plain: "Die Aufteilung im Ziel enthält nichts, was die Aufgabe verbietet, etwa Parken an Hauptstraßen mit Tempo 50."
+      why: "Die Prüfung fängt Fehler ab, bei denen ein Ziel gegen die Regeln der Aufgabe verstößt."
       text: >-
         Soll-Profil enthält kein Element, das requirements[cat] verbietet: kein Parken und kein Radfahrstreifen an GOW50,
         kein zweiter Fahrstreifen und kein Mittelstreifen an GOW30 (maßgeblich die D5-Kategorie, wo vorhanden)
@@ -980,6 +1230,9 @@ validation:
       source_type: assumption
       status: draft
     - id: V-INV-04
+      label_plain: "Prüfung: kein Radstreifen bei viel Verkehr"
+      explain_plain: "Auf Hauptstraßen mit Tempo 30 und viel Autoverkehr gibt es keinen Radstreifen."
+      why: "Über der Grenze für das breite Profil ist kein Radstreifen vorgesehen. Die Prüfung findet Verstöße."
       text: "Keine Soll-Führung cycle_lane an GOW30 mit DTV über profiles.wide.max_dtv (c05 und nach der Abbaukaskade c06)"
       finding: [F01]
       expected: holds
@@ -988,6 +1241,9 @@ validation:
       source_type: assumption
       status: draft
     - id: V-INV-05
+      label_plain: "Prüfung: Breiten stimmen überein"
+      explain_plain: "Passt die Aufgabe in die Breite, passt auch die Aufteilung im Ziel, höchstens mit Abstrichen."
+      why: "Die Prüfung fängt Widersprüche ab: Die Straße passt angeblich, die Aufteilung aber nicht."
       text: "fits in S-XS-06 ⇒ c06 fits oder fits_after_degrade mit Abbaustufen höchstens bis D4"
       finding: [F05]
       expected: violated
@@ -996,6 +1252,9 @@ validation:
       status: draft
       note: "Verletzt seit Paket P3 (Ladezone, Busfahrbahn ETW30, GOW30-Profil breiter als required_width); offene Frage V-INV-05"
     - id: V-INV-06
+      label_plain: "Prüfung: Rechenwerte stimmen"
+      explain_plain: "Jede berechnete nötige Breite stimmt mit ihrer Formel überein."
+      why: "Die Prüfung entdeckt Rechenfehler. Eine falsche Breite würde alle weiteren Ergebnisse verfälschen."
       text: "value = berechnete formula für alle required_width.* mit formula"
       finding: [F05]
       expected: holds
@@ -1003,6 +1262,9 @@ validation:
       source_type: assumption
       status: draft
     - id: V-INV-07
+      label_plain: "Prüfung: Rad-Vorrang nur im kleinen Kreisverkehr"
+      explain_plain: "Vorrang für Räder gibt es nur in einspurigen Kreisverkehren."
+      why: "Vorrang für Räder ist nur an einspurigen Kreisverkehren vorgesehen. Turbokreisel haben eine eigene Regel."
       text: "Rad-Vorrang (cyclist_treatment JC-01) nur an einstreifigen Kreisverkehren; Turbokreisel tragen JC-06"
       finding: [F02]
       expected: holds
@@ -1010,6 +1272,9 @@ validation:
       source_type: assumption
       status: draft
     - id: V-INV-08
+      label_plain: "Prüfung: Radweg heute überall gleich"
+      explain_plain: "Alle Schritte nutzen dieselbe Angabe, welcher Radweg heute vorhanden ist."
+      why: "Die Prüfung fängt Fehler ab, bei denen zwei Schritte vom selben Radweg verschieden ausgehen."
       text: "Ist-Führung in s08 (Diskrepanz), c04 (Prinzipien) und c05 (Führungsform) identisch mit S-FEAT-13 (c03b)"
       finding: [F26]
       expected: holds
@@ -1018,6 +1283,9 @@ validation:
       source_type: assumption
       status: draft
     - id: V-INV-09
+      label_plain: "Prüfung: Hauptverkehrsstraße bleibt Hauptstraße"
+      explain_plain: "Eine Hauptverkehrsstraße wird nur nach fachlicher Freigabe zur Wohnstraße."
+      why: "Eine Hauptverkehrsstraße soll ohne Freigabe nicht zur Wohnstraße werden. Die Prüfung zeigt Verstöße."
       text: "Kein HVS-Abschnitt hat cat_final ETW30 oder ETW_ERF ohne approved Override (overrides/overrides.csv)"
       finding: [F29]
       expected: violated
@@ -1026,6 +1294,8 @@ validation:
       source_type: assumption
       status: draft
       note: >-
-        Die Kaskade (cat_cascade, tests/test_classification_data.py) hält die Invariante ein; cat_final verletzt sie bei
-        20 HVS-Abschnitten (0,8 km), die die Harmonisierung H-STR-01 Schritt (2) „GOW zwischen zwei ETW30-Läufen ->
-        ETW30“ herabstuft. Offene Frage V-INV-09 (Review 2026-11 P6); die Regel bleibt bis zur Entscheidung unverändert.
+        Die Kaskade (cat_cascade, tests/test_classification_data.py) hält die Invariante ein; cat_final verletzt sie
+        bei 20 HVS-Abschnitten (0,8 km), die die Harmonisierung H-STR-01 Schritt (2) „GOW zwischen zwei ETW30-Läufen
+        -> ETW30“ herabstuft. Offene Frage V-INV-09; die Regel bleibt bis zur Entscheidung unverändert.
+      history:
+        - "Review 2026-11 P6: offene Frage V-INV-09"

@@ -65,11 +65,11 @@ terms:
 
 cycling:
   Radnetz:            {plain: "Radnetz", explain: "Die zusammenhängenden Routen für den Radverkehr.", level: 1}
-  RSV:                {plain: "Radschnellweg", explain: "Breite, schnelle Route für lange Strecken, mit Vorrang an Kreuzungen.", level: 3, found: 31}
+  RSV:                {plain: "Radvorrangroute", explain: "Wichtigste Route für viel Radverkehr auf langen Strecken. Sie ist keine Radschnellverbindung nach den deutschen Richtlinien (FGSV).", level: 3, found: 31}
   HAUPT:              {plain: "Radroute", explain: "Wichtige Route zwischen Stadtteilen.", level: 3, found: 26}
   BASIS:              {plain: "Bezirksroute", explain: "Route im Bezirk, zu Schulen, Läden und Haltestellen.", level: 3, found: 17}
   ERSCHL:             {plain: "übrige Wege", explain: "Alle anderen Straßen und Wege, auf denen man Rad fahren darf.", level: 3}
-  Radvorrangroute:    {plain: "Radschnellweg", explain: "siehe RSV", level: 2}
+  Radvorrangroute:    {plain: "Radvorrangroute", explain: "siehe RSV", level: 1}
   Führungsform:       {plain: "Art des Radwegs", explain: "Wie das Rad geführt wird: eigener Radweg, Radstreifen, Fahrradstraße oder mit den Autos auf der Fahrbahn.", level: 1}
   Mischverkehr:       {plain: "Rad auf der Fahrbahn", explain: "Rad und Auto teilen sich die Fahrbahn, ohne eigenen Streifen.", level: 1, found: 19}
   Radfahrstreifen:    {plain: "Radstreifen", explain: "Streifen für Räder auf der Fahrbahn, mit durchgezogener Linie.", level: 1, found: 19}

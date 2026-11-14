@@ -314,6 +314,10 @@ def t_lang_proof():
     return _run_compare("lang", "base")
 
 
+def t_p4_proof():
+    return _run_compare("p4", "base")
+
+
 def t_cons_runs():
     rows = []
     for name in ["K3", "K8", "K10", "K11", "ALL"]:

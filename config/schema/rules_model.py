@@ -89,6 +89,12 @@ def _check_units(entry: dict, path: str, entry_unit: str | None) -> None:
 
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    # Plain-language texts for the website and the rule reference, and the history of a rule (redesign 2026-11, E5 c).
+    # Text only: no rule reads them.
+    label_plain: str | None = None
+    explain_plain: str | None = None
+    why: str | None = None
+    history: list[str] | None = None
 
 
 class Meta(_Strict):
