@@ -1,31 +1,71 @@
-// App state <-> URL hash, e.g. #karte?layer=disc&cat=GOW30,ETW30&dt=D1&pr=1&seg=seg_x&map=14/53.57/9.95
-// Cycling layers (prompt 21): layer=cnet|cfac|cgap|lanes|cfit|jct|coff, jct=<node_id> opens a junction profile.
-// Defaults are left out of the URL so that shared links stay short.
+// App state <-> URL hash, e.g. #karte?theme=rad&view=luecken&bz=Altona&seg=seg_x&map=14/53.57/9.95
+// Redesign 2026-11 (package 2): five themes with views instead of 13 layers; each view maps to one map layer of
+// layers.js (state.layer is derived). Old links (?layer=…, #tabelle, #downloads, #quellen) are rewritten on load,
+// see docs/redesign/02_information_architecture.md. Defaults are left out of the URL so shared links stay short.
 
-export const PAGES = ["karte", "tabelle", "methode", "radnetz", "downloads", "quellen", "impressum"];
+export const PAGES = ["karte", "bezirke", "methode", "radnetz", "daten", "impressum"];
+const PAGE_ALIASES = { tabelle: "bezirke", downloads: "daten", quellen: "daten" };
 export const CYCLING_LAYER_KEYS = ["cnet", "cfac", "cgap", "lanes", "cfit", "jct", "coff"];
-export const LAYERS = ["cat", "speed", "disc", "width", "feas", "hvs", ...CYCLING_LAYER_KEYS];
+export const LAYERS = ["cat", "speed", "disc", "prio", "width", "feas", "hvs", ...CYCLING_LAYER_KEYS];
 export const OVERLAYS = ["bus", "cyc", "fac", "acc"];
 
+// theme -> {title, views: {view: {label, layer, level}}}; level 3 views are offered under "Mehr Ansichten"
+export const THEMES = {
+  aufgabe: { title: "Aufgabe und Tempo", views: {
+    ziel: { label: "Ziel", layer: "cat" }, heute: { label: "heute", layer: "speed" },
+    hvs: { label: "Hauptverkehrsstraßen (Vergleich)", layer: "hvs", level: 3 } } },
+  abweichung: { title: "Heute und Ziel", views: {
+    ziel: { label: "Abweichung", layer: "disc" }, prio: { label: "Dringlichkeit", layer: "prio" } } },
+  platz: { title: "Platz in der Straße", views: {
+    ziel: { label: "Passt das Ziel?", layer: "cfit" }, fahrstreifen: { label: "Fahrstreifen", layer: "lanes" },
+    breite: { label: "Breite der Straße", layer: "width", level: 3 },
+    regelprofil: { label: "Regelprofil der Aufgabe", layer: "feas", level: 3 } } },
+  rad: { title: "Radnetz", views: {
+    ziel: { label: "Ziel", layer: "cnet" }, radweg: { label: "Radweg", layer: "cfac" }, luecken: { label: "Lücken", layer: "cgap" },
+    amtlich: { label: "amtliches Netz", layer: "coff", level: 3 } } },
+  knoten: { title: "Kreuzungen", views: { ziel: { label: "Ziel", layer: "jct" } } },
+};
+const firstView = (theme) => Object.keys(THEMES[theme].views)[0];
+export const layerOf = (theme, view) => THEMES[theme]?.views[view]?.layer ?? null;
+const OLD_LAYER = Object.fromEntries(Object.entries(THEMES).flatMap(([t, th]) =>
+  Object.entries(th.views).map(([v, x]) => [x.layer, [t, v]])));
+
 export const DEFAULTS = Object.freeze({
-  page: "karte", layer: "cat", overlays: [], cats: [], dts: [], prmin: 0, bz: "", seg: null, jct: null, map: null,
+  page: "karte", theme: "aufgabe", view: "ziel", layer: "cat", overlays: [], cats: [], dts: [], prmin: 0, bz: "",
+  seg: null, jct: null, table: false, map: null,
 });
 
 const list = (v, allowed) => (v ? v.split(",").filter((x) => !allowed || allowed.includes(x)) : []);
+
+/** Set theme/view (falling back to valid values) and the derived map layer. */
+export function withView(state, theme, view) {
+  const t = THEMES[theme] ? theme : DEFAULTS.theme;
+  const v = THEMES[t].views[view] ? view : firstView(t);
+  return { ...state, theme: t, view: v, layer: layerOf(t, v) };
+}
 
 export function parseHash(hash) {
   const raw = (hash || "").replace(/^#\/?/, "");
   const [pagePart, query = ""] = raw.split("?");
   const p = new URLSearchParams(query);
-  const state = { ...DEFAULTS, overlays: [], cats: [], dts: [] };
-  if (PAGES.includes(pagePart)) state.page = pagePart;
-  if (LAYERS.includes(p.get("layer"))) state.layer = p.get("layer");
+  let state = { ...DEFAULTS, overlays: [], cats: [], dts: [] };
+  const page = PAGE_ALIASES[pagePart] ?? pagePart;
+  if (PAGES.includes(page)) state.page = page;
   state.overlays = list(p.get("ov"), OVERLAYS);
+  let theme = p.get("theme");
+  let view = p.get("view");
+  if (!THEMES[theme] && OLD_LAYER[p.get("layer")]) [theme, view] = OLD_LAYER[p.get("layer")];
+  if (!THEMES[theme] && state.overlays.includes("cyc")) {
+    [theme, view] = ["rad", "amtlich"];  // the old overlay "Radnetz Hamburg" is now a view of the theme Radnetz
+    state.overlays = state.overlays.filter((o) => o !== "cyc");
+  }
+  state = withView(state, theme, view);
   state.cats = list(p.get("cat"));
   state.dts = list(p.get("dt"));
   const pr = Number(p.get("pr"));
   state.prmin = Number.isFinite(pr) && pr > 0 ? Math.min(pr, 3) : 0;
   state.bz = p.get("bz") || "";
+  state.table = state.page === "bezirke" && Boolean(state.bz) && (pagePart === "tabelle" || p.get("tabelle") === "1");
   state.seg = /^seg_[0-9a-f]+$/.test(p.get("seg") || "") ? p.get("seg") : null;
   state.jct = /^[0-9]+$/.test(p.get("jct") || "") ? p.get("jct") : null;
   const m = (p.get("map") || "").split("/").map(Number);
@@ -35,12 +75,14 @@ export function parseHash(hash) {
 
 export function toHash(state) {
   const p = new URLSearchParams();
-  if (state.layer !== DEFAULTS.layer) p.set("layer", state.layer);
+  if (state.theme !== DEFAULTS.theme) p.set("theme", state.theme);
+  if (THEMES[state.theme] && state.view !== firstView(state.theme)) p.set("view", state.view);
   if (state.overlays.length) p.set("ov", state.overlays.join(","));
   if (state.cats.length) p.set("cat", state.cats.join(","));
   if (state.dts.length) p.set("dt", state.dts.join(","));
   if (state.prmin > 0) p.set("pr", String(state.prmin));
   if (state.bz) p.set("bz", state.bz);
+  if (state.table) p.set("tabelle", "1");
   if (state.seg) p.set("seg", state.seg);
   if (state.jct) p.set("jct", state.jct);
   if (state.map) p.set("map", `${state.map.zoom.toFixed(2)}/${state.map.lat.toFixed(5)}/${state.map.lon.toFixed(5)}`);

@@ -31,6 +31,9 @@ web:
     address: [Fruchtallee 9, 20259 Hamburg]
     email: contact@hamburgmobility.de
   feedback_email: null    # TODO: Adresse für mailto-Rückmeldungen; ohne Wert kein mailto-Link
+  overview:               # Bezirksseite und Karte (redesign 2026-11, docs/redesign/02_information_architecture.md): reine Darstellung
+    need_min_disc: 2      # ab dieser Stufe von disc_max (0–3, rules.yaml discrepancy) zählt ein Abschnitt als „große Abweichung“
+    top_n: 5              # Länge der Listen „Wo ist der Handlungsbedarf am größten?“
   tiles_base_url: null    # null = relativ zur Seite (GitHub Pages); später z. B. Cloudflare R2 mit Range und CORS
   basemap:
     build: "20261103"     # Protomaps-Tagesbuild (config/sources.yaml web_assets.basemap); 20261028 seit 2026-11-04 nicht mehr verfügbar (HTTP 404)

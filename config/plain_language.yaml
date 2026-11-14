@@ -5,60 +5,62 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.9.1
-  date: 2026-11-11
+  version: 0.10.0
+  date: 2026-11-14
+# 0.10.0: Einfache Sprache nach config/glossary.yaml (Redesign 2026-11, Entscheidung E4 b); Datenbeschreibung (columns)
+# bleibt fachlich (Ebene 3).
 
 categories:
-  SW: "Schnellverkehrsstraße – anbaufrei, nur für Kraftfahrzeuge; Fuß- und Radverkehr getrennt geführt"
-  GOW50: "Stadtmagistrale – verbindet Stadtteile, Tempo 50, Radverkehr auf baulich getrenntem Radweg"
-  GOW30: "Stadtstraße 30 – verbindet Quartiere, Tempo 30, Radverkehr auf Radfahrstreifen, bei viel Kfz-Verkehr auf baulichem Radweg"
-  ETW30: "Quartiersstraße – erschließt das Quartier, Tempo 30, Radverkehr gemeinsam mit dem Kfz-Verkehr"
-  ETW_ERF: "Aufenthaltsstraße – Schrittgeschwindigkeit, Aufenthalt und Fußverkehr haben Vorrang"
-  GOW80: "Landstraße (Verbindung) – außerorts, Tempo 80"
-  ETW60: "Landstraße (Erschließung) – außerorts, Tempo 60"
+  SW: "Autobahn oder Kraftfahrstraße: nur für Autos, ohne Häuser direkt an der Straße. Fuß- und Radverkehr haben eigene Wege."
+  GOW50: "Verbindet Stadtteile. Autos fahren 50 km/h. Das Rad hat einen eigenen Radweg."
+  GOW30: "Verbindet Stadtteile, hat aber viel Leben am Rand. Darum gilt Tempo 30. Das Rad hat einen Radstreifen, bei viel Autoverkehr einen eigenen Radweg."
+  ETW30: "Führt zu den Häusern im Viertel. Autos fahren 30 km/h. Rad und Auto teilen sich die Fahrbahn."
+  ETW_ERF: "Hier haben Menschen zu Fuß Vorrang. Autos fahren höchstens Schritttempo."
+  GOW80: "Verbindet Orte außerhalb der Stadt, Tempo 80. Derzeit nicht bewertet."
+  ETW60: "Führt außerhalb der Stadt zu Höfen und Orten, Tempo 60. Derzeit nicht bewertet."
 
 # Klartext je Regel der Kaskade: passed = Regel hat gegriffen, failed = Regel wurde geprüft und hat nicht gegriffen
 # (nur wo das für die Begründung hilft). Fragmente werden mit „; “ verbunden.
 rules:
   H-STR-01:
     passed:
-      - {text: "an den Straßenzug angeglichen: kurzes Stück ({run_m|.0f} m) zwischen {neighbours}; Vorschlag der Regeln war {from_cat}, jetzt {to_cat}"}
+      - {text: "an die Straße davor und dahinter angeglichen: kurzes Stück ({run_m|.0f} m) zwischen {neighbours}; vorher {from_cat}, jetzt {to_cat}"}
   C-SW-01:
     passed:
-      - {text: "Autobahn oder Kraftfahrstraße nur für Kraftfahrzeuge (OSM highway={highway})"}
+      - {text: "Autobahn oder Kraftfahrstraße, nur für Autos"}
   C-RUR-01:
     passed:
       - {text: "außerorts"}
   C-ERF-01:
     passed:
-      - {when: "ist_verkehrsberuhigt", text: "heute verkehrsberuhigter Bereich"}
-      - {when: "pedestrian_zone", text: "heute Fußgängerzone"}
+      - {when: "ist_verkehrsberuhigt", text: "heute schon eine Spielstraße (verkehrsberuhigter Bereich)"}
+      - {when: "pedestrian_zone", text: "heute schon eine Fußgängerzone"}
       - {when: "override_school_street", text: "als Schulstraße eingetragen"}
   C-GOW-01:
     passed:
-      - {when: "in_hvs", text: "Hauptverkehrsstraße der BVM"}
-      - {when: "conn_score >= thresholds.conn_gow", text: "hohe Verbindungsfunktion: Verbindungswert {conn_score|.2f} (ab {thresholds.conn_gow|.2f})"}
+      - {when: "in_hvs", text: "steht auf der Liste der Hauptverkehrsstraßen"}
+      - {when: "conn_score >= thresholds.conn_gow", text: "wichtig für Wege quer durch die Stadt: Verbindungswert {conn_score|.2f} (ab {thresholds.conn_gow|.2f})"}
     failed:
-      - {text: "geringe Verbindungsfunktion: Verbindungswert {conn_score|.2f} (unter {thresholds.conn_gow|.2f}), keine Hauptverkehrsstraße"}
+      - {text: "für Wege quer durch die Stadt nicht wichtig: Verbindungswert {conn_score|.2f} (unter {thresholds.conn_gow|.2f}), keine Hauptverkehrsstraße"}
   C-G30-01:
     passed:
-      - {when: "school_or_kita_access_m <= thresholds.access_radius", text: "Schule oder Kita direkt an der Straße: Grundstück {school_or_kita_access_m|.0f} m entfernt (bis {thresholds.access_radius|.0f} m)"}
-      - {when: "shop_frontage_share >= thresholds.frontage", text: "viele Gebäude mit Läden oder Publikumsverkehr: {shop_frontage_share|%} (ab {thresholds.frontage|%})"}
+      - {when: "school_or_kita_access_m <= thresholds.access_radius", text: "eine Schule oder Kita liegt direkt an der Straße: Grundstück {school_or_kita_access_m|.0f} m entfernt (bis {thresholds.access_radius|.0f} m)"}
+      - {when: "shop_frontage_share >= thresholds.frontage", text: "viele Läden und Lokale: in {shop_frontage_share|%} der Gebäude (ab {thresholds.frontage|%})"}
     failed:
-      - {text: "keine Schule oder Kita direkt an der Straße und wenig Publikumsverkehr"}
+      - {text: "keine Schule oder Kita direkt an der Straße und wenige Läden"}
   C-G30-02:
     passed:
-      - {when: "not bus_route", text: "für einen ausreichenden baulichen Radweg fehlt der Platz: Straßenraum {width_p10_m|.1f} m, nötig {required_width.GOW50|.1f} m"}
-      - {when: "bus_route", text: "für einen ausreichenden baulichen Radweg neben der Busfahrbahn fehlt der Platz: Straßenraum {width_p10_m|.1f} m, nötig {required_width.GOW50_bus|.1f} m"}
+      - {when: "not bus_route", text: "für einen eigenen Radweg fehlt der Platz: Straße {width_p10_m|.1f} m breit, nötig {required_width.GOW50|.1f} m"}
+      - {when: "bus_route", text: "für einen eigenen Radweg neben der Busspur fehlt der Platz: Straße {width_p10_m|.1f} m breit, nötig {required_width.GOW50_bus|.1f} m"}
     failed:
-      - {when: "not bus_route and width_p10_m >= required_width.GOW50", text: "Platz für einen baulichen Radweg: Straßenraum {width_p10_m|.1f} m (nötig {required_width.GOW50|.1f} m)"}
-      - {when: "bus_route and width_p10_m >= required_width.GOW50_bus", text: "Platz für einen baulichen Radweg neben der Busfahrbahn: Straßenraum {width_p10_m|.1f} m (nötig {required_width.GOW50_bus|.1f} m)"}
+      - {when: "not bus_route and width_p10_m >= required_width.GOW50", text: "genug Platz für einen eigenen Radweg: Straße {width_p10_m|.1f} m breit (nötig {required_width.GOW50|.1f} m)"}
+      - {when: "bus_route and width_p10_m >= required_width.GOW50_bus", text: "genug Platz für einen eigenen Radweg neben der Busspur: Straße {width_p10_m|.1f} m breit (nötig {required_width.GOW50_bus|.1f} m)"}
   C-G50-01:
     passed:
-      - {text: "kein Grund für Tempo 30 auf dieser Verbindungsstraße gefunden"}
+      - {text: "kein Grund für Tempo 30 auf dieser Hauptstraße"}
   C-ETW-01:
     passed:
-      - {text: "darum Quartiersstraße: Die Straße erschließt das Quartier"}
+      - {text: "darum Wohnstraße: Die Straße führt vor allem zu den Häusern im Viertel"}
 
 # Namen der Merkmale für die Datenunsicherheit (confidence_reasons) und die Datenbeschreibung
 features:
@@ -87,18 +89,18 @@ confidence:
 # Robustheit der Einstufung aus der Sensitivitätsanalyse (pipeline/validate.py, V-SENS-01/02, V-UNC-01).
 # Platzhalter: {runs} Läufe, {rate} Anteil als Prozent, {alt} andere Kategorie, {delta} Variation in Prozent.
 sensitivity:
-  stable: "In allen {runs} Rechenläufen mit veränderten Annahmen bleibt die Kategorie gleich."
-  changes: "In {rate} von {runs} Rechenläufen mit veränderten Annahmen ergibt sich eine andere Kategorie, meist {alt}."
-  uncertain: "Unsicher: Die Einstufung hängt stark an gesetzten Annahmen und sollte fachlich geprüft werden."
+  stable: "In allen {runs} Rechenläufen mit veränderten Annahmen bleibt die Aufgabe gleich."
+  changes: "In {rate} von {runs} Rechenläufen mit veränderten Annahmen ergibt sich eine andere Aufgabe, meist {alt}."
+  uncertain: "Unsicher: Das Ergebnis hängt stark an gesetzten Annahmen. Fachleute sollten es prüfen."
   not_assessed: "Die Robustheit wurde für diesen Stand nicht berechnet."
-  oat_intro: "Die Kategorie wechselt schon, wenn eine einzelne Annahme um {delta} anders gesetzt wird:"
+  oat_intro: "Die Aufgabe wechselt schon, wenn eine einzelne Annahme um {delta} anders gesetzt wird:"
   direction: {"-": "niedriger", "+": "höher"}
   params:
     thresholds.conn_gow: "Schwelle für den Verbindungswert"
     thresholds.access_radius: "Abstand zum Grundstück einer Schule oder Kita"
     thresholds.frontage: "Anteil Gebäude mit Publikumsverkehr"
-    required_width.GOW50: "nötige Straßenraumbreite für eine Stadtmagistrale"
-    required_width.GOW50_bus: "nötige Straßenraumbreite für eine Stadtmagistrale mit Bus"
+    required_width.GOW50: "nötige Breite für eine Hauptstraße mit Tempo 50"
+    required_width.GOW50_bus: "nötige Breite für eine Hauptstraße mit Tempo 50 und Bus"
     conn_score.betweenness_norm: "Gewicht der Netzbedeutung"
     conn_score.bus_trips_weekday_norm: "Gewicht der Busfahrten"
     conn_score.dtv_norm: "Gewicht der Verkehrsmenge"
@@ -110,11 +112,25 @@ feasibility:
 
 # Hinweise im Steckbrief (Abschnitt Soll-Kategorie), Schlüssel = Flag
 hints:
-  gow50_anbaufrei: "Anbaufreie Stadtmagistrale: kaum Gebäude und Einmündungen an der Straße. Sie bleibt eine Stadtmagistrale (keine eigene Kategorie); ein heutiges Tempo über 50 ist hier fachlich zu prüfen und zählt nicht als Diskrepanz."
+  gow50_anbaufrei: "Kaum Häuser und Einmündungen an dieser Hauptstraße. Sie bleibt eine Hauptstraße mit Tempo 50. Ein heutiges Tempo über 50 sollten Fachleute prüfen; es zählt nicht als Abweichung."
 
 speed_source:
   official: "amtlich (Zulässige Höchstgeschwindigkeiten)"
   osm: "OpenStreetMap"
+
+# Sätze der Bezirksseite (web, Redesign 2026-11 Paket 2). Platzhalter {name} usw. füllt die Webseite aus districts/<bezirk>.json.
+overview:
+  intro: "Auf {km_need} von {km_total} km Straße passt der heutige Zustand nicht zur Aufgabe der Straße. {junctions_rebuild} Kreuzungen müssten umgebaut werden."
+  figures:
+    km_need: "Straßen mit großer Abweichung zwischen heute und Ziel"
+    junctions_rebuild: "Kreuzungen, die umgebaut werden müssten"
+    km_cycle_missing: "Radnetz ohne passenden Radweg"
+  street_speed: "heute {speed_ist} km/h, Ziel {target} km/h"
+  street_crashes: "{crashes} Unfälle mit Fuß- oder Radbeteiligung in 5 Jahren"
+  junction: "heute {ist}, Ziel {soll}"
+  junction_crashes: "{crashes} Unfälle mit Radbeteiligung in 5 Jahren"
+  gap: "{km} km {cycle_cat} ohne passenden Radweg, bis {demand} Radfahrten am Tag (Modell)"
+  lists_note: "Straßen nach Dringlichkeit (Abweichung mal Risiko), Kreuzungen nach Rang beim Umbau, Lücken nach Länge mal Radverkehr (Modell). Alle Werte aus dem Entwurf, nicht amtlich."
 
 disclaimer: "Nicht amtlicher Diskussionsentwurf – keine Planung oder Anordnung der Freien und Hansestadt Hamburg"
 
@@ -182,34 +198,34 @@ cycling:
   disclaimer: "Radnetz, Radanlagen, Querschnitte und Knotenpunkte sind ein nicht amtlicher Entwurf – nicht das Radnetz Hamburg"
   no_cycle_category: "nicht im Soll-Radnetz"
   facility:
-    separated_oneway_both: "Radweg auf beiden Seiten (baulich getrennt)"
-    separated_twoway: "Zweirichtungsradweg (baulich getrennt)"
-    cycle_lane: "Radfahrstreifen"
+    separated_oneway_both: "eigener Radweg auf beiden Seiten"
+    separated_twoway: "Radweg für beide Richtungen"
+    cycle_lane: "Radstreifen auf der Fahrbahn"
     cycle_street: "Fahrradstraße"
-    mixed: "Mischverkehr auf der Fahrbahn"
-    own_path: "eigener Radweg abseits der Straße"
+    mixed: "Rad auf der Fahrbahn"
+    own_path: "eigener Weg abseits der Straße"
   facility_osm:
     cycle_street: "Fahrradstraße"
     track: "Radweg"
-    lane: "Radfahr- oder Schutzstreifen"
+    lane: "Radstreifen"
     shared_lane: "Fahrradpiktogramm oder Busspur"
     "no": "keine Radanlage"
   gap:
-    none: "Ist passt zum Soll"
-    missing: "Radanlage fehlt"
-    wrong_type: "andere Radanlage als im Soll"
-    partial: "Radanlage erfüllt das Soll teilweise"
-    too_narrow: "Radanlage zu schmal"
+    none: "passt zum Ziel"
+    missing: "Radweg fehlt"
+    wrong_type: "anderer Radweg als im Ziel"
+    partial: "Radweg passt zum Teil"
+    too_narrow: "Radweg zu schmal"
     not_assessed: "nicht bewertet"
   fit:
-    fits: "passt in den Straßenraum"
-    fits_after_degrade: "passt nach Abstrichen"
-    does_not_fit: "passt nicht in den Straßenraum"
+    fits: "passt in die Straße"
+    fits_after_degrade: "passt mit Abstrichen"
+    does_not_fit: "passt nicht in die Straße"
   lanes:
-    shared: "keine markierten Fahrstreifen (Mischverkehr)"
-    fewer: "weniger Kfz-Fahrstreifen als heute"
-    same: "so viele Kfz-Fahrstreifen wie heute"
-    more: "mehr Kfz-Fahrstreifen als heute"
+    shared: "keine markierten Fahrstreifen"
+    fewer: "weniger Fahrstreifen für Autos als heute"
+    same: "so viele Fahrstreifen für Autos wie heute"
+    more: "mehr Fahrstreifen für Autos als heute"
     ist_unknown: "heutige Zahl unbekannt"
   side:
     both: "auf beiden Straßenseiten"
@@ -235,60 +251,60 @@ cycling:
       high: "Modellnachfrage deutlich über dem Auslöser, auch bei der Modellunsicherheit"
     no_run: "ohne eigenen Lauf (Lückenschluss oder Korrektur)"
   facility_flags:
-    dtv_unknown: "Kfz-Menge nicht gezählt – Bedingung vorläufig als erfüllt angenommen"
+    dtv_unknown: "Autoverkehr nicht gezählt – vorläufig als passend angenommen"
     fallback_check_p19: "Ersatzlösung möglich, wenn der Platz nicht reicht"
-    cycle_street_blocked: "Fahrradstraße erst nach weniger Kfz-Verkehr möglich (Filter) oder Route verlegen"
-    mixed_over_s04: "Mischverkehr bei zu viel Kfz-Verkehr – prüfen"
+    cycle_street_blocked: "Fahrradstraße erst mit weniger Autoverkehr möglich (Durchfahrt sperren) oder Route verlegen"
+    mixed_over_s04: "Rad auf der Fahrbahn bei viel Autoverkehr – prüfen"
     no_target_width: "keine Sollbreite für diese Kombination"
     ist_width_unknown: "heutige Breite in OpenStreetMap nicht erfasst"
-    track_on_access_road: "Radweg an einer Erschließungsstraße – Straßenkategorie prüfen"
-    existing_track_below_floor: "heutiger Radweg schmaler als die Untergrenze – zählt nicht als sicherer Radweg (C-G30-02)"
-    gow30_high_volume: "viel Kfz-Verkehr für Tempo 30 – Radweg statt Radfahrstreifen"
+    track_on_access_road: "Radweg an einer Wohnstraße – Aufgabe der Straße prüfen"
+    existing_track_below_floor: "heutiger Radweg schmaler als die Untergrenze – zählt nicht als sicherer Radweg"
+    gow30_high_volume: "viel Autoverkehr für Tempo 30 – eigener Radweg statt Radstreifen"
     haupt_through_pedestrian_area: "Hauptroute durch Fußgängerzone oder verkehrsberuhigten Bereich – eigene Trasse bevorzugt, sonst nur Schrittgeschwindigkeit"
-    filter_needed: "Kfz-Menge nicht gezählt, aber Durchgangsverkehr wahrscheinlich – Filter prüfen"
-    parallel_cycle_route: "kein baulicher Radweg, aber eine Parallelroute im Radnetz – mildert, ersetzt den Radweg nicht"
+    filter_needed: "Autoverkehr nicht gezählt, aber wahrscheinlich Durchgangsverkehr – Durchfahrtssperre prüfen"
+    parallel_cycle_route: "kein eigener Radweg, aber eine Radroute daneben – hilft, ersetzt den Radweg aber nicht"
     track_tag_only: "Radweg nur laut Straßen-Tag in OpenStreetMap, kein Radweg im Radgraphen – prüfen"
   profile_flags:
-    width_unknown: "Straßenraumbreite nicht gemessen"
-    no_profile_rules: "für diese Straßenkategorie kein Soll-Profil"
-    dtv_unknown: "Kfz-Menge fehlt – Fahrstreifen wie heute angenommen"
+    width_unknown: "Breite der Straße nicht gemessen"
+    no_profile_rules: "für diese Art Straße keine Aufteilung im Ziel"
+    dtv_unknown: "Autoverkehr nicht gezählt – Fahrstreifen wie heute angenommen"
     lanes_capped_l06: "nicht mehr Fahrstreifen als heute (L-06)"
     pl02_unchecked: "Lage des Zweirichtungsradwegs nicht prüfbar"
     trees_as_pits: "neue Bäume in Baumscheiben im Trenn- oder Seitenraum statt Baumstreifen"
-    capacity_reduction_needed: "mehr Kfz-Verkehr als ein Fahrstreifen je Richtung trägt – Verkehrsmenge senken"
-    gow30_dtv_above_profile: "Kfz-Menge über dem breiten Profil für Tempo 30"
-    D6: "Einrichtungsverkehr oder Durchfahrtssperre für Kfz prüfen"
+    capacity_reduction_needed: "mehr Autoverkehr, als ein Fahrstreifen je Richtung schafft – der Autoverkehr müsste weniger werden"
+    gow30_dtv_above_profile: "mehr Autoverkehr, als für Tempo 30 vorgesehen ist"
+    D6: "Einbahnstraße oder Durchfahrtssperre für Autos prüfen"
     D7: "Radroute auf eine Parallelstraße verlegen prüfen"
   junction_type:
     roundabout_single_lane_cycle_priority: "Kreisverkehr (einstreifig), Radverkehr hat Vorrang"
     roundabout_single_lane_cycle_yield: "Kreisverkehr (einstreifig), Radverkehr wartet"
-    turbo_roundabout: "Turbokreisverkehr"
-    signal_protected: "Ampelkreuzung, geschützt gestaltet"
-    priority_raised: "Vorfahrtsknoten mit Aufpflasterung"
-    priority_flat_coloured: "Vorfahrtsknoten mit eingefärbter Fläche"
-    continuous_footway_exit: "durchgehender Gehweg (Gehwegüberfahrt)"
-    equal_right_before_left: "gleichrangig, rechts vor links"
-    cycle_crossing_priority: "Radwegfurt mit Vorrang"
-    cycle_crossing_signal: "Radwegfurt mit Ampel"
+    turbo_roundabout: "Kreisverkehr mit zwei Spuren"
+    signal_protected: "Ampel mit geschützten Wegen für Rad und Fuß"
+    priority_raised: "Vorfahrt mit erhöhter Fahrbahn"
+    priority_flat_coloured: "Vorfahrt mit eingefärbter Fläche"
+    continuous_footway_exit: "durchgehender Gehweg"
+    equal_right_before_left: "rechts vor links"
+    cycle_crossing_priority: "Radüberweg mit Vorrang"
+    cycle_crossing_signal: "Radüberweg mit Ampel"
     grade_separated_cycle: "Brücke oder Tunnel für den Radverkehr"
-    cycle_crossing_refuge: "Radquerung mit Mittelinsel, Radverkehr wartet"
-    not_applicable: "kein Knotentyp nötig (Autobahnknoten ohne Rad- und Fußverkehr)"
+    cycle_crossing_refuge: "Querung mit Insel in der Mitte, Rad wartet"
+    not_applicable: "keine Kreuzungsart nötig (Autobahnknoten ohne Rad- und Fußverkehr)"
   junction_group:
     roundabout: "Kreisverkehr"
     signal: "Ampel"
-    priority: "Vorfahrt mit Aufpflasterung, Furt oder Querung mit Mittelinsel"
+    priority: "Vorfahrt mit erhöhter Fahrbahn, Radüberweg oder Insel"
     continuous: "durchgehender Gehweg"
     equal: "rechts vor links"
     grade_separated: "Brücke oder Tunnel"
-    none: "kein Soll-Typ (Autobahnknoten oder keine Regel passt)"
+    none: "kein Ziel festgelegt (Autobahnknoten oder keine Regel passt)"
   junction_ist:
     roundabout: "Kreisverkehr"
-    signal_plateau: "Ampel mit Aufpflasterung"
+    signal_plateau: "Ampel mit erhöhter Fahrbahn"
     signal: "Ampel"
-    plateau: "Aufpflasterung"
-    none_mapped: "nichts Besonderes erfasst"
+    plateau: "erhöhte Fahrbahn"
+    none_mapped: "keine Ampel und kein Kreisverkehr erfasst"
   junction_result:
-    match: "heutiger Knoten passt"
+    match: "passt schon heute"
     mismatch: "Umbau nötig"
     not_checkable: "nicht prüfbar (heutige Gestaltung nicht erfasst)"
   junction_flags:

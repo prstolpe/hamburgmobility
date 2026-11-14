@@ -8,7 +8,7 @@ Grundlage: `decisions.md` (E1 b, E2 b mit Navigation-Klärung, E3 b, E3b b, E3c 
    Priorität, Knoten nach `priority_rank`, Radnetzlücken nach Länge × Nachfrage). Logik aus `analysis/redesign/district_data.py`.
 2. `data/out/cycle_mesh_gaps.geojson` (vereinfacht, EPSG:4326) für die Ansicht „Lücken“.
 3. Knoten in die Suche (eigene Datei `search_junctions.json`, `search.json` bleibt unverändert).
-4. `docs/redesign/glossary.yaml` → `config/glossary.yaml` (eine Quelle), Export nach `meta.json` (`glossary`).
+4. `docs/redesign/glossary.yaml` → `config/glossary.yaml` (eine Quelle, erledigt), Export nach `meta.json` (`glossary`).
 5. `config/plain_language.yaml`: Kategorienamen und Begründungsbausteine nach Glossar (Texte aus `04_language.md`),
    neue meta.version, CHANGELOG. Download-Texte (`DOWNLOAD_TEXTS` in `s09_export.py`) ebenso.
 

@@ -709,3 +709,13 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
 - Neu gerechnet: validate, c08, Export und Website (erstmals seit vor P0); make test und make a11y grün.
 - docs/review/2026-11/05_reststand.md: Umsetzungsstand F01–F38 und Strukturempfehlungen 1–10, Abweichungen,
   offene Fragen gruppiert, Kandidaten für V-SENS-01, nächste Schritte.
+
+## plain_language.yaml 0.10.0 – 2026-11-14 (Redesign 2026-11, Paket 2)
+- Texte in Einfacher Sprache nach `config/glossary.yaml` (Entscheidung E4 b): Kategorientexte, Begründungsbausteine der
+  Kaskade, Robustheit, Hinweise, Radweg- und Kreuzungsbezeichnungen, Hinweise zu Radweg und Querschnitt. Keine Schwelle
+  und keine Bedingung geändert; Datenbeschreibung der Downloads bleibt fachlich.
+- Neu: Abschnitt `overview` mit den Sätzen der Bezirksseite.
+- `config/glossary.yaml` (aus `docs/redesign/`) ist die einzige Quelle für Klarnamen und Erklärungen; der Export schreibt
+  sie nach `meta.json` (`glossary`), Kategorienamen in `meta.categories[*].label` kommen von dort (`label_de` bleibt).
+- Export: `districts/<bezirk>.json` (Kennzahlen und Top-5-Listen), `search_junctions.json`, `cycle_mesh_gaps.geojson`;
+  Anzeigeparameter in `config/project.yaml` `web.overview`.

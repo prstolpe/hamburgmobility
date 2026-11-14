@@ -55,9 +55,9 @@ def test_reason_c_g30_02_names_widths():
              _step("C-G30-02", True, bus_route=False, width_p10_m=14.2)]
     reasons = ex.rule_reasons(trace, RULES, TEXTS)
     assert [r["rule"] for r in reasons] == ["C-GOW-01", "C-G30-01", "C-G30-02"]  # failed C-SW-01 has no text
-    assert reasons[0]["text"] == ("Hauptverkehrsstraße der BVM; hohe Verbindungsfunktion: Verbindungswert 0,88 "
-                                  "(ab 0,87)")
-    assert reasons[2]["text"] == ("für einen ausreichenden baulichen Radweg fehlt der Platz: Straßenraum 14,2 m, "
+    assert reasons[0]["text"] == ("steht auf der Liste der Hauptverkehrsstraßen; wichtig für Wege quer durch die Stadt: "
+                                  "Verbindungswert 0,88 (ab 0,87)")
+    assert reasons[2]["text"] == ("für einen eigenen Radweg fehlt der Platz: Straße 14,2 m breit, "
                                   "nötig 17,0 m")
     assert reasons[2]["passed"] is True and reasons[1]["passed"] is False
 
@@ -65,15 +65,15 @@ def test_reason_c_g30_02_names_widths():
 def test_reason_c_g30_02_bus_route_names_bus_width():
     trace = [_step("C-G30-02", True, bus_route=True, width_p10_m=17.2)]
     assert ex.rule_reasons(trace, RULES, TEXTS)[0]["text"] == (
-        "für einen ausreichenden baulichen Radweg neben der Busfahrbahn fehlt der Platz: Straßenraum 17,2 m, nötig 17,5 m")
+        "für einen eigenen Radweg neben der Busspur fehlt der Platz: Straße 17,2 m breit, nötig 17,5 m")
 
 
 def test_reason_only_true_fragments():
     trace = [_step("C-G30-01", True, school_or_kita_access_m=23.6, shop_frontage_share=0.5,
                    crossing_demand="not_assessed")]
     text = ex.rule_reasons(trace, RULES, TEXTS)[0]["text"]
-    assert text.startswith("Schule oder Kita direkt an der Straße: Grundstück 24 m entfernt (bis 50 m); "
-                           "viele Gebäude mit Läden oder Publikumsverkehr: 50 %")
+    assert text.startswith("eine Schule oder Kita liegt direkt an der Straße: Grundstück 24 m entfernt (bis 50 m); "
+                           "viele Läden und Lokale: in 50 % der Gebäude")
     assert "Querungsbedarf" not in text
 
 
@@ -81,7 +81,7 @@ def test_reason_unknown_fragment_left_out():
     trace = [_step("C-G30-02", False, bus_route=None, width_p10_m=18.0),
              _step("C-G30-02", False, bus_route=False, width_p10_m=18.0)]
     reasons = ex.rule_reasons(trace, RULES, TEXTS)
-    assert reasons[0]["text"] == "Platz für einen baulichen Radweg: Straßenraum 18,0 m (nötig 17,0 m)"
+    assert reasons[0]["text"] == "genug Platz für einen eigenen Radweg: Straße 18,0 m breit (nötig 17,0 m)"
 
 
 def test_every_cascade_rule_has_a_text():

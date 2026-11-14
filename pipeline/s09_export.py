@@ -30,6 +30,7 @@ import yaml
 
 from pipeline.lib import export as ex
 from pipeline.lib import export_cycling as xc
+from pipeline.lib import export_overview as ov
 from pipeline.lib.area import area_label, read_districts, read_rural
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
@@ -40,6 +41,8 @@ from pipeline.s06_coherence import FLAG_LABELS, RULE_LABELS
 from pipeline.s08_discrepancy import reason_text
 
 PROJECT_PATH = REPO_ROOT / "config" / "project.yaml"
+GLOSSARY_PATH = REPO_ROOT / "config" / "glossary.yaml"
+MESH_GAPS_PATH = REPO_ROOT / "data" / "interim" / "cycle_mesh_gaps.parquet"
 SOURCES_PATH = REPO_ROOT / "config" / "sources.yaml"
 IN_PATH = REPO_ROOT / "data" / "interim" / "discrepancy.parquet"
 VALIDATION_PATH = REPO_ROOT / "data" / "interim" / "validation.parquet"
@@ -72,19 +75,19 @@ PROFILE_SOURCES = {
     "bike_counters": "Rad-Zählstellen: Kalibrierung des Radverkehrsmodells",
 }
 DOWNLOAD_TEXTS = {
-    "segments.parquet": "Abschnitte mit allen Merkmalen (GeoParquet)",
-    "segments.geojson": "Abschnitte mit allen Merkmalen (GeoJSON)",
-    "segments.csv": "Abschnitte als Tabelle mit Mittelpunkt (CSV)",
-    "datenbeschreibung.md": "Datenbeschreibung: Bedeutung aller Spalten",
-    "rules.yaml": "Regelwerk mit allen Schwellenwerten und Quellen",
-    "overrides.csv": "Fachliche Korrekturen (Korrekturdatei)",
-    "cycle_segments.parquet": "Radnetz je Abschnitt: Führungsform, Breite, Fahrstreifen, Querschnitt (GeoParquet)",
-    "cycle_segments.geojson": "Radnetz je Abschnitt (GeoJSON)",
-    "junctions.parquet": "Knotenpunkte: Soll- und Ist-Typ, Radverkehrsführung (GeoParquet)",
-    "junctions.geojson": "Knotenpunkte (GeoJSON)",
-    "cycle_network.parquet": "Soll-Radnetz als Kanten des Radgraphen (GeoParquet)",
-    "cycling_rules.yaml": "Regelwerk Radnetz (Kategorien, Prinzipien, Trennungsmatrix, Breiten)",
-    "design_rules.yaml": "Regelwerk Querschnitt und Knotenpunkte",
+    "segments.parquet": "Alle Straßenstücke mit allen Angaben (GeoParquet)",
+    "segments.geojson": "Alle Straßenstücke mit allen Angaben (GeoJSON)",
+    "segments.csv": "Alle Straßenstücke als Tabelle, mit Mittelpunkt (CSV)",
+    "datenbeschreibung.md": "Was jede Spalte bedeutet",
+    "rules.yaml": "Regeln mit allen Grenzwerten und Quellen",
+    "overrides.csv": "Korrekturen durch Fachleute",
+    "cycle_segments.parquet": "Radverkehr je Straßenstück: Art und Breite des Radwegs, Fahrstreifen, Aufteilung der Straße (GeoParquet)",
+    "cycle_segments.geojson": "Radverkehr je Straßenstück (GeoJSON)",
+    "junctions.parquet": "Kreuzungen: Art heute und im Ziel, Führung des Radverkehrs (GeoParquet)",
+    "junctions.geojson": "Kreuzungen (GeoJSON)",
+    "cycle_network.parquet": "Radnetz im Ziel als Wegstücke (GeoParquet)",
+    "cycling_rules.yaml": "Regeln für das Radnetz (Stufen, Prinzipien, Radweg je Straße, Breiten)",
+    "design_rules.yaml": "Regeln für die Aufteilung der Straße und für Kreuzungen",
 }
 FACILITY_LAYERS = {"schools": "data/raw/schools__osm.parquet", "kitas": "data/raw/kitas__osm.parquet"}
 
@@ -220,6 +223,28 @@ def profile(r: pd.Series, ctx: dict) -> dict:
 
 
 # --- writers ---------------------------------------------------------------------------------
+
+
+def write_overview(seg: gpd.GeoDataFrame, c: dict, names: list[str], params: dict) -> dict:
+    """Bezirk overview (figures and top lists, data/out/districts/<slug>.json), junction search entries
+    (search_junctions.json) and network gaps (cycle_mesh_gaps.geojson) for the website (redesign 2026-11, package 2)."""
+    fac = c["fac"].merge(c["xs"][["segment_id", "fit_class"]], on="segment_id", how="left")
+    fac = fac[fac.segment_id.isin(set(seg.segment_id))]
+    net = c["net"]
+    demand = net[net.segment_id.notna()].groupby("segment_id").cyc_calibrated.max()
+    figures = ov.district_figures(seg, fac, c["j"], params)
+    files = {}
+    for b in names:
+        files[b] = f"{ex.district_slug(b)}.json"
+        write_json(OUT_DIR / "districts" / files[b], {
+            "name": b, "figures": figures.get(b),
+            "top": {"streets": ov.top_streets(seg, b, params), "junctions": ov.top_junctions(c["j"], b, params),
+                    "gaps": ov.top_gaps(fac, demand, b, params)}})
+    write_json(OUT_DIR / "search_junctions.json", ov.junction_search(c["j"][c["j"].bezirk.isin(names)]))
+    if MESH_GAPS_PATH.exists():
+        ov.mesh_gaps_frame(gpd.read_parquet(MESH_GAPS_PATH)).to_file(OUT_DIR / "cycle_mesh_gaps.geojson", driver="GeoJSON",
+                                                                     COORDINATE_PRECISION=6)
+    return {"figures": figures, "files": files, "params": params, "mesh_gaps": MESH_GAPS_PATH.exists()}
 
 
 def write_json(path, data) -> None:
@@ -485,7 +510,7 @@ def main() -> int:
            "sources": source_list(manifest, sources_yaml["sources"]), "viewers": load_viewers(), "sens": sens_ctx}
 
     if OUT_DIR.exists():
-        for sub in ("segments", "downloads", "tiles", "table", "junctions"):
+        for sub in ("segments", "downloads", "tiles", "table", "junctions", "districts"):
             shutil.rmtree(OUT_DIR / sub, ignore_errors=True)
     dl = OUT_DIR / "downloads"
     dl.mkdir(parents=True, exist_ok=True)
@@ -532,6 +557,7 @@ def main() -> int:
     rural[["name", "geometry"]].to_file(OUT_DIR / "rural_excluded.geojson", driver="GeoJSON")
     (OUT_DIR / "district.geojson").unlink(missing_ok=True)
     web = project["web"]
+    glossary = _load_yaml(GLOSSARY_PATH)
     assets = sources_yaml["web_assets"]
     attribution = ["© OpenStreetMap-Beitragende (ODbL)"] + sorted({s["attribution"] for s in ctx["sources"]
                                                                     if s["attribution"] and "OpenStreetMap" not in s["attribution"]})
@@ -541,8 +567,9 @@ def main() -> int:
             "rural_excluded": sorted(rural["name"]),
             "categories_present": [c for c in rules.categories if c in set(pub["cat_final"])],
             "n_segments": len(pub), "bbox": [round(float(v), 6) for v in district.total_bounds],
-            "categories": {c: {"label": rules.categories[c].label_de, "text": texts["categories"][c]}
-                           for c in rules.categories},
+            # plain name from config/glossary.yaml (redesign E4); label_de stays as the technical name (level 3)
+            "categories": {c: {"label": glossary["categories"][c]["plain"], "label_de": rules.categories[c].label_de,
+                               "text": texts["categories"][c]} for c in rules.categories},
             "discrepancy_types": dict(rules.discrepancy.types),
             "feasibility": texts["feasibility"],
             "global_caveats": ex.global_caveats(rules, texts),
@@ -557,6 +584,8 @@ def main() -> int:
             "basemap": {k: {"title": v["title"], "license": v["license"], "attribution": v.get("attribution")}
                         for k, v in assets.items()}}
     meta["cycling"] = cycling_meta(cyc) if cyc else None
+    meta["glossary"] = {k: v for k, v in glossary.items() if k != "meta"}
+    meta["overview"] = {**write_overview(seg, cyc, names, web["overview"]), "texts": texts["overview"]} if cyc else None
     write_json(OUT_DIR / "meta.json", meta)
     shutil.copy(REPO_ROOT / "docs" / "licenses.md", OUT_DIR / "licenses.md")
     shutil.copy(REPO_ROOT / "CHANGELOG.md", OUT_DIR / "changelog.md")

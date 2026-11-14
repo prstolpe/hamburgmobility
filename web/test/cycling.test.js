@@ -34,7 +34,7 @@ describe("URL state for cycling", () => {
   });
 
   it("round-trips a junction id", () => {
-    const s = { ...DEFAULTS, layer: "jct", jct: "1026524904" };
+    const s = { ...DEFAULTS, theme: "knoten", view: "ziel", layer: "jct", jct: "1026524904" };
     expect(parseHash(toHash(s))).toEqual(s);
     expect(toHash(s)).toContain("jct=1026524904");
   });

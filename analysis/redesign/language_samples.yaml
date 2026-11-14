@@ -1,6 +1,6 @@
 # Before/after samples for docs/redesign/04_language.md (prompt 24, A4). "before" is read from the content capture
 # (data/scenarios/redesign/ui/content.json) via `ref`; "after" is the rewrite in plain language (B1), using the terms
-# of docs/redesign/glossary.yaml. Facts in "after" come from the same profile JSON / page; nothing new is claimed.
+# of config/glossary.yaml. Facts in "after" come from the same profile JSON / page; nothing new is claimed.
 # ref forms: page:<page>:<heading>[|<heading>…] · layer:<key> · profile:<cat>:<heading>|… · junction:<heading>|…
 
 samples:

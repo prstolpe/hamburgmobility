@@ -1,11 +1,11 @@
-# Glossar Redesign 2026-11 (Prompt 24, A4): Fachbegriff -> Name in Einfacher Sprache (B1) und ein Satz Erklärung.
+# Glossar (Redesign 2026-11, Prompt 24 A4; einzige Quelle seit Paket 2, Export nach meta.json „glossary“): Fachbegriff -> Name in Einfacher Sprache (B1) und ein Satz Erklärung.
 # level: 1/2 = Klartext ersetzt den Fachbegriff auf diesen Ebenen; 3 = Fachbegriff bleibt auf Ebene 3 sichtbar,
 # mit diesem Eintrag als Erklärung (Tooltip oder Glossar-Link). Begriffe in plain sind verbindlich: überall gleich.
 # found = Fundstellen laut data/scenarios/redesign/readability_terms.csv (Anzahl in Webseite, Klartexten, Regeldateien).
 meta:
   version: 0.1.0
   date: 2026-11-14
-  status: Vorschlag (Entscheidung E4 in docs/redesign/decisions.md)
+  status: übernommen (Entscheidung E4 b, docs/redesign/decisions.md)
 
 categories:
   SW:      {plain: "Schnellstraße", explain: "Autobahn oder Kraftfahrstraße: nur für Autos, ohne Häuser direkt an der Straße.", level: 3}

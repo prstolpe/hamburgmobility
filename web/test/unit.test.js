@@ -2,22 +2,11 @@ import { describe, expect, it } from "vitest";
 import { issueUrl, mailtoUrl } from "../src/feedback.js";
 import { allColors, CASING, CATEGORY_STYLE, contrast } from "../src/palette.js";
 import { profileHtml } from "../src/panel.js";
-import { DEFAULTS, parseHash, rowMatches, toHash } from "../src/state.js";
+import { DEFAULTS, parseHash, rowMatches } from "../src/state.js";
 import { robust } from "../src/table.js";
 
 describe("URL state", () => {
-  it("round-trips all fields", () => {
-    const s = {
-      ...DEFAULTS, page: "tabelle", layer: "disc", overlays: ["bus", "acc"], cats: ["GOW30", "ETW30"], dts: ["D1"],
-      prmin: 1.5, bz: "Eimsbüttel", seg: "seg_00ab", map: { zoom: 14, lat: 53.57, lon: 9.95 },
-    };
-    expect(parseHash(toHash(s))).toEqual(s);
-  });
-
-  it("keeps defaults out of the URL", () => {
-    expect(toHash({ ...DEFAULTS })).toBe("#karte");
-  });
-
+  // theme/view and the redirect of old links: test/state.test.js
   it("ignores invalid values", () => {
     const s = parseHash("#nirgends?layer=foo&ov=bus,xyz&pr=-2&seg=<script>&map=a/b/c");
     expect(s.page).toBe("karte");
