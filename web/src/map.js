@@ -39,6 +39,7 @@ function addJunctionIcons(map) {
 function ensureSources(map, meta, layers, tilesBase) {
   const urls = { cyc: meta.cycling?.tiles?.cycling, jct: meta.cycling?.tiles?.junctions };
   for (const l of layers) {
+    if (l.source === "gaps" && !map.getSource("gaps")) map.addSource("gaps", { type: "geojson", data: dataUrl("cycle_mesh_gaps.geojson") });
     if (map.getSource(l.source) || !urls[l.source]) continue;
     map.addSource(l.source, { type: "vector", url: `pmtiles://${dataUrl(urls[l.source], tilesBase)}`, promoteId: "id",
       attribution: l.source === "cyc"
@@ -120,6 +121,7 @@ export function createMap(container, meta, state, { onSelect, onSelectJunction, 
     map,
     update(st) { if (map.isStyleLoaded()) apply(st); else map.once("load", () => apply(st)); },
     fitBbox(b) { map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 17 }); },
+    flyTo([lon, lat], zoom = 16) { map.flyTo({ center: [lon, lat], zoom, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 800 }); },
     resize() { map.resize(); },
   };
 }

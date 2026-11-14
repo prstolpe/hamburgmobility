@@ -2,22 +2,11 @@ import { describe, expect, it } from "vitest";
 import { issueUrl, mailtoUrl } from "../src/feedback.js";
 import { allColors, CASING, CATEGORY_STYLE, contrast } from "../src/palette.js";
 import { profileHtml } from "../src/panel.js";
-import { DEFAULTS, parseHash, rowMatches, toHash } from "../src/state.js";
+import { DEFAULTS, parseHash, rowMatches } from "../src/state.js";
 import { robust } from "../src/table.js";
 
 describe("URL state", () => {
-  it("round-trips all fields", () => {
-    const s = {
-      ...DEFAULTS, page: "tabelle", layer: "disc", overlays: ["bus", "acc"], cats: ["GOW30", "ETW30"], dts: ["D1"],
-      prmin: 1.5, bz: "Eimsbüttel", seg: "seg_00ab", map: { zoom: 14, lat: 53.57, lon: 9.95 },
-    };
-    expect(parseHash(toHash(s))).toEqual(s);
-  });
-
-  it("keeps defaults out of the URL", () => {
-    expect(toHash({ ...DEFAULTS })).toBe("#karte");
-  });
-
+  // theme/view and the redirect of old links: test/state.test.js
   it("ignores invalid values", () => {
     const s = parseHash("#nirgends?layer=foo&ov=bus,xyz&pr=-2&seg=<script>&map=a/b/c");
     expect(s.page).toBe("karte");
@@ -140,8 +129,8 @@ describe("legend", () => {
   it("explains the grey rural Stadtteile when there are any", async () => {
     const { legendHtml } = await import("../src/layers.js");
     const meta = { categories: { SW: { label: "Schnellverkehrsstraße" } }, discrepancy_types: {}, width_classes_m: {}, feasibility: {} };
-    expect(legendHtml("cat", { ...meta, rural_excluded: ["Kirchwerder"] })).toContain("außerorts – nicht bewertet");
-    expect(legendHtml("cat", meta)).not.toContain("außerorts – nicht bewertet");
+    expect(legendHtml("cat", { ...meta, rural_excluded: ["Kirchwerder"] })).toContain("auf dem Land – nicht bewertet");
+    expect(legendHtml("cat", meta)).not.toContain("auf dem Land – nicht bewertet");
   });
 });
 
@@ -151,8 +140,9 @@ describe("legend categories", () => {
     const meta = { categories: { SW: { label: "A" }, GOW80: { label: "B" } }, categories_present: ["SW"],
       discrepancy_types: {}, width_classes_m: {}, feasibility: {} };
     const html = legendHtml("cat", meta);
-    expect(html).toContain("SW – A");
+    expect(html).toContain("<span>A</span>");
     expect(html).not.toContain("GOW80");
+    expect(html).not.toMatch(/\bSW\b/); // plain names only, codes stay on level 3 (redesign E4)
   });
 });
 

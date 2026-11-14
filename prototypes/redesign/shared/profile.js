@@ -1,7 +1,7 @@
 // Profile ("Steckbrief") in three levels for the redesign prototypes (prompt 24, A2/A3): level 1 at a glance,
 // level 2 explanation ("Mehr erfahren"), level 3 details and sources. Works on the existing profile JSON in
 // data/out (segments/*.json, junctions/*.json); rule IDs and codes only on level 3. Plain names follow
-// docs/redesign/glossary.yaml.
+// config/glossary.yaml.
 import { crossSectionSvg } from "../../../web/src/panel.js";
 import { esc, num } from "../../../web/src/util.js";
 import { changes, fitAnswer } from "../../shared/steckbrief.js";

@@ -28,7 +28,7 @@ Kürzel.
 
 ## Glossar
 
-[`glossary.yaml`](glossary.yaml) enthält rund 90 Begriffe in fünf Gruppen: Kategorien, allgemeine Begriffe, Radverkehr,
+[`glossary.yaml`](../../config/glossary.yaml) enthält rund 90 Begriffe in fünf Gruppen: Kategorien, allgemeine Begriffe, Radverkehr,
 Kreuzungen, Daten. Jeder Eintrag hat:
 
 - **plain:** der Name in Einfacher Sprache, verbindlich

@@ -1,4 +1,4 @@
-// Street search with autocomplete (WAI-ARIA combobox pattern) over search.json.
+// Street and junction search with autocomplete (WAI-ARIA combobox pattern) over search.json.
 import Fuse from "fuse.js";
 import { esc } from "./util.js";
 
@@ -18,7 +18,7 @@ export function setupSearch(input, listbox, entries, onPick) {
 
   function render() {
     listbox.innerHTML = results.map((r, i) => `<li id="opt-${i}" role="option" aria-selected="${i === active}"
-      data-i="${i}">${esc(r.name)} <span class="muted">${esc(r.bezirk)}, ${r.n} Abschnitt${r.n === 1 ? "" : "e"}</span></li>`).join("");
+      data-i="${i}">${esc(r.name)} <span class="muted">${esc(r.bezirk)}, ${r.kind === "jct" ? "Kreuzung" : `${r.n} Straßenstück${r.n === 1 ? "" : "e"}`}</span></li>`).join("");
     listbox.hidden = results.length === 0;
     input.setAttribute("aria-expanded", String(results.length > 0));
     if (active >= 0) input.setAttribute("aria-activedescendant", `opt-${active}`);

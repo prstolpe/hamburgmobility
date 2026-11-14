@@ -5,16 +5,17 @@ import { esc, num } from "./util.js";
 const PAGE_SIZE = 100;
 // Robustness from the sensitivity analysis: true = unsicher, false = robust, null = not computed.
 export const robust = (un) => (un === true ? "unsicher" : un === false ? "robust" : "–");
+// One answer to "how sure is this?" (redesign E3c): data (confidence) and assumptions (sensitivity) together.
+export const certaintyOf = (row) => (row.un === true || row.conf === "niedrig" ? "unsicher" : row.conf === "mittel" ? "eher sicher" : row.conf === "hoch" ? "sicher" : "–");
 const COLUMNS = [
   { key: "name", label: "Straße", type: "text" },
-  { key: "cat", label: "Soll", type: "text" },
-  { key: "spd", label: "Ist-Tempo km/h", type: "num" },
-  { key: "dt", label: "Diskrepanz", type: "text" },
-  { key: "dm", label: "Stärke", type: "num" },
+  { key: "cat", label: "Aufgabe", type: "text" },
+  { key: "spd", label: "Tempo heute km/h", type: "num" },
+  { key: "dt", label: "Abweichung", type: "text" },
+  { key: "dm", label: "Stärke (0–3)", type: "num" },
   { key: "acc", label: "Unfälle Fuß/Rad", type: "num" },
-  { key: "pr", label: "Priorität", type: "num" },
-  { key: "conf", label: "Datenunsicherheit", type: "text" },
-  { key: "un", label: "Robustheit", type: "text" },
+  { key: "pr", label: "Dringlichkeit (0–3)", type: "num" },
+  { key: "cert", label: "Wie sicher?", type: "text" },
   { key: "len", label: "Länge m", type: "num" },
 ];
 
@@ -29,7 +30,10 @@ export function renderDistrictChooser(root, districts, onPick) {
   };
 }
 
-export function renderTable(root, rows, getState, { onOpen, onOtherDistrict, caption = "Abschnitte" }) {
+export function renderTable(root, rows, getState, { onOpen, onOtherDistrict, caption = "Straßenstücke", meta = null }) {
+  const catLabel = (c) => meta?.categories?.[c]?.label ?? c;
+  const dtLabel = (r) => (r.dt ? meta?.glossary?.terms?.[r.dt]?.plain ?? r.dt : r.dm === null ? "nicht prüfbar" : "keine");
+  for (const r of rows) r.cert = certaintyOf(r);
   let sort = { key: "pr", dir: "descending" };
   let page = 0;
 
@@ -52,7 +56,7 @@ export function renderTable(root, rows, getState, { onOpen, onOtherDistrict, cap
     page = Math.min(page, pages - 1);
     const slice = all.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
     root.innerHTML = `
-      <p id="table-summary">${num(all.length)} Abschnitte (Filter wie auf der Karte). Seite ${page + 1} von ${pages}.
+      <p id="table-summary">${num(all.length)} Straßenstücke (Filter wie auf der Karte). Seite ${page + 1} von ${pages}.
         ${onOtherDistrict ? `<button type="button" class="link" data-other-district>anderen Bezirk wählen</button>` : ""}</p>
       <div class="table-wrap" tabindex="0" role="region" aria-labelledby="table-caption">
       <table>
@@ -60,8 +64,8 @@ export function renderTable(root, rows, getState, { onOpen, onOtherDistrict, cap
         <thead><tr>${COLUMNS.map((c) => `<th scope="col" aria-sort="${sort.key === c.key ? sort.dir : "none"}">
           <button type="button" data-sort="${c.key}">${esc(c.label)}</button></th>`).join("")}<th scope="col">Steckbrief</th></tr></thead>
         <tbody>${slice.map((r) => `<tr>
-          <td>${esc(r.name ?? "–")}</td><td>${esc(r.cat)}</td><td>${num(r.spd)}</td><td>${esc(r.dt ?? (r.dm === null ? "nicht prüfbar" : "keine"))}</td>
-          <td>${num(r.dm, Number.isInteger(r.dm) || r.dm == null ? 0 : 1)}</td><td>${num(r.acc)}</td><td>${num(r.pr, 2)}</td><td>${esc(r.conf)}</td><td>${robust(r.un)}</td><td>${num(r.len)}</td>
+          <td>${esc(r.name ?? "–")}</td><td>${esc(catLabel(r.cat))}</td><td>${num(r.spd)}</td><td>${esc(dtLabel(r))}</td>
+          <td>${num(r.dm, Number.isInteger(r.dm) || r.dm == null ? 0 : 1)}</td><td>${num(r.acc)}</td><td>${num(r.pr, 2)}</td><td>${esc(r.cert)}</td><td>${num(r.len)}</td>
           <td><button type="button" class="link" data-open="${esc(r.id)}">öffnen<span class="visually-hidden"> ${esc(r.name ?? r.id)}</span></button></td></tr>`).join("")}
         </tbody></table></div>
       <nav class="pager" aria-label="Seiten der Tabelle">

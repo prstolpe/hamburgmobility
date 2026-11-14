@@ -9,7 +9,9 @@ import { chromium, newPage, open, OUT, shot, words, writeJson } from "./lib.mjs"
 const FX = JSON.parse(readFileSync(join(OUT, "fixtures.json")));
 // IMG_PREFIX: screenshot prefix (default "c-" = state before the redesign; e.g. "p1-" for package 1 of Part B)
 const PREFIX = process.env.IMG_PREFIX || "c-";
-const PAGES = ["karte", "tabelle", "methode", "radnetz", "downloads", "quellen", "impressum"];
+const PAGES = ["karte", "bezirke", "methode", "radnetz", "daten", "impressum"];
+// the intro box ("Was ist das?") is shown once; all captures except the dedicated intro screenshot mark it as seen
+const SEEN = () => { try { localStorage.setItem("sfp-intro-seen", "1"); } catch {} };
 
 /** Text of an element split into sections by headings h1–h4 (heading, text, words). */
 async function sections(page, selector) {
@@ -40,19 +42,26 @@ async function sections(page, selector) {
 
 const withWords = (secs) => secs.map((s) => ({ ...s, words: (s.text.match(/\S+/g) ?? []).length }));
 
+/** Open all details in the panel so that their texts are captured. */
+const openDetails = (page) => page.evaluate(() => document.querySelectorAll("#panel details").forEach((d) => { d.open = true; }));
+
 const browser = await chromium.launch();
-const result = { generated: new Date().toISOString(), pages: {}, layers: {}, profiles: {}, junction: null, chrome: {} };
+const result = { intro: null, generated: new Date().toISOString(), pages: {}, layers: {}, profiles: {}, junction: null, chrome: {} };
 
 for (const kind of ["desktop", "mobile"]) {
   const page = await newPage(browser, kind);
+  // first visit: intro box visible (own context without the seen flag)
+  const first = await newPage(browser, kind);
+  await open(first, "#karte", { settle: 2500 });
+  const introImg = await shot(first, `${PREFIX}intro-${kind}`);
+  if (kind === "desktop") result.intro = { text: await first.evaluate(() => document.querySelector("#intro")?.innerText ?? ""), image: introImg };
+  else result.intro.image_mobile = introImg;
+  await first.context().close();
+  await page.addInitScript(SEEN);
 
   // pages
   for (const p of PAGES) {
-    await open(page, `#${p}`, { settle: p === "karte" ? 3000 : 1500 });
-    if (p === "tabelle") {
-      await page.click('button[data-bz="Eimsbüttel"]').catch(() => {});
-      await page.waitForTimeout(1500);
-    }
+    await open(page, p === "bezirke" ? "#bezirke?bz=Eimsb%C3%BCttel" : `#${p}`, { settle: p === "karte" ? 3000 : 1500 });
     const img = await shot(page, `${PREFIX}${p}-${kind}`);
     const full = p === "karte" ? null : await shot(page, `${PREFIX}${p}-${kind}-full`, { fullPage: true, quality: 60 });
     if (kind === "desktop") {
@@ -73,30 +82,48 @@ for (const kind of ["desktop", "mobile"]) {
       banner: await page.textContent(".banner"),
       title: await page.textContent(".site-title"),
       nav: await page.$$eval("nav.main a", (as) => as.map((a) => a.innerText.trim())),
-      controls_summary: await page.textContent("details.controls > summary"),
+      controls_summary: await page.evaluate(() => document.querySelector("#controls-body summary")?.innerText ?? ""),
       fieldsets: await page.$$eval("#controls-body fieldset > legend", (ls) => ls.map((l) => l.innerText.trim())),
-      layer_options: await page.$$eval('#controls-body input[name="layer"]', (is) => is.map((i) => i.parentElement.innerText.trim())),
+      themes: await page.$$eval("#themes button[data-theme]", (bs) => bs.map((b) => b.innerText.trim())),
+      views: await page.$$eval("#controls-body [data-view], #controls-body [data-theme-view]", (bs) => bs.map((b) => b.innerText.trim())),
       overlay_options: await page.$$eval('#controls-body input[name="ov"]', (is) => is.map((i) => i.parentElement.innerText.trim())),
-      filter_text: await page.evaluate(() => document.querySelector("#controls-body details")?.innerText ?? ""),
-      controls_height_desktop: await page.evaluate(() => document.querySelector("details.controls").scrollHeight),
+      filter_text: await page.evaluate(() => { const d = document.querySelector("#controls-body details"); if (d) d.open = true; return d?.innerText ?? ""; }),
+      controls_height_desktop: await page.evaluate(() => document.querySelector("#controls-body").scrollHeight),
     };
   }
 
-  // layers: description + legend
-  const layers = await page.$$eval('#controls-body input[name="layer"]', (is) => is.map((i) => i.value));
-  for (const l of layers) {
-    await open(page, `#karte?layer=${l}`, { settle: 3000 });
-    const img = await shot(page, `${PREFIX}layer-${l}-${kind}`);
+  // layers: every theme/view (key "theme/view"), description + legend
+  await open(page, "#karte", { settle: 1500 });
+  // level 3 "Mehr Ansichten" lists every theme:view pair
+  const pairs = await page.evaluate(() => {
+    document.querySelectorAll("#controls-body details").forEach((d) => { d.open = true; });
+    return [...document.querySelectorAll("#controls-body [data-theme-view]")].map((b) => b.dataset.themeView.split(":"));
+  });
+  // plus the level-1/2 view buttons of every theme (first view = theme default)
+  const themes = await page.$$eval("#themes button[data-theme]", (bs) => bs.map((b) => b.dataset.theme));
+  for (const t of themes) {
+    await open(page, `#karte?theme=${t}`, { settle: 500 });
+    const vs = await page.$$eval("#themes button[data-view]", (bs) => bs.map((b) => b.dataset.view));
+    pairs.push(...(vs.length ? vs : ["ziel"]).map((v) => [t, v]));
+  }
+  const done = new Set();
+  for (const [t, v] of pairs) {
+    if (done.has(`${t}-${v}`)) continue;
+    done.add(`${t}-${v}`);
+    const key = `${t}-${v}`;
+    await open(page, `#karte?theme=${t}&view=${v}`, { settle: 3000 });
+    const img = await shot(page, `${PREFIX}layer-${key}-${kind}`);
     if (kind === "desktop") {
-      const text = await page.textContent("#layer-text");
+      const text = (await page.textContent("#layer-text").catch(() => "")) ?? "";
       const legend = await page.$$eval("#legend li", (lis) => lis.map((li) => li.innerText.trim()));
       const notes = await page.$$eval("#legend p", (ps) => ps.map((p) => p.innerText.trim()));
       const legendTop = await page.evaluate(() => Math.round(document.querySelector("#legend").getBoundingClientRect().top));
-      result.layers[l] = { title: await page.evaluate((v) => document.querySelector(`input[name="layer"][value="${v}"]`).parentElement.innerText.trim(), l),
+      const title = await page.evaluate(() => document.querySelector("#controls-body [data-theme-view][aria-pressed=true]")?.textContent.trim() ?? "");
+      result.layers[key] = { theme: t, view: v, title,
         text, legend, notes, words: words([text, ...legend, ...notes].join(" ")), legend_top_px: legendTop, image: img };
     } else {
-      result.layers[l].image_mobile = img;
-      result.layers[l].legend_visible_mobile = await page.evaluate(() => {
+      result.layers[key].image_mobile = img;
+      result.layers[key].legend_visible_mobile = await page.evaluate(() => {
         const r = document.querySelector("#legend").getBoundingClientRect();
         return r.top < innerHeight && r.bottom > 0;
       });
@@ -107,6 +134,7 @@ for (const kind of ["desktop", "mobile"]) {
   for (const [cat, p] of Object.entries(FX.profiles)) {
     await open(page, `#karte?seg=${p.id}&map=16/${p.lat}/${p.lon}`, { settle: 3500 });
     await page.waitForSelector("#panel-title", { timeout: 15_000 });
+    await openDetails(page);
     const img = await shot(page, `${PREFIX}profile-${cat}-${kind}`);
     if (kind === "desktop") {
       const secs = withWords(await sections(page, "#panel-body"));
@@ -118,8 +146,9 @@ for (const kind of ["desktop", "mobile"]) {
     }
   }
   const j = FX.junction;
-  await open(page, `#karte?layer=jct&jct=${j.id}&map=17/${j.lat}/${j.lon}`, { settle: 3500 });
+  await open(page, `#karte?theme=knoten&jct=${j.id}&map=17/${j.lat}/${j.lon}`, { settle: 3500 });
   await page.waitForSelector("#panel-title", { timeout: 15_000 });
+  await openDetails(page);
   const jimg = await shot(page, `${PREFIX}junction-${kind}`);
   if (kind === "desktop") {
     const secs = withWords(await sections(page, "#panel-body"));

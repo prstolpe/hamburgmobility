@@ -34,7 +34,7 @@ describe("URL state for cycling", () => {
   });
 
   it("round-trips a junction id", () => {
-    const s = { ...DEFAULTS, layer: "jct", jct: "1026524904" };
+    const s = { ...DEFAULTS, theme: "knoten", view: "ziel", layer: "jct", jct: "1026524904" };
     expect(parseHash(toHash(s))).toEqual(s);
     expect(toHash(s)).toContain("jct=1026524904");
   });
@@ -72,8 +72,9 @@ describe("cycling layers", () => {
 
   it("uses the cycling tile sources and the Bezirk filter", () => {
     const ls = sfpLayers({ ...DEFAULTS, layer: "cfac", bz: "Altona" }, META);
-    const main = ls.filter((l) => l.id.startsWith("main-"));
+    const main = ls.filter((l) => l.id.startsWith("main-") && l.id !== "main-jctdot");
     expect(main.length).toBeGreaterThan(0);
+    expect(ls.find((l) => l.id === "main-jctdot")).toMatchObject({ source: "jct", minzoom: 14 }); // junctions tappable in every theme
     for (const l of main) {
       expect(l.source).toBe("cyc");
       expect(l["source-layer"]).toBe("cycle_segments");
