@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Variante A „Karte zuerst“ – Prototyp Redesign (nicht veröffentlicht)</title>
+  <link rel="stylesheet" href="../shared/tokens.css">
+</head>
+<body>
+  <p class="notice" role="note">Nicht amtlicher Diskussionsentwurf · keine Planung der Freien und Hansestadt Hamburg · <span id="datestand">Datenstand …</span></p>
+  <p class="proto">Prototyp Redesign, Variante A „Karte zuerst“ · nur Eimsbüttel · <a href="../">Varianten</a></p>
+  <header class="site">
+    <div class="brand"><b>Straßen für Hamburg</b><span>Entwurf: Welche Aufgabe hat jede Straße?</span></div>
+    <nav aria-label="Hauptnavigation"><a href="#">Start</a><a href="#" aria-current="page">Karte</a><a href="../ueberblick-zuerst/">Bezirke</a><a href="#">Methode</a><a href="#">Daten</a></nav>
+    <button class="menu" type="button" aria-label="Menü">☰</button>
+    <div class="search" role="search"><label for="q" class="visually-hidden">Straße suchen</label>
+      <input id="q" type="search" placeholder="Straße suchen (Eimsbüttel)" autocomplete="off"><ul id="q-list" role="listbox" hidden></ul></div>
+  </header>
+  <main id="main" class="mapview"></main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

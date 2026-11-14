@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Variante B „Überblick zuerst“ – Prototyp Redesign (nicht veröffentlicht)</title>
+  <link rel="stylesheet" href="../shared/tokens.css">
+  <style>
+    .overview { display: grid; grid-template-columns: repeat(var(--cols), 1fr); column-gap: var(--gutter); row-gap: var(--s5); padding: var(--s5) var(--margin); }
+    .overview > * { grid-column: 1 / -1; }
+    .intro-l1 { grid-column: 1 / span 8; }
+    .intro-l1 h1 { font-size: 40px; line-height: 48px; font-weight: 700; letter-spacing: -0.02em; }
+    .intro-l1 p { font-size: 20px; line-height: 28px; margin-top: var(--s3); max-width: 60ch; }
+    .bz-pick { grid-column: 9 / span 4; align-self: end; }
+    .bz-pick label { display: block; font-weight: 600; }
+    .bz-pick select { font: inherit; width: 100%; padding: var(--s2); border: 1px solid var(--ink); border-radius: 0; background: #fff; margin-top: var(--s1); }
+    .lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); }
+    .lists h2 { font-size: 20px; line-height: 28px; font-weight: 700; margin-bottom: var(--s2); }
+    .actions { display: flex; gap: var(--s3); flex-wrap: wrap; }
+    .btn { border: 1px solid var(--ink); background: var(--ink); color: #fff; padding: var(--s2) var(--s4); min-height: 44px; font-weight: 600; }
+    .btn.secondary { background: #fff; color: var(--ink); }
+    #mapscreen { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    body.map-open #overview { display: none; }
+    body.map-open #mapscreen { display: flex; }
+    .back { margin: var(--s2) var(--margin) 0; align-self: flex-start; }
+    @media (max-width: 1199px) { .intro-l1 { grid-column: 1 / -1; } .bz-pick { grid-column: 1 / span 4; } .lists { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 767px) { .intro-l1 h1 { font-size: 28px; line-height: 36px; } .bz-pick { grid-column: 1 / -1; } .lists, .kpis { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <p class="notice" role="note">Nicht amtlicher Diskussionsentwurf · keine Planung der Freien und Hansestadt Hamburg · <span id="datestand">Datenstand …</span></p>
+  <p class="proto">Prototyp Redesign, Variante B „Überblick zuerst“ · nur Eimsbüttel · <a href="../">Varianten</a></p>
+  <header class="site">
+    <div class="brand"><b>Straßen für Hamburg</b><span>Entwurf: Welche Aufgabe hat jede Straße?</span></div>
+    <nav aria-label="Hauptnavigation"><a href="#">Start</a><a href="../karte-zuerst/">Karte</a><a href="#" aria-current="page">Bezirke</a><a href="#">Methode</a><a href="#">Daten</a></nav>
+    <button class="menu" type="button" aria-label="Menü">☰</button>
+    <div class="search" role="search"><label for="q" class="visually-hidden">Straße suchen</label>
+      <input id="q" type="search" placeholder="Straße suchen (Eimsbüttel)" autocomplete="off"><ul id="q-list" role="listbox" hidden></ul></div>
+  </header>
+  <main id="overview" class="overview" aria-labelledby="h-bz"></main>
+  <section id="mapscreen" aria-label="Karte"><button type="button" class="btn secondary back" id="back">← Zurück zur Übersicht</button><div id="mapview" class="mapview"></div></section>
+  <footer class="foot"><span>Impressum</span><span>Datenschutz</span><span>Quellen und Lizenzen</span><span>Rückmeldung</span></footer>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

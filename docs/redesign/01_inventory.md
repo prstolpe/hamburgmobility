@@ -1,6 +1,6 @@
 # Redesign 2026-11 · A1 Bestandsaufnahme
 
-Stand: 14.11.2026, Branch `redesign/2026-11` (Basis `review/2026-11`, rules.yaml 0.20.0, cycling_rules.yaml 0.11.0,
+Stand: 14.11.2026, Branch `redesign/2026-11` (Basis `review/2026-11`, rules.yaml 0.21.0, cycling_rules.yaml 0.11.1,
 design_rules.yaml 0.9.0). Geprüft wurde die gebaute Seite aus `web/dist` (Datenstand 28.10.2026, gleiche `meta.json` wie
 `data/out`), lokal über `vite preview`. Alle Zahlen kommen aus Skripten in `analysis/redesign/` und lassen sich neu
 erzeugen (Abschnitt „Wie gemessen“ am Ende). Die Tabellen zwischen den Markierungen `<!-- table:… -->` schreibt
@@ -139,6 +139,17 @@ Befunde aus den Steckbriefen:
   Er gehört auf Ebene 3 oder auf die Quellenseite.
 - **Begründung mit Regel-IDs:** Jede Begründungszeile endet mit einer Regel-ID in Klammern, zum Beispiel
   „(C-G30-01)“. Für Laien ist das Rauschen, für Fachleute die Spur ins Regelwerk.
+- **Gründe dafür und dagegen sehen gleich aus:** Die Begründung listet auch Prüfungen, die *nicht* zugetroffen haben
+  (`reasons[].passed = false`), mit derselben Formatierung (`web/src/panel.js:185`). Das betrifft 31 115 von 33 712
+  Steckbriefen (92 %): C-GOW-01 in 24 711, C-G30-02 in 5 744 und C-G30-01 in 3 751 Steckbriefen. Beispiel
+  Hallerstraße: „Platz für einen baulichen Radweg neben der Busfahrbahn: Straßenraum 22,9 m (nötig 17,5 m)“ steht als
+  Grund da. Diese Prüfung hat aber nicht gegriffen, sie erklärt nur, warum der Platz *nicht* der Auslöser für Tempo 30
+  ist.
+- **Zwei verschiedene Ist-Aussagen zum Radverkehr:** „Ist-Zustand → Radverkehr“ kommt aus `s09_export._cycling`
+  (OSM-Tags am Abschnitt), „Radanlage heute“ aus der Ist-Führung C-FAC-05/S-FEAT-13. Bei 93 Abschnitten widersprechen sie
+  sich. Bei 66 davon ist es eine Fahrradstraße, bei 27 ein Radfahrstreifen, der oben als „keine Radverkehrsanlage“
+  erscheint. Beispiel Hallerstraße: oben „keine Radverkehrsanlage (Radverkehr auf der Fahrbahn)“, unten
+  „Radfahrstreifen“.
 
 ### Methodenteil, Downloads, Lizenzen
 

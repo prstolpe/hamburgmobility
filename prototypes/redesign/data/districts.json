@@ -1,0 +1,255 @@
+{
+ "source": "data/out/downloads (Version 0.21.0+2026-10-28)",
+ "focus": "Eimsbüttel",
+ "bbox": [
+  9.8692,
+  53.55699,
+  10.00823,
+  53.65552
+ ],
+ "per_bezirk": {
+  "Altona": {
+   "km_total": 620.5,
+   "km_need": 157.8,
+   "km_speed_down": 153.9,
+   "km_cycle_main": 388.6,
+   "km_cycle_missing": 195.7,
+   "km_profile_no_fit": 190.7,
+   "junctions": 2298,
+   "junctions_rebuild": 286
+  },
+  "Bergedorf": {
+   "km_total": 209.3,
+   "km_need": 50.5,
+   "km_speed_down": 51.9,
+   "km_cycle_main": 157.0,
+   "km_cycle_missing": 42.2,
+   "km_profile_no_fit": 44.7,
+   "junctions": 872,
+   "junctions_rebuild": 77
+  },
+  "Eimsbüttel": {
+   "km_total": 470.4,
+   "km_need": 144.7,
+   "km_speed_down": 143.7,
+   "km_cycle_main": 312.6,
+   "km_cycle_missing": 122.9,
+   "km_profile_no_fit": 89.3,
+   "junctions": 1878,
+   "junctions_rebuild": 310
+  },
+  "Hamburg-Mitte": {
+   "km_total": 881.3,
+   "km_need": 366.7,
+   "km_speed_down": 370.1,
+   "km_cycle_main": 412.1,
+   "km_cycle_missing": 152.9,
+   "km_profile_no_fit": 170.3,
+   "junctions": 2961,
+   "junctions_rebuild": 598
+  },
+  "Hamburg-Nord": {
+   "km_total": 563.3,
+   "km_need": 190.6,
+   "km_speed_down": 187.6,
+   "km_cycle_main": 364.3,
+   "km_cycle_missing": 122.0,
+   "km_profile_no_fit": 87.6,
+   "junctions": 2353,
+   "junctions_rebuild": 457
+  },
+  "Harburg": {
+   "km_total": 465.2,
+   "km_need": 125.6,
+   "km_speed_down": 130.2,
+   "km_cycle_main": 237.6,
+   "km_cycle_missing": 107.0,
+   "km_profile_no_fit": 128.6,
+   "junctions": 1630,
+   "junctions_rebuild": 176
+  },
+  "Wandsbek": {
+   "km_total": 1030.4,
+   "km_need": 322.9,
+   "km_speed_down": 320.0,
+   "km_cycle_main": 688.8,
+   "km_cycle_missing": 327.0,
+   "km_profile_no_fit": 296.6,
+   "junctions": 3853,
+   "junctions_rebuild": 423
+  }
+ },
+ "top": {
+  "streets": [
+   {
+    "name": "Hallerstraße",
+    "id": "seg_5a4361a0331e0791",
+    "priority": 2.89,
+    "km_need": 1.1,
+    "label": "Stadtstraße 30",
+    "sentence": "heute 50 km/h, Ziel 30 km/h; 25 Unfälle mit Fuß- oder Radbeteiligung in 5 Jahren",
+    "at": [
+     9.987374,
+     53.57264
+    ]
+   },
+   {
+    "name": "Rothenbaumchaussee",
+    "id": "seg_fa63c868af35a11f",
+    "priority": 2.23,
+    "km_need": 2.2,
+    "label": "Stadtstraße 30",
+    "sentence": "heute 50 km/h, Ziel 30 km/h; 19 Unfälle mit Fuß- oder Radbeteiligung in 5 Jahren",
+    "at": [
+     9.989101,
+     53.565109
+    ]
+   },
+   {
+    "name": "Bogenstraße",
+    "id": "seg_9f2d4f1215c7d779",
+    "priority": 1.97,
+    "km_need": 0.9,
+    "label": "Quartiersstraße",
+    "sentence": "heute 50 km/h, Ziel 30 km/h; 15 Unfälle mit Fuß- oder Radbeteiligung in 5 Jahren",
+    "at": [
+     9.970136,
+     53.576206
+    ]
+   },
+   {
+    "name": "Eidelstedter Weg",
+    "id": "seg_e9aeb43a720e5f9e",
+    "priority": 1.96,
+    "km_need": 1.1,
+    "label": "Stadtstraße 30",
+    "sentence": "heute 50 km/h, Ziel 30 km/h; 21 Unfälle mit Fuß- oder Radbeteiligung in 5 Jahren",
+    "at": [
+     9.956949,
+     53.580991
+    ]
+   },
+   {
+    "name": "An der Verbindungsbahn",
+    "id": "seg_2c77cc12fc382716",
+    "priority": 1.94,
+    "km_need": 0.4,
+    "label": "Stadtstraße 30",
+    "sentence": "heute 50 km/h, Ziel 30 km/h; 5 Unfälle mit Fuß- oder Radbeteiligung in 5 Jahren",
+    "at": [
+     9.98056,
+     53.564153
+    ]
+   }
+  ],
+  "junctions": [
+   {
+    "name": "Frauenthal / Hagedornstraße / Harvestehuder Weg / Mittelweg",
+    "id": "628944060",
+    "rank": 1,
+    "sentence": "heute Kreisverkehr, Ziel durchgehender Gehweg (Gehwegüberfahrt); 25 Radunfälle in 5 Jahren",
+    "at": [
+     9.993952,
+     53.579693
+    ]
+   },
+   {
+    "name": "Harvestehuder Weg / Krugkoppel",
+    "id": "6680473100",
+    "rank": 2,
+    "sentence": "heute Kreisverkehr, Ziel Vorfahrtsknoten mit Aufpflasterung; 15 Radunfälle in 5 Jahren",
+    "at": [
+     9.997356,
+     53.578508
+    ]
+   },
+   {
+    "name": "Altonaer Straße / Max-Brauer-Allee / Schulterblatt",
+    "id": "8541215407",
+    "rank": 3,
+    "sentence": "heute Ampel, Ziel durchgehender Gehweg (Gehwegüberfahrt); 14 Radunfälle in 5 Jahren",
+    "at": [
+     9.960112,
+     53.563744
+    ]
+   },
+   {
+    "name": "Beim Schlump / Bundesstraße",
+    "id": "16956679",
+    "rank": 4,
+    "sentence": "heute Ampel, Ziel durchgehender Gehweg (Gehwegüberfahrt); 13 Radunfälle in 5 Jahren",
+    "at": [
+     9.974078,
+     53.569209
+    ]
+   },
+   {
+    "name": "Grindelberg / Grindelberg / Hoheluftchaussee / Isestraße",
+    "id": "17704872",
+    "rank": 5,
+    "sentence": "heute Ampel, Ziel durchgehender Gehweg (Gehwegüberfahrt); 12 Radunfälle in 5 Jahren",
+    "at": [
+     9.976874,
+     53.578022
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "name": "König-Heinrich-Weg",
+    "id": "seg_fb1723763aefb342",
+    "score": 4882138.196575179,
+    "km": 2.6,
+    "sentence": "2,6 km Radroute (Hauptnetz) ohne passenden Radweg, bis 2 478 Radfahrten am Tag (Modell)",
+    "at": [
+     9.955552,
+     53.626776
+    ]
+   },
+   {
+    "name": "Vereinsstraße",
+    "id": "seg_32ca166deabbfd21",
+    "score": 3805121.265349076,
+    "km": 0.5,
+    "sentence": "0,5 km Radroute (Hauptnetz) ohne passenden Radweg, bis 8 545 Radfahrten am Tag (Modell)",
+    "at": [
+     9.961428,
+     53.567198
+    ]
+   },
+   {
+    "name": "Niendorfer Gehege",
+    "id": "seg_b46d08f6c5969da2",
+    "score": 2487477.9623026922,
+    "km": 1.9,
+    "sentence": "1,9 km Radroute (Hauptnetz) ohne passenden Radweg, bis 1 486 Radfahrten am Tag (Modell)",
+    "at": [
+     9.932701,
+     53.615745
+    ]
+   },
+   {
+    "name": "Süderfeldstraße",
+    "id": "seg_5acbcc56b0b093d8",
+    "score": 2111124.017335952,
+    "km": 0.5,
+    "sentence": "0,5 km Radroute (Hauptnetz) ohne passenden Radweg, bis 4 983 Radfahrten am Tag (Modell)",
+    "at": [
+     9.970539,
+     53.593855
+    ]
+   },
+   {
+    "name": "Oortskamp / Wiebischenkamp",
+    "id": "seg_9f11827418380eea",
+    "score": 1982205.7262161719,
+    "km": 0.8,
+    "sentence": "0,8 km Radroute (Hauptnetz) ohne passenden Radweg, bis 2 764 Radfahrten am Tag (Modell)",
+    "at": [
+     9.907655,
+     53.611902
+    ]
+   }
+  ]
+ }
+}

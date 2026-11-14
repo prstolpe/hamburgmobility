@@ -23,6 +23,8 @@ export async function newPage(browser, kind) {
   const ctx = await browser.newContext({ ...VIEWPORTS[kind], locale: "de-DE" });
   const page = await ctx.newPage();
   page.errors = [];
+  page.external = new Set(); // hosts other than localhost (no external fonts, scripts or tracking expected)
+  page.on("request", (r) => { const h = new URL(r.url()).hostname; if (h && h !== "localhost" && h !== "127.0.0.1") page.external.add(h); });
   page.on("pageerror", (e) => page.errors.push(e.message));
   page.on("console", (m) => { if (m.type() === "error") page.errors.push(m.text()); });
   return page;
