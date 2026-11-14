@@ -15,7 +15,9 @@ const PAGES = {
   "Bezirk Eimsbüttel": "#bezirke?bz=Eimsb%C3%BCttel",
   "Bezirk mit Tabelle": "#bezirke?bz=Eimsb%C3%BCttel&tabelle=1",
   "Methode": "#methode",
-  "Radnetz": "#radnetz",
+  "Methode Kapitel Radnetz": "#methode/radnetz",
+  "Methode Regeln": "#methode/regeln",
+  "Methode Neu": "#methode/neu",
   "Karte Radnetz Lücken": "#karte?theme=rad&view=luecken",
   "Karte Kreuzungen mit Steckbrief": `#karte?theme=knoten&jct=${JCT}&map=15/53.56/9.99`,
   "Daten": "#daten",
@@ -88,6 +90,7 @@ test("district page lists 7 districts and opens Eimsbüttel", async ({ page }) =
 
 test("district table on level 3 sorts by a column and opens a profile", async ({ page }) => {
   await ready(page, "#bezirke?bz=Eimsb%C3%BCttel");
+  await page.locator("details.l3", { has: page.locator("button[data-show-table]") }).locator("summary").click();
   await page.locator("button[data-show-table]").click();
   await expect(page).toHaveURL(/tabelle=1/);
   const th = page.locator('th:has(button[data-sort="len"])');
@@ -97,6 +100,33 @@ test("district table on level 3 sorts by a column and opens a profile", async ({
   await expect(th).toHaveAttribute("aria-sort", "ascending");
   await page.locator("table tbody button[data-open]").first().click();
   await expect(page.locator("#panel-title")).not.toHaveText("");
+});
+
+test("method: summary, chapter and rule details", async ({ page }) => {
+  await ready(page, "#methode");
+  await expect(page.locator('[data-page="methode"] h1')).not.toHaveText("");
+  await page.locator('a[href="#methode/platz"]').first().click();
+  await expect(page).toHaveURL(/#methode\/platz/);
+  const d = page.locator('[data-page="methode"] details', { hasText: "Details und Quellen" }).first();
+  await d.locator("summary").click();
+  await expect(d).toHaveJSProperty("open", true);
+  await expect(d.locator("code").first()).toBeVisible();
+});
+
+test("method: rule link opens the rule in the reference", async ({ page }) => {
+  await ready(page, "#methode/regeln?regel=C-G30-02");
+  const item = page.locator("#regel-C-G30-02");
+  await expect(item).toBeVisible();
+  await expect(item.locator("details")).toHaveJSProperty("open", true);
+  await page.locator("#rule-q").fill("autobahn");
+  await expect(page.locator("#rule-list li.rule")).not.toHaveCount(0);
+  await expect(page.locator("#regel-C-G30-02")).toHaveCount(0);
+});
+
+test("old #radnetz link opens the method chapter", async ({ page }) => {
+  await ready(page, "#radnetz");
+  await expect(page).toHaveURL(/#methode\/radnetz/);
+  await expect(page.locator('[data-page="methode"] h1')).toContainText("Radnetz");
 });
 
 test("search suggests streets and junctions and jumps to the map", async ({ page }) => {

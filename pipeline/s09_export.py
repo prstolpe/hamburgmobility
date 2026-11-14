@@ -31,6 +31,7 @@ import yaml
 from pipeline.lib import export as ex
 from pipeline.lib import export_cycling as xc
 from pipeline.lib import export_overview as ov
+from pipeline.lib import export_rules as er
 from pipeline.lib.area import area_label, read_districts, read_rural
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
@@ -223,6 +224,20 @@ def profile(r: pd.Series, ctx: dict) -> dict:
 
 
 # --- writers ---------------------------------------------------------------------------------
+
+
+def write_rule_reference(meta: dict, texts: dict, with_cycling: bool) -> dict:
+    """data/out/rules.json (rule reference of the method page) and meta.method (texts, chapters, placeholder values)."""
+    read = lambda name, cols: pd.read_parquet(INTERIM / f"{name}.parquet", columns=cols)  # noqa: E731
+    decides = er.decides(
+        final=read("final", ["rule_path", "length_m"]),
+        **({"junctions": read("junctions", ["decision_rule", "cyclist_treatment"]),
+            "facility": read("cycle_facility", ["length_m", "cycle_facility_soll", "rule_trace_facility"]),
+            "network": read("cycle_network", ["length_m", "cycle_cat_proposed", "rule_trace_cycle"])}
+           if with_cycling else {}))
+    ref = er.rule_reference(er.load_rule_docs(), texts["chapters"], decides, er.key_labels(_load_yaml(GLOSSARY_PATH)))
+    write_json(OUT_DIR / "rules.json", ref)
+    return {**texts, "vars": er.method_vars(ref, meta)}
 
 
 def write_overview(seg: gpd.GeoDataFrame, c: dict, names: list[str], params: dict) -> dict:
@@ -588,6 +603,7 @@ def main() -> int:
     meta["glossary"] = {k: v for k, v in glossary.items() if k != "meta"}
     meta["site_texts"] = texts["site"]
     meta["overview"] = {**write_overview(seg, cyc, names, web["overview"]), "texts": texts["overview"]} if cyc else None
+    meta["method"] = write_rule_reference(meta, texts["method"], with_cycling=bool(cyc))
     write_json(OUT_DIR / "meta.json", meta)
     shutil.copy(REPO_ROOT / "docs" / "licenses.md", OUT_DIR / "licenses.md")
     shutil.copy(REPO_ROOT / "CHANGELOG.md", OUT_DIR / "changelog.md")

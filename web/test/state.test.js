@@ -78,6 +78,33 @@ describe("old links are rewritten", () => {
     expect(parseHash("#downloads").page).toBe("daten");
     expect(parseHash("#quellen").page).toBe("daten");
     expect(parseHash("#impressum").page).toBe("impressum");
-    expect(parseHash("#radnetz").page).toBe("radnetz");
+    expect(parseHash("#radnetz")).toMatchObject({ page: "methode", sub: "radnetz" });
+    expect(toHash(parseHash("#radnetz"))).toBe("#methode/radnetz");
+  });
+});
+
+describe("method sub pages", () => {
+  it("parses chapters, reference and news; unknown sub falls back to the summary", () => {
+    expect(parseHash("#methode")).toMatchObject({ page: "methode", sub: null, rule: null });
+    expect(parseHash("#methode/platz").sub).toBe("platz");
+    expect(parseHash("#methode/regeln").sub).toBe("regeln");
+    expect(parseHash("#methode/neu").sub).toBe("neu");
+    expect(parseHash("#methode/gibtesnicht").sub).toBeNull();
+  });
+
+  it("parses the regel parameter and rejects odd values", () => {
+    expect(parseHash("#methode/regeln?regel=C-G30-02")).toMatchObject({ sub: "regeln", rule: "C-G30-02" });
+    expect(parseHash("#methode/regeln?regel=a%22b").rule).toBeNull();
+  });
+
+  it("round-trips sub and rule", () => {
+    for (const h of ["#methode", "#methode/knoten", "#methode/neu", "#methode/regeln", "#methode/regeln?regel=C-G30-02"]) {
+      expect(toHash(parseHash(h))).toBe(h);
+    }
+  });
+
+  it("does not put sub or rule into other pages", () => {
+    expect(parseHash("#daten/aufgabe").sub).toBeNull();
+    expect(toHash({ ...DEFAULTS, page: "daten", sub: "aufgabe", rule: "X-1" })).toBe("#daten");
   });
 });

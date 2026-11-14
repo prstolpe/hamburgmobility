@@ -126,7 +126,7 @@ describe("segmentHtml", () => {
     const { l3 } = split(segmentHtml(seg(), meta, "u"));
     expect(l3).toContain('<details class="level l3"><summary>Details und Quellen</summary>');
     expect(l3).not.toMatch(/level l3"[^>]* open/);
-    for (const s of ["C-G30-02</code> trifft nicht zu", "C-GOW-01</code> trifft zu", "C-GOW-01 → C-G30-01", "<code>GOW30</code>",
+    for (const s of ["C-G30-02</code></a> trifft nicht zu", "C-GOW-01</code></a> trifft zu", "<code>GOW30</code>",
       "Wie sicher ist das?", "Alle Werte stammen aus Primärquellen.", "Abstand zur Schule niedriger", "D3 Mischform",
       "Tempo 2, Gestaltung 1, Nutzung 3", "Bezirksroute (Basisnetz)", "Fünf Prinzipien", "OSM-Auszug", "ODbL-1.0",
       "seg_5a4361a0331e0791", "0.21.0+2026-10-28"]) expect(l3).toContain(s);
@@ -174,5 +174,13 @@ describe("junctionHtml", () => {
   it("level 3 has legs with codes and numbers", () => {
     const { l3 } = split(junctionHtml(j(), meta, "u"));
     for (const s of ["<code>GOW30</code>", "Regel J-05", "15.000 Kfz/Tag", "30,3 m Radius", "14 (5 Jahre)", "<dd>3</dd>", "hoch", "8541215407", "0.21.0"]) expect(l3).toContain(s);
+  });
+});
+
+describe("rule links", () => {
+  it("level 3 links every rule ID and every step of the rule path to the reference", () => {
+    const html = segmentHtml(seg(), meta, "https://x.test/", {});
+    expect(html).toContain('<a href="#methode/regeln?regel=C-G30-02"><code>C-G30-02</code></a>');
+    expect(html).toContain('<a href="#methode/regeln?regel=C-GOW-01"><code>C-GOW-01</code></a> → <a href="#methode/regeln?regel=C-G30-01">');
   });
 });

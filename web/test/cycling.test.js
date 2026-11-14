@@ -30,7 +30,7 @@ const META = {
 describe("URL state for cycling", () => {
   it("knows the cycling layers and the Radnetz page", () => {
     for (const l of CYCLING_LAYERS) expect(LAYERS).toContain(l);
-    expect(parseHash("#radnetz").page).toBe("radnetz");
+    expect(parseHash("#radnetz")).toMatchObject({ page: "methode", sub: "radnetz" });
   });
 
   it("round-trips a junction id", () => {
@@ -222,22 +222,5 @@ describe("junction profile", () => {
     expect(html).toContain("Rang 7");
     expect(html).toContain("Fachlich korrigiert");
     expect(html).toContain("Straßenbahn");
-  });
-});
-
-describe("Radnetz method page", () => {
-  it("explains the five principles, the draft status and the limits", async () => {
-    const { radnetzHtml } = await import("../src/pages.js");
-    const html = radnetzHtml({ ...META, cycling: { ...META.cycling, stats: { km_by_category: { HAUPT: 2027.1 }, n_junctions: 16285, n_junctions_action: 3076 } } });
-    for (const p of Object.values(META.cycling.principles)) expect(html).toContain(p);
-    expect(html).toContain("Radnetz-Entwurf – nicht amtlich");
-    expect(html).toContain("Grenzen");
-    expect(html).toContain("2.027 km");
-    expect(html).toContain("16.285 Knotenpunkte");
-  });
-
-  it("works without cycling data", async () => {
-    const { radnetzHtml } = await import("../src/pages.js");
-    expect(radnetzHtml({ cycling: null })).toContain("noch nicht enthalten");
   });
 });

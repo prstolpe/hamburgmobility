@@ -216,3 +216,22 @@ details > summary { cursor: pointer; }
 table.compact td { text-align: right; }
 .maplibregl-ctrl-group { border-radius: 0 !important; box-shadow: none !important; border: 1px solid var(--ink); }
 .maplibregl-ctrl-attrib, .maplibregl-ctrl-scale { font-family: inherit; }
+
+/* page "Methode" */
+.crumb { margin: 0 0 var(--s2); }
+ul.plain { list-style: none; padding: 0; margin: 0 0 var(--s3); }
+ul.points > li, ul.rules > li, ul.news > li { padding: var(--s2) 0; border-top: 1px solid var(--line); }
+ul.points p, ul.rules > li > p { margin: var(--s1) 0 0; }
+.chapter-list { padding-left: var(--s4); }
+.chapter-list li { padding: var(--s2) 0; }
+.chapter-list p { margin: var(--s1) 0 0; }
+.chapter-nav { display: flex; justify-content: space-between; gap: var(--s3); margin-top: var(--s5); padding-top: var(--s3); border-top: 1px solid var(--ink); }
+.rule-filter { display: grid; gap: var(--s2); margin: var(--s3) 0; max-width: 32rem; }
+.rule-filter input[type="search"] { padding: var(--s2) var(--s3); font: inherit; border: 1px solid var(--ink); border-radius: 0; min-height: 44px; width: 100%; }
+.tag { font-size: .75rem; border: 1px solid var(--ink); padding: 0 var(--s1); white-space: nowrap; }
+.rules h4 { margin: var(--s3) 0 var(--s1); font-size: 1rem; }
+.rules code, .tech code { overflow-wrap: anywhere; }
+dl.tech dd { margin: 0 0 var(--s1) var(--s3); }
+.rules li:target { background: var(--surface); }
+.prose pre, .changelog { overflow-x: auto; max-width: 100%; }
+.prose { overflow-wrap: break-word; }

@@ -84,10 +84,10 @@ export function districtHtml(meta, d) {
     <p class="lists-note">${esc(t.lists_note)}</p>
   </details>
   <details class="level l3"><summary>Details und Quellen: alle Bezirke im Vergleich</summary>
-    <table class="data"><caption class="visually-hidden">Kennzahlen je Bezirk</caption>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Kennzahlen je Bezirk"><table class="data"><caption class="visually-hidden">Kennzahlen je Bezirk</caption>
       <thead><tr><th scope="col">Bezirk</th><th scope="col" class="n">Straßen km</th><th scope="col" class="n">große Abweichung km</th>
         <th scope="col" class="n">Ziel passt nicht km</th><th scope="col" class="n">Radnetz ohne Radweg km</th><th scope="col" class="n">Kreuzungen mit Umbau</th></tr></thead>
-      <tbody>${rows}</tbody></table>
+      <tbody>${rows}</tbody></table></div>
     <p><button type="button" data-show-table>Alle Straßenstücke als Tabelle</button></p>
   </details>`;
 }
