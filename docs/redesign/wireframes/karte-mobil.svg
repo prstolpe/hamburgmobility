@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="760" viewBox="0 0 860 760" font-family="Inter, Arial, sans-serif" font-size="13">
+  <title>Wireframe Karte mobil, Blatt von unten in drei Höhen</title>
+  <rect width="860" height="760" fill="#fff"/>
+  <g id="phone">
+    <!-- state A: map first, theme chips, sheet peek -->
+    <rect x="20" y="20" width="260" height="560" fill="#fff" stroke="#111"/>
+    <rect x="20" y="20" width="260" height="22" fill="#111"/><text x="28" y="35" fill="#fff" font-size="10">Nicht amtlicher Entwurf · Datenstand 28.10.2026</text>
+    <text x="28" y="60" font-weight="700">Straßen für Hamburg</text><text x="250" y="60">☰</text>
+    <rect x="28" y="70" width="244" height="26" fill="#fff" stroke="#111"/><text x="36" y="87" fill="#666" font-size="12">Straße oder Kreuzung suchen</text>
+    <rect x="20" y="104" width="260" height="320" fill="#e6e6e6"/>
+    <path d="M30 400 C 90 330, 160 300, 270 260" stroke="#1a1a1a" stroke-width="5" fill="none"/>
+    <path d="M50 130 L 140 240 L 270 300" stroke="#c4161c" stroke-width="4" fill="none"/>
+    <g font-size="11"><rect x="28" y="112" width="96" height="22" fill="#111"/><text x="76" y="127" fill="#fff" text-anchor="middle">Aufgabe/Tempo</text>
+    <rect x="128" y="112" width="70" height="22" fill="#fff" stroke="#111"/><text x="163" y="127" text-anchor="middle">Heute/Ziel</text>
+    <rect x="202" y="112" width="70" height="22" fill="#fff" stroke="#111"/><text x="237" y="127" text-anchor="middle">mehr …</text></g>
+    <rect x="20" y="424" width="260" height="156" fill="#fff" stroke="#111"/>
+    <rect x="130" y="430" width="40" height="4" fill="#bbb"/>
+    <text x="28" y="456" font-weight="700">Legende</text>
+    <rect x="28" y="466" width="22" height="5" fill="#c4161c"/><text x="58" y="472" font-size="12">Hauptstraße, Tempo 50</text>
+    <rect x="28" y="482" width="22" height="2" fill="#2b6cb0"/><text x="58" y="487" font-size="12">Wohnstraße, Tempo 30</text>
+    <text x="28" y="512" fill="#555" font-size="12">Straße antippen für den Steckbrief</text>
+    <text x="150" y="604" text-anchor="middle" font-weight="700">A · Start: Karte + Legende</text>
+  </g>
+  <g transform="translate(290 0)">
+    <rect x="20" y="20" width="260" height="560" fill="#fff" stroke="#111"/>
+    <rect x="20" y="20" width="260" height="22" fill="#111"/><text x="28" y="35" fill="#fff" font-size="10">Nicht amtlicher Entwurf · Datenstand 28.10.2026</text>
+    <rect x="20" y="42" width="260" height="280" fill="#e6e6e6"/>
+    <path d="M50 70 L 140 180 L 270 240" stroke="#c4161c" stroke-width="4" fill="none" opacity=".55"/>
+    <path d="M50 70 L 140 180" stroke="#111" stroke-width="10" opacity=".2" fill="none"/>
+    <rect x="20" y="322" width="260" height="258" fill="#fff" stroke="#111"/>
+    <rect x="130" y="328" width="40" height="4" fill="#bbb"/>
+    <text x="28" y="356" font-size="16" font-weight="700">Hallerstraße</text>
+    <rect x="28" y="366" width="5" height="34" fill="#c4161c" opacity=".55"/>
+    <text x="40" y="380" font-weight="700">Hauptstraße mit Tempo 30</text>
+    <text x="40" y="396">Heute 50 km/h, Ziel 30 km/h</text>
+    <text x="28" y="426" font-weight="600" text-decoration="underline">Mehr erfahren</text>
+    <text x="28" y="452" fill="#555" font-size="11">Ebene 1 im halb offenen Blatt;</text>
+    <text x="28" y="468" fill="#555" font-size="11">Karte bleibt zu 50 % sichtbar</text>
+    <text x="150" y="604" text-anchor="middle" font-weight="700">B · Antippen: Ebene 1</text>
+  </g>
+  <g transform="translate(580 0)">
+    <rect x="20" y="20" width="260" height="560" fill="#fff" stroke="#111"/>
+    <rect x="20" y="20" width="260" height="22" fill="#111"/><text x="28" y="35" fill="#fff" font-size="10">Nicht amtlicher Entwurf · Datenstand 28.10.2026</text>
+    <rect x="20" y="42" width="260" height="60" fill="#e6e6e6"/>
+    <rect x="20" y="102" width="260" height="478" fill="#fff" stroke="#111"/>
+    <rect x="130" y="108" width="40" height="4" fill="#bbb"/>
+    <text x="28" y="136" font-size="16" font-weight="700">Hallerstraße</text>
+    <text x="28" y="156" font-weight="700">Hauptstraße mit Tempo 30</text>
+    <text x="28" y="186" font-weight="700">Warum?</text>
+    <text x="28" y="204" font-size="12">Verbindet Stadtteile. Schule oder Kita</text>
+    <text x="28" y="220" font-size="12">direkt an der Straße: darum Tempo 30.</text>
+    <text x="28" y="248" font-weight="700">Was ändert sich?</text>
+    <rect x="28" y="258" width="244" height="64" fill="#f2f2f2"/><text x="36" y="294" fill="#555" font-size="11">Querschnitt heute → Ziel</text>
+    <text x="28" y="344" font-size="12">Radweg beidseits; 1 Fahrstreifen je Richtung</text>
+    <text x="28" y="378" font-weight="600">▸ Details und Quellen</text>
+    <text x="28" y="404" fill="#555" font-size="11">Ebene 2 im ganz offenen Blatt;</text>
+    <text x="28" y="420" fill="#555" font-size="11">Ebene 3 zugeklappt darunter</text>
+    <text x="150" y="604" text-anchor="middle" font-weight="700">C · Mehr erfahren: Ebene 2</text>
+  </g>
+  <text x="20" y="650" fill="#555">Raster mobil: 4 Spalten, Rand 16 px. Das Bedienfeld liegt nicht mehr über der Karte (heute beginnt die Karte bei rund 1 050 px).</text>
+  <text x="20" y="670" fill="#555">Das Blatt hat drei Höhen: zu (Legende), halb (Ebene 1), ganz (Ebene 2/3). Wischen oder „Mehr erfahren“.</text>
+</svg>

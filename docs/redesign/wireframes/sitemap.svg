@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="430" viewBox="0 0 960 430" font-family="Inter, Arial, sans-serif" font-size="13">
+  <title>Sitemap Vorschlag</title>
+  <rect width="960" height="430" fill="#ffffff"/>
+  <g fill="#111">
+    <text x="24" y="32" font-size="18" font-weight="700">Sitemap (Vorschlag)</text>
+    <text x="24" y="52" fill="#555">5 Hauptpunkte statt 7; Impressum und Lizenzen im Fuß</text>
+  </g>
+  <g stroke="#111" stroke-width="1.5" fill="none">
+    <path d="M480 96 V116 M96 116 H864 M96 116 V136 M288 116 V136 M480 116 V136 M672 116 V136 M864 116 V136"/>
+  </g>
+  <rect x="400" y="68" width="160" height="28" fill="#111"/>
+  <text x="480" y="87" fill="#fff" text-anchor="middle" font-weight="700">Start</text>
+  <g font-weight="700">
+    <rect x="24" y="136" width="144" height="28" fill="#fff" stroke="#111" stroke-width="1.5"/><text x="96" y="155" text-anchor="middle">Karte</text>
+    <rect x="216" y="136" width="144" height="28" fill="#fff" stroke="#111" stroke-width="1.5"/><text x="288" y="155" text-anchor="middle">Bezirke</text>
+    <rect x="408" y="136" width="144" height="28" fill="#fff" stroke="#111" stroke-width="1.5"/><text x="480" y="155" text-anchor="middle">Steckbriefe</text>
+    <rect x="600" y="136" width="144" height="28" fill="#fff" stroke="#111" stroke-width="1.5"/><text x="672" y="155" text-anchor="middle">Methode</text>
+    <rect x="792" y="136" width="144" height="28" fill="#fff" stroke="#111" stroke-width="1.5"/><text x="864" y="155" text-anchor="middle">Daten</text>
+  </g>
+  <g fill="#333">
+    <text x="24" y="188">5 Themen statt 13 Ebenen:</text>
+    <text x="24" y="206">1 Aufgabe und Tempo</text>
+    <text x="24" y="222">2 Heute und Ziel</text>
+    <text x="24" y="238">3 Platz in der Straße</text>
+    <text x="24" y="254">4 Radnetz</text>
+    <text x="24" y="270">5 Kreuzungen</text>
+    <text x="24" y="294" fill="#666">je Thema: Ziel | heute</text>
+    <text x="24" y="310" fill="#666">Zusatz (Ebene 3): Unfälle,</text>
+    <text x="24" y="326" fill="#666">Schulen/Kitas, Bus, Vergleich</text>
+    <text x="24" y="342" fill="#666">mit amtlichen Netzen</text>
+
+    <text x="216" y="188">Übersicht: 7 Bezirkskarten</text>
+    <text x="216" y="206">je Bezirk:</text>
+    <text x="216" y="222">· 1 Kennzahl je Thema</text>
+    <text x="216" y="238">· Top 5 Straßen</text>
+    <text x="216" y="254">· Top 5 Kreuzungen</text>
+    <text x="216" y="270">· Top 5 Radnetzlücken</text>
+    <text x="216" y="294" fill="#666">Ebene 3: alle Abschnitte</text>
+    <text x="216" y="310" fill="#666">als Tabelle (heute: Seite</text>
+    <text x="216" y="326" fill="#666">„Tabelle“)</text>
+
+    <text x="408" y="188">Straßenabschnitt</text>
+    <text x="408" y="206">Kreuzung</text>
+    <text x="408" y="230" fill="#666">auf der Karte als Panel</text>
+    <text x="408" y="246" fill="#666">(Desktop) bzw. Blatt</text>
+    <text x="408" y="262" fill="#666">von unten (mobil);</text>
+    <text x="408" y="278" fill="#666">eigene URL je Abschnitt</text>
+    <text x="408" y="294" fill="#666">und Kreuzung</text>
+
+    <text x="600" y="188">Auf einer Seite: Was ist das,</text>
+    <text x="600" y="204">was zeigt es, was nicht</text>
+    <text x="600" y="228">Kapitel (je 3 Ebenen):</text>
+    <text x="600" y="244">1 Aufgabe einer Straße</text>
+    <text x="600" y="260">2 Tempo und Abweichung</text>
+    <text x="600" y="276">3 Platz in der Straße</text>
+    <text x="600" y="292">4 Radnetz und Radwege</text>
+    <text x="600" y="308">5 Kreuzungen</text>
+    <text x="600" y="324">6 Wie sicher ist das?</text>
+    <text x="600" y="340">7 Daten und Grenzen</text>
+    <text x="600" y="364" font-weight="700">Regelreferenz</text>
+    <text x="600" y="380" fill="#666">(aus den Regeldateien erzeugt)</text>
+    <text x="600" y="396" fill="#666">Was ist neu</text>
+
+    <text x="792" y="188">Downloads</text>
+    <text x="792" y="204">Quellen und Lizenzen</text>
+    <text x="792" y="228" fill="#666">Fuß jeder Seite:</text>
+    <text x="792" y="244" fill="#666">Impressum, Datenschutz,</text>
+    <text x="792" y="260" fill="#666">Lizenzen, Rückmeldung</text>
+  </g>
+</svg>

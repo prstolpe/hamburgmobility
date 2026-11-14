@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" font-family="Inter, Arial, sans-serif" font-size="13">
+  <title>Drei Ebenen im Steckbrief Straße und Kreuzung</title>
+  <rect width="1200" height="560" fill="#fff"/>
+  <text x="24" y="32" font-size="18" font-weight="700">Ein Muster für alle Teile: auf einen Blick · Erklärung · Details</text>
+  <g font-weight="700"><text x="24" y="70">Ebene</text><text x="200" y="70">Steckbrief Straße (Beispiel Hallerstraße, echte Werte)</text><text x="720" y="70">Steckbrief Kreuzung (Altonaer Str. / Max-Brauer-Allee / Schulterblatt)</text></g>
+  <line x1="24" y1="80" x2="1176" y2="80" stroke="#111"/>
+  <!-- L1 -->
+  <text x="24" y="106" font-weight="700">1 Auf einen Blick</text>
+  <text x="24" y="124" fill="#555">Was ist es?</text><text x="24" y="140" fill="#555">5 Sekunden</text>
+  <rect x="200" y="94" width="5" height="44" fill="#c4161c" opacity=".55"/>
+  <text x="214" y="110" font-weight="700" font-size="15">Hauptstraße mit Tempo 30</text>
+  <text x="214" y="130">Heute 50 km/h → Ziel 30 km/h</text>
+  <rect x="720" y="94" width="16" height="16" fill="none" stroke="#111" stroke-width="2"/>
+  <text x="744" y="108" font-weight="700" font-size="15">Durchgehender Gehweg (Ziel)</text>
+  <text x="744" y="128">Heute Ampel · Umbau nötig</text>
+  <line x1="24" y1="158" x2="1176" y2="158" stroke="#ccc"/>
+  <!-- L2 -->
+  <text x="24" y="184" font-weight="700">2 Erklärung</text>
+  <text x="24" y="202" fill="#555">Warum? Was ändert sich?</text><text x="24" y="218" fill="#555">3–5 Sätze, 1 Bild</text>
+  <g>
+    <text x="200" y="184">Die Straße ist eine Hauptverkehrsstraße und verbindet Stadtteile.</text>
+    <text x="200" y="202">Direkt an der Straße liegt eine Schule oder Kita (43 m). Darum soll Tempo 30 gelten.</text>
+    <text x="200" y="220">Radweg auf beiden Seiten statt Radfahrstreifen. Ein Fahrstreifen je Richtung, wie heute.</text>
+    <text x="200" y="238">Das passt in die Straße: 21,3 m nötig, 22,9 m vorhanden.</text>
+    <rect x="200" y="250" width="420" height="58" fill="#f2f2f2"/><text x="210" y="284" fill="#555" font-size="12">Bild: Querschnitt heute ↔ Ziel, maßstäblich, Meterangaben</text>
+    <text x="200" y="330" fill="#555" font-size="12">Hinweis (ruhig, ohne Ampel): Für den Radweg statt Radfahrstreifen ist der Kfz-Verkehr hier zu stark.</text>
+  </g>
+  <g>
+    <text x="720" y="184">Die Hauptstraße mit Tempo 30 läuft durch, das Schulterblatt mündet ein.</text>
+    <text x="720" y="202">Ziel: Der Gehweg läuft über die Einmündung durch.</text>
+    <text x="720" y="220">Heute regelt eine Ampel den Knoten (Rang 3 beim Umbaubedarf).</text>
+    <text x="720" y="238">Für Radfahrende: Mittelinsel zum Queren der Hauptstraße.</text>
+    <rect x="720" y="250" width="300" height="58" fill="#f2f2f2"/><text x="730" y="284" fill="#555" font-size="12">Bild: Skizze des Knotentyps</text>
+  </g>
+  <line x1="24" y1="350" x2="1176" y2="350" stroke="#ccc"/>
+  <!-- L3 -->
+  <text x="24" y="376" font-weight="700">3 Details und Quellen</text>
+  <text x="24" y="394" fill="#555">Wie genau? Woher?</text><text x="24" y="410" fill="#555">zugeklappt</text>
+  <g fill="#333">
+    <text x="200" y="376">▸ Regeln mit Werten: C-GOW-01 (in_hvs = ja), C-G30-01 (Abstand 43 m ≤ 50 m) …</text>
+    <text x="200" y="396">▸ Wie sicher ist das? Daten: hoch · Annahmen: robust in 500 Läufen</text>
+    <text x="200" y="416">▸ Radnetz und fünf Prinzipien (Punkte heute / Ziel)</text>
+    <text x="200" y="436">▸ Abweichung heute – Ziel: Typ D3, Tempo 2/3, Gestaltung 1/3, Nutzung 3/3</text>
+    <text x="200" y="456">▸ Daten dieses Abschnitts mit Stand und Lizenz · Abschnitts-ID seg_5a43…</text>
+    <text x="200" y="476">▸ Rückmeldung zu diesem Abschnitt</text>
+  </g>
+  <g fill="#333">
+    <text x="720" y="376">▸ Arme (4) mit Kategorie, Radnetz, Radanlage</text>
+    <text x="720" y="396">▸ Regel J-05 mit Werten, Robustheit</text>
+    <text x="720" y="416">▸ Daten mit Stand · Knoten-ID 8541215407</text>
+  </g>
+  <text x="24" y="530" fill="#555">Gleiches Muster für: Bezirk, Radnetz-Abschnitt, Methodenkapitel, Download. Fachwörter und Kürzel stehen nur auf Ebene 3 (im Glossar erklärt).</text>
+</svg>

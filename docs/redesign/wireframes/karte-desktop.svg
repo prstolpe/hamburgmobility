@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" font-family="Inter, Arial, sans-serif" font-size="13">
+  <title>Wireframe Karte Desktop mit Steckbrief Ebene 1 und 2</title>
+  <rect width="1200" height="720" fill="#fff"/>
+  <!-- notice -->
+  <rect x="0" y="0" width="1200" height="28" fill="#111"/>
+  <text x="24" y="19" fill="#fff">Nicht amtlicher Diskussionsentwurf · keine Planung der Freien und Hansestadt Hamburg · Datenstand 28.10.2026</text>
+  <!-- header on 12-col grid -->
+  <text x="24" y="62" font-size="17" font-weight="700">Straßen für Hamburg</text>
+  <text x="24" y="80" fill="#555">Entwurf: Welche Aufgabe hat jede Straße?</text>
+  <g font-weight="600"><text x="420" y="68">Start</text><text x="480" y="68" text-decoration="underline">Karte</text><text x="544" y="68">Bezirke</text><text x="620" y="68">Methode</text><text x="696" y="68">Daten</text></g>
+  <rect x="860" y="48" width="316" height="30" fill="#fff" stroke="#111"/><text x="872" y="68" fill="#666">Straße oder Kreuzung suchen</text>
+  <line x1="0" y1="96" x2="1200" y2="96" stroke="#111"/>
+  <!-- theme switcher -->
+  <g>
+    <rect x="24" y="108" width="150" height="32" fill="#111"/><text x="99" y="129" fill="#fff" text-anchor="middle" font-weight="600">Aufgabe und Tempo</text>
+    <rect x="178" y="108" width="130" height="32" fill="#fff" stroke="#111"/><text x="243" y="129" text-anchor="middle">Heute und Ziel</text>
+    <rect x="312" y="108" width="150" height="32" fill="#fff" stroke="#111"/><text x="387" y="129" text-anchor="middle">Platz in der Straße</text>
+    <rect x="466" y="108" width="90" height="32" fill="#fff" stroke="#111"/><text x="511" y="129" text-anchor="middle">Radnetz</text>
+    <rect x="560" y="108" width="100" height="32" fill="#fff" stroke="#111"/><text x="610" y="129" text-anchor="middle">Kreuzungen</text>
+    <text x="684" y="129" fill="#555">Ansicht:</text>
+    <rect x="740" y="112" width="52" height="24" fill="#111"/><text x="766" y="129" fill="#fff" text-anchor="middle">Ziel</text>
+    <rect x="792" y="112" width="60" height="24" fill="#fff" stroke="#111"/><text x="822" y="129" text-anchor="middle">heute</text>
+  </g>
+  <!-- legend column (3 of 12 cols), always visible next to map -->
+  <text x="24" y="172" font-weight="700">Was die Farben bedeuten</text>
+  <g>
+    <rect x="24" y="186" width="28" height="6" fill="#1a1a1a"/><text x="60" y="193">Schnellstraße</text>
+    <rect x="24" y="208" width="28" height="5" fill="#c4161c"/><text x="60" y="214">Hauptstraße, Tempo 50</text>
+    <rect x="24" y="229" width="28" height="4" fill="#c4161c" opacity=".55"/><text x="60" y="235">Hauptstraße, Tempo 30</text>
+    <rect x="24" y="250" width="28" height="2" fill="#2b6cb0"/><text x="60" y="255">Wohnstraße, Tempo 30</text>
+    <rect x="24" y="270" width="28" height="2" fill="#2b6cb0" stroke="#2b6cb0" stroke-dasharray="3 2"/><text x="60" y="275">Spielstraße, Schritttempo</text>
+    <text x="24" y="304" fill="#555">Breite Linie = mehr Verbindung.</text>
+    <text x="24" y="320" fill="#555">Grau = nicht bewertet.</text>
+    <text x="24" y="352" fill="#111" text-decoration="underline">Mehr Ebenen (Unfälle, Schulen, Bus)</text>
+    <text x="24" y="376" fill="#111" text-decoration="underline">Filter: Bezirk</text>
+  </g>
+  <!-- map -->
+  <rect x="300" y="156" width="560" height="540" fill="#e6e6e6"/>
+  <g stroke-linecap="round" fill="none">
+    <path d="M330 640 C 420 560, 520 520, 840 470" stroke="#1a1a1a" stroke-width="6"/>
+    <path d="M360 200 L 520 360 L 700 420 L 840 600" stroke="#c4161c" stroke-width="5"/>
+    <path d="M520 360 L 600 220 L 820 190" stroke="#c4161c" stroke-width="4" opacity=".55"/>
+    <path d="M400 300 L 470 420 M600 300 L 640 500 M720 260 L 760 380 M450 520 L 560 600" stroke="#2b6cb0" stroke-width="2"/>
+    <path d="M520 360 L 600 220" stroke="#111" stroke-width="10" opacity=".2"/>
+  </g>
+  <text x="312" y="684" fill="#555" font-size="11">© OpenStreetMap-Mitwirkende · Basemap Protomaps</text>
+  <!-- profile panel level 1 + 2 -->
+  <rect x="884" y="156" width="292" height="540" fill="#fff" stroke="#111"/>
+  <text x="900" y="184" font-size="17" font-weight="700">Hallerstraße</text>
+  <text x="900" y="202" fill="#555">Eimsbüttel · 168 m</text>
+  <rect x="900" y="216" width="6" height="40" fill="#c4161c" opacity=".55"/>
+  <text x="914" y="232" font-weight="700" font-size="15">Hauptstraße mit Tempo 30</text>
+  <text x="914" y="250">Heute 50 km/h, Ziel 30 km/h</text>
+  <text x="900" y="282" fill="#555" font-size="11">EBENE 1 · auf einen Blick</text>
+  <line x1="900" y1="292" x2="1160" y2="292" stroke="#ccc"/>
+  <text x="900" y="314" font-weight="700">Warum?</text>
+  <text x="900" y="334">Die Straße verbindet Stadtteile. Direkt</text>
+  <text x="900" y="350">an ihr liegt eine Schule oder Kita.</text>
+  <text x="900" y="366">Deshalb soll hier Tempo 30 gelten.</text>
+  <text x="900" y="392" font-weight="700">Was ändert sich?</text>
+  <rect x="900" y="402" width="260" height="70" fill="#f2f2f2"/>
+  <text x="910" y="420" fill="#555" font-size="11">Querschnitt heute → Ziel (Zeichnung)</text>
+  <g><rect x="910" y="430" width="16" height="30" fill="#bbb"/><rect x="926" y="430" width="14" height="30" fill="#2b6cb0" opacity=".5"/><rect x="940" y="430" width="70" height="30" fill="#777"/><rect x="1010" y="430" width="14" height="30" fill="#2b6cb0" opacity=".5"/><rect x="1024" y="430" width="16" height="30" fill="#bbb"/></g>
+  <text x="1046" y="442" font-size="11">passt:</text><text x="1046" y="456" font-size="11">21,3 von 22,9 m</text>
+  <text x="900" y="494">Radweg auf beiden Seiten statt Radfahrstreifen.</text>
+  <text x="900" y="510">Ein Fahrstreifen je Richtung bleibt.</text>
+  <text x="900" y="540" fill="#555" font-size="11">EBENE 2 · offen, sobald man „Mehr erfahren“ wählt</text>
+  <line x1="900" y1="552" x2="1160" y2="552" stroke="#ccc"/>
+  <text x="900" y="576" font-weight="700">▸ Details und Quellen</text>
+  <text x="900" y="596" fill="#555">Regeln C-GOW-01, C-G30-01 mit Werten,</text>
+  <text x="900" y="612" fill="#555">Daten mit Datum, Wie sicher ist das?,</text>
+  <text x="900" y="628" fill="#555">Annahmen, Abschnitts-ID, Rückmeldung</text>
+  <text x="900" y="652" fill="#555" font-size="11">EBENE 3 · zugeklappt</text>
+  <!-- grid hint -->
+  <g stroke="#3b82f6" stroke-width=".5" opacity=".35">
+    <line x1="24" y1="150" x2="24" y2="700"/><line x1="276" y1="150" x2="276" y2="700"/><line x1="300" y1="150" x2="300" y2="700"/><line x1="860" y1="150" x2="860" y2="700"/><line x1="884" y1="150" x2="884" y2="700"/><line x1="1176" y1="150" x2="1176" y2="700"/>
+  </g>
+  <text x="24" y="712" fill="#3b82f6" font-size="10">Raster: 12 Spalten, Rand 24 px, Abstand 24 px · Legende 3 Spalten · Karte 6 · Steckbrief 3</text>
+</svg>
