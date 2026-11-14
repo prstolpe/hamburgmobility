@@ -732,3 +732,11 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   nach FGSV, siehe cycle_categories.RSV.label_note).
 - Nachweis: Neurechnung ab `network` mit den neuen Dateien, alle Dateien in `data/interim` hashgleich
   (docs/redesign/impl_rule_language.md).
+
+## plain_language.yaml 0.11.0 – 2026-11-15 (Redesign 2026-11, Paket 3)
+- Neuer Abschnitt `method`: Seite „Methode“ mit Zusammenfassung, sieben Kapiteln (je ein Satz und eine Erklärung) und
+  „Was ist neu“. Inhalt der bisherigen Seiten „Methode“ und „Radnetz“ in die Kapitel übernommen.
+- Regelreferenz: neue Datei `data/out/rules.json` aus den drei Regeldateien (`pipeline/lib/export_rules.py`): jede Regel
+  mit `label_plain`, `explain_plain`, `why`, technischen Feldern, Schwellen, Quellen, Status und wie oft sie im Lauf
+  entschieden hat. Jede Regel gehört über ihren Abschnitt zu genau einem Kapitel (`method.chapters[].sections`, Test).
+- Keine Regel, keine Schwelle und kein Ergebnis geändert.

@@ -27,6 +27,17 @@ function plainName(code, meta, fallback = "Radweg") {
 }
 
 /** One plain answer to "how sure is this?". */
+/** Rule ID as a link to the rule reference (level 3). */
+export function ruleLink(id) {
+  const code = `<code>${esc(id)}</code>`;
+  return /^[A-Za-z0-9-]+$/.test(String(id ?? "")) ? `<a href="#methode/regeln?regel=${esc(id)}">${code}</a>` : code;
+}
+
+function rulePathHtml(path) {
+  if (!path) return "<code>–</code>";
+  return String(path).split("→").map((x) => ruleLink(x.trim())).join(" → ");
+}
+
 export function certainty(p) {
   const uncertain = !!(p.sensitivity?.uncertain || p.confidence?.level === "niedrig");
   const lvl = uncertain ? "unsicher" : p.confidence?.level === "mittel" ? "eher sicher" : "sicher";
@@ -123,7 +134,7 @@ export function segmentHtml(p, meta, pageUrl, { level2Open = true } = {}) {
       ${feedback(p, meta, pageUrl)}
     </details>`;
 
-  const rules = reasons.map((r) => `<li><code>${esc(r.rule)}</code> ${r.passed === false ? "trifft nicht zu" : "trifft zu"}: ${esc(r.text)}</li>`).join("");
+  const rules = reasons.map((r) => `<li>${ruleLink(r.rule)} ${r.passed === false ? "trifft nicht zu" : "trifft zu"}: ${esc(r.text)}</li>`).join("");
   const d = p.discrepancy ?? {};
   const cr = d.crashes;
   const conf = p.confidence ?? {};
@@ -131,7 +142,7 @@ export function segmentHtml(p, meta, pageUrl, { level2Open = true } = {}) {
   const l3 = `
     <details class="level l3"><summary>Details und Quellen</summary>
       <h3>Regeln mit Werten</h3>
-      <p class="t-small">Entscheidungsweg: <code>${esc(p.rule_path ?? "–")}</code> · Kategorie <code>${esc(code)}</code></p>
+      <p class="t-small">Entscheidungsweg: ${rulePathHtml(p.rule_path)} · Kategorie <code>${esc(code)}</code></p>
       <ul class="t-small">${rules}</ul>
       <h3>Wie sicher ist das?</h3>
       <dl><dt>Gesamt</dt><dd>${esc(c.lvl)}</dd>
@@ -181,7 +192,7 @@ export function junctionHtml(j, meta, pageUrl, { level2Open = true } = {}) {
     <details class="level l3"><summary>Details und Quellen</summary>
       <h3>Arme</h3>
       <ul class="t-small">${(j.legs ?? []).map((l) => `<li>${esc(l.name ?? "–")}: <code>${esc(l.cat ?? "–")}</code>, ${esc(l.cycle_cat?.label ?? "kein Radnetz")}${l.facility_text ? `, ${esc(l.facility_text)}` : ""}${l.dtv ? `, ${num(l.dtv)} Kfz/Tag` : ""}</li>`).join("")}</ul>
-      <dl><dt>Regel</dt><dd>${esc(j.rule?.text ?? "–")}</dd>
+      <dl><dt>Regel</dt><dd>${esc(j.rule?.text ?? "–")}${j.rule?.id ? ` (${ruleLink(j.rule.id)})` : ""}</dd>
         <dt>Zufluss</dt><dd>${j.entering_dtv ? `${num(j.entering_dtv)} Kfz/Tag` : "unbekannt"}</dd>
         <dt>Platz</dt><dd>${j.space_radius_m ? `Kreis mit ${num(j.space_radius_m, 1)} m Radius` : "unbekannt"}</dd>
         <dt>Radunfälle</dt><dd>${num(j.crashes?.cyc ?? 0)} (5 Jahre)</dd>

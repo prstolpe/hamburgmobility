@@ -3,10 +3,12 @@
 // layers.js (state.layer is derived). Old links (?layer=…, #tabelle, #downloads, #quellen) are rewritten on load,
 // see docs/redesign/02_information_architecture.md. Defaults are left out of the URL so shared links stay short.
 
-export const PAGES = ["karte", "bezirke", "methode", "radnetz", "daten", "impressum"];
+export const PAGES = ["karte", "bezirke", "methode", "daten", "impressum"];
 const PAGE_ALIASES = { tabelle: "bezirke", downloads: "daten", quellen: "daten" };
 export const CYCLING_LAYER_KEYS = ["cnet", "cfac", "cgap", "lanes", "cfit", "jct", "coff"];
 export const LAYERS = ["cat", "speed", "disc", "prio", "width", "feas", "hvs", ...CYCLING_LAYER_KEYS];
+// sub pages of "methode": chapters (keys as in meta.method.chapters), the rule reference and the news page
+export const METHOD_SUBS = ["aufgabe", "abweichung", "platz", "radnetz", "knoten", "sicherheit", "daten", "regeln", "neu"];
 export const OVERLAYS = ["bus", "cyc", "fac", "acc"];
 
 // theme -> {title, views: {view: {label, layer, level}}}; level 3 views are offered under "Mehr Ansichten"
@@ -32,7 +34,7 @@ const OLD_LAYER = Object.fromEntries(Object.entries(THEMES).flatMap(([t, th]) =>
 
 export const DEFAULTS = Object.freeze({
   page: "karte", theme: "aufgabe", view: "ziel", layer: "cat", overlays: [], cats: [], dts: [], prmin: 0, bz: "",
-  seg: null, jct: null, table: false, map: null,
+  seg: null, jct: null, table: false, map: null, sub: null, rule: null,
 });
 
 const list = (v, allowed) => (v ? v.split(",").filter((x) => !allowed || allowed.includes(x)) : []);
@@ -46,11 +48,15 @@ export function withView(state, theme, view) {
 
 export function parseHash(hash) {
   const raw = (hash || "").replace(/^#\/?/, "");
-  const [pagePart, query = ""] = raw.split("?");
+  const [pathPart, query = ""] = raw.split("?");
+  const [pagePart, subPart = ""] = pathPart.split("/");
   const p = new URLSearchParams(query);
   let state = { ...DEFAULTS, overlays: [], cats: [], dts: [] };
   const page = PAGE_ALIASES[pagePart] ?? pagePart;
   if (PAGES.includes(page)) state.page = page;
+  if (pagePart === "radnetz") { state.page = "methode"; state.sub = "radnetz"; }  // old link
+  else if (state.page === "methode" && METHOD_SUBS.includes(subPart)) state.sub = subPart;
+  state.rule = /^[A-Za-z0-9-]+$/.test(p.get("regel") || "") ? p.get("regel") : null;
   state.overlays = list(p.get("ov"), OVERLAYS);
   let theme = p.get("theme");
   let view = p.get("view");
@@ -85,9 +91,11 @@ export function toHash(state) {
   if (state.table) p.set("tabelle", "1");
   if (state.seg) p.set("seg", state.seg);
   if (state.jct) p.set("jct", state.jct);
+  if (state.page === "methode" && state.sub === "regeln" && state.rule) p.set("regel", state.rule);
   if (state.map) p.set("map", `${state.map.zoom.toFixed(2)}/${state.map.lat.toFixed(5)}/${state.map.lon.toFixed(5)}`);
   const q = p.toString().replaceAll("%2C", ",").replaceAll("%2F", "/");
-  return `#${state.page}${q ? `?${q}` : ""}`;
+  const path = state.page === "methode" && state.sub ? `methode/${state.sub}` : state.page;
+  return `#${path}${q ? `?${q}` : ""}`;
 }
 
 /** Does a table row pass the current filters? (same logic as the map filter in layers.js) */

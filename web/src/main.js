@@ -2,7 +2,8 @@ import "./style.css";
 import { dataHtml } from "./datapage.js";
 import { bindDistrictPage, districtHtml, districtListHtml } from "./districts.js";
 import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO } from "./layers.js";
-import { imprintHtml, methodHtml, radnetzHtml } from "./pages.js";
+import { chapterHtml, newsHtml, referenceHtml, referenceListHtml, summaryHtml } from "./method.js";
+import { imprintHtml } from "./pages.js";
 import { junctionHtml, segmentHtml } from "./profile.js";
 import { setupSearch } from "./search.js";
 import { parseHash, THEMES, toHash, withView } from "./state.js";
@@ -198,17 +199,68 @@ async function renderDistricts() {
   });
 }
 
+// --- method page ------------------------------------------------------------------------------
+
+let rulesData, changelogText;
+let ruleQuery = { q: "", onlyAssumption: false };
+
+async function loadRules() {
+  rulesData ??= await json("rules.json");
+  return rulesData;
+}
+
+async function renderMethod() {
+  const sec = $('[data-page="methode"]');
+  const method = meta.method;
+  if (!method) { sec.innerHTML = "<h1>Methode</h1><p>Die Methodenseite ist in diesem Datenstand nicht enthalten.</p>"; return; }
+  const sub = state.sub;
+  const key = `${sub ?? ""}|${state.rule ?? ""}`;
+  if (sec.dataset.loaded === key) return;
+  sec.dataset.loaded = key;
+  if (!state.rule) window.scrollTo(0, 0);
+  try {
+    if (!sub) sec.innerHTML = summaryHtml(method, meta);
+    else if (sub === "regeln") {
+      const data = await loadRules();
+      if (state.rule) ruleQuery = { q: "", onlyAssumption: false };
+      sec.innerHTML = referenceHtml(method, data.rules, ruleQuery, data.versions, meta.github_repo);
+      bindReference(sec, data);
+      if (state.rule) {
+        const li = document.getElementById(`regel-${state.rule}`);
+        if (li) { li.querySelector("details")?.setAttribute("open", ""); li.scrollIntoView(); }
+      }
+    } else if (sub === "neu") {
+      changelogText ??= await fetch("changelog.md").then((r) => (r.ok ? r.text() : ""));
+      sec.innerHTML = newsHtml(method, meta, changelogText);
+    } else sec.innerHTML = chapterHtml(method, sub, (await loadRules()).rules, meta);
+  } catch (err) {
+    sec.dataset.loaded = "";
+    sec.innerHTML = `<p role="alert">Die Seite konnte nicht geladen werden (${esc(err.message)}).</p>`;
+  }
+}
+
+function bindReference(sec, data) {
+  const list = sec.querySelector("#rule-list");
+  const update = () => {
+    ruleQuery = { q: sec.querySelector("#rule-q").value, onlyAssumption: sec.querySelector("#rule-assume").checked };
+    list.innerHTML = referenceListHtml(meta.method, data.rules, ruleQuery, meta.github_repo);
+  };
+  sec.querySelector("#rule-q").oninput = update;
+  sec.querySelector("#rule-assume").onchange = update;
+}
+
 // --- render ----------------------------------------------------------------------------------
 
 async function render() {
   for (const sec of document.querySelectorAll("[data-page]")) sec.hidden = sec.dataset.page !== state.page;
-  const navPage = state.page === "radnetz" ? "methode" : state.page;
   for (const a of document.querySelectorAll("nav.main a")) {
-    if (a.getAttribute("href") === `#${navPage}`) a.setAttribute("aria-current", "page");
+    if (a.getAttribute("href") === `#${state.page}`) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
-  const titles = { bezirke: "Bezirke", methode: "Methode", radnetz: "Radnetz", daten: "Daten", impressum: "Impressum" };
-  document.title = `${meta.site_title}${titles[state.page] ? ` – ${titles[state.page]}` : ""}`;
+  const titles = { bezirke: "Bezirke", methode: "Methode", daten: "Daten", impressum: "Impressum" };
+  const chapter = meta.method?.chapters?.find((c) => c.key === state.sub);
+  const subTitle = state.page !== "methode" ? null : state.sub === "regeln" ? "Alle Regeln" : state.sub === "neu" ? "Was ist neu" : chapter?.title;
+  document.title = `${meta.site_title}${titles[state.page] ? ` – ${subTitle ? `${titles.methode}: ${subTitle}` : titles[state.page]}` : ""}`;
   if (state.page === "karte") {
     renderControls();
     renderIntro();
@@ -225,12 +277,14 @@ async function render() {
     mapView.update(state);
   }
   if (state.page === "bezirke") await renderDistricts();
-  const pages = { methode: async () => methodHtml(meta, await (await fetch("changelog.md")).text()),
-    radnetz: async () => radnetzHtml(meta), daten: async () => dataHtml(meta), impressum: async () => imprintHtml(meta) };
-  const sec = $(`[data-page="${state.page}"]`);
-  if (pages[state.page] && !sec.dataset.loaded) {
-    sec.innerHTML = await pages[state.page]();
-    sec.dataset.loaded = "1";
+  if (state.page === "methode") await renderMethod();
+  else {
+    const pages = { daten: async () => dataHtml(meta), impressum: async () => imprintHtml(meta) };
+    const sec = $(`[data-page="${state.page}"]`);
+    if (pages[state.page] && !sec.dataset.loaded) {
+      sec.innerHTML = await pages[state.page]();
+      sec.dataset.loaded = "1";
+    }
   }
   const panelId = $("#panel").dataset.id;
   const want = state.jct ? `jct:${state.jct}` : state.seg ? `seg:${state.seg}` : "";
@@ -269,7 +323,7 @@ async function init() {
     a.addEventListener("click", (ev) => {
       ev.preventDefault();
       const page = a.getAttribute("href").slice(1);
-      setState({ page, ...(page === "bezirke" ? { table: false } : {}) }, { push: true });
+      setState({ page, sub: null, rule: null, ...(page === "bezirke" ? { table: false } : {}) }, { push: true });
       if (a.dataset.anchor) setTimeout(() => document.getElementById(a.dataset.anchor)?.scrollIntoView(), 100);
       else $("#main").focus();
     });

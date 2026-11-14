@@ -5,8 +5,10 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.10.0
-  date: 2026-11-14
+  version: 0.11.0
+  date: 2026-11-15
+# 0.11.0: Seite „Methode“ (Redesign 2026-11, Paket 3): Abschnitt method mit Zusammenfassung, Kapiteln, Regelreferenz
+#   und „Was ist neu“.
 # 0.10.0: Einfache Sprache nach config/glossary.yaml (Redesign 2026-11, Entscheidung E4 b); Datenbeschreibung (columns)
 # bleibt fachlich (Ebene 3).
 
@@ -398,3 +400,199 @@ cycling:
       cyc_calibrated: "Modellierte Radfahrten je Werktag (nicht gezählt)"
       demand_confidence: "Verlässlichkeit des Modellwerts"
       geometry: "Linie in WGS 84 (EPSG:4326)"
+
+# Seite „Methode“ (Redesign 2026-11, Paket 3; docs/redesign/02_information_architecture.md, Abschnitt Methode).
+# Drei Ebenen: l1 = ein Satz, l2 = Erklärung (Markdown), Ebene 3 = Regelreferenz aus den Regeldateien
+# (label_plain, explain_plain, why und die technischen Felder; pipeline/lib/export_rules.py -> data/out/rules.json).
+# sections: welche Abschnitte der Regeldateien (Datei:Abschnitt) in der Regelreferenz zu diesem Kapitel gehören; jede
+# Regel gehört zu genau einem Kapitel (Test). Platzhalter {name} füllt die Webseite aus meta.method.vars.
+method:
+  title: "So entsteht der Entwurf"
+  summary:
+    what_title: "Was ist das?"
+    what: "Dieser Entwurf gibt jeder Straße in Hamburg eine Aufgabe. Sie verbindet Orte oder führt zu den Häusern im Viertel. Daraus folgen Tempo, Radweg, Platz und Kreuzungen."
+    shows_title: "Was zeigt der Entwurf?"
+    shows:
+      - {title: "Eine Aufgabe für jede Straße", text: "Jedes Straßenstück bekommt eine von fünf Aufgaben. Zum Beispiel: Hauptstraße mit Tempo 50 oder Wohnstraße. Der Entwurf zeigt auch, welche Regeln dazu geführt haben."}
+      - {title: "Wo heute und Ziel nicht zusammenpassen", text: "Die Karte zeigt, wo heute schneller gefahren werden darf oder anders gebaut ist als im Ziel. Eine Dringlichkeit hilft, die Reihenfolge für Änderungen zu finden."}
+      - {title: "Radnetz, Platz und Kreuzungen", text: "Der Entwurf legt ein Radnetz über die Stadt. Er zeigt, welcher Radweg, welche Aufteilung der Straße und welche Art von Kreuzung zum Ziel passen."}
+    not_title: "Was zeigt er nicht?"
+    not:
+      - {title: "Keine Planung der Stadt", text: "Die Stadt Hamburg hat den Entwurf nicht beschlossen. Ein Computerprogramm macht den ersten Vorschlag. Menschen prüfen ihn und korrigieren ihn, wenn nötig."}
+      - {title: "Keine Messung vor Ort", text: "Alle Werte stammen aus Karten und Datenbanken. Niemand hat Breiten, Radwege oder Tempo vor Ort gemessen. Vor einem Umbau muss jemand die Straße ansehen."}
+      - {title: "Keine Verkehrsprognose", text: "Der Entwurf sagt nicht voraus, wie viel Verkehr künftig fährt. Er zeigt, wie eine Straße nach ihrer Aufgabe aussehen sollte."}
+    assumptions: "{n_thresholds_assumption} von {n_thresholds} Grenzwerten und {n_rules_assumption} von {n_rules} Regeln sind Annahmen: Das Projekt hat sie gesetzt, weil keine Quelle sie nennt. Sie werden geprüft. In den Regeln steht dazu „Annahme“."
+  chapters:
+    - key: aufgabe
+      title: "Aufgabe einer Straße"
+      l1: "Jede Straße hat eine Aufgabe: Sie verbindet Orte oder führt zu Häusern."
+      l2: |
+        Die Idee heißt „Duurzaam Veilig“ (nachhaltig sicher) und kommt aus den Niederlanden. Jede Straße hat eine klare Aufgabe. Tempo und Gestaltung passen dazu.
+
+        Es gibt fünf Aufgaben:
+
+        - **Schnellstraße:** nur für Autos, ohne Häuser am Rand.
+        - **Fußgängerzone oder Spielstraße:** Menschen zu Fuß haben Vorrang.
+        - **Hauptstraße mit Tempo 50:** verbindet Stadtteile und hat einen eigenen Radweg.
+        - **Hauptstraße mit Tempo 30:** verbindet ebenfalls, aber am Rand ist viel los.
+        - **Wohnstraße mit Tempo 30:** führt zu den Häusern im Viertel.
+
+        Der Entwurf prüft der Reihe nach. Die erste Frage, die zutrifft, entscheidet:
+
+        1. Ist es eine Autobahn oder Kraftfahrstraße? Dann ist es eine Schnellstraße.
+        2. Ist es heute schon eine Fußgängerzone oder ein verkehrsberuhigter Bereich? Dann bleibt es eine Fußgängerzone oder Spielstraße.
+        3. Verbindet die Straße wichtige Orte? Dann ist es eine Hauptstraße. Sie bekommt Tempo 30, wenn eine Schule oder Kita direkt anliegt, wenn viele Läden an ihr liegen oder wenn der Platz für Tempo 50 mit eigenem Radweg fehlt. Sonst bleibt es bei Tempo 50.
+        4. Alle anderen Straßen sind Wohnstraßen.
+
+        Danach glättet der Entwurf jede ganze Straße. Kurze Stücke unter 200 Metern bekommen die Aufgabe der Stücke davor und dahinter. Trifft Tempo 50 auf Tempo 30, gewinnt Tempo 30.
+
+        Zum Schluss prüft der Entwurf das ganze Netz. Er gibt Hinweise, etwa wenn eine Hauptstraße im Nichts endet. Diese Hinweise ändern nichts von selbst.
+
+        Eine Aufgabe bekommen Straßen für Autos und benannte Zufahrten. Fußwege, Wege in Parks und Kleingärten und Parkplatzgassen bekommen keine. Ländliche Stadtteile bewertet der Entwurf nicht.
+      sections: ["rules.yaml:classification", "rules.yaml:harmonisation", "rules.yaml:coherence"]
+    - key: abweichung
+      title: "Tempo und Abweichung"
+      l1: "Der Entwurf zeigt, wo heute schneller gefahren werden darf oder anders gebaut ist als im Ziel."
+      l2: |
+        Der Entwurf vergleicht die Aufgabe im Ziel mit dem Zustand heute. Passt etwas nicht, hat die Straße eine Abweichung. Fachleute nennen das eine „graue Straße“.
+
+        Es gibt drei Arten von Abweichung:
+
+        - **Tempo:** Heute darf schneller gefahren werden als im Ziel.
+        - **Gestaltung:** Die Straße ist anders gebaut, als ihre Aufgabe verlangt. Zum Beispiel fehlt bei Tempo 50 ein Radweg. Oder eine Wohnstraße ist so breit gebaut wie eine Hauptstraße.
+        - **Nutzung:** Auf einer Hauptstraße mit Tempo 30 fahren mehr Autos, als dort vorgesehen ist.
+
+        Der Entwurf ordnet die Abweichung zusätzlich ein. Die Straße ist gebaut wie eine Hauptstraße, ihr fehlt die passende Gestaltung, oder beides trifft zu.
+
+        Nicht jede Abweichung ist gleich dringend. Die Dringlichkeit ergibt sich aus der Größe der Abweichung mal dem Risiko. Das Risiko steigt mit Unfällen unter Beteiligung von Fuß- oder Radverkehr. Es steigt auch mit dem Radnetz, mit der Zahl der Menschen in der Nähe und mit Schulen oder Kitas.
+
+        Die Dringlichkeit ordnet nur die Reihenfolge. Sie sagt nicht, dass die Stadt etwas ändern muss.
+      sections: ["rules.yaml:discrepancy", "rules.yaml:priority"]
+    - key: platz
+      title: "Platz in der Straße"
+      l1: "Der Entwurf prüft, ob die Aufteilung im Ziel in die Breite der Straße passt."
+      l2: |
+        Für jedes Straßenstück baut der Entwurf eine Aufteilung aus Bausteinen. Die Reihenfolge ist fest:
+
+        1. Gehwege
+        2. Radweg
+        3. Bus und Bahn
+        4. Fahrbahn für Autos
+        5. Sicherheitsabstände
+        6. Bäume
+        7. Ladezonen
+        8. Parken
+
+        Autospuren gibt es so wenige wie möglich. Eine zweite Spur kommt nur dazu, wenn die erste rechnerisch überlastet ist. Es sind nie mehr Spuren als heute.
+
+        Reicht der Platz nicht, macht der Entwurf schrittweise Abstriche. Er beginnt dort, wo es am wenigsten wehtut:
+
+        - Zuerst entfällt Parken.
+        - Dann wachsen Bäume in Baumscheiben statt in Baumstreifen.
+        - Dann bekommt das Rad eine einfachere Anlage.
+        - Dann entfällt die zweite Autospur.
+        - Dann gelten die Mindestbreiten.
+
+        Hilft das nicht, macht der Entwurf einen Vorschlag: Einbahnverkehr, eine Durchfahrtssperre für Autos oder eine andere Route für das Rad.
+
+        Die Breite der Straße ist aus Katasterdaten geschätzt und nicht vor Ort gemessen. Die Skizze im Steckbrief zeigt das Ergebnis maßstäblich.
+      sections: ["design_rules.yaml:lanes", "design_rules.yaml:placement", "design_rules.yaml:profile_assignment"]
+    - key: radnetz
+      title: "Radnetz und Radwege"
+      l1: "Ein Radnetz mit vier Stufen verbindet die Stadt, und jede Straße bekommt den passenden Radweg."
+      l2: |
+        Der Entwurf legt ein Radnetz über die Straßen. Vorbild ist die Radverkehrsplanung in den Niederlanden (CROW). Das amtliche „Radnetz Hamburg“ ist eine eigene Ebene auf der Karte, zum Vergleich.
+
+        **Vier Stufen:** Radvorrangroute, Radroute, Bezirksroute und übrige Wege. Ein einfaches Verkehrsmodell schätzt, wie viele Menschen wo Rad fahren würden: von Wohnungen zu Arbeit, Läden, Schulen, Hochschulen und Bahnhöfen. Stark genutzte Verbindungen werden Radvorrangrouten oder Radrouten. Der Entwurf schließt zu große Lücken und bindet Schulen und Läden an. Das amtliche Radnetz bekommt Vorrang, ist aber nicht das Ziel. Alle anderen Straßen und Wege, auf denen man Rad fahren darf, sind „übrige Wege“.
+
+        **Fünf Prinzipien:** Ein gutes Netz erfüllt fünf Anforderungen. Der Entwurf misst sie für jede Route, heute und nach dem Umbau.
+
+        | Prinzip | Worum es geht |
+        |---|---|
+        | Zusammenhang | Ein lückenloses Netz verbindet alle wichtigen Ziele. |
+        | Direktheit | Wenige Umwege und Halte. |
+        | Sicherheit | Getrennt vom schnellen Autoverkehr, sichere Kreuzungen. |
+        | Komfort | Genug Breite, glatter Belag, wenig Anhalten. |
+        | Attraktivität | Grün und ruhig statt neben lauten Hauptstraßen. |
+
+        **Welcher Radweg?** Das hängt von Tempo und Autoverkehr ab. Je schneller und stärker befahren die Straße ist, desto stärker muss der Radweg getrennt sein. Auf einer Hauptstraße mit Tempo 50 liegt er getrennt von der Fahrbahn. Auf einer Wohnstraße fährt das Rad auf der Fahrbahn. Eine wichtige Route wird dort eine Fahrradstraße, wenn wenig Autos fahren.
+
+        **Wie breit?** Die Breite folgt der Netzstufe und dem erwarteten Radverkehr. Der Steckbrief nennt zum Vergleich das deutsche Regelmaß und den niederländischen Wert.
+
+        Radverkehrsstärken sind geschätzt, nicht gezählt. Das Modell trifft die Zählstellen nur mäßig. Viele Breiten und Grenzwerte stammen aus Zweitquellen. Die Neufassung der deutschen Radverkehrsrichtlinie kann sie ändern. Der Entwurf ersetzt keine Planung. Er macht Netz und Platzbedarf sichtbar.
+      sections: ["cycling_rules.yaml:cycle_graph", "cycling_rules.yaml:demand_model", "cycling_rules.yaml:routing_impedance",
+                 "cycling_rules.yaml:network_design", "cycling_rules.yaml:principles", "cycling_rules.yaml:principle_scoring",
+                 "cycling_rules.yaml:separation_matrix", "cycling_rules.yaml:facility_assignment"]
+    - key: knoten
+      title: "Kreuzungen"
+      l1: "Der Entwurf wählt für jede Kreuzung die Art, die zu den Straßen und zum Platz passt."
+      l2: |
+        Kreuzungen sind die gefährlichsten Stellen. Die Art der Kreuzung hängt von den Straßen, dem Autoverkehr und dem Platz ab. Im Entwurf sind {n_junctions} Kreuzungen erfasst, an {n_junctions_action} davon müsste sich etwas ändern.
+
+        So fällt die Wahl:
+
+        - **Kreisverkehr:** Zwei Hauptstraßen kreuzen sich, und es ist Platz. Ein Kreisverkehr hat die wenigsten Stellen, an denen sich Wege kreuzen. Ob Radfahrende darin Vorrang haben, ist umstritten. Die niederländische Empfehlung steht gegen Unfallforschung und deutsches Recht. Der Steckbrief nennt diesen Zielkonflikt. Im Kreisverkehr mit zwei Spuren warten Radfahrende immer.
+        - **Ampel:** nur bei sehr viel Verkehr oder bei Straßenbahn, dann mit geschütztem Radverkehr. Auch dort, wo eine Radroute eine große Hauptstraße quert. Sonst gibt es eine Querung mit Insel in der Straßenmitte.
+        - **Durchgehender Gehweg oder Aufpflasterung:** Eine Wohnstraße mündet in eine Hauptstraße. Autos fahren dort langsam und lassen Fußgänger vor.
+        - **Rechts vor links:** zwischen Wohnstraßen.
+        - **Brücke oder Tunnel:** Ein eigener Radweg einer wichtigen Radroute quert eine Schnellstraße oder eine sehr stark befahrene Straße. Autobahnanschlüsse sind normale Kreuzungen. Reine Autobahnknoten bekommen keine Art.
+
+        Die Skizze im Steckbrief zeigt die Art der Kreuzung und die Führung des Rads. Kreisverkehre und Ampeln brauchen eine genaue Planung. Der Platz ist nur geschätzt.
+      sections: ["design_rules.yaml:junctions"]
+    - key: sicherheit
+      title: "Wie sicher ist das?"
+      l1: "Für jede Einstufung prüft der Entwurf, wie sicher sie ist: unsicher, eher sicher oder sicher."
+      l2: |
+        Zwei Dinge können eine Einstufung unsicher machen. Der Entwurf zeigt sie zusammen in einer Angabe mit drei Stufen.
+
+        **Unsichere Daten.** Ein entscheidender Wert fehlt, stammt aus einer Ersatzquelle oder liegt nahe an einem Grenzwert. Fehlt ein Wert, gilt eine Regel nur, wenn ihr Ergebnis trotzdem feststeht.
+
+        **Unsichere Annahmen.** Viele Grenzwerte und Gewichte sind Annahmen. Der Entwurf prüft, wie stark die Einstufung an ihnen hängt. Er rechnet alles {mc_runs}-mal neu, mit zufällig veränderten Werten. Jeder Wert weicht dabei bis zu {mc_delta_pct} Prozent nach oben oder unten ab. Wechselt die Aufgabe einer Straße in mindestens {mc_min_change_pct} Prozent der Läufe, hängt sie zu stark an den Annahmen.
+
+        Daraus ergeben sich drei Stufen:
+
+        - **Unsicher:** Die Daten sind schlecht, oder die Aufgabe wechselt oft. Bitte fachlich prüfen.
+        - **Eher sicher:** Die Daten sind mittel, meist weil ein Wert stadtweit ersetzt wurde. Das ist der Normalfall.
+        - **Sicher:** Die Daten sind gut, und die Aufgabe wechselt selten.
+
+        Beim Radnetz ist die Prüfung ähnlich. Dort sind es {cyc_sens_runs} Läufe, in denen jede Annahme einzeln um {cyc_sens_delta_pct} Prozent geändert wird. Der Steckbrief sagt, ob sich Radweg, Autospuren oder Art der Kreuzung dabei ändern. Außerdem vergleicht der Entwurf das Netz mit dem amtlichen Radnetz und mit Zählstellen.
+
+        Im Steckbrief steht ein Hinweis nur bei „unsicher“. Mehr Angaben stehen auf der dritten Ebene.
+      sections: ["rules.yaml:classification_policy", "rules.yaml:validation"]
+    - key: daten
+      title: "Daten und Grenzen"
+      l1: "Der Entwurf nutzt offene Daten aus Karten und Ämtern, und jede Quelle hat Grenzen."
+      l2: |
+        Alle Daten sind offen und kommen aus diesen Quellen:
+
+        - **OpenStreetMap:** das Straßennetz, das Tempo, Radwege und Parken. Freiwillige pflegen die Karte. Viele Angaben fehlen dort. Sie zählen dann als „unbekannt“. Auch Radwege, Breiten und Kreuzungen sind nicht immer erfasst.
+        - **Offene Daten der Stadt Hamburg:** amtliche Tempolimits, Hauptverkehrsstraßen und das Kataster, die Karte der Grundstücke. Daraus schätzt der Entwurf die Breite der Straße. Niemand hat sie gemessen.
+        - **Verkehrsmengen:** Es gibt Zahlen nur für Hauptverkehrsstraßen, und nur bis 2019. Wo Zahlen fehlen, nimmt der Entwurf an: Eine Fahrradstraße ist möglich. Das muss man vor Ort prüfen.
+        - **Unfälle:** Es zählen nur Unfälle mit Verletzten, die die Polizei aufgenommen hat. Der Entwurf zeigt nur Summen je Straßenstück.
+        - **Radverkehr:** Die Stärken sind geschätzt, nicht gezählt. Das Modell trifft die Zählstellen nur mäßig.
+
+        Weitere Grenzen:
+
+        - Gewichte und viele Grenzwerte sind Annahmen. Sie sind gekennzeichnet und werden fachlich geprüft.
+        - Breiten und Grenzwerte für Radwege stammen oft aus anderen Quellen.
+        - Der Entwurf ersetzt keine Planung.
+
+        Alle Quellen, Stände und Lizenzen stehen auf der Seite „Daten“.
+      sections: ["rules.yaml:network", "rules.yaml:conflation", "rules.yaml:features", "rules.yaml:crosssection"]
+  reference:
+    title: "Alle Regeln"
+    intro: "Hier stehen alle Regeln aus den drei Regeldateien. Jede hat einen einfachen Namen, eine Erklärung und einen Grund. Technische Angaben und Quellen kann man aufklappen. „Annahme“ steht bei Werten, die das Projekt ohne Quelle gesetzt hat."
+  # Was ist neu (neueste zuerst): date, version (Regelwerk), title, text (ein Satz), items (Liste)
+  news:
+    - date: "2026-11-15"
+      version: "0.21.1"
+      title: "Neue Webseite in einfacher Sprache"
+      text: "Die Webseite ist neu gestaltet und in einfacher Sprache geschrieben. Die Ergebnisse sind gleich geblieben."
+      items:
+        - "Die Karte ist die Startseite. Das Menü hat vier Punkte: Karte, Bezirke, Methode, Daten."
+        - "Fünf Themen ersetzen die 13 Ebenen der Karte. Jede Farbe hat nur eine Bedeutung."
+        - "Die Aufgaben der Straßen haben einfache Namen, zum Beispiel „Hauptstraße mit Tempo 30“ statt „Stadtstraße 30“."
+        - "Steckbriefe zeigen zuerst das Wichtigste. Mehr steht unter „Mehr erfahren“ und „Details und Quellen“."
+        - "Eine Angabe „Wie sicher ist das?“ ersetzt Ampel und Robustheit."
+        - "Neu ist die Seite „Bezirke“ mit Kennzahlen und den dringendsten Straßen, Kreuzungen und Lücken im Radnetz."
+        - "Die Methode hat eine Zusammenfassung, sieben Kapitel und eine Liste aller Regeln mit Erklärung und Grund."

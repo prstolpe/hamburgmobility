@@ -1,6 +1,6 @@
 # Export – Stufe 9
 
-Erzeugt: 2026-11-14T22:30:38+00:00 von `pipeline/s09_export.py`, Version 0.21.1+2026-10-28. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-14T23:25:37+00:00 von `pipeline/s09_export.py`, Version 0.21.1+2026-10-28. Nicht amtlicher Entwurf.
 
 ## Prüfungen
 
@@ -73,7 +73,8 @@ Erzeugt: 2026-11-14T22:30:38+00:00 von `pipeline/s09_export.py`, Version 0.21.1+
 | `data/out/downloads/segments.geojson` | 58.35 MB |
 | `data/out/downloads/segments.parquet` | 8.16 MB |
 | `data/out/licenses.md` | 0.00 MB |
-| `data/out/meta.json` | 0.03 MB |
+| `data/out/meta.json` | 0.04 MB |
+| `data/out/rules.json` | 0.23 MB |
 | `data/out/rural_excluded.geojson` | 0.13 MB |
 | `data/out/search.json` | 1.67 MB |
 | `data/out/search_junctions.json` | 1.76 MB |
