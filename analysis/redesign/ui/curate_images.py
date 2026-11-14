@@ -23,7 +23,7 @@ def main() -> None:
     KEEP_ALL.mkdir(parents=True, exist_ok=True)
     refs = set()
     for md in DOCS.glob("*.md"):
-        refs |= set(re.findall(r"\(img/([^)\s]+)\)", md.read_text()))
+        refs |= set(re.findall(r"\(img/([^)\s]+\.jpg)\)", md.read_text()))  # PNG maps are small, kept as written
     missing = [r for r in refs if not (IMG / r).exists() and not (KEEP_ALL / r).exists()]
     if missing:
         raise SystemExit(f"referenced but missing: {missing}")

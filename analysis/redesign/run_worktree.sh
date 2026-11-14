@@ -21,6 +21,6 @@ rmdir "$main/data/scenarios/redesign_$name"
 mkdir -p "$dest/interim"
 cp "$wt"/data/interim/*.parquet "$dest/interim/"
 (cd "$wt/data/out" && find . -type f ! -name '*.pmtiles' -print0 | sort -z | xargs -0 shasum -a 256) > "$dest/out_hashes.txt"
-if [ -n "$patch" ]; then cp "$patch" "$dest/"; fi
+if [ -n "$patch" ] && [ "$(cd "$(dirname "$patch")" && pwd)" != "$dest" ]; then cp "$patch" "$dest/"; fi
 git -C "$main" worktree remove --force "$wt"
 echo "done: $dest"

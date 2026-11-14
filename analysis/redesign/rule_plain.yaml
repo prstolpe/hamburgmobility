@@ -1,0 +1,290 @@
+# Plain-language fields for every rule, category and threshold (prompt 24, A5). Proposal only: these fields would be
+# added next to the existing keys in config/*.yaml (label_plain, explain_plain, why). Existing keys, IDs and values do
+# not change. `why` is written for the 10 representative rules of the diff sketch in docs/redesign/05_rule_language.md;
+# for the others it follows in Part B, package 4. explain_plain also serves as "purpose in one sentence" in
+# docs/redesign/01_rules_inventory.csv.
+
+# --- config/rules.yaml -----------------------------------------------------------------------------------------
+C-SW-01:   {label_plain: "Autobahn wird Schnellstraße", explain_plain: "Autobahnen und Kraftfahrstraßen nur für Autos werden Schnellstraßen."}
+C-RUR-01:  {label_plain: "Außerorts: Landstraße", explain_plain: "Außerhalb von Ortschaften würde eine Straße Landstraße mit Tempo 80 oder 60; die Regel ist abgeschaltet, weil Daten fehlen."}
+C-ERF-01:  {label_plain: "Fußgängerzone bleibt Fußgängerzone", explain_plain: "Verkehrsberuhigte Bereiche, Fußgängerzonen und eingetragene Schulstraßen werden Fußgängerzone oder Spielstraße."}
+C-GOW-01:  {label_plain: "Verbindet die Straße Stadtteile?", explain_plain: "Eine Straße wird Hauptstraße, wenn sie auf der Liste der Hauptverkehrsstraßen steht oder ihr Verbindungswert hoch ist.",
+            why: "Nach Duurzaam Veilig hat jede Straße genau eine Aufgabe. Straßen, die Stadtteile verbinden, brauchen eine andere Gestaltung als Straßen im Wohngebiet."}
+C-G30-01:  {label_plain: "Tempo 30 wegen Schule oder Läden", explain_plain: "Eine Hauptstraße bekommt Tempo 30, wenn eine Schule oder Kita direkt an ihr liegt oder viele Läden an ihr sind.",
+            why: "Wo viele Menschen zu Fuß queren, verhindert Tempo 30 schwere Unfälle. Das niederländische Regelwerk nennt das Umfeld als ersten Grund für Tempo 30 auf Hauptstraßen."}
+C-G30-02:  {label_plain: "Tempo 30, wenn Platz für den Radweg fehlt", explain_plain: "Eine Hauptstraße bekommt Tempo 30, wenn kein Platz für einen eigenen Radweg ist.",
+            why: "Bei Tempo 50 braucht das Rad einen getrennten Radweg. Passt er nicht in die Straße, ist Tempo 50 nicht sicher zu gestalten."}
+C-G50-01:  {label_plain: "Sonst Hauptstraße mit Tempo 50", explain_plain: "Trifft keiner der Gründe für Tempo 30 zu, bleibt die Hauptstraße bei Tempo 50."}
+C-ETW-01:  {label_plain: "Alle übrigen: Wohnstraße", explain_plain: "Alle anderen Straßen werden Wohnstraßen mit Tempo 30."}
+C-MISS-01: {label_plain: "Umgang mit fehlenden Werten", explain_plain: "Fehlt ein Wert, greift eine Regel nur, wenn ihr Ergebnis trotzdem feststeht; sonst gilt die Einstufung als unsicher."}
+C-CONF-01: {label_plain: "Wie gut ist die Datenlage?", explain_plain: "Die Datenlage ist niedrig, wenn ein entscheidender Wert fehlt oder knapp an einem Grenzwert liegt, und mittel bei Ersatzwerten."}
+S-NET-01:  {label_plain: "Straßenstück endet an Kreuzungen", explain_plain: "Ein Straßenstück endet an jeder Kreuzung, Einmündung und Sackgasse."}
+S-NET-02:  {label_plain: "Straßenstück endet beim Wechsel der Straßenart", explain_plain: "Ein Straßenstück endet auch dort, wo sich die Art der Straße in OpenStreetMap ändert."}
+S-NET-03:  {label_plain: "Teilen beim Tempowechsel", explain_plain: "Lange Straßenstücke werden geteilt, wo sich das erlaubte Tempo ändert."}
+S-NET-04:  {label_plain: "Benannte Zufahrten gehören dazu", explain_plain: "Benannte Zufahrten und Wirtschaftswege mit Autoverkehr kommen ins Netz, Fußwege und Parkplatzgassen nicht."}
+S-CONF-01: {label_plain: "Amtliche Linien zuordnen", explain_plain: "Amtliche Linien, etwa das Tempo, werden dem passenden Straßenstück zugeordnet, nach Lage, Richtung und Überdeckung."}
+S-CONF-02: {label_plain: "Tempo-30-Zonen zuordnen", explain_plain: "Ein Straßenstück liegt in einer Zone, wenn genug von seiner Länge in der amtlichen Zone liegt."}
+S-CONF-03: {label_plain: "Zeitweise Tempolimits getrennt", explain_plain: "Tempolimits, die nur zu bestimmten Zeiten gelten, werden getrennt gespeichert und nicht als normales Tempo gezählt."}
+S-CONF-04: {label_plain: "Hauptverkehrsstraßen aus der Karte 2019", explain_plain: "Ob eine Straße Hauptverkehrsstraße ist, kommt aus der Verkehrsmengenkarte 2019, weil die aktuelle Karte nicht als Daten vorliegt."}
+S-FEAT-01: {label_plain: "Werte vergleichbar machen", explain_plain: "Merkmale werden in eine Rangzahl von 0 bis 1 umgerechnet, damit man sie zusammenzählen kann."}
+S-FEAT-02: {label_plain: "Wie viele Wege durch die Straße führen", explain_plain: "Gezählt wird, wie viele schnellste Autowege durch ganz Hamburg über das Straßenstück führen."}
+S-FEAT-03: {label_plain: "Gebäudedichte", explain_plain: "Anteil der Fläche um die Straße, der mit Gebäuden bebaut ist."}
+S-FEAT-04: {label_plain: "Einwohner in der Nähe", explain_plain: "Zahl der Menschen, die nahe an der Straße wohnen (Zensus 2022)."}
+S-FEAT-05: {label_plain: "Läden und Publikumsverkehr", explain_plain: "Anteil der Gebäude an der Straße mit Läden, Gastronomie oder anderem Publikumsverkehr."}
+S-FEAT-06: {label_plain: "Abstand zu Schule oder Kita", explain_plain: "Abstand vom Straßenstück zum nächsten Grundstück einer Schule oder Kita."}
+S-FEAT-07: {label_plain: "Liegt am amtlichen Radnetz", explain_plain: "Ob das Straßenstück zum amtlichen Radnetz Hamburg gehört."}
+S-FEAT-08: {label_plain: "Busverkehr", explain_plain: "Wie viele Busse an einem Werktag fahren, aus dem Fahrplan des HVV."}
+S-FEAT-09: {label_plain: "Tempo heute", explain_plain: "Das heutige Tempo kommt aus den amtlichen Daten, sonst aus OpenStreetMap."}
+S-FEAT-10: {label_plain: "Gestaltung aus OpenStreetMap", explain_plain: "Radwege, Mittellinie und Parken werden aus OpenStreetMap gelesen."}
+S-FEAT-11: {label_plain: "Radroute daneben?", explain_plain: "Ob parallel eine Radroute des Entwurfs ohne großen Umweg verläuft."}
+S-FEAT-12: {label_plain: "Straße ohne Häuser am Rand", explain_plain: "Ob an einem Großteil der Straße keine Häuser und keine Einmündungen liegen."}
+S-FEAT-13: {label_plain: "Radweg heute", explain_plain: "Welche Art von Radweg es heute gibt, einmal je Straßenstück berechnet."}
+S-XS-01:   {label_plain: "Breite messen: Querlinien", explain_plain: "Quer zur Straße werden in festen Abständen Linien gezogen, um die Breite zu messen."}
+S-XS-02:   {label_plain: "Breite der Straßenfläche", explain_plain: "Breite zwischen den Grenzen der Straßenfläche im Kataster."}
+S-XS-03:   {label_plain: "Abstand zwischen den Häusern", explain_plain: "Breite zwischen den Hauswänden links und rechts."}
+S-XS-04:   {label_plain: "Sonderfälle beim Messen", explain_plain: "Messungen an Kreuzungen, auf Brücken und in Tunneln zählen nicht."}
+S-XS-05:   {label_plain: "Engste Stelle bestimmen", explain_plain: "Aus den Messungen werden die typische Breite und die engste Stelle berechnet."}
+S-XS-06:   {label_plain: "Passt die Aufgabe in die Breite?", explain_plain: "Die gemessene Breite wird mit der Breite verglichen, die die Aufgabe braucht."}
+S-XS-07:   {label_plain: "Breite vom Nachbarstück", explain_plain: "Fehlt die Breite, wird sie vom angrenzenden Stück derselben Straße übernommen."}
+N1:        {label_plain: "Hauptstraßen führen irgendwo hin", explain_plain: "Hinweis, wenn eine Hauptstraße endet, ohne auf eine andere Hauptstraße zu treffen."}
+N2:        {label_plain: "Kurze Inseln melden", explain_plain: "Hinweis, wenn ein kurzes Stück eine andere Aufgabe hat als die Straße davor und dahinter."}
+N3:        {label_plain: "Zu kleine Wohngebiete", explain_plain: "Hinweis, wenn Hauptstraßen ein sehr kleines Wohngebiet umschließen."}
+N4:        {label_plain: "Schleichverkehr möglich", explain_plain: "Hinweis, wenn der kürzeste Weg zwischen Hauptstraßen lange durch Wohnstraßen führt.",
+            why: "Ein Wohngebiet ist nur ruhig, wenn Abkürzen sich nicht lohnt. Der Hinweis zeigt, wo ein Filter oder eine andere Aufgabe nötig sein könnte."}
+N5:        {label_plain: "Übergang braucht einen Eingang", explain_plain: "Hinweis, wo eine Hauptstraße in eine Tempo-30-Straße übergeht und ein deutlicher Eingang nötig ist."}
+N6:        {label_plain: "Kreuzungsart aus der Kreuzungstabelle", explain_plain: "Verweis: Die Art der Kreuzung kommt aus der Kreuzungstabelle."}
+N7:        {label_plain: "Vorschlag zum Angleichen", explain_plain: "Vorschlag, die kurze Insel aus N2 an ihre Nachbarn anzugleichen; gilt erst nach fachlicher Freigabe."}
+D-SPD-01:  {label_plain: "Tempo zu hoch?", explain_plain: "Abweichung, wenn heute schneller gefahren werden darf als im Ziel.",
+            why: "Das Tempo ist der wichtigste Hebel für die Sicherheit. Eine Straße, die schneller erlaubt als ihre Aufgabe, ist ein Hinweis auf Handlungsbedarf."}
+D-DES-01:  {label_plain: "Gestaltung passt nicht?", explain_plain: "Abweichung, wenn die Gestaltung nicht zur Aufgabe passt, zum Beispiel kein Radweg bei Tempo 50."}
+D-USE-01:  {label_plain: "Zu viel Autoverkehr?", explain_plain: "Abweichung, wenn mehr Autos fahren, als die Aufgabe vorsieht."}
+D-TYPE-01: {label_plain: "Art der Abweichung", explain_plain: "Ordnet die Abweichung ein: gebaut wie eine Hauptstraße, zu sparsam gestaltet oder beides."}
+P-RISK-01: {label_plain: "Risiko", explain_plain: "Risiko aus Unfällen mit Fuß- und Radbeteiligung, Radnetz, Einwohnern und Schulen in der Nähe."}
+H-STR-01:  {label_plain: "Kurze Stücke angleichen", explain_plain: "Kurze Stücke bekommen die Aufgabe der Straße davor und dahinter; trifft 50 auf 30, gewinnt 30.",
+            why: "Eine Straße soll auf langer Strecke gleich aussehen und gleich schnell sein. Ständige Wechsel verwirren und machen die Regel unglaubwürdig."}
+V-SENS-01: {label_plain: "Jede Annahme einzeln ändern", explain_plain: "Jeder angenommene Grenzwert wird einzeln etwas höher und niedriger gesetzt, um seine Wirkung zu sehen."}
+V-SENS-02: {label_plain: "500 Läufe mit zufälligen Annahmen", explain_plain: "Alle Annahmen werden zusammen zufällig verändert und der Entwurf 500-mal neu berechnet."}
+V-UNC-01:  {label_plain: "Wann ist eine Einstufung unsicher?", explain_plain: "Unsicher, wenn die Aufgabe in mindestens 30 von 100 Läufen wechselt."}
+V-SAMP-01: {label_plain: "Stichproben prüfen", explain_plain: "Fachleute prüfen Stichproben; der Anteil strittiger Fälle soll klein bleiben."}
+V-DQ-01:   {label_plain: "Datenqualität beim Tempo", explain_plain: "Für fast alle Straßenstücke muss das heutige Tempo bekannt sein."}
+V-INV-01:  {label_plain: "Prüfung: jede Aufgabe hat Regeln", explain_plain: "Jede Aufgabe hat eine Zeile in der Radweg-Tabelle und Regeln für die Aufteilung der Straße."}
+V-INV-02:  {label_plain: "Prüfung: jede Kreuzung hat ein Ziel", explain_plain: "Keine Kreuzung bleibt ohne Ziel; Autobahnknoten sind ausdrücklich ausgenommen."}
+V-INV-03:  {label_plain: "Prüfung: Ziel ohne verbotene Teile", explain_plain: "Die Aufteilung im Ziel enthält nichts, was die Aufgabe verbietet, etwa Parken an Hauptstraßen mit Tempo 50."}
+V-INV-04:  {label_plain: "Prüfung: kein Radstreifen bei viel Verkehr", explain_plain: "Auf Hauptstraßen mit Tempo 30 und viel Autoverkehr gibt es keinen Radstreifen."}
+V-INV-05:  {label_plain: "Prüfung: Breiten stimmen überein", explain_plain: "Passt die Aufgabe in die Breite, passt auch die Aufteilung im Ziel, höchstens mit Abstrichen."}
+V-INV-06:  {label_plain: "Prüfung: Rechenwerte stimmen", explain_plain: "Jede berechnete nötige Breite stimmt mit ihrer Formel überein."}
+V-INV-07:  {label_plain: "Prüfung: Rad-Vorrang nur im kleinen Kreisverkehr", explain_plain: "Vorrang für Räder gibt es nur in einspurigen Kreisverkehren."}
+V-INV-08:  {label_plain: "Prüfung: Radweg heute überall gleich", explain_plain: "Alle Schritte nutzen dieselbe Angabe, welcher Radweg heute vorhanden ist."}
+V-INV-09:  {label_plain: "Prüfung: Hauptverkehrsstraße bleibt Hauptstraße", explain_plain: "Eine Hauptverkehrsstraße wird nur nach fachlicher Freigabe zur Wohnstraße."}
+
+# --- config/cycling_rules.yaml ---------------------------------------------------------------------------------
+P-COH-01:  {label_plain: "Netz dicht genug", explain_plain: "Lücke, wenn die Maschen des Radnetzes größer sind als vorgesehen."}
+P-COH-02:  {label_plain: "Netz hängt zusammen", explain_plain: "Jede Stufe des Radnetzes muss zusammenhängen."}
+P-COH-03:  {label_plain: "Ziele erreichbar", explain_plain: "Anteil der Schulen, Zentren und Bahnhöfe nahe an einer Radroute."}
+P-COH-04:  {label_plain: "Route bleibt gleich", explain_plain: "Eine Route behält ihre Stufe und die Art des Radwegs über Kreuzungen hinweg."}
+P-DIR-01:  {label_plain: "Kein großer Umweg", explain_plain: "Verhältnis von Route zu kürzestem Weg; ein großer Umweg zählt schlecht."}
+P-DIR-02:  {label_plain: "Wenige Halte", explain_plain: "Wie oft man je Kilometer an Ampeln oder Vorfahrtstraßen anhalten muss."}
+P-DIR-03:  {label_plain: "Wenig Zeitverlust", explain_plain: "Wie viele Sekunden je Kilometer man durch Halte verliert."}
+P-SAF-01:  {label_plain: "Passender Radweg", explain_plain: "Ob der Radweg zur Tabelle passt: welcher Radweg zu welcher Straße."}
+P-SAF-02:  {label_plain: "Passende Kreuzung", explain_plain: "Ob die Art der Kreuzung zum Ziel passt; derzeit nicht berechnet."}
+P-SAF-03:  {label_plain: "Beleuchtet", explain_plain: "Ob die Route beleuchtet ist."}
+P-SAF-04:  {label_plain: "Unfälle", explain_plain: "Unfälle mit Radbeteiligung je Kilometer."}
+P-COM-01:  {label_plain: "Breit genug", explain_plain: "Ob der Radweg so breit ist wie nötig."}
+P-COM-02:  {label_plain: "Glatter Belag", explain_plain: "Ob die Route eine glatte Decke hat, etwa Asphalt."}
+P-COM-03:  {label_plain: "Keine steilen Steigungen", explain_plain: "Steigung je Route; derzeit ohne Daten."}
+P-ATT-01:  {label_plain: "Grün am Weg", explain_plain: "Anteil von Bäumen und Grün entlang der Route."}
+P-ATT-02:  {label_plain: "Wenig Lärm", explain_plain: "Lärm entlang der Route; derzeit ohne Daten."}
+P-ATT-03:  {label_plain: "Nicht an lauten Hauptstraßen", explain_plain: "Hinweis, wenn eine Route an einer stark befahrenen Straße liegt und es einen ruhigen Weg daneben gibt."}
+C-PRI-01:  {label_plain: "Punkte je Prinzip", explain_plain: "Jede Prüfung gibt 0 bis 1 Punkt; daraus werden Punkte je Prinzip und eine Gesamtzahl."}
+C-PRI-02:  {label_plain: "Radweg heute je Wegstück", explain_plain: "Für jedes Wegstück wird die heutige Art des Radwegs bestimmt, wie beim Straßenstück."}
+C-PRI-03:  {label_plain: "Punkte: passender Radweg", explain_plain: "Ein Radweg, der zur Tabelle passt, gibt volle Punkte; teilweise passend gibt weniger."}
+C-PRI-04:  {label_plain: "Punkte: Umweg", explain_plain: "Umweg je Route und für zufällige Wege im Netz."}
+C-PRI-05:  {label_plain: "Punkte: Halte", explain_plain: "Halte und Zeitverlust je Route an Ampeln und Vorfahrtstraßen."}
+C-PRI-06:  {label_plain: "Punkte: Licht", explain_plain: "Anteil der beleuchteten Strecke."}
+C-PRI-07:  {label_plain: "Punkte: Unfälle", explain_plain: "Unfälle mit Radbeteiligung je Kilometer im Vergleich zur ganzen Stadt."}
+C-PRI-08:  {label_plain: "Punkte: Breite", explain_plain: "Heutige Breite des Radwegs im Vergleich zur nötigen Breite."}
+C-PRI-09:  {label_plain: "Punkte: Belag", explain_plain: "Anteil der Strecke mit glattem Belag."}
+C-PRI-10:  {label_plain: "Punkte: Grün", explain_plain: "Anteil von Grün und Bäumen entlang des Wegs."}
+C-PRI-11:  {label_plain: "Punkte: ruhige Lage", explain_plain: "Anteil der Strecke abseits stark befahrener Straßen."}
+C-PRI-12:  {label_plain: "Punkte: Zusammenhang", explain_plain: "Lücken, Zusammenhang und Wechsel je Route."}
+C-PRI-13:  {label_plain: "Datenlage je Route", explain_plain: "Wie vollständig die Daten für die Prüfungen einer Route sind."}
+C-PRI-14:  {label_plain: "Gewichte prüfen", explain_plain: "Wie sich die Rangfolge ändert, wenn man die Gewichte der Prinzipien verändert."}
+C-PRI-15:  {label_plain: "Stichprobe für Ortskundige", explain_plain: "Zufällige Auswahl von Routen zur Prüfung vor Ort."}
+C-PRI-16:  {label_plain: "Prüfungen ohne Daten", explain_plain: "Prüfungen ohne Datengrundlage zählen nicht und senken die Datenlage."}
+C-IMP-01:  {label_plain: "Routenwahl: Fahrradstraße", explain_plain: "Fahrradstraßen zählen bei der Routenwahl als besonders angenehm."}
+C-IMP-02:  {label_plain: "Routenwahl: eigener Weg", explain_plain: "Eigenständige Rad- und Fußwege zählen als angenehm."}
+C-IMP-03:  {label_plain: "Routenwahl: Radweg an der Straße", explain_plain: "Radwege neben der Fahrbahn zählen als angenehm."}
+C-IMP-04:  {label_plain: "Routenwahl: ruhige Wohnstraße", explain_plain: "Wohnstraßen bis Tempo 30 zählen fast so gut; Fußgängerzonen zählen als langsam."}
+C-IMP-05:  {label_plain: "Routenwahl: Hauptstraße 30 mit Radstreifen", explain_plain: "Hauptstraßen bis Tempo 30 mit Radstreifen zählen mittel."}
+C-IMP-06:  {label_plain: "Routenwahl: Hauptstraße 30 ohne Radstreifen", explain_plain: "Hauptstraßen bis Tempo 30 ohne Radstreifen zählen vorläufig wie mit Radstreifen."}
+C-IMP-07:  {label_plain: "Routenwahl: übrige Straßen", explain_plain: "Alle Straßen über Tempo 30 zählen als unangenehm."}
+C-IMP-08:  {label_plain: "Routenwahl: schlechter Belag", explain_plain: "Kopfsteinpflaster und unbefestigte Wege zählen zusätzlich als unangenehm."}
+C-GRAPH-01: {label_plain: "Wo man Rad fahren darf", explain_plain: "Zum Netz gehören Straßen ohne Radverbot, Radwege und Wege mit Radfreigabe."}
+C-GRAPH-02: {label_plain: "Einbahnstraßen", explain_plain: "Gegen die Einbahnrichtung darf man nur fahren, wenn es für Räder freigegeben ist."}
+C-GRAPH-03: {label_plain: "Fähren", explain_plain: "Fähren mit Radmitnahme gehören zum Netz, mit einer Wartezeit."}
+C-GRAPH-04: {label_plain: "Wartezeit an Ampeln", explain_plain: "An jeder Ampel kommt eine feste Wartezeit dazu."}
+C-GRAPH-05: {label_plain: "Wartezeit an Vorfahrtstraßen", explain_plain: "Wer aus einer Nebenstraße auf eine Hauptstraße trifft, wartet eine feste Zeit."}
+C-GRAPH-06: {label_plain: "Radweg gehört zur Straße", explain_plain: "Ein eigenständiger Radweg wird der Straße daneben zugeordnet."}
+C-DEM-01:  {label_plain: "Woher die Wege kommen", explain_plain: "Hamburg wird in Quadrate geteilt; die Einwohner sind die Startpunkte."}
+C-DEM-02:  {label_plain: "Wohin die Wege gehen", explain_plain: "Ziele sind Arbeitsplätze, Schulen, Hochschulen, Läden und Bahnhöfe, unterschiedlich gewichtet."}
+C-DEM-03:  {label_plain: "Arbeitsplätze schätzen", explain_plain: "Arbeitsplätze werden aus der Fläche der Gebäude ohne Wohnungen geschätzt."}
+C-DEM-04:  {label_plain: "Wege verteilen", explain_plain: "Je näher ein Ziel liegt, desto mehr Wege führen dorthin."}
+C-DEM-05:  {label_plain: "Wege aufs Netz legen", explain_plain: "Die Wege werden auf die angenehmsten Routen gelegt, mehrmals mit kleinen Zufallsabweichungen."}
+C-DEM-06:  {label_plain: "An Zählstellen anpassen", explain_plain: "Das Modell wird mit einem Faktor an die Rad-Zählstellen von 2025 angepasst."}
+C-DEM-07:  {label_plain: "Wie sicher ist die Radmenge?", explain_plain: "Hoch nahe an gut passenden Zählstellen; niedrig am Stadtrand und bei wenig Radverkehr."}
+C-NET-01:  {label_plain: "Wichtige Ziele", explain_plain: "Ausgangspunkte des Netzes sind Innenstadt, Umsteigebahnhöfe, Hochschulen und Arbeitsplatzschwerpunkte."}
+C-NET-02:  {label_plain: "Verbindungen zwischen Zielen", explain_plain: "Jedes Ziel wird mit seinen nächsten Zielen und mit der Innenstadt verbunden."}
+C-NET-03:  {label_plain: "Wege im Ziel bewerten", explain_plain: "Für die Netzplanung zählt jeder Weg so, als hätte er schon den passenden Radweg."}
+C-NET-04:  {label_plain: "Vorrang für viel Radverkehr", explain_plain: "Wege mit viel Radverkehr werden bevorzugt."}
+C-NET-05:  {label_plain: "Vorrang für das amtliche Radnetz", explain_plain: "Wege des amtlichen Radnetzes werden bevorzugt."}
+C-NET-06:  {label_plain: "Radschnellweg festlegen", explain_plain: "Lange Strecken mit sehr viel Radverkehr werden Radschnellweg."}
+C-NET-07:  {label_plain: "Netzlücken messen", explain_plain: "Das Netz wird in Maschen geteilt; ihre Größe zeigt Lücken."}
+C-NET-08:  {label_plain: "Lücken schließen", explain_plain: "Zu große Maschen werden durch neue Routen geteilt, dort wo viel Radverkehr ist."}
+C-NET-09:  {label_plain: "Schulen und Läden anbinden", explain_plain: "Schulen und Läden weit weg vom Netz bekommen eine Bezirksroute."}
+C-NET-10:  {label_plain: "Ruhiger Weg statt Hauptstraße", explain_plain: "Liegt eine Route lange an einer lauten Straße, wird ein ruhiger Weg daneben gewählt, wenn er kaum länger ist."}
+C-NET-11:  {label_plain: "Route durchgehend", explain_plain: "Kurze schwächere Stücke zwischen zwei gleichen Stücken einer Route werden angehoben."}
+C-NET-12:  {label_plain: "Übrige Wege", explain_plain: "Alle anderen Wege gehören zu den übrigen Wegen."}
+C-NET-13:  {label_plain: "Vergleich mit dem amtlichen Radnetz", explain_plain: "Wie viel des Vorschlags im amtlichen Radnetz liegt und umgekehrt."}
+S-01:      {label_plain: "Kein Radstreifen bei Tempo 50", explain_plain: "An Hauptstraßen mit Tempo 50 braucht das Rad einen eigenen Radweg, keinen Streifen.",
+            why: "Bei Tempo 50 und vielen Lastwagen ist ein Streifen auf der Fahrbahn nicht sicher genug. Das niederländische Regelwerk trennt hier immer baulich."}
+S-02:      {label_plain: "Kein Radstreifen in Wohnstraßen", explain_plain: "In Wohnstraßen fährt das Rad auf der Fahrbahn; wichtige Routen werden Fahrradstraße."}
+S-03:      {label_plain: "Radweg für beide Richtungen nur selten", explain_plain: "Ein Radweg für beide Richtungen nur auf einer Seite mit wenigen Einmündungen; wirkt nur außerorts."}
+S-04:      {label_plain: "Auf der Fahrbahn nur bei wenig Autos", explain_plain: "Rad auf der Fahrbahn nur, wenn wenige Autos pro Stunde fahren."}
+S-05:      {label_plain: "Viel Autoverkehr: eigener Radweg", explain_plain: "Hauptstraßen mit Tempo 30 und sehr viel Autoverkehr bekommen einen eigenen Radweg statt Streifen."}
+C-FAC-01:  {label_plain: "Art des Radwegs im Ziel", explain_plain: "Die Art des Radwegs kommt aus der Tabelle: Aufgabe der Straße mal Stufe im Radnetz."}
+C-FAC-02:  {label_plain: "Wann Fahrradstraße?", explain_plain: "Fahrradstraße nur, wenn wenige Autos fahren und mehr Räder als Autos.",
+            why: "Eine Fahrradstraße funktioniert nur, wenn das Rad dort wirklich die Mehrheit ist. Sonst bleibt es eine Wohnstraße mit Schild."}
+C-FAC-03:  {label_plain: "Wenige Autos? So wird gezählt", explain_plain: "Autos pro Stunde aus Autos pro Tag, um die Grenze für Rad auf der Fahrbahn zu prüfen."}
+C-FAC-04:  {label_plain: "Breite des Radwegs", explain_plain: "Wie breit der Radweg im Ziel sein soll, je nach Art, Netzstufe und Radverkehr."}
+C-FAC-05:  {label_plain: "Radweg heute", explain_plain: "Welche Art von Radweg es heute gibt, aus OpenStreetMap."}
+C-FAC-06:  {label_plain: "Fehlt der Radweg?", explain_plain: "Vergleich von heute und Ziel: fehlt, anders, zu schmal oder passt."}
+C-FAC-07:  {label_plain: "Datenlage Radweg", explain_plain: "Wie sicher die Angabe zum Radweg ist."}
+
+# --- config/design_rules.yaml ----------------------------------------------------------------------------------
+L-01:      {label_plain: "Ein Fahrstreifen bei Tempo 30", explain_plain: "In Straßen mit Tempo 30 gibt es höchstens einen Fahrstreifen je Richtung."}
+L-02:      {label_plain: "Zwei Fahrstreifen nur bei Bedarf", explain_plain: "Eine Hauptstraße mit Tempo 50 bekommt zwei Fahrstreifen je Richtung nur, wenn einer nicht reicht."}
+L-03:      {label_plain: "Mittelstreifen bei zwei Fahrstreifen", explain_plain: "Bei zwei Fahrstreifen je Richtung trennt ein Mittelstreifen die Richtungen."}
+L-04:      {label_plain: "Busspur statt zweitem Fahrstreifen", explain_plain: "Fahren viele Busse, wird der zweite Fahrstreifen eine Busspur."}
+L-05:      {label_plain: "Abbiegestreifen nur an Ampeln", explain_plain: "Abbiegestreifen gibt es nur an Ampelkreuzungen mit Bedarf, nicht auf der Strecke."}
+L-06:      {label_plain: "Nicht mehr Fahrstreifen als heute", explain_plain: "Der Entwurf plant nie mehr Fahrstreifen als heute, außer nach fachlicher Freigabe.",
+            why: "Mehr Fahrstreifen ziehen mehr Autoverkehr an. Ein Zuwachs ist eine politische Entscheidung, keine Folge einer Rechenregel."}
+L-07:      {label_plain: "Zu viel Verkehr für Tempo 30", explain_plain: "Hinweis, wenn auf einer Hauptstraße mit Tempo 30 mehr Autos fahren, als ein Fahrstreifen schafft."}
+PL-01:     {label_plain: "Radweg zwischen Gehweg und Fahrbahn", explain_plain: "Ein eigener Radweg liegt auf jeder Seite zwischen Gehweg und Trennstreifen."}
+PL-02:     {label_plain: "Radweg für beide Richtungen: wo", explain_plain: "Nur auf einer Seite mit wenigen Einmündungen; abgeschaltet, weil es nur außerorts gilt."}
+PL-03:     {label_plain: "Radstreifen am Fahrbahnrand", explain_plain: "Ein Radstreifen liegt rechts auf der Fahrbahn, mit Abstand zu parkenden Autos."}
+PL-04:     {label_plain: "Abstand zur Fahrbahn", explain_plain: "Zwischen Radweg und Fahrbahn liegt ein Streifen von mindestens 0,75 m."}
+PL-05:     {label_plain: "Radweg hinter der Haltestelle", explain_plain: "An Bushaltestellen führt der Radweg hinter der Haltestelle vorbei, wenn Platz ist."}
+PL-06:     {label_plain: "Einbahnstraßen für Räder öffnen", explain_plain: "In Wohnstraßen dürfen Räder Einbahnstraßen in beide Richtungen fahren."}
+PRF-01:    {label_plain: "Fahrstreifen heute", explain_plain: "Wie viele Fahrstreifen es heute gibt, aus amtlichen Daten oder OpenStreetMap."}
+PRF-02:    {label_plain: "Busse je Stunde", explain_plain: "Wie viele Busse in der stärksten Stunde je Richtung fahren."}
+PRF-03:    {label_plain: "Teile der Straße im Ziel", explain_plain: "Welche Teile die Straße im Ziel hat: Gehwege, Radweg, Fahrbahn, Bäume, Parken, Ladezone."}
+PRF-04:    {label_plain: "Breite der Fahrbahn", explain_plain: "Wie breit die Fahrbahn im Ziel ist, je nach Aufgabe und Fahrstreifen."}
+PRF-05:    {label_plain: "Passt alles hinein?", explain_plain: "Alle Teile mit Regelmaß nebeneinander: Passt das in die Breite der Straße?"}
+PRF-06:    {label_plain: "Abstriche, wenn es nicht passt", explain_plain: "Passt es nicht, entfallen Schritt für Schritt Parken, Bäume oder ein Fahrstreifen."}
+PRF-07:    {label_plain: "Nicht prüfbar", explain_plain: "Haltestellen und einseitige Radwege lassen sich mit den Daten nicht prüfen."}
+J-01:      {label_plain: "Zwei Hauptstraßen mit Tempo 50", explain_plain: "Kreisverkehr, wenn Verkehr und Platz es erlauben, sonst Turbokreisel oder geschützte Ampel."}
+J-02:      {label_plain: "Hauptstraße 50 trifft Hauptstraße 30", explain_plain: "Wie bei zwei Hauptstraßen mit Tempo 50."}
+J-03:      {label_plain: "Zwei Hauptstraßen mit Tempo 30", explain_plain: "Kreisverkehr, wenn möglich; sonst Vorfahrt mit eingefärbter Fläche."}
+J-04:      {label_plain: "Hauptstraße 50 trifft Wohnstraße", explain_plain: "Durchgehender Gehweg über die Einmündung."}
+J-05:      {label_plain: "Hauptstraße 30 trifft Wohnstraße", explain_plain: "Durchgehender Gehweg über die Einmündung.",
+            why: "Wer aus der Wohnstraße kommt, fährt langsam über den Gehweg. So sieht jeder: Hier beginnt ein ruhiges Gebiet, Fußgänger haben Vorrang."}
+J-06:      {label_plain: "Zwei Wohnstraßen", explain_plain: "Rechts vor links."}
+J-07:      {label_plain: "Fahrradstraße trifft Wohnstraße", explain_plain: "Die Fahrradstraße hat Vorfahrt, mit erhöhter Fläche."}
+J-08:      {label_plain: "Radweg quert Hauptstraße 30", explain_plain: "Radüberweg mit Vorrang, rot und erhöht."}
+J-09:      {label_plain: "Wichtiger Radweg quert Hauptstraße 50", explain_plain: "Brücke oder Tunnel, wenn sehr viel Autoverkehr kreuzt."}
+J-12:      {label_plain: "Radroute quert Wohnstraße", explain_plain: "Radüberweg mit Vorrang für den eigenständigen Radweg."}
+J-13:      {label_plain: "Wohnstraße trifft Fußgängerzone", explain_plain: "Durchgehender Gehweg."}
+J-10:      {label_plain: "Wichtiger Radweg quert Schnellstraße", explain_plain: "Brücke oder Tunnel für Radschnellwege und Radrouten."}
+J-10b:     {label_plain: "Autobahnrampe an Hauptstraße", explain_plain: "Wie bei zwei Hauptstraßen: Kreisverkehr oder Ampel."}
+J-10c:     {label_plain: "Autobahnrampe an Wohnstraße", explain_plain: "Geschützte Ampel."}
+J-10d:     {label_plain: "Autobahnknoten", explain_plain: "Für Rad- und Fußverkehr ist keine Kreuzungsart nötig."}
+J-14:      {label_plain: "Radroute quert Hauptstraße 50 an einer Einmündung", explain_plain: "Ampel für Räder bei viel Verkehr oder zwei Fahrstreifen, sonst durchgehender Gehweg."}
+J-15:      {label_plain: "Nebenweg quert Hauptstraße 50", explain_plain: "Ampel für Räder bei viel Verkehr, sonst Querung mit Mittelinsel."}
+J-16:      {label_plain: "Nebenweg trifft Wohnstraße", explain_plain: "Rechts vor links."}
+J-11:      {label_plain: "Kreuzung mit Straßenbahn", explain_plain: "Ampel, wenn eine Straßenbahn kreuzt; in Hamburg gibt es keinen Fall."}
+JC-01:     {label_plain: "Kreisverkehr: Rad hat Vorrang", explain_plain: "Im Kreisverkehr hat der umlaufende Radweg Vorrang."}
+JC-02:     {label_plain: "Geschützte Ampelkreuzung", explain_plain: "Eckinseln, abgesetzter Radüberweg, Wartefläche vor den Autos, Linksabbiegen in zwei Schritten."}
+JC-03:     {label_plain: "Radüberweg auf wichtigen Routen", explain_plain: "So breit wie der Radweg, rot, erhöht wo Vorrang."}
+JC-04:     {label_plain: "Mittelinsel zum Queren", explain_plain: "Insel in der Hauptstraße, 2,50 bis 4,00 m breit je nach Route."}
+JC-05:     {label_plain: "Freies Rechtsabbiegen für Räder", explain_plain: "An Ampeln dürfen Räder rechts abbiegen, wo es sicher ist."}
+JC-06:     {label_plain: "Turbokreisel: Rad wartet", explain_plain: "Am Turbokreisel wartet das Rad; auf wichtigen Routen Brücke oder Tunnel prüfen."}
+J-M-01:    {label_plain: "Was ist eine Kreuzung?", explain_plain: "Treffpunkte von drei oder mehr Straßenstücken oder von Radweg und Straße; nahe Punkte gelten als eine Kreuzung."}
+J-M-02:    {label_plain: "Straßen an der Kreuzung", explain_plain: "Welche Straßen auf die Kreuzung treffen und wie viele Autos zufließen."}
+J-M-03:    {label_plain: "Platz an der Kreuzung", explain_plain: "Größter Kreis, der in die Straßenfläche an der Kreuzung passt."}
+J-M-04:    {label_plain: "Welches Straßenpaar zählt", explain_plain: "Die wichtigste durchgehende Straße und die wichtigste querende Straße bestimmen die Art der Kreuzung."}
+J-M-05:    {label_plain: "Reihenfolge der Tabelle", explain_plain: "Die erste passende Zeile der Kreuzungstabelle entscheidet."}
+J-M-06:    {label_plain: "Kreuzung heute", explain_plain: "Ob es heute eine Ampel oder einen Kreisverkehr gibt, aus OpenStreetMap."}
+J-M-07:    {label_plain: "Rangfolge beim Umbau", explain_plain: "Zuerst Kreuzungen mit vielen Radunfällen, dann wichtige Radrouten, dann viel Autoverkehr."}
+
+# --- categories (config/rules.yaml categories.*) --------------------------------------------------------------
+_categories:
+  SW:      {label_plain: "Schnellstraße", explain_plain: "Autobahn oder Kraftfahrstraße: nur für Autos, ohne Häuser direkt an der Straße."}
+  GOW50:   {label_plain: "Hauptstraße mit Tempo 50", explain_plain: "Verbindet Stadtteile; Autos fahren 50 km/h, das Rad hat einen eigenen Radweg."}
+  GOW30:   {label_plain: "Hauptstraße mit Tempo 30", explain_plain: "Verbindet Stadtteile, hat aber viel Leben am Rand; darum gilt Tempo 30."}
+  ETW30:   {label_plain: "Wohnstraße mit Tempo 30", explain_plain: "Führt zu den Häusern im Viertel; Rad und Auto teilen sich die Fahrbahn."}
+  ETW_ERF: {label_plain: "Fußgängerzone oder Spielstraße", explain_plain: "Menschen zu Fuß haben Vorrang; Autos fahren höchstens Schritttempo."}
+  GOW80:   {label_plain: "Landstraße mit Tempo 80", explain_plain: "Verbindet Orte außerhalb der Stadt; derzeit nicht bewertet."}
+  ETW60:   {label_plain: "Zufahrtsstraße auf dem Land mit Tempo 60", explain_plain: "Führt außerhalb der Stadt zu Höfen und Orten; derzeit nicht bewertet."}
+
+# --- thresholds (path in the rule file -> label_plain) --------------------------------------------------------
+_thresholds:
+  rules.yaml:
+    "classification[3].thresholds.conn_gow": "Verbindungswert ab dem eine Straße Hauptstraße wird"
+    "classification[4].thresholds.access_radius": "größter Abstand zum Grundstück einer Schule oder Kita"
+    "classification[4].thresholds.frontage": "Anteil Gebäude mit Läden ab dem Tempo 30 gilt"
+    "classification_policy[1].thresholds.near_threshold": "Spanne um einen Grenzwert, in der ein Wert als knapp gilt"
+    "network.rules[2].thresholds.min_length_m": "Mindestlänge für das Teilen beim Tempowechsel"
+    "conflation.rules[0].thresholds.buffer_m": "Suchabstand für amtliche Linien"
+    "conflation.rules[0].thresholds.max_angle_deg": "größter Richtungsunterschied beim Zuordnen"
+    "conflation.rules[0].thresholds.min_overlap_share": "nötige Überdeckung beim Zuordnen"
+    "conflation.rules[1].thresholds.min_length_share": "nötiger Längenanteil in einer Zone"
+    "features.rules[1].thresholds.default_speed_motorway": "Standardtempo Autobahn"
+    "features.rules[1].thresholds.default_speed_motorway_link": "Standardtempo Autobahnauffahrt"
+    "features.rules[1].thresholds.default_speed_trunk": "Standardtempo Kraftfahrstraße"
+    "features.rules[1].thresholds.default_speed_trunk_link": "Standardtempo Auffahrt Kraftfahrstraße"
+    "features.rules[1].thresholds.default_speed_primary": "Standardtempo Hauptstraße"
+    "features.rules[1].thresholds.default_speed_primary_link": "Standardtempo Zufahrt Hauptstraße"
+    "features.rules[1].thresholds.default_speed_secondary": "Standardtempo Nebenhauptstraße"
+    "features.rules[1].thresholds.default_speed_secondary_link": "Standardtempo Zufahrt Nebenhauptstraße"
+    "features.rules[1].thresholds.default_speed_tertiary": "Standardtempo Sammelstraße"
+    "features.rules[1].thresholds.default_speed_tertiary_link": "Standardtempo Zufahrt Sammelstraße"
+    "features.rules[1].thresholds.default_speed_unclassified": "Standardtempo sonstige Straße"
+    "features.rules[1].thresholds.default_speed_residential": "Standardtempo Wohnstraße"
+    "features.rules[1].thresholds.default_speed_living_street": "Standardtempo Spielstraße"
+    "features.rules[2].thresholds.buffer_m": "Abstand für die Gebäudedichte"
+    "features.rules[3].thresholds.buffer_m": "Abstand für die Einwohner"
+    "features.rules[4].thresholds.buffer_m": "Abstand für Läden"
+    "features.rules[7].thresholds.bus_route_min_peak_h_dir": "Busse je Stunde ab denen eine Straße Busstrecke ist"
+    "features.rules[9].thresholds.node_snap_m": "Fangabstand für Knoten aus OpenStreetMap"
+    "features.rules[10].thresholds.buffer_m": "Suchabstand für eine Radroute daneben"
+    "features.rules[11].thresholds.buffer_m": "Abstand für Häuser am Rand"
+    "features.rules[11].thresholds.min_share": "Anteil ohne Häuser, ab dem eine Straße anbaufrei ist"
+    "crosssection.rules[0].thresholds.simplify_m": "Glättung der Mittellinie"
+    "crosssection.rules[0].thresholds.spacing_m": "Abstand der Messlinien"
+    "crosssection.rules[0].thresholds.half_length_m": "Länge der Messlinien je Seite"
+    "crosssection.rules[0].thresholds.tangent_half_m": "Strecke für die Richtung der Messlinie"
+    "crosssection.rules[3].thresholds.node_exclusion_m": "Abstand zu Kreuzungen ohne Messung"
+    "crosssection.rules[4].thresholds.quantile": "Anteil für die engste typische Breite"
+    "crosssection.rules[4].thresholds.min_run": "Messlinien in Folge für eine Engstelle"
+    "coherence[0].thresholds.boundary_tolerance_m": "Abstand zur Stadtgrenze, der als Ende zählt"
+    "coherence[1].thresholds.max_deflection_deg": "größter Knick, bei dem eine Straße weiterläuft"
+    "coherence[1].thresholds.bearing_sample_m": "Strecke für die Richtung eines Straßenstücks"
+    "coherence[4].thresholds.min_speed_kmh": "Tempo ab dem ein Übergang als schnell gilt"
+    "coherence[4].thresholds.target_speed_kmh": "Tempo der Straße nach dem Übergang"
+    "priority.risk.thresholds.snap_m": "größter Abstand eines Unfalls zur Straße"
+    "priority.risk.thresholds.min_length_m": "Mindestlänge für Unfälle je Kilometer"
+    "priority.risk.thresholds.school_kita_radius_m": "Umkreis für Schulen und Kitas beim Risiko"
+    "priority.risk.thresholds.period_years": "Zeitraum der Unfalldaten"
+    "harmonisation.rules[0].thresholds.gap_close_m": "größte Lücke, die beim Angleichen geschlossen wird"
+    "validation.rules[0].thresholds.delta": "Änderung je Annahme bei der Einzelprüfung"
+    "validation.rules[1].thresholds.delta": "größte zufällige Änderung je Annahme"
+    "validation.rules[2].thresholds.min_change_rate": "Anteil der Läufe, ab dem eine Einstufung unsicher ist"
+    "validation.rules[3].thresholds.max_disputed_share": "größter Anteil strittiger Stichproben"
+    "validation.rules[4].thresholds.max_missing_speed_share": "größter Anteil ohne bekanntes Tempo"
+  design_rules.yaml:
+    "junctions.thresholds.roundabout_max_dtv": "höchster Autoverkehr für einen einspurigen Kreisverkehr"
+    "junctions.thresholds.turbo_max_dtv": "höchster Autoverkehr für einen Turbokreisel"
+    "junctions.thresholds.grade_sep_min_dtv": "Autoverkehr ab dem eine Brücke oder ein Tunnel nötig ist"
+    "junctions.thresholds.roundabout_min_radius": "Platz, den ein Kreisverkehr braucht"
+    "junctions.thresholds.turbo_min_radius": "Platz, den ein Turbokreisel braucht"
+    "junctions.thresholds.crossing_signal_min_dtv": "Autoverkehr ab dem Räder eine Ampel zum Queren bekommen"

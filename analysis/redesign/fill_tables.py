@@ -255,6 +255,124 @@ def t_language_samples():
     return "\n".join(out).rstrip()
 
 
+REP_RULES = ["C-GOW-01", "C-G30-01", "C-G30-02", "H-STR-01", "N4", "D-SPD-01", "S-01", "C-FAC-02", "L-06", "J-05"]
+
+
+def _entry(text: str, rid: str) -> str:
+    """Lines of one rule entry: from its id line to the next entry at the same or lower indentation."""
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        if re.search(rf"(\{{id: |- id: |^\s*id: ){re.escape(rid)}\b", line):
+            ind = len(line) - len(line.lstrip())
+            j = i + 1
+            while j < len(lines) and lines[j].strip() and (len(lines[j]) - len(lines[j].lstrip()) > ind
+                                                          or not lines[j].lstrip().startswith(("- ", "#"))) \
+                    and not re.match(r"^\s*[a-z_]+:\s*$", lines[j]) and len(lines[j]) - len(lines[j].lstrip()) >= ind:
+                j += 1
+            return "\n".join(lines[i:j])
+    return ""
+
+
+def t_rule_diff_sketch():
+    import yaml as _y
+    from analysis.redesign.make_lang_patch import insert_rule_fields
+    plain = _y.safe_load((ROOT / "analysis/redesign/rule_plain.yaml").read_text(encoding="utf-8"))
+    out = []
+    for rid in REP_RULES:
+        for f in ["config/rules.yaml", "config/cycling_rules.yaml", "config/design_rules.yaml"]:
+            orig = (ROOT / f).read_text(encoding="utf-8")
+            a = _entry(orig, rid)
+            if not a:
+                continue
+            new, _ = insert_rule_fields(orig, {rid: plain[rid]})
+            b = _entry(new, rid)
+            added = [l for l in b.split("\n") if l not in a.split("\n")]
+            long = lambda l: l if len(l) <= 160 else l[:157] + "…"
+            body = "\n".join("  " + long(l) for l in a.split("\n")[:6]) + ("\n  …" if a.count("\n") >= 6 else "")
+            if any("{id:" in l for l in added):  # flow style: show the new fields as their own lines for reading
+                added = [f"+ {k}: {plain[rid][k]!r}" for k in ("label_plain", "explain_plain", "why") if plain[rid].get(k)]
+            else:
+                added = ["+ " + l.strip() for l in added]
+            out.append(f"**{rid}** (`{f}`)\n\n```diff\n{body}\n" + "\n".join(added) + "\n```")
+            break
+    return "\n\n".join(out)
+
+
+def _run_compare(name: str, ref: str = "main") -> str:
+    d = DATA / name
+    files = pd.read_csv(d / f"compare_vs_{ref}.files.csv")
+    diffs = pd.read_csv(d / f"compare_vs_{ref}.csv") if (d / f"compare_vs_{ref}.csv").stat().st_size > 1 else pd.DataFrame()
+    rows = []
+    for r in files.itertuples():
+        dd = diffs[diffs.file == r.file] if len(diffs) else diffs
+        cols = ", ".join(f"`{c}` ({n})" for c, n in zip(dd.get("column", []), dd.get("rows_differ", []))) or "–"
+        rows.append([r.file, r.rows_a, "ja" if r.hash_equal else "nein", cols])
+    return table(["Datei (data/interim)", "Zeilen", "Datei-Hash gleich", "Spalten mit Unterschied (Zeilen)"], rows)
+
+
+def t_lang_proof():
+    return _run_compare("lang", "base")
+
+
+def t_cons_runs():
+    rows = []
+    for name in ["K3", "K8", "K10", "K11", "ALL"]:
+        f = DATA / name / "effect.json"
+        if not f.exists():
+            rows.append([name, "(Lauf fehlt)"] + ["–"] * 7)
+            continue
+        e = json.loads(f.read_text(encoding="utf-8"))
+        cell_ = []
+        for c in e["checks"]:
+            if c["unit"] == "km":
+                cell_.append("0" if not c["n"] else f"{fmt(c['km'], 2)} km ({c['n']})")
+            else:
+                cell_.append("0" if not c["n"] else f"{c['n']} Knoten")
+        rows.append([name, *cell_])
+    return table(["Probelauf", "Kategorie", "Radnetzstufe", "Radweg (Ziel)", "Fahrstreifen", "Querschnitt passt",
+                  "Art der Kreuzung", "entscheidende Zeile"], rows)
+
+
+def _cons_detail(name):
+    f = DATA / name / "effect.json"
+    if not f.exists():
+        return "(Lauf fehlt)"
+    e = json.loads(f.read_text(encoding="utf-8"))
+    out = []
+    for c in e["checks"]:
+        if not c["n"]:
+            continue
+        by = ", ".join(f"{k} {fmt(v, 2) if c['unit'] == 'km' else v}" for k, v in sorted(c["by_bezirk"].items(), key=lambda x: -x[1]))
+        tr = "; ".join(f"{k}: {v}" for k, v in c["transitions"].items())
+        out.append(f"- **{c['label']}**: {c['n']} {'Abschnitte/Kanten, ' + fmt(c['km'], 2) + ' km' if c['unit'] == 'km' else 'Knoten'}. "
+                   f"Nach Bezirk: {by}. Wechsel: {tr}.")
+        for x in c["examples"][:3]:
+            out.append(f"  - {x['links']}: {x['from']} → {x['to']}")
+    if e.get("map"):
+        out.append(f"\n![Karte {name}]({e['map']})")
+    return "\n".join(out) or "Keine Änderung an Kategorie, Radnetz, Radweg, Fahrstreifen, Querschnitt oder Kreuzungsart."
+
+
+def t_cons_K3():
+    return _cons_detail("K3")
+
+
+def t_cons_K8():
+    return _cons_detail("K8")
+
+
+def t_cons_K10():
+    return _cons_detail("K10")
+
+
+def t_cons_K11():
+    return _cons_detail("K11")
+
+
+def t_cons_ALL():
+    return _cons_detail("ALL")
+
+
 TABLES = {n.removeprefix("t_"): f for n, f in globals().items() if n.startswith("t_") and callable(f)}
 
 
