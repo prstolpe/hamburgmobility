@@ -1,0 +1,161 @@
+# Before/after samples for docs/redesign/04_language.md (prompt 24, A4). "before" is read from the content capture
+# (data/scenarios/redesign/ui/content.json) via `ref`; "after" is the rewrite in plain language (B1), using the terms
+# of docs/redesign/glossary.yaml. Facts in "after" come from the same profile JSON / page; nothing new is claimed.
+# ref forms: page:<page>:<heading>[|<heading>…] · layer:<key> · profile:<cat>:<heading>|… · junction:<heading>|…
+
+samples:
+  - id: start
+    title: Einleitung (heute Methodenseite, oben)
+    ref: "page:methode:So funktioniert der Entwurf"
+    after: |
+      Dieser Entwurf schlägt für jede Straße in Hamburg eine Aufgabe vor.
+      Manche Straßen sollen Stadtteile verbinden. Andere führen nur zu den Häusern im Viertel.
+      Aus der Aufgabe folgt, wie schnell Autos fahren sollen. Sie zeigt auch, wie die Straße aussehen sollte.
+      Die Idee kommt aus den Niederlanden. Dort heißt sie „nachhaltig sicher“.
+      Wichtig: Das ist ein Vorschlag zur Diskussion. Die Stadt Hamburg hat ihn nicht beschlossen.
+      Ein Computerprogramm macht den ersten Vorschlag. Fachleute prüfen ihn und korrigieren ihn, wo nötig.
+
+  - id: legend-cat
+    title: Legende Aufgabe der Straße
+    ref: "layer:cat"
+    after: |
+      Welche Aufgabe jede Straße haben soll. Die Farbe zeigt das Tempo im Ziel. Die Breite zeigt, wie stark die Straße verbindet.
+      Schnellstraße
+      Hauptstraße mit Tempo 50
+      Hauptstraße mit Tempo 30
+      Wohnstraße mit Tempo 30
+      Fußgängerzone oder Spielstraße
+      Grau: auf dem Land, nicht bewertet
+  - id: legend-disc
+    title: Legende Abweichung
+    ref: "layer:disc"
+    after: |
+      Wo die Straße heute nicht zu ihrer Aufgabe passt. Zum Beispiel ist das Tempo zu hoch. Eine breite Linie heißt: große Abweichung.
+      große Abweichung
+      kleine Abweichung
+      passt zum Ziel
+      nicht prüfbar
+  - id: legend-cfit
+    title: Legende Passt das Ziel?
+    ref: "layer:cfit"
+    after: |
+      Passt das Ziel in die Straße? Wir prüfen Gehwege, Radweg, Fahrbahn, Bäume und Parken.
+      passt
+      passt mit Abstrichen, zum Beispiel weniger Parkplätze
+      passt nicht
+      nicht prüfbar, weil die Breite fehlt
+      Das ist ein Entwurf, keine Planung der Stadt.
+  - id: legend-cnet
+    title: Legende Radnetz
+    ref: "layer:cnet"
+    after: |
+      Das vorgeschlagene Radnetz. Eine breite Linie heißt: wichtige Route.
+      Radschnellweg
+      Radroute
+      Bezirksroute
+      übrige Wege
+      Das ist ein Entwurf, nicht das Radnetz der Stadt.
+  - id: legend-jct
+    title: Legende Kreuzungen
+    ref: "layer:jct"
+    after: |
+      Welche Art Kreuzung das Ziel ist. Die Form zeigt die Art. Orange heißt: Hier ist ein Umbau nötig.
+      Kreisverkehr
+      Ampel
+      Vorfahrt mit erhöhter Fahrbahn
+      durchgehender Gehweg
+      rechts vor links
+      Brücke oder Tunnel
+      kein Ziel festgelegt
+
+  - id: profile-SW
+    title: Steckbrief Schnellstraße (Deckel Stellingen)
+    ref: "profile:SW:Soll-Kategorie|Begründung|Ist-Zustand|Querschnitt|Soll-Querschnitt"
+    after: |
+      Schnellstraße. Ohne Tempo-Ziel.
+      Warum? Die Straße ist eine Autobahn. Hier fahren nur Autos und Lastwagen.
+      Was ändert sich? Für die Aufgabe ist kein Umbau nötig. Fuß- und Radverkehr haben eigene Wege daneben.
+      Heute fahren hier 131 000 Autos am Tag.
+  - id: profile-GOW50
+    title: Steckbrief Hauptstraße mit Tempo 50 (Farnhornstieg)
+    ref: "profile:GOW50:Soll-Kategorie|Begründung|Ist-Zustand|Querschnitt|Soll-Querschnitt"
+    after: |
+      Hauptstraße mit Tempo 50. Tempo 50, wie heute.
+      Warum? Die Straße verbindet Stadtteile. Sie steht auf der Liste der Hauptverkehrsstraßen.
+      Für Tempo 30 gibt es keinen Grund. Keine Schule liegt direkt an der Straße. Es gibt genug Platz für einen eigenen Radweg.
+      Was ändert sich? Heute gibt es mehrere Fahrstreifen je Richtung ohne Trennung in der Mitte.
+      Im Ziel hat jede Richtung einen Fahrstreifen und eine Busspur. Auf beiden Seiten gibt es einen eigenen Radweg.
+      Das passt in die Straße: 30,0 m nötig, 31,1 m vorhanden.
+  - id: profile-GOW30
+    title: Steckbrief Hauptstraße mit Tempo 30 (Kieler Straße)
+    ref: "profile:GOW30:Soll-Kategorie|Begründung|Ist-Zustand|Querschnitt|Soll-Querschnitt|Hinweise"
+    after: |
+      Hauptstraße mit Tempo 30. Heute 50 km/h, Ziel 30 km/h.
+      Warum? Die Straße verbindet Stadtteile. In vielen Häusern sind Läden: in 62 von 100 Gebäuden. Darum soll Tempo 30 gelten.
+      Was ändert sich? Autos fahren 30 statt 50. Den eigenen Radweg auf beiden Seiten gibt es weiter.
+      Das passt in die Straße: 24,8 m nötig, 29,3 m vorhanden.
+      Hinweis: Hier fahren 41 000 Autos am Tag. Das ist mehr, als ein Fahrstreifen je Richtung schafft. Der Autoverkehr müsste weniger werden.
+  - id: profile-ETW30
+    title: Steckbrief Wohnstraße mit Tempo 30 (Schippelsweg)
+    ref: "profile:ETW30:Soll-Kategorie|Begründung|Ist-Zustand|Querschnitt|Soll-Querschnitt|Hinweise"
+    after: |
+      Wohnstraße mit Tempo 30. Tempo 30, wie heute.
+      Warum? Die Straße führt vor allem zu den Häusern im Viertel. Für Wege quer durch die Stadt ist sie nicht wichtig.
+      Was ändert sich? Räder fahren wie heute auf der Fahrbahn. Für Gehwege von 3 m Breite fallen Parkplätze weg.
+      Dann passt es: 10,8 m nötig, 12,0 m vorhanden.
+      Hinweis: Wahrscheinlich fahren hier Autos durch. Eine Sperre für den Durchgangsverkehr könnte helfen. Das ist noch zu prüfen.
+  - id: profile-ETW_ERF
+    title: Steckbrief Fußgängerzone oder Spielstraße (Alte Elbgaustraße)
+    ref: "profile:ETW_ERF:Soll-Kategorie|Begründung|Ist-Zustand|Querschnitt|Soll-Querschnitt"
+    after: |
+      Fußgängerzone oder Spielstraße. Schritttempo.
+      Warum? Die Straße ist heute schon eine Fußgängerzone. Hier haben Menschen zu Fuß Vorrang.
+      Was ändert sich? Für die Aufgabe ist kein Umbau nötig. Platz ist genug: 7,3 m nötig, 18,0 m vorhanden.
+
+  - id: junction
+    title: Steckbrief Kreuzung (Altonaer Straße / Max-Brauer-Allee / Schulterblatt)
+    ref: "junction:Soll-Knotentyp|Heute|Radverkehrsführung"
+    after: |
+      Durchgehender Gehweg. Heute: Ampel. Ein Umbau ist nötig.
+      Was ist hier? Max-Brauer-Allee und Altonaer Straße sind Hauptstraßen mit Tempo 30. Das Schulterblatt ist eine Wohnstraße und mündet hier ein.
+      Heute regelt eine Ampel die Kreuzung.
+      Was ändert sich? Im Ziel läuft der Gehweg über die Einmündung durch. Autos fahren langsam darüber und lassen Fußgänger vor.
+      Für Radfahrende gibt es eine Insel in der Mitte der Hauptstraße. Dort können sie beim Queren warten.
+
+  - id: method-summary
+    title: Methode – Zusammenfassung (neu; vorher Einleitung und „Grenzen“)
+    ref: "page:methode:So funktioniert der Entwurf|Grenzen"
+    after: |
+      Was ist das? Ein Vorschlag, welche Aufgabe jede Straße in Hamburg hat. Er zeigt auch, was sich dafür ändern müsste.
+      Ein Programm macht den Vorschlag nach festen Regeln. Fachleute prüfen ihn.
+      Was zeigt es? Für jede Straße die Aufgabe und das Tempo im Ziel. Wo die Straße heute nicht dazu passt. Ob das Ziel in die Straße passt.
+      Dazu kommen ein Radnetz und die Art jeder Kreuzung.
+      Was zeigt es nicht? Es ist keine Planung der Stadt. Niemand hat vor Ort gemessen.
+      Viele Angaben stammen aus OpenStreetMap. Dort fehlen manche Angaben.
+      Die Zahl der Autos kennen wir nur für Hauptstraßen, Stand 2019.
+      Viele Grenzwerte sind Annahmen. Wir kennzeichnen sie und prüfen sie.
+  - id: method-category
+    title: Methode – Kapitel „Wie die Aufgabe entsteht“
+    ref: "page:methode:Wie die Kategorie entsteht"
+    after: |
+      Das Programm prüft jede Straße in fünf Schritten. Die erste Antwort mit Ja entscheidet.
+      1. Ist die Straße eine Autobahn? Dann ist sie eine Schnellstraße.
+      2. Ist sie heute eine Fußgängerzone oder Spielstraße? Dann bleibt sie das.
+      3. Verbindet sie Stadtteile? Das gilt, wenn sie auf der Liste der Hauptverkehrsstraßen steht. Es gilt auch, wenn ihr Verbindungswert hoch ist. Dann ist sie eine Hauptstraße.
+      4. Liegt an dieser Hauptstraße eine Schule oder Kita? Gibt es viele Läden? Fehlt Platz für einen eigenen Radweg? Dann gilt Tempo 30. Sonst gilt Tempo 50.
+      5. Alle anderen Straßen sind Wohnstraßen mit Tempo 30.
+      Danach gleicht das Programm kurze Stücke an. Ein Stück unter 200 m bekommt die Aufgabe der Straße davor und dahinter.
+      Treffen Tempo 50 und Tempo 30 aufeinander, gilt Tempo 30. So wechselt die Aufgabe nicht alle paar Meter.
+      Fußwege, Wege in Parks und Parkplätze bekommen keine Aufgabe.
+  - id: method-certainty
+    title: Methode – Kapitel „Wie sicher ist das?“
+    ref: "page:methode:Wie sicher ist die Einstufung?"
+    after: |
+      Zwei Dinge können ein Ergebnis unsicher machen.
+      Erstens die Daten. Manchmal fehlt ein wichtiger Wert. Oder er stammt aus einer Ersatzquelle. Oder er liegt knapp an einem Grenzwert.
+      Zweitens die Annahmen. Viele Grenzwerte hat das Projekt selbst gesetzt.
+      Darum rechnen wir den Entwurf 500-mal. Jedes Mal ändern wir die Grenzwerte zufällig um bis zu 20 Prozent.
+      Wechselt die Aufgabe einer Straße in mindestens 30 von 100 Läufen, gilt sie als unsicher.
+      Beides zusammen betrifft 7 von 100 Kilometern. Bei diesen Straßen steht im Steckbrief ein Hinweis. Fachleute sollten sie prüfen.
+      Manche Lücken gelten für alle Straßen gleich. Zum Beispiel stammen die Hauptverkehrsstraßen aus einer Karte von 2019.
+      Diese Lücken nennen wir einmal hier. Sie machen kein einzelnes Ergebnis unsicher.

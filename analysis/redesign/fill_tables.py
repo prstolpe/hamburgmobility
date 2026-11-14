@@ -225,6 +225,36 @@ def t_rules_never():
     return "\n".join(f"- **{k}**: {v}" for k, v in groups.items())
 
 
+def t_language_scores():
+    d = json.loads((DATA / "language_scores.json").read_text(encoding="utf-8"))
+    rows = []
+    for x in d["samples"] + [{"title": "**alle Beispiele zusammen**", "m_before": d["total_before"], "m_after": d["total_after"],
+                              "terms_before": {}, "terms_after": {}, "total": True}]:
+        b, a = x["m_before"], x["m_after"]
+        tb = "–" if x.get("total") else len([k for k in x["terms_before"] if k not in ("Abschnitt",)])
+        ta = "–" if x.get("total") else len([k for k in x["terms_after"] if k not in ("Abschnitt",)])
+        rows.append([x["title"], b.get("words"), a.get("words"), b.get("wstf"), a.get("wstf"), b.get("fre_amstad"), a.get("fre_amstad"),
+                     b.get("mean_sentence_words"), a.get("mean_sentence_words"), tb, ta])
+    return table(["Beispiel", "Wörter vorher", "nachher", "WSTF vorher", "nachher", "FRE vorher", "nachher",
+                  "Ø Satzlänge vorher", "nachher", "Fachbegriffe/Kürzel (Liste A1.3) vorher", "nachher"], rows)
+
+
+def t_language_samples():
+    d = json.loads((DATA / "language_scores.json").read_text(encoding="utf-8"))
+    out = []
+    for x in d["samples"]:
+        out.append(f"#### {x['title']}\n")
+        out.append("<table><tr><th>vorher (heutige Seite)</th><th>nachher (Vorschlag)</th></tr><tr><td>\n")
+        out.append(x["before"].replace("\n", "<br>") + "\n")
+        out.append("</td><td>\n")
+        out.append(x["after"].replace("\n", "<br>") + "\n")
+        out.append("</td></tr></table>\n")
+        tb = [k.replace("Regel-ID ", "").replace("Kürzel ", "") for k in x["terms_before"] if k != "Abschnitt"]
+        ta = [k.replace("Regel-ID ", "").replace("Kürzel ", "") for k in x["terms_after"] if k != "Abschnitt"]
+        out.append(f"Fachbegriffe und Kürzel vorher: {', '.join(tb) or '–'}. Nachher: {', '.join(ta) or '–'}.\n")
+    return "\n".join(out).rstrip()
+
+
 TABLES = {n.removeprefix("t_"): f for n, f in globals().items() if n.startswith("t_") and callable(f)}
 
 

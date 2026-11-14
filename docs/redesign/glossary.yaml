@@ -1,0 +1,103 @@
+# Glossar Redesign 2026-11 (Prompt 24, A4): Fachbegriff -> Name in Einfacher Sprache (B1) und ein Satz Erklärung.
+# level: 1/2 = Klartext ersetzt den Fachbegriff auf diesen Ebenen; 3 = Fachbegriff bleibt auf Ebene 3 sichtbar,
+# mit diesem Eintrag als Erklärung (Tooltip oder Glossar-Link). Begriffe in plain sind verbindlich: überall gleich.
+# found = Fundstellen laut data/scenarios/redesign/readability_terms.csv (Anzahl in Webseite, Klartexten, Regeldateien).
+meta:
+  version: 0.1.0
+  date: 2026-11-14
+  status: Vorschlag (Entscheidung E4 in docs/redesign/decisions.md)
+
+categories:
+  SW:      {plain: "Schnellstraße", explain: "Autobahn oder Kraftfahrstraße: nur für Autos, ohne Häuser direkt an der Straße.", level: 3}
+  GOW50:   {plain: "Hauptstraße mit Tempo 50", explain: "Verbindet Stadtteile. Autos fahren 50 km/h, Radfahrende haben einen eigenen, baulich getrennten Radweg.", level: 3}
+  GOW30:   {plain: "Hauptstraße mit Tempo 30", explain: "Verbindet Stadtteile, hat aber viel Leben am Rand, zum Beispiel eine Schule. Darum gilt Tempo 30.", level: 3}
+  ETW30:   {plain: "Wohnstraße mit Tempo 30", explain: "Führt zu den Häusern im Viertel. Durchgangsverkehr gehört nicht hierher. Rad und Auto teilen sich die Fahrbahn.", level: 3}
+  ETW_ERF: {plain: "Fußgängerzone oder Spielstraße", explain: "Hier haben Menschen zu Fuß Vorrang. Autos fahren höchstens Schritttempo.", level: 3}
+  GOW80:   {plain: "Landstraße mit Tempo 80", explain: "Verbindet Orte außerhalb der Stadt. Im Entwurf derzeit nicht bewertet.", level: 3}
+  ETW60:   {plain: "Zufahrtsstraße auf dem Land mit Tempo 60", explain: "Führt außerhalb der Stadt zu Höfen und Orten. Im Entwurf derzeit nicht bewertet.", level: 3}
+
+terms:
+  Soll:               {plain: "Ziel", explain: "So sollte die Straße nach dem Entwurf sein.", level: 1, found: 154}
+  Ist:                {plain: "heute", explain: "So ist die Straße heute, nach den verfügbaren Daten.", level: 1, found: 87}
+  Soll-Kategorie:     {plain: "Aufgabe der Straße", explain: "Was die Straße im Netz leisten soll: verbinden, erschließen oder Aufenthalt.", level: 1, found: 14}
+  Kategorie:          {plain: "Aufgabe der Straße", explain: "Eine von fünf Arten von Straßen, je nach Aufgabe im Netz.", level: 2}
+  Diskrepanz:         {plain: "Abweichung zwischen heute und Ziel", explain: "Die Straße passt heute nicht zu ihrer Aufgabe, zum Beispiel weil das Tempo zu hoch ist.", level: 1, found: 12}
+  D1:                 {plain: "gebaut wie eine Hauptstraße", explain: "Die Straße soll nur das Viertel erschließen, ist aber für schnellen Durchgangsverkehr gestaltet.", level: 3, found: 104}
+  D2:                 {plain: "Hauptstraße ohne passende Gestaltung", explain: "Die Straße soll verbinden, ihr fehlt aber die sichere Gestaltung dafür, zum Beispiel ein Radweg bei Tempo 50.", level: 3}
+  D3:                 {plain: "Mischform", explain: "Die Straße hat Merkmale von beidem: teils zu schnell gestaltet, teils zu sparsam.", level: 3}
+  Priorität:          {plain: "Dringlichkeit", explain: "Wie dringend eine Änderung ist: Abweichung mal Risiko (Unfälle, Schulen, Radverkehr).", level: 1, found: 13}
+  Handlungsbedarf:    {plain: "Handlungsbedarf", explain: "Hier müsste sich etwas ändern, damit die Straße zu ihrer Aufgabe passt.", level: 1}
+  Querschnitt:        {plain: "Aufteilung der Straße", explain: "Wie die Breite der Straße auf Gehweg, Radweg, Fahrbahn, Bäume und Parken verteilt ist.", level: 2, found: 18}
+  Soll-Querschnitt:   {plain: "Aufteilung im Ziel", explain: "Gehweg, Radweg, Fahrbahn, Bäume und Parken, wie der Entwurf sie vorsieht.", level: 1}
+  Straßenraumbreite:  {plain: "Breite der Straße", explain: "Abstand von Grundstücksgrenze zu Grundstücksgrenze, an der engsten Stelle.", level: 1, found: 14}
+  Machbarkeit:        {plain: "Passt das Ziel in die Straße?", explain: "Ob alle Teile des Ziels nebeneinander Platz haben.", level: 1}
+  Engstelle:          {plain: "engste Stelle", explain: "Der Teil der Straße, an dem sie am schmalsten ist.", level: 1}
+  Verkehrsfläche:     {plain: "Straßenfläche", explain: "Die Fläche zwischen den Grundstücken, die dem Verkehr gehört (aus dem Kataster).", level: 2, found: 12}
+  Abschnitt:          {plain: "Straßenstück", explain: "Ein Stück Straße zwischen zwei Kreuzungen.", level: 1, found: 50}
+  Straßenzug:         {plain: "ganze Straße", explain: "Alle Stücke einer Straße hintereinander.", level: 1}
+  Steckbrief:         {plain: "Steckbrief", explain: "Die Seite mit allen Angaben zu einem Straßenstück oder einer Kreuzung.", level: 1}
+  Kfz:                {plain: "Autoverkehr", explain: "Autos, Lastwagen, Busse und Motorräder.", level: 1, found: 80}
+  DTV:                {plain: "Autos pro Tag", explain: "Wie viele Kraftfahrzeuge an einem durchschnittlichen Tag durchfahren (Zählung 2019).", level: 1, found: 26}
+  Spitzenstunde:      {plain: "stärkste Stunde", explain: "Die Stunde des Tages mit dem meisten Verkehr.", level: 2}
+  LSA:                {plain: "Ampel", explain: "Lichtsignalanlage.", level: 1, found: 9}
+  HVS:                {plain: "Hauptverkehrsstraße", explain: "Straße auf der amtlichen Liste der wichtigsten Straßen Hamburgs.", level: 2, found: 9}
+  BVM:                {plain: "Verkehrsbehörde", explain: "Behörde für Verkehr und Mobilitätswende der Stadt Hamburg.", level: 2}
+  Verbindungswert:    {plain: "Verbindungswert", explain: "Zahl von 0 bis 1: wie wichtig die Straße für Wege quer durch die Stadt ist.", level: 2, found: 9}
+  conn_score:         {plain: "Verbindungswert", explain: "siehe Verbindungswert", level: 3}
+  place_score:        {plain: "Aufenthaltswert", explain: "Zahl von 0 bis 1: wie viel Leben am Straßenrand ist (Läden, Schulen, Wohnungen).", level: 3}
+  Schwelle:           {plain: "Grenzwert", explain: "Ab diesem Wert gilt eine Regel.", level: 1, found: 18}
+  Annahme:            {plain: "Annahme", explain: "Ein Wert, den das Projekt gesetzt hat, weil es keine Quelle gibt. Er wird geprüft.", level: 1, found: 18}
+  confidence:         {plain: "Datenlage", explain: "Wie vollständig und genau die Daten für dieses Straßenstück sind.", level: 2, found: 12}
+  Datenunsicherheit:  {plain: "Wie sicher ist das?", explain: "Ob wichtige Werte fehlen, ersetzt sind oder nahe an einem Grenzwert liegen.", level: 1, found: 12}
+  Robustheit:         {plain: "hängt an Annahmen", explain: "Ob sich das Ergebnis ändert, wenn man die Annahmen etwas anders setzt.", level: 2}
+  Fallback:           {plain: "Ersatzwert", explain: "Ein Wert aus einer zweiten Quelle, weil die erste fehlt.", level: 2, found: 10}
+  Kaskade:            {plain: "Prüfschritte", explain: "Die Regeln, die der Reihe nach geprüft werden. Die erste, die zutrifft, entscheidet.", level: 2, found: 10}
+  Harmonisierung:     {plain: "Angleichen kurzer Stücke", explain: "Kurze Stücke bekommen die Aufgabe der Straße davor und dahinter.", level: 2}
+  Netzprüfung:        {plain: "Prüfung des ganzen Netzes", explain: "Ob die Aufgaben der Straßen zusammenpassen, etwa ob Hauptstraßen irgendwo hinführen.", level: 2}
+  Schleichverkehr:    {plain: "Schleichverkehr", explain: "Autos, die durch Wohnstraßen abkürzen.", level: 1}
+  Torsituation:       {plain: "Eingang ins Wohngebiet", explain: "Eine Stelle, die deutlich zeigt: Ab hier gilt langsam fahren.", level: 2}
+  Duurzaam Veilig:    {plain: "nachhaltig sicher", explain: "Niederländisches Konzept: Jede Straße hat eine klare Aufgabe, und ihre Gestaltung passt dazu.", level: 2}
+  SWOV:               {plain: "niederländisches Institut für Verkehrssicherheit", explain: "Forschungsinstitut, das Duurzaam Veilig entwickelt hat.", level: 3}
+  CROW:               {plain: "niederländisches Regelwerk für Straßen", explain: "Fachorganisation, die Richtlinien für Straßen und Radwege herausgibt.", level: 3}
+  RASt:               {plain: "deutsche Richtlinie für Stadtstraßen", explain: "Richtlinien für die Anlage von Stadtstraßen (FGSV 2006).", level: 3}
+  ERA:                {plain: "deutsche Richtlinie für Radwege", explain: "Empfehlungen für Radverkehrsanlagen (FGSV 2010).", level: 3}
+  HBS:                {plain: "deutsches Handbuch für Verkehrsfluss", explain: "Handbuch für die Bemessung von Straßenverkehrsanlagen (FGSV 2015).", level: 3}
+
+cycling:
+  Radnetz:            {plain: "Radnetz", explain: "Die zusammenhängenden Routen für den Radverkehr.", level: 1}
+  RSV:                {plain: "Radschnellweg", explain: "Breite, schnelle Route für lange Strecken, mit Vorrang an Kreuzungen.", level: 3, found: 31}
+  HAUPT:              {plain: "Radroute", explain: "Wichtige Route zwischen Stadtteilen.", level: 3, found: 26}
+  BASIS:              {plain: "Bezirksroute", explain: "Route im Bezirk, zu Schulen, Läden und Haltestellen.", level: 3, found: 17}
+  ERSCHL:             {plain: "übrige Wege", explain: "Alle anderen Straßen und Wege, auf denen man Rad fahren darf.", level: 3}
+  Radvorrangroute:    {plain: "Radschnellweg", explain: "siehe RSV", level: 2}
+  Führungsform:       {plain: "Art des Radwegs", explain: "Wie das Rad geführt wird: eigener Radweg, Radstreifen, Fahrradstraße oder mit den Autos auf der Fahrbahn.", level: 1}
+  Mischverkehr:       {plain: "Rad auf der Fahrbahn", explain: "Rad und Auto teilen sich die Fahrbahn, ohne eigenen Streifen.", level: 1, found: 19}
+  Radfahrstreifen:    {plain: "Radstreifen", explain: "Streifen für Räder auf der Fahrbahn, mit durchgezogener Linie.", level: 1, found: 19}
+  Schutzstreifen:     {plain: "gestrichelter Radstreifen", explain: "Streifen für Räder auf der Fahrbahn, mit gestrichelter Linie. Autos dürfen ihn kurz mitbenutzen.", level: 1}
+  baulicher Radweg:   {plain: "eigener Radweg", explain: "Radweg neben der Fahrbahn, durch einen Bordstein oder Streifen getrennt.", level: 1}
+  Fahrradstraße:      {plain: "Fahrradstraße", explain: "Straße, auf der das Rad Vorrang hat. Autos dürfen nur, wenn ein Schild es erlaubt.", level: 1, found: 19}
+  Trennungsmatrix:    {plain: "Tabelle: welcher Radweg zu welcher Straße", explain: "Je nach Tempo und Autoverkehr braucht das Rad eine andere Art von Radweg.", level: 2}
+  Masche:             {plain: "Lücke im Radnetz", explain: "Ein Gebiet, in dem die nächste Route zu weit weg ist.", level: 2}
+  Zweirichtungsradweg: {plain: "Radweg für beide Richtungen", explain: "Ein Radweg auf einer Straßenseite, auf dem man in beide Richtungen fährt.", level: 1}
+
+junctions:
+  Knotenpunkt:        {plain: "Kreuzung", explain: "Ort, an dem Straßen oder Wege zusammentreffen.", level: 1}
+  Knotentyp:          {plain: "Art der Kreuzung", explain: "Wie die Kreuzung geregelt ist: Ampel, Kreisverkehr, Vorfahrt oder rechts vor links.", level: 1}
+  Arm:                {plain: "Straße an der Kreuzung", explain: "Eine der Straßen, die auf die Kreuzung treffen.", level: 2}
+  Gehwegüberfahrt:    {plain: "durchgehender Gehweg", explain: "Der Gehweg läuft über die Einmündung. Autos fahren langsam darüber und lassen Fußgänger vor.", level: 1}
+  Furt:               {plain: "Radüberweg an der Kreuzung", explain: "Markierter Weg für Räder über die Kreuzung.", level: 2}
+  planfrei:           {plain: "mit Brücke oder Tunnel", explain: "Rad und Auto kreuzen sich nicht auf einer Ebene.", level: 1}
+  Turbokreisel:       {plain: "Kreisverkehr mit zwei Spuren", explain: "Großer Kreisverkehr mit festen Spuren und Trennlinien.", level: 1}
+  Aufstellfläche:     {plain: "Wartefläche für Räder", explain: "Fläche vor den Autos, auf der Radfahrende an der Ampel warten.", level: 2}
+  Mittelinsel:        {plain: "Insel in der Straßenmitte", explain: "Hier kann man beim Queren halb warten.", level: 1}
+
+data:
+  OSM:                {plain: "OpenStreetMap", explain: "Freie Weltkarte, die Freiwillige pflegen.", level: 2, found: 52}
+  ALKIS:              {plain: "Liegenschaftskataster", explain: "Amtliche Karte der Grundstücke und Gebäude.", level: 3, found: 17}
+  GTFS:               {plain: "Fahrplandaten", explain: "Fahrplan des HVV in einem Standardformat.", level: 3, found: 13}
+  WFS:                {plain: "Kartendienst", explain: "Schnittstelle, über die Behörden Geodaten bereitstellen.", level: 3}
+  Unfallatlas:        {plain: "Unfallatlas", explain: "Unfälle mit Verletzten, die die Polizei aufgenommen hat (Statistische Ämter).", level: 2, found: 11}
+  dl-de:              {plain: "Datenlizenz Deutschland", explain: "Lizenz, unter der Behörden Daten freigeben; Quelle muss genannt werden.", level: 3, found: 59}
+  ODbL:               {plain: "OpenStreetMap-Lizenz", explain: "Offene Datenbank-Lizenz: abgeleitete Daten müssen wieder offen sein.", level: 3, found: 31}
+  segment_id:         {plain: "Kennung des Straßenstücks", explain: "Feste Nummer, unter der das Stück immer zu finden ist.", level: 3}
+  Regel-ID:           {plain: "Kennung der Regel", explain: "Kurzzeichen wie C-G30-01, unter dem die Regel in der Regelreferenz steht.", level: 3}
