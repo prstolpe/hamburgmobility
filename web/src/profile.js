@@ -54,7 +54,7 @@ function changes(p) {
   if (tk && ist && ist > tk) out.push(`Tempo ${ist} → ${code === "ETW_ERF" ? WALK : `${tk} km/h`}`);
   const f = p.cycling?.facility;
   if (f?.soll_text && f.gap && !["none", "not_assessed"].includes(f.gap)) {
-    out.push(`Radverkehr: heute ${f.ist_text ? f.ist_text.toLowerCase() : "keine Radanlage"} → ${f.soll_text}`);
+    out.push(`Radverkehr: heute ${f.ist_text ?? "kein Radweg"} → ${f.soll_text}`);
   }
   const l = p.cycling?.lanes;
   if (l?.change === "fewer") out.push(`Kfz-Fahrstreifen je Richtung: ${l.ist} → ${l.soll}`);

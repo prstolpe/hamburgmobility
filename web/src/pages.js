@@ -18,6 +18,7 @@ export function methodHtml(meta, changelog) {
   <p><strong>Wichtig:</strong> Das ist ein Vorschlag zur Diskussion. Die Stadt Hamburg hat ihn nicht beschlossen.
   Ein Computerprogramm macht den ersten Vorschlag. Menschen prüfen ihn und korrigieren ihn, wenn nötig.</p>
 
+  <p>Wie das Radnetz, die Radwege und die Kreuzungen entstehen: <a href="#radnetz">Radnetz und Kreuzungen</a>.</p>
   <h2>Die fünf Kategorien</h2>
   <ul class="cat-list">${cats.map(([k, c]) => `<li><strong>${esc(c.label)}</strong> (${esc(k)}): ${esc(c.text.split(" – ")[1] ?? c.text)}</li>`).join("")}</ul>
 

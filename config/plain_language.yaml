@@ -118,6 +118,13 @@ speed_source:
   official: "amtlich (Zulässige Höchstgeschwindigkeiten)"
   osm: "OpenStreetMap"
 
+# Rahmen der Webseite (Redesign 2026-11, Paket 2): Kasten „Was ist das?“ beim ersten Besuch der Karte
+site:
+  intro_title: "Was ist das?"
+  intro: "Dieser Entwurf schlägt für jede Straße in Hamburg eine Aufgabe vor: verbinden, erschließen oder Aufenthalt. Daraus folgt, wie schnell Autos fahren sollen und wie die Straße aussehen sollte. Das ist ein Vorschlag zur Diskussion, keine Planung der Stadt."
+  intro_hint: "Suchen Sie oben Ihre Straße oder tippen Sie eine Linie auf der Karte an."
+  intro_more: "Wie der Entwurf entsteht"
+
 # Sätze der Bezirksseite (web, Redesign 2026-11 Paket 2). Platzhalter {name} usw. füllt die Webseite aus districts/<bezirk>.json.
 overview:
   intro: "Auf {km_need} von {km_total} km Straße passt der heutige Zustand nicht zur Aufgabe der Straße. {junctions_rebuild} Kreuzungen müssten umgebaut werden."

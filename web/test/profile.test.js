@@ -87,7 +87,7 @@ describe("segmentHtml", () => {
   it("changes use cycling.facility.ist_text, never ist.cycling", () => {
     const h = segmentHtml(seg(), meta, "u");
     const { l2 } = split(h);
-    expect(l2).toContain("Radverkehr: heute radfahrstreifen → Radweg auf beiden Seiten");
+    expect(l2).toContain("Radverkehr: heute Radfahrstreifen → Radweg auf beiden Seiten");
     expect(l2).toContain("Tempo 50 → 30 km/h");
     expect(l2).toContain("Kfz-Fahrstreifen je Richtung: 2 → 1");
     expect(h).not.toContain("keine Radverkehrsanlage");

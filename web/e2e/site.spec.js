@@ -7,25 +7,32 @@ const search = JSON.parse(readFileSync(new URL("../../data/out/search.json", imp
 const SEG = search.find((s) => s.name === "Hallerstraße")?.ids[0] ?? search[0].ids[0];
 const meta = JSON.parse(readFileSync(new URL("../../data/out/meta.json", import.meta.url)));
 const JCT = meta.cycling ? readdirSync(new URL("../../data/out/junctions/", import.meta.url)).sort()[0].replace(".json", "") : null;
-const CYCLING_LAYERS = { cnet: "Radnetz (Soll)", cfac: "Radanlagen (Soll)", cgap: "Radanlagen Soll/Ist", lanes: "Fahrstreifen Soll/Ist",
-  cfit: "Querschnitt passt?", jct: "Knotenpunkte", coff: "Radnetz Hamburg (amtlich)" };
+const RAD_VIEWS = ["ziel", "radweg", "luecken"];
 const PAGES = {
   "Karte": "#karte",
   "Karte mit Steckbrief": `#karte?seg=${SEG}`,
-  "Tabelle (Bezirk wählen)": "#tabelle",
-  "Tabelle": "#tabelle?bz=Eimsb%C3%BCttel",
+  "Bezirke": "#bezirke",
+  "Bezirk Eimsbüttel": "#bezirke?bz=Eimsb%C3%BCttel",
+  "Bezirk mit Tabelle": "#bezirke?bz=Eimsb%C3%BCttel&tabelle=1",
   "Methode": "#methode",
   "Radnetz": "#radnetz",
-  "Karte Radanlagen Soll/Ist": "#karte?layer=cgap",
-  "Karte Knotenpunkte mit Steckbrief": `#karte?layer=jct&jct=${JCT}&map=15/53.56/9.99`,
-  "Downloads": "#downloads",
-  "Quellen und Lizenzen": "#quellen",
+  "Karte Radnetz Lücken": "#karte?theme=rad&view=luecken",
+  "Karte Kreuzungen mit Steckbrief": `#karte?theme=knoten&jct=${JCT}&map=15/53.56/9.99`,
+  "Daten": "#daten",
   "Impressum": "#impressum",
 };
 const results = [];
 
+/** On mobile the level-2 details are closed: open the one holding "Warum?". */
+async function openWhy(page) {
+  const d = page.locator("#panel details.l2", { has: page.locator("#h-why") });
+  await d.waitFor();
+  if (!(await d.evaluate((e) => e.open))) await d.locator("summary").first().click();
+}
+
 async function ready(page, hash) {
   const errors = [];
+  await page.addInitScript(() => { try { localStorage.setItem("sfp-intro-seen", "1"); } catch {} });
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
   await page.goto(`/${hash}`);
@@ -47,6 +54,7 @@ test("profile opens from the URL and shows reasons and feedback note", async ({ 
   await ready(page, `#karte?seg=${SEG}`);
   const panel = page.locator("#panel");
   await expect(panel).toBeVisible();
+  await openWhy(page);
   await expect(panel.locator("#h-why")).toBeVisible();
   await expect(panel.locator("#panel-title")).not.toHaveText("");
   await page.screenshot({ path: `test-results/steckbrief-${test.info().project.name}.png` });
@@ -55,28 +63,47 @@ test("profile opens from the URL and shows reasons and feedback note", async ({ 
   await expect(page).not.toHaveURL(/seg=/);
 });
 
-test("layer switch and filter are reflected in the URL", async ({ page }) => {
+test("theme and view switch are reflected in the URL", async ({ page }) => {
   await ready(page, "#karte");
-  await page.getByLabel("Diskrepanz", { exact: true }).check();
-  await expect(page).toHaveURL(/layer=disc/);
-  await page.getByText("Filter", { exact: true }).click();
-  await page.getByLabel("Stadtstraße 30 (GOW30)").check();
-  await expect(page).toHaveURL(/cat=GOW30/);
+  await page.locator('#themes button[data-theme="abweichung"]').click();
+  await expect(page).toHaveURL(/theme=abweichung/);
+  await page.locator('button[data-view="prio"]').click();
+  await expect(page).toHaveURL(/view=prio/);
 });
 
-test("table is sortable and opens a profile", async ({ page }) => {
-  await ready(page, "#tabelle?bz=Eimsb%C3%BCttel");
-  await expect(page.locator("#table-root tbody tr")).toHaveCount(100);
-  await page.getByRole("button", { name: "Straße", exact: true }).click();
-  await expect(page.locator("th[aria-sort='descending'] button")).toHaveText("Straße");
-  await page.locator("#table-root tbody button[data-open]").first().click();
-  await expect(page.locator("#panel")).toBeVisible();
+test("old layer link is rewritten", async ({ page }) => {
+  await ready(page, "#karte?layer=cgap");
+  await expect(page).toHaveURL(/theme=rad/);
+  await expect(page).toHaveURL(/view=luecken/);
+  await expect(page).not.toHaveURL(/layer=/);
 });
 
-test("search suggests streets and jumps to the map", async ({ page }) => {
+test("district page lists 7 districts and opens Eimsbüttel", async ({ page }) => {
+  await ready(page, "#bezirke");
+  await expect(page.locator("#bezirke-root button[data-bz]")).toHaveCount(7);
+  await page.locator('#bezirke-root button[data-bz="Eimsbüttel"]').click();
+  await expect(page).toHaveURL(/bz=Eimsb/);
+  await expect(page.locator("#bezirke-root h1")).toContainText("Eimsbüttel");
+});
+
+test("district table on level 3 sorts by a column and opens a profile", async ({ page }) => {
+  await ready(page, "#bezirke?bz=Eimsb%C3%BCttel");
+  await page.locator("button[data-show-table]").click();
+  await expect(page).toHaveURL(/tabelle=1/);
+  const th = page.locator('th:has(button[data-sort="len"])');
+  await th.locator("button").click();
+  await expect(th).toHaveAttribute("aria-sort", "descending");
+  await th.locator("button").press("Enter");
+  await expect(th).toHaveAttribute("aria-sort", "ascending");
+  await page.locator("table tbody button[data-open]").first().click();
+  await expect(page.locator("#panel-title")).not.toHaveText("");
+});
+
+test("search suggests streets and junctions and jumps to the map", async ({ page }) => {
   await ready(page, "#methode");
-  await page.locator("#search").fill("Hallerstr");
-  await expect(page.locator("#search-list li").first()).toContainText("Hallerstraße");
+  await page.locator("#search").fill("Schulterblatt");
+  await expect(page.locator("#search-list li").first()).toContainText("Schulterblatt");
+  await expect(page.locator("#search-list li", { hasText: "Kreuzung" }).first()).toBeVisible();
   await page.locator("#search").press("Enter");
   await expect(page).toHaveURL(/#karte/);
 });
@@ -85,9 +112,11 @@ test("cycling layers switch without errors and show the draft note", async ({ pa
   test.skip(!meta.cycling, "no cycling layers in this export");
   const errors = await ready(page, "#karte?map=14/53.57/9.97");
   await page.waitForFunction(() => document.querySelector("#map canvas"));
-  for (const [key, label] of Object.entries(CYCLING_LAYERS)) {
-    await page.getByLabel(label, { exact: true }).check();
-    await expect(page).toHaveURL(new RegExp(`layer=${key}`));
+  await page.locator('#themes button[data-theme="rad"]').click();
+  await expect(page).toHaveURL(/theme=rad/);
+  for (const key of RAD_VIEWS.slice(1)) {
+    await page.locator(`button[data-view="${key}"]`).click();
+    await expect(page).toHaveURL(new RegExp(`view=${key}`));
     await expect(page.locator("#legend .note")).toContainText("nicht amtlich");
     await page.waitForTimeout(800);
   }
@@ -99,16 +128,17 @@ test("segment profile shows the cycling section with the cross-section sketch", 
   test.skip(!meta.cycling, "no cycling layers in this export");
   await ready(page, `#karte?seg=${SEG}`);
   const panel = page.locator("#panel");
-  await expect(panel.locator("#h-rad")).toBeVisible();
-  await expect(panel.locator("#h-rad")).toContainText("Radverkehr");
+  await panel.locator("details").evaluateAll((ds) => ds.forEach((d) => { d.open = true; }));
+  await expect(panel.getByRole("heading", { name: "Radverkehr", includeHidden: true })).toHaveCount(1);
 });
 
 test("junction profile opens from the URL", async ({ page }) => {
   test.skip(!meta.cycling, "no cycling layers in this export");
-  await ready(page, `#karte?layer=jct&jct=${JCT}`);
+  await ready(page, `#karte?theme=knoten&jct=${JCT}`);
   const panel = page.locator("#panel");
-  await expect(panel.locator("#h-jsoll")).toBeVisible();
-  await expect(panel).toContainText("nicht amtlich");
+  await panel.locator("details").evaluateAll((ds) => ds.forEach((d) => { d.open = true; }));
+  await expect(panel.getByRole("heading", { name: "Was ändert sich?", includeHidden: true })).toHaveCount(1);
+  await expect(panel).toContainText("Kreuzung");
   await page.screenshot({ path: `test-results/knoten-${test.info().project.name}.png` });
   await page.keyboard.press("Escape");
   await expect(page).not.toHaveURL(/jct=/);
@@ -128,8 +158,8 @@ for (const [name, hash] of Object.entries(PAGES)) {
   test(`axe: ${name}`, async ({ page }) => {
     await ready(page, hash);
     if (hash.includes("seg=") || hash.includes("jct=")) await expect(page.locator("#panel-title")).toBeVisible();
-    if (hash === "#tabelle") await expect(page.locator("#table-root button[data-bz]").first()).toBeVisible();
-    if (hash.startsWith("#tabelle?")) await expect(page.locator("#table-root tbody tr").first()).toBeVisible();
+    if (hash === "#bezirke") await expect(page.locator("#bezirke-root button[data-bz]").first()).toBeVisible();
+    if (hash.includes("tabelle=1")) await expect(page.locator("#table-root tbody tr").first()).toBeVisible();
     if (hash.startsWith("#karte")) await page.waitForTimeout(1500);
     const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     results.push({ project: test.info().project.name, name, violations: r.violations.map((v) => ({

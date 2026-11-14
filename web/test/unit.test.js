@@ -129,8 +129,8 @@ describe("legend", () => {
   it("explains the grey rural Stadtteile when there are any", async () => {
     const { legendHtml } = await import("../src/layers.js");
     const meta = { categories: { SW: { label: "Schnellverkehrsstraße" } }, discrepancy_types: {}, width_classes_m: {}, feasibility: {} };
-    expect(legendHtml("cat", { ...meta, rural_excluded: ["Kirchwerder"] })).toContain("außerorts – nicht bewertet");
-    expect(legendHtml("cat", meta)).not.toContain("außerorts – nicht bewertet");
+    expect(legendHtml("cat", { ...meta, rural_excluded: ["Kirchwerder"] })).toContain("auf dem Land – nicht bewertet");
+    expect(legendHtml("cat", meta)).not.toContain("auf dem Land – nicht bewertet");
   });
 });
 
@@ -140,8 +140,9 @@ describe("legend categories", () => {
     const meta = { categories: { SW: { label: "A" }, GOW80: { label: "B" } }, categories_present: ["SW"],
       discrepancy_types: {}, width_classes_m: {}, feasibility: {} };
     const html = legendHtml("cat", meta);
-    expect(html).toContain("SW – A");
+    expect(html).toContain("<span>A</span>");
     expect(html).not.toContain("GOW80");
+    expect(html).not.toMatch(/\bSW\b/); // plain names only, codes stay on level 3 (redesign E4)
   });
 });
 

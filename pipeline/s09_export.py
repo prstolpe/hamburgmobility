@@ -569,7 +569,8 @@ def main() -> int:
             "n_segments": len(pub), "bbox": [round(float(v), 6) for v in district.total_bounds],
             # plain name from config/glossary.yaml (redesign E4); label_de stays as the technical name (level 3)
             "categories": {c: {"label": glossary["categories"][c]["plain"], "label_de": rules.categories[c].label_de,
-                               "text": texts["categories"][c]} for c in rules.categories},
+                               "speed_kmh": rules.categories[c].speed_kmh, "text": texts["categories"][c]}
+                           for c in rules.categories},
             "discrepancy_types": dict(rules.discrepancy.types),
             "feasibility": texts["feasibility"],
             "global_caveats": ex.global_caveats(rules, texts),
@@ -585,6 +586,7 @@ def main() -> int:
                         for k, v in assets.items()}}
     meta["cycling"] = cycling_meta(cyc) if cyc else None
     meta["glossary"] = {k: v for k, v in glossary.items() if k != "meta"}
+    meta["site_texts"] = texts["site"]
     meta["overview"] = {**write_overview(seg, cyc, names, web["overview"]), "texts": texts["overview"]} if cyc else None
     write_json(OUT_DIR / "meta.json", meta)
     shutil.copy(REPO_ROOT / "docs" / "licenses.md", OUT_DIR / "licenses.md")

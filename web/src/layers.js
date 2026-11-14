@@ -3,7 +3,7 @@
 // and "jct" (tiles/junctions.pmtiles: junctions). map.js adds the cycling sources only when such a layer is shown.
 import {
   CASING, CATEGORY_STYLE, CYCLE_CAT_STYLE, DISC_TYPE_STYLE, FACILITY_STYLE, FEASIBILITY_STYLE, FIT_STYLE, GAP_STYLE,
-  INK, JUNCTION_STYLE, LANES_STYLE, OFFICIAL_STYLE, OVERLAY_COLORS, REFERENCE_COLOR, RURAL_FILL, SHAPES, SPEED_CLASSES, UNKNOWN,
+  INK, JUNCTION_STYLE, NEED, NONE, LANES_STYLE, OFFICIAL_STYLE, OVERLAY_COLORS, REFERENCE_COLOR, RURAL_FILL, SHAPES, SPEED_CLASSES, UNKNOWN,
   WIDTH_STYLE,
 } from "./palette.js";
 import { CYCLING_LAYER_KEYS } from "./state.js";
@@ -48,7 +48,7 @@ function cyclingGroups(layer, meta) {
   const at = (gs) => gs.map((g) => ({ src, srcLayer, ...g }));
   switch (layer) {
     case "cnet":
-      return at(styled(CYCLE_CAT_STYLE, "cc", c.cycle_categories).map((g) => ({ ...g, label: `${g.key.slice(3)} – ${g.label}` })));
+      return at(styled(CYCLE_CAT_STYLE, "cc", c.cycle_categories));
     case "cfac":
       return at(styled(FACILITY_STYLE, "fs", c.facility));
     case "cgap":
@@ -66,7 +66,7 @@ function cyclingGroups(layer, meta) {
       })));
     case "coff":
       return [
-        { key: "ref", label: "Soll-Radnetz RSV/HAUPT (Entwurf, zum Vergleich)", color: REFERENCE_COLOR, width: 2, dash: null,
+        { key: "ref", label: "Radnetz im Ziel: Radschnellwege und Radrouten (Entwurf, zum Vergleich)", color: REFERENCE_COLOR, width: 2, dash: null,
           reference: true, src: "cyc", srcLayer: "cycle_network", filter: ["in", ["get", "cc"], ["literal", ["RSV", "HAUPT"]]] },
         ...at(styled(OFFICIAL_STYLE, "grp", c.official_status)),
       ];
@@ -82,7 +82,7 @@ export function groups(layer, meta) {
     case "cat":
       // only categories that occur in the data (GOW80/ETW60 stay out while rural Stadtteile are not classified)
       return Object.entries(CATEGORY_STYLE).filter(([cat]) => !meta.categories_present || meta.categories_present.includes(cat)).map(([cat, s]) => ({
-        key: cat, label: `${cat} – ${meta.categories[cat]?.label ?? cat}`, filter: ["==", ["get", "cat"], cat], ...s,
+        key: cat, label: meta.categories[cat]?.label ?? cat, filter: ["==", ["get", "cat"], cat], ...s,
       }));
     case "speed": {
       let lower = -Infinity;
@@ -98,10 +98,10 @@ export function groups(layer, meta) {
     case "disc":
       return [
         ...Object.entries(DISC_TYPE_STYLE).map(([t, s]) => ({
-          key: t, label: `${t} – ${meta.discrepancy_types[t]}`, filter: ["==", ["get", "dt"], t], color: s.color, dash: s.dash,
+          key: t, label: meta.glossary?.terms?.[t]?.plain ?? meta.discrepancy_types[t], filter: ["==", ["get", "dt"], t], color: s.color, dash: s.dash,
           width: ["match", ["get", "dm"], 3, 6, 2, 4.5, 3],
         })),
-        { key: "none", label: "keine Diskrepanz", color: UNKNOWN, width: 1.2, dash: null,
+        { key: "none", label: "passt zum Ziel", color: NONE, width: 1.2, dash: null,
           filter: ["all", ["!", known("dt")], known("dm")] },
         { key: "unchecked", label: "nicht prüfbar", color: UNKNOWN, width: 1.2, dash: [1, 1.5], filter: ["!", known("dm")] },
       ];
@@ -126,6 +126,16 @@ export function groups(layer, meta) {
         })),
         { key: "fe_unknown", label: "nicht bewertet", color: UNKNOWN, width: 1.2, dash: [1, 1.5], filter: ["!", known("fe")] },
       ];
+    case "prio": {
+      // display classes from config/project.yaml web.overview.prio_classes (priority 0–3 = deviation x risk)
+      const [lo, hi] = meta.overview?.params?.prio_classes ?? [1, 2];
+      const pr = ["coalesce", ["get", "pr"], 0];
+      return [
+        { key: "p3", label: "dringend", color: NEED, width: 4.5, dash: null, filter: [">=", pr, hi] },
+        { key: "p2", label: "mittel", color: NEED, width: 3, dash: [2, 1.5], filter: ["all", [">=", pr, lo], ["<", pr, hi]] },
+        { key: "p1", label: "gering oder keine", color: NONE, width: 1.5, dash: null, filter: ["<", pr, lo] },
+      ];
+    }
     case "hvs":
       return [
         { key: "hvs1", label: "Hauptverkehrsstraße (BVM, Verkehrsmengenkarte 2019)", color: INK, width: 5, dash: null,
@@ -168,6 +178,13 @@ export function sfpLayers(state, meta) {
       paint: { "line-color": OVERLAY_COLORS.acc, "line-opacity": 0.45,
         "line-width": ["interpolate", ["linear"], ["get", "acc"], 1, 8, 10, 22] } });
   }
+  if (cycling && state.layer === "cgap" && meta.overview?.mesh_gaps) {
+    // network gaps: meshes wider than planned (data/out/cycle_mesh_gaps.geojson), under the lines
+    out.push({ id: "gaps-fill", type: "fill", source: "gaps", filter: state.bz ? ["==", ["get", "bezirk"], state.bz] : ["all"],
+      paint: { "fill-color": NEED, "fill-opacity": 0.14 } });
+    out.push({ id: "gaps-line", type: "line", source: "gaps", filter: state.bz ? ["==", ["get", "bezirk"], state.bz] : ["all"],
+      paint: { "line-color": NEED, "line-width": 1, "line-dasharray": [3, 2] } });
+  }
   if (cycling) {
     const gs = groups(state.layer, meta);
     for (const g of gs.filter((x) => x.reference)) out.push(lineLayer(`ref-${g.key}`, g, cyclingFilter(state, g.srcLayer), { "line-opacity": 0.45 }));
@@ -199,6 +216,12 @@ export function sfpLayers(state, meta) {
     out.push({ id: "ov-fac", type: "circle", source: SRC, "source-layer": "facilities",
       paint: { "circle-color": OVERLAY_COLORS.fac, "circle-radius": 5, "circle-stroke-color": CASING, "circle-stroke-width": 2 } });
   }
+  if (meta.cycling && state.layer !== "jct") {
+    // junctions stay tappable in every theme from zoom 14 (small dots)
+    out.push({ id: "main-jctdot", type: "circle", source: "jct", "source-layer": "junctions", minzoom: 14,
+      filter: cyclingFilter(state, "junctions"),
+      paint: { "circle-radius": 3.5, "circle-color": INK, "circle-stroke-color": CASING, "circle-stroke-width": 1.5 } });
+  }
   const segLayer = cycling && CYCLING_SOURCE[state.layer][1] === "cycle_segments" ? ["cyc", "cycle_segments"] : [SRC, SEG];
   out.push({ id: "selected", type: "line", source: segLayer[0], "source-layer": segLayer[1], filter: ["==", ["get", "id"], state.seg ?? ""],
     paint: { "line-color": "#000000", "line-width": zoomWidth(10), "line-opacity": 0.35 } });
@@ -209,32 +232,26 @@ export function sfpLayers(state, meta) {
   return out;
 }
 
+// One sentence per view, plain language (docs/redesign/04_language.md); titles of the views are in state.js THEMES.
 export const LAYER_INFO = {
-  cat: { title: "Soll-Kategorie", text: "Welche Funktion die Straße nach Duurzaam Veilig haben soll (Vorschlag)." },
-  speed: { title: "Ist-Tempo", text: "Heute zulässige Höchstgeschwindigkeit (amtlich, sonst OpenStreetMap)." },
-  disc: { title: "Diskrepanz", text: "Wo heutiges Tempo, Gestaltung oder Verkehrsmenge nicht zur Soll-Kategorie passen. Breitere Linie = stärkere Diskrepanz." },
-  width: { title: "Straßenraumbreite", text: "Breite von Grundstücksgrenze zu Grundstücksgrenze an Engstellen." },
-  feas: { title: "Machbarkeit", text: "Passt der Soll-Querschnitt der eigenen Kategorie in den Straßenraum?" },
-  hvs: { title: "Hauptverkehrsstraßen (Vergleich)", text: "Hauptverkehrsstraßennetz der BVM zum Vergleich mit der Soll-Kategorie." },
-  cnet: { title: "Radnetz (Soll)", cycling: true,
-    text: "Vorgeschlagenes Radnetz in vier Ebenen: Radvorrangroute, Radroute, Bezirksroute und Quartiersnetz." },
-  cfac: { title: "Radanlagen (Soll)", cycling: true,
-    text: "Welche Radverkehrsanlage der Abschnitt nach dem Entwurf haben soll – nach der Prüfung, ob der Platz reicht." },
-  cgap: { title: "Radanlagen Soll/Ist", cycling: true,
-    text: "Wo die heutige Radanlage (aus OpenStreetMap) fehlt, eine andere ist als im Soll oder zu schmal ist." },
-  lanes: { title: "Fahrstreifen Soll/Ist", cycling: true,
-    text: "Kfz-Fahrstreifen je Richtung im Soll-Querschnitt im Vergleich zu heute." },
-  cfit: { title: "Querschnitt passt?", cycling: true,
-    text: "Passen Gehwege, Radanlage, Fahrbahn, Bäume und Parken des Soll-Querschnitts in den Straßenraum?" },
-  jct: { title: "Knotenpunkte", cycling: true,
-    text: "Vorgeschlagener Knotentyp; Form und Farbe zeigen den Typ, größere Zeichen: Umbau nötig. Sichtbar ab Zoomstufe 12." },
-  coff: { title: "Radnetz Hamburg (amtlich)", cycling: true,
-    text: "Amtliches Radnetz Hamburg zum Vergleich; grau darunter das vorgeschlagene Soll-Radnetz (Radvorrangrouten und Radrouten)." },
+  cat: { title: "Aufgabe der Straße", text: "Welche Aufgabe jede Straße haben soll. Die Farbe zeigt das Tempo im Ziel, die Breite, wie stark die Straße verbindet." },
+  speed: { title: "Tempo heute", text: "Welches Tempo heute gilt (amtlich, sonst OpenStreetMap). Gleiche Farben wie im Ziel: So sieht man, wo sich das Tempo ändert." },
+  disc: { title: "Abweichung", text: "Wo die Straße heute nicht zu ihrer Aufgabe passt, zum Beispiel weil das Tempo zu hoch ist. Breite Linie heißt: große Abweichung." },
+  prio: { title: "Dringlichkeit", text: "Wo eine Abweichung und viele Unfälle, Schulen oder Radverkehr zusammenkommen." },
+  width: { title: "Breite der Straße", text: "Breite von Grundstück zu Grundstück an der engsten Stelle. Breite Linie heißt: breite Straße." },
+  feas: { title: "Regelprofil der Aufgabe", text: "Passt die Regel-Aufteilung der Aufgabe in die Straße? (Ohne Radweg-Details; die Ansicht „Passt das Ziel?“ ist genauer.)" },
+  hvs: { title: "Hauptverkehrsstraßen (Vergleich)", text: "Die amtliche Liste der Hauptverkehrsstraßen zum Vergleich mit der Aufgabe im Entwurf." },
+  cnet: { title: "Radnetz im Ziel", cycling: true, text: "Das vorgeschlagene Radnetz. Eine breite Linie heißt: wichtige Route." },
+  cfac: { title: "Radweg im Ziel", cycling: true, text: "Welche Art Radweg die Straße im Ziel haben soll – nach der Prüfung, ob der Platz reicht." },
+  cgap: { title: "Lücken", cycling: true, text: "Wo auf dem Radnetz ein passender Radweg fehlt, und wo das Netz zu weitmaschig ist." },
+  lanes: { title: "Fahrstreifen", cycling: true, text: "Wo das Ziel weniger Fahrstreifen für Autos hat als heute." },
+  cfit: { title: "Passt das Ziel?", cycling: true, text: "Passen Gehwege, Radweg, Fahrbahn, Bäume und Parken des Ziels in die Straße?" },
+  jct: { title: "Kreuzungen", cycling: true, text: "Welche Art Kreuzung das Ziel ist. Die Form zeigt die Art, Orange heißt: Umbau nötig. Sichtbar ab Zoomstufe 12." },
+  coff: { title: "Amtliches Radnetz", cycling: true, text: "Das amtliche Radnetz Hamburg zum Vergleich; darunter hell das vorgeschlagene Radnetz." },
 };
 
 export const OVERLAY_INFO = {
   bus: "Busverkehr (Fahrten je Werktag, Linienbreite)",
-  cyc: "Radnetz Hamburg",
   fac: "Schulen und Kitas",
   acc: "Unfälle mit Fuß-/Radbeteiligung (Summe je Abschnitt, 5 Jahre)",
 };
@@ -254,8 +271,11 @@ export function legendHtml(layer, meta) {
     const w = typeof g.width === "number" ? Math.max(2, Math.min(g.width, 6)) : 4;
     return `<li><svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${CASING}" stroke-width="${w + 4}" stroke-linecap="round"/><line x1="2" y1="7" x2="34" y2="7" stroke="${g.color}" stroke-width="${w}" ${dash}/></svg><span>${esc(g.label)}</span></li>`;
   });
+  if (layer === "cgap" && meta.overview?.mesh_gaps) {
+    items.unshift(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${NEED}" fill-opacity="0.2" stroke="${NEED}" stroke-dasharray="4 2"/></svg><span>Netz zu weitmaschig (Fläche)</span></li>`);
+  }
   if (meta.rural_excluded?.length) {
-    items.push(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${RURAL_FILL}" fill-opacity="0.35" stroke="${RURAL_FILL}"/></svg><span>außerorts – nicht bewertet (ländliche Stadtteile)</span></li>`);
+    items.push(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${RURAL_FILL}" fill-opacity="0.35" stroke="${RURAL_FILL}"/></svg><span>auf dem Land – nicht bewertet</span></li>`);
   }
   const notes = [];
   if (isCyclingLayer(layer) && meta.cycling) {

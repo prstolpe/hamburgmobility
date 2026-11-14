@@ -82,7 +82,62 @@ main:focus { outline: none; }
 
 /* map page: controls and legend 3 columns, map the rest */
 .map-page { flex: 1; display: grid; grid-template-columns: calc(3 * var(--col) + 2 * var(--gutter) + var(--margin)) 1fr;
-  min-height: calc(100vh - 8rem); }
+  grid-template-rows: auto 1fr; min-height: calc(100vh - 9rem); position: relative; }
+.themes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; padding: var(--s3) var(--margin) var(--s2);
+  border-bottom: 1px solid var(--line); }
+.themes button { background: #fff; color: var(--ink); min-height: 44px; }
+.themes button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.themes .views { display: inline-flex; align-items: center; margin-left: var(--s4); }
+.themes .views-label { margin-right: var(--s2); color: var(--muted); }
+.themes .views button { font-weight: 400; min-height: 36px; padding: var(--s1) var(--s3); }
+.themes .views button + button { border-left: 0; }
+.controls h2.legend-title { font-size: 1rem; line-height: 24px; margin: var(--s2) 0; }
+.controls .bz-label { display: block; font-weight: 700; margin-top: var(--s3); }
+ul.plain { list-style: none; padding: 0; margin: 0; }
+.intro { position: absolute; z-index: 5; right: calc(var(--margin) + 48px); top: calc(76px + var(--s3)); width: min(26rem, calc(100% - 2 * var(--margin)));
+  background: #fff; border: 2px solid var(--ink); padding: var(--s3) var(--s4); }
+.intro h2 { margin-top: 0; }
+.site-foot { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); padding: var(--s3) var(--margin); border-top: 1px solid var(--ink);
+  font-size: .875rem; line-height: 20px; }
+.site-title a.home { color: var(--ink); text-decoration: none; }
+
+/* three levels: profile, district page, controls */
+details.level { border-top: 1px solid var(--ink); margin-top: var(--s4); padding-top: var(--s2); }
+details.level > summary { font-weight: 700; min-height: 44px; display: flex; align-items: center; list-style: none; }
+details.level > summary::-webkit-details-marker { display: none; }
+details.level > summary::before { content: "▸"; display: inline-block; width: 1.2em; }
+details.level[open] > summary::before { content: "▾"; }
+.controls details.level { margin-top: var(--s3); }
+.profile .meta { color: var(--muted); font-size: .875rem; margin: var(--s3) 0 0; }
+.l1 { border-left: 6px solid var(--line); padding-left: var(--s3); margin: var(--s3) 0; }
+.l1 .label { font-size: 1.25rem; line-height: 28px; font-weight: 700; margin: 0; }
+.l1 .key { margin: 0; font-variant-numeric: tabular-nums; font-size: 1rem; line-height: 24px; font-weight: 400; }
+.t-small { font-size: .875rem; line-height: 20px; }
+.fit { margin-top: var(--s2); }
+.panel .xs-figure, .panel figure.sketch { background: var(--surface); padding: var(--s2); margin: var(--s2) 0 0; }
+
+/* district page */
+.bz-cards { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: var(--gutter); }
+.bz-card { width: 100%; text-align: left; background: #fff; color: var(--ink); border: 1px solid var(--ink); display: flex; flex-direction: column;
+  gap: var(--s1); padding: var(--s3); font-weight: 400; }
+.bz-card:hover { background: var(--surface); }
+.bz-name { font-size: 1.25rem; line-height: 28px; font-weight: 700; }
+.intro-l1 p { font-size: 1.25rem; line-height: 28px; max-width: 60ch; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); margin: var(--s4) 0; }
+.kpis > * { border-top: 2px solid var(--ink); padding-top: var(--s2); }
+.kpi-value { display: block; font-size: 2.5rem; line-height: 48px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.kpi-label { display: block; color: var(--text2); font-size: .875rem; line-height: 20px; }
+.lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); }
+.top-list { padding-left: var(--s4); }
+.top-list li { padding: var(--s2) 0; border-top: 1px solid var(--line); }
+.top-list button { all: unset; display: block; cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.top-list button:focus-visible { outline: 3px solid var(--focus); box-shadow: 0 0 0 4px var(--ink); }
+.entry-note { display: block; color: var(--text2); }
+.lists-note { color: var(--muted); font-size: .875rem; }
+tr.current th, tr.current td { font-weight: 700; }
+td.n, th.n { text-align: right; }
+@media (max-width: 1199px) { .lists { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .lists, .kpis { grid-template-columns: 1fr; } }
 .map-page[hidden] { display: none; }
 .controls { border-right: 1px solid var(--ink); overflow: auto; padding: var(--s2) var(--gutter) var(--s3) var(--margin); max-height: calc(100vh - 8rem); }
 .controls summary { font-weight: 700; padding: var(--s2) 0; min-height: 44px; cursor: pointer; }
@@ -144,10 +199,13 @@ details > summary { cursor: pointer; }
 
 /* phones: controls on top, profile as sheet from below (no radius, no shadow: a 2 px rule separates it) */
 @media (max-width: 760px) {
-  .map-page { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .controls { border-right: none; border-bottom: 1px solid var(--ink); max-height: 45vh; padding: var(--s2) var(--margin); }
-  .controls:not([open]) { max-height: none; }
-  .map { min-height: 65vh; }
+  .map-page { grid-template-columns: 1fr; grid-template-rows: auto minmax(55vh, 1fr) auto; }
+  .themes { flex-wrap: nowrap; overflow-x: auto; padding: var(--s2) var(--margin); }
+  .themes button { flex: none; }
+  .themes .views { margin-left: var(--s2); }
+  .map { min-height: 55vh; grid-row: 2; }
+  .controls { grid-row: 3; border-right: none; border-top: 2px solid var(--ink); max-height: none; padding: var(--s2) var(--margin); }
+  .intro { top: 76px; right: var(--margin); left: var(--margin); width: auto; }
   .panel { top: auto; left: 0; width: 100%; max-height: 70vh; border-left: none; border-top: 2px solid var(--ink); }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }

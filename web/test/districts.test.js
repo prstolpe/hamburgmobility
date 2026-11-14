@@ -5,6 +5,7 @@ const fig = (n) => ({ km_total: 100 * n, km_need: 12.5 * n, km_speed_down: 3, km
   km_profile_no_fit: 7, junctions: 50, junctions_rebuild: 3 * n });
 const names = ["Hamburg-Mitte", "Altona", "Eimsbüttel", "Hamburg-Nord", "Wandsbek", "Bergedorf", "Harburg"];
 const meta = {
+  categories: { GOW50: { speed_kmh: 50 }, GOW30: { speed_kmh: 30 }, ETW30: { speed_kmh: 30 }, ETW_ERF: { speed_kmh: 7 } },
   cycling: { junction_ist: { signal: "Ampel" }, junction_type: { roundabout: "Kreisverkehr" }, cycle_categories: { main: "Hauptroute" } },
   overview: {
     figures: Object.fromEntries(names.map((n, i) => [n, fig(i + 1)])),
