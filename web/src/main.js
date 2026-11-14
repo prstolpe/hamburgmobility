@@ -2,7 +2,7 @@ import "./style.css";
 import { dataHtml } from "./datapage.js";
 import { bindDistrictPage, districtHtml, districtListHtml } from "./districts.js";
 import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO } from "./layers.js";
-import { chapterHtml, newsHtml, referenceHtml, referenceListHtml, summaryHtml } from "./method.js";
+import { chapterHtml, newsHtml, referenceHtml, referenceListHtml, resolveRule, summaryHtml } from "./method.js";
 import { imprintHtml } from "./pages.js";
 import { junctionHtml, segmentHtml } from "./profile.js";
 import { setupSearch } from "./search.js";
@@ -226,7 +226,7 @@ async function renderMethod() {
       sec.innerHTML = referenceHtml(method, data.rules, ruleQuery, data.versions, meta.github_repo);
       bindReference(sec, data);
       if (state.rule) {
-        const li = document.getElementById(`regel-${state.rule}`);
+        const li = document.getElementById(`regel-${resolveRule(data.rules, state.rule)}`);
         if (li) { li.querySelector("details")?.setAttribute("open", ""); li.scrollIntoView(); }
       }
     } else if (sub === "neu") {

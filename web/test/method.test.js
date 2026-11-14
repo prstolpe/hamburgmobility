@@ -126,3 +126,14 @@ describe("newsHtml", () => {
     expect(html).not.toContain("Noch keine Einträge");
   });
 });
+
+describe("former rule ids", () => {
+  it("resolves an alias to the rule that took it over", async () => {
+    const { resolveRule, ruleDetailsHtml } = await import("../src/method.js");
+    const rules = [{ id: "J-01", aliases: ["J-02"] }, { id: "J-03" }];
+    expect(resolveRule(rules, "J-02")).toBe("J-01");
+    expect(resolveRule(rules, "J-03")).toBe("J-03");
+    expect(resolveRule(rules, "X-9")).toBe("X-9");
+    expect(ruleDetailsHtml({ id: "J-01", aliases: ["J-02"], file: "design_rules.yaml", section: "junctions" })).toContain("früher auch <code>J-02</code>");
+  });
+});

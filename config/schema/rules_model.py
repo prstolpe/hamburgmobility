@@ -95,6 +95,8 @@ class _Strict(BaseModel):
     explain_plain: str | None = None
     why: str | None = None
     history: list[str] | None = None
+    # Former ids merged into this rule (redesign 2026-11, package 5): old links, traces and overrides stay readable.
+    aliases: list[str] | None = None
 
 
 class Meta(_Strict):

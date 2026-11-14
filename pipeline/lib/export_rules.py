@@ -15,7 +15,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RULE_FILES = ["rules.yaml", "cycling_rules.yaml", "design_rules.yaml"]
-META_KEYS = {"id", "label_plain", "explain_plain", "why", "history", "source", "source_type", "status", "thresholds",
+META_KEYS = {"id", "label_plain", "explain_plain", "why", "history", "aliases", "source", "source_type", "status", "thresholds",
              "description", "note"}
 VAR_NAMES = ["area_label", "n_rules", "n_rules_assumption", "n_thresholds", "n_thresholds_assumption", "mc_runs",
              "mc_delta_pct", "mc_min_change_pct", "n_junctions", "n_junctions_action", "cyc_sens_runs",
@@ -97,7 +97,7 @@ def collect_rules(file: str, doc: dict, section_chapter: dict, key_labels: dict 
                     "id": node["id"], "file": file, "section": section, "chapter": section_chapter[sec],
                     "label_plain": _plain(node.get("label_plain")), "explain_plain": _plain(node.get("explain_plain")),
                     "why": _plain(node.get("why")), "description": _plain(node.get("description")),
-                    "note": _plain(node.get("note")), "history": node.get("history"),
+                    "note": _plain(node.get("note")), "history": node.get("history"), "aliases": node.get("aliases"),
                     "technical": [[k, _text(v)] for k, v in node.items() if k not in META_KEYS and not _has_id(v)],
                     "thresholds": _thresholds(node, inh.get("source_type"), key_labels or {}),
                     "source": _sources(inh.get("source"), catalogue), "source_type": inh.get("source_type"),
