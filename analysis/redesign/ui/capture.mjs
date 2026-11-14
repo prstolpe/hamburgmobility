@@ -7,6 +7,8 @@ import { join } from "node:path";
 import { chromium, newPage, open, OUT, shot, words, writeJson } from "./lib.mjs";
 
 const FX = JSON.parse(readFileSync(join(OUT, "fixtures.json")));
+// IMG_PREFIX: screenshot prefix (default "c-" = state before the redesign; e.g. "p1-" for package 1 of Part B)
+const PREFIX = process.env.IMG_PREFIX || "c-";
 const PAGES = ["karte", "tabelle", "methode", "radnetz", "downloads", "quellen", "impressum"];
 
 /** Text of an element split into sections by headings h1–h4 (heading, text, words). */
@@ -51,8 +53,8 @@ for (const kind of ["desktop", "mobile"]) {
       await page.click('button[data-bz="Eimsbüttel"]').catch(() => {});
       await page.waitForTimeout(1500);
     }
-    const img = await shot(page, `c-${p}-${kind}`);
-    const full = p === "karte" ? null : await shot(page, `c-${p}-${kind}-full`, { fullPage: true, quality: 60 });
+    const img = await shot(page, `${PREFIX}${p}-${kind}`);
+    const full = p === "karte" ? null : await shot(page, `${PREFIX}${p}-${kind}-full`, { fullPage: true, quality: 60 });
     if (kind === "desktop") {
       const sel = p === "karte" ? "#controls-body" : `section[data-page="${p}"]`;
       const secs = withWords(await sections(page, sel));
@@ -84,7 +86,7 @@ for (const kind of ["desktop", "mobile"]) {
   const layers = await page.$$eval('#controls-body input[name="layer"]', (is) => is.map((i) => i.value));
   for (const l of layers) {
     await open(page, `#karte?layer=${l}`, { settle: 3000 });
-    const img = await shot(page, `c-layer-${l}-${kind}`);
+    const img = await shot(page, `${PREFIX}layer-${l}-${kind}`);
     if (kind === "desktop") {
       const text = await page.textContent("#layer-text");
       const legend = await page.$$eval("#legend li", (lis) => lis.map((li) => li.innerText.trim()));
@@ -105,7 +107,7 @@ for (const kind of ["desktop", "mobile"]) {
   for (const [cat, p] of Object.entries(FX.profiles)) {
     await open(page, `#karte?seg=${p.id}&map=16/${p.lat}/${p.lon}`, { settle: 3500 });
     await page.waitForSelector("#panel-title", { timeout: 15_000 });
-    const img = await shot(page, `c-profile-${cat}-${kind}`);
+    const img = await shot(page, `${PREFIX}profile-${cat}-${kind}`);
     if (kind === "desktop") {
       const secs = withWords(await sections(page, "#panel-body"));
       result.profiles[cat] = { id: p.id, name: p.name, title: await page.textContent("#panel-title"), sections: secs,
@@ -118,7 +120,7 @@ for (const kind of ["desktop", "mobile"]) {
   const j = FX.junction;
   await open(page, `#karte?layer=jct&jct=${j.id}&map=17/${j.lat}/${j.lon}`, { settle: 3500 });
   await page.waitForSelector("#panel-title", { timeout: 15_000 });
-  const jimg = await shot(page, `c-junction-${kind}`);
+  const jimg = await shot(page, `${PREFIX}junction-${kind}`);
   if (kind === "desktop") {
     const secs = withWords(await sections(page, "#panel-body"));
     result.junction = { id: j.id, title: await page.textContent("#panel-title"), sections: secs, words: secs.reduce((a, s) => a + s.words, 0), image: jimg };
@@ -129,7 +131,7 @@ for (const kind of ["desktop", "mobile"]) {
   await page.context().close();
 }
 await browser.close();
-writeJson("content.json", result);
+writeJson(PREFIX === "c-" ? "content.json" : `content-${PREFIX.replace(/-$/, "")}.json`, result);
 for (const [k, v] of Object.entries(result.pages)) console.log(`page ${k.padEnd(10)} ${v.words} words, ${v.sections.length} sections`);
 for (const [k, v] of Object.entries(result.layers)) console.log(`layer ${k.padEnd(6)} ${v.words} words, legend ${v.legend.length} items, mobile legend visible ${v.legend_visible_mobile}`);
 for (const [k, v] of Object.entries(result.profiles)) console.log(`profile ${k.padEnd(8)} ${v.words} words, ${v.sections.length} sections, ${v.panel_height_px}px`);

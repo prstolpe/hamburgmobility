@@ -3,7 +3,7 @@
 // and "jct" (tiles/junctions.pmtiles: junctions). map.js adds the cycling sources only when such a layer is shown.
 import {
   CASING, CATEGORY_STYLE, CYCLE_CAT_STYLE, DISC_TYPE_STYLE, FACILITY_STYLE, FEASIBILITY_STYLE, FIT_STYLE, GAP_STYLE,
-  JUNCTION_STYLE, LANES_STYLE, OFFICIAL_STYLE, OVERLAY_COLORS, REFERENCE_COLOR, RURAL_FILL, SHAPES, SPEED_CLASSES, UNKNOWN,
+  INK, JUNCTION_STYLE, LANES_STYLE, OFFICIAL_STYLE, OVERLAY_COLORS, REFERENCE_COLOR, RURAL_FILL, SHAPES, SPEED_CLASSES, UNKNOWN,
   WIDTH_STYLE,
 } from "./palette.js";
 import { CYCLING_LAYER_KEYS } from "./state.js";
@@ -87,7 +87,7 @@ export function groups(layer, meta) {
     case "speed": {
       let lower = -Infinity;
       const out = SPEED_CLASSES.map((c) => {
-        const g = { key: `s${c.max}`, label: c.label, color: c.color, width: 3, dash: null,
+        const g = { key: `s${c.max}`, label: c.label, color: c.color, width: c.width, dash: c.dash,
           filter: ["all", known("spd"), [">", ["get", "spd"], lower], ["<=", ["get", "spd"], c.max === Infinity ? 999 : c.max]] };
         lower = c.max;
         return g;
@@ -128,7 +128,7 @@ export function groups(layer, meta) {
       ];
     case "hvs":
       return [
-        { key: "hvs1", label: "Hauptverkehrsstraße (BVM, Verkehrsmengenkarte 2019)", color: "#332288", width: 5, dash: null,
+        { key: "hvs1", label: "Hauptverkehrsstraße (BVM, Verkehrsmengenkarte 2019)", color: INK, width: 5, dash: null,
           filter: ["==", ["get", "hvs"], 1] },
         { key: "hvs0", label: "andere Straße", color: UNKNOWN, width: 1.2, dash: null, filter: ["!=", ["get", "hvs"], 1] },
       ];
@@ -149,7 +149,7 @@ function lineLayer(id, g, filter, extra = {}) {
 function symbolLayer(id, g, filter) {
   return {
     id, type: "symbol", source: g.src, "source-layer": g.srcLayer, minzoom: JUNCTION_MIN_ZOOM, filter: ["all", g.filter, filter],
-    layout: { "icon-image": g.icon, "icon-allow-overlap": true, "icon-ignore-placement": true,
+    layout: { "icon-image": ["case", ["==", ["get", "act"], 1], `${g.icon}-act`, g.icon], "icon-allow-overlap": true, "icon-ignore-placement": true,
       "icon-size": ["case", ["==", ["get", "act"], 1], 1, 0.7] },
   };
 }
@@ -170,7 +170,7 @@ export function sfpLayers(state, meta) {
   }
   if (cycling) {
     const gs = groups(state.layer, meta);
-    for (const g of gs.filter((x) => x.reference)) out.push(lineLayer(`ref-${g.key}`, g, cyclingFilter(state, g.srcLayer)));
+    for (const g of gs.filter((x) => x.reference)) out.push(lineLayer(`ref-${g.key}`, g, cyclingFilter(state, g.srcLayer), { "line-opacity": 0.45 }));
     const lines = gs.filter((x) => !x.reference && x.kind !== "symbol");
     const casings = [...new Set(lines.map((g) => `${g.src}|${g.srcLayer}`))];
     for (const key of casings) {
@@ -260,7 +260,7 @@ export function legendHtml(layer, meta) {
   const notes = [];
   if (isCyclingLayer(layer) && meta.cycling) {
     notes.push(`<p class="note">${esc(meta.cycling.disclaimer)}</p>`);
-    if (layer === "jct") notes.push('<p class="muted">Größere Zeichen: heutiger Knoten passt nicht zum Soll (Umbau nötig).</p>');
+    if (layer === "jct") notes.push('<p class="muted">Orange und größer: heutiger Knoten passt nicht zum Soll (Umbau nötig).</p>');
     if (layer === "coff") notes.push(`<p class="muted">${esc(meta.cycling.official_attribution ?? "")}</p>`);
   }
   return `${notes.join("")}<ul class="legend">${items.join("")}</ul>`;

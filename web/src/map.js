@@ -5,7 +5,7 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
 import { sfpLayers } from "./layers.js";
-import { CASING, JUNCTION_STYLE, RURAL_FILL, SHAPES } from "./palette.js";
+import { CASING, JUNCTION_REBUILD, JUNCTION_STYLE, RURAL_FILL, SHAPES } from "./palette.js";
 import { dataUrl } from "./util.js";
 
 maplibregl.setWorkerUrl(workerUrl);
@@ -17,8 +17,7 @@ const ICON_PX = 40; // icon bitmap size (pixelRatio 2 -> 20 px on the map)
 
 /** Junction symbols as map images, drawn from the same shapes as the legend (palette.js SHAPES). */
 function addJunctionIcons(map) {
-  for (const [grp, st] of Object.entries(JUNCTION_STYLE)) {
-    const id = `jct-${grp}`;
+  for (const [grp, st] of Object.entries(JUNCTION_STYLE)) for (const [id, color] of [[`jct-${grp}`, st.color], [`jct-${grp}-act`, JUNCTION_REBUILD]]) {
     if (map.hasImage(id)) continue;
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = ICON_PX;
@@ -26,11 +25,11 @@ function addJunctionIcons(map) {
     ctx.scale(ICON_PX / 16, ICON_PX / 16);
     const path = new Path2D(SHAPES[st.shape].d);
     if (SHAPES[st.shape].mode === "fill") {
-      ctx.fillStyle = st.color; ctx.fill(path);
+      ctx.fillStyle = color; ctx.fill(path);
       ctx.strokeStyle = CASING; ctx.lineWidth = 1.2; ctx.stroke(path);
     } else {
       ctx.strokeStyle = CASING; ctx.lineWidth = 4.5; ctx.stroke(path);
-      ctx.strokeStyle = st.color; ctx.lineWidth = 2.5; ctx.stroke(path);
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke(path);
     }
     map.addImage(id, ctx.getImageData(0, 0, ICON_PX, ICON_PX), { pixelRatio: 2 });
   }
