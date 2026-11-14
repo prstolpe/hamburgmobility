@@ -219,5 +219,7 @@ export function imprintHtml(meta) {
   </ul>
   <h2>Hintergrundkarte</h2>
   <p>Protomaps Basemap aus OpenStreetMap-Daten (ODbL), Kartenstil @protomaps/basemaps (BSD-3-Clause), Schrift
-  Noto Sans (SIL Open Font License), Symbole nach tangrams/icons (MIT). Selbst gehostet.</p>`;
+  Noto Sans (SIL Open Font License), Symbole nach tangrams/icons (MIT). Selbst gehostet.</p>
+  <h2>Schrift</h2>
+  <p>Inter (SIL Open Font License 1.1, © The Inter Project Authors). Selbst gehostet, ohne Schriftdienst.</p>`;
 }

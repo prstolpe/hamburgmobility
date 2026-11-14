@@ -21,6 +21,12 @@
 | Zulässige Höchstgeschwindigkeiten, Verkehrsmengen HVS 2019 (api.hamburg.de) | dl-de/by-2.0 (laut Transparenzportal; die API nennt keine Lizenz) | Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM) |
 | Weitere (api.hamburg.de u. a.) | je Landing Page prüfen | siehe config/sources.yaml |
 
+## Schrift der Webseite
+Inter 4.1 (variabel, auf lateinische Zeichen reduziert), © 2016 The Inter Project Authors, SIL Open Font License 1.1.
+Selbst gehostet mit der Lizenzdatei (`web/src/fonts/OFL-Inter.txt`), keine Anfrage an einen Schriftdienst. Quelle:
+https://github.com/rsms/inter/releases/tag/v4.1. Die Kartenbeschriftung nutzt weiter Noto Sans (SIL OFL 1.1, siehe
+Hintergrundkarte).
+
 Unfalldaten werden nur aggregiert je Abschnitt bzw. je Knotenpunkt veröffentlicht.
 
 Das amtliche Radnetz Hamburg erscheint auf der Webseite unverändert als Vergleichsebene (tiles/cycling.pmtiles, Ebene

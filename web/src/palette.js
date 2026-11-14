@@ -1,95 +1,113 @@
-// Display colours and line styles. Colour-blind safe (Paul Tol "vibrant"/"bright", dark variants), every colour
-// with at least 3:1 contrast against the white casing under each line (WCAG 2.2, 1.4.11). Categories differ in
-// colour, width and dash pattern, so they stay apart without colour vision.
+// Display colours and line styles. Colour-blind safe (Paul Tol "bright", dark variants), every colour with at least
+// 3:1 contrast against the white casing under each line (WCAG 2.2, 1.4.11). Groups of one legend differ in width or
+// dash as well, so they stay apart without colour vision.
 
 export const CASING = "#ffffff";
 export const UNKNOWN = "#767676";
 export const RURAL_FILL = "#767676"; // rural Stadtteile, not classified (area, not a line: no casing contrast needed)
 
+// Redesign 2026-11 (docs/redesign/tokens.json): one meaning per data colour across the site.
+// Tempo (today and target) has its own scale; a category is drawn in the colour of its target speed, its function by
+// line width and dash. Need for action is one orange; cycling one petrol; reference and comparison lines are ink.
+export const SPEED = { le20: "#117733", t30: "#0077BB", t40: "#AA4499", t50: "#CC3311", gt50: "#332288" };
+export const NEED = "#B35900";
+export const NONE = "#8a8a8a"; // "fits / no need / other ways": thin and grey, not green
+export const INK = "#111111";
+export const CYCLING = "#007A6E";
+export const COLOR_CONCEPTS = {
+  speed: Object.values(SPEED),
+  need: [NEED],
+  cycling: [CYCLING],
+  neutral: [INK, NONE, "#4a4a4a"],
+  unknown: [UNKNOWN],
+};
+
 export const CATEGORY_STYLE = {
-  SW: { color: "#332288", width: 6, dash: null },
-  GOW50: { color: "#CC3311", width: 5, dash: null },
-  GOW30: { color: "#AA4499", width: 4, dash: [3, 1.5] },
-  ETW30: { color: "#0077BB", width: 2.5, dash: null },
-  ETW_ERF: { color: "#117733", width: 3, dash: [0.6, 1.4] },
-  // außerorts (Regel S-FEAT-BUA-01, Entwurf)
-  GOW80: { color: "#882255", width: 5, dash: [6, 2] },
-  ETW60: { color: "#007A6E", width: 2.5, dash: [1.5, 1.5] },
+  SW: { color: SPEED.gt50, width: 7, dash: null },
+  GOW50: { color: SPEED.t50, width: 5, dash: null },
+  GOW30: { color: SPEED.t30, width: 5, dash: [3, 1.5] },
+  ETW30: { color: SPEED.t30, width: 2.5, dash: null },
+  ETW_ERF: { color: SPEED.le20, width: 2.5, dash: [0.6, 1.4] },
+  // außerorts (inaktiv, C-RUR-01)
+  GOW80: { color: SPEED.gt50, width: 5, dash: [6, 2] },
+  ETW60: { color: SPEED.gt50, width: 2.5, dash: [1.5, 1.5] },
 };
 
 export const SPEED_CLASSES = [
-  { max: 20, label: "bis 20 km/h (auch Schrittgeschwindigkeit)", color: "#117733" },
-  { max: 30, label: "30 km/h", color: "#0077BB" },
-  { max: 40, label: "40 km/h", color: "#AA4499" },
-  { max: 50, label: "50 km/h", color: "#CC3311" },
-  { max: Infinity, label: "über 50 km/h", color: "#332288" },
+  { max: 20, label: "bis 20 km/h (auch Schrittgeschwindigkeit)", color: SPEED.le20, width: 2, dash: [0.6, 1.4] },
+  { max: 30, label: "30 km/h", color: SPEED.t30, width: 2.5, dash: null },
+  { max: 40, label: "40 km/h", color: SPEED.t40, width: 3, dash: [3, 1.5] },
+  { max: 50, label: "50 km/h", color: SPEED.t50, width: 4, dash: null },
+  { max: Infinity, label: "über 50 km/h", color: SPEED.gt50, width: 5.5, dash: null },
 ];
 
+// Discrepancy: strength = width (in layers.js), type = dash, all in the need colour
 export const DISC_TYPE_STYLE = {
-  D1: { color: "#CC3311", dash: null },
-  D2: { color: "#0077BB", dash: [2, 1] },
-  D3: { color: "#AA4499", dash: [0.6, 1.4] },
+  D1: { color: NEED, dash: null },
+  D2: { color: NEED, dash: [2, 1] },
+  D3: { color: NEED, dash: [0.6, 1.4] },
 };
 
 export const FEASIBILITY_STYLE = {
-  fits: { color: "#117733", dash: null },
-  tight: { color: "#B35900", dash: [3, 1.5] },
-  does_not_fit: { color: "#CC3311", dash: [0.6, 1.4] },
+  fits: { color: NONE, width: 1.5, dash: null },
+  tight: { color: NEED, width: 3, dash: [3, 1.5] },
+  does_not_fit: { color: NEED, width: 4.5, dash: null },
 };
 
+// Street width is a measurement, not a judgement: ink, wider line = wider street
 export const WIDTH_STYLE = {
-  narrow: { color: "#CC3311", dash: [0.6, 1.4] },
-  middle: { color: "#AA4499", dash: [3, 1.5] },
-  wide: { color: "#0077BB", dash: null },
+  narrow: { color: INK, width: 1.5, dash: null },
+  middle: { color: INK, width: 3, dash: null },
+  wide: { color: INK, width: 5, dash: null },
 };
 
-export const OVERLAY_COLORS = { bus: "#004949", cyc: "#117733", fac: "#332288", acc: "#000000" };
+export const OVERLAY_COLORS = { bus: "#4a4a4a", cyc: CYCLING, fac: INK, acc: INK };
 
-// --- cycling layers (prompt 21): colour plus line style or symbol shape ----------------------
+// --- cycling layers: one colour, hierarchy by width, type by dash -----------------------------
 
 export const CYCLE_CAT_STYLE = {
-  RSV: { color: "#332288", width: 6, dash: null },
-  HAUPT: { color: "#CC3311", width: 4.5, dash: null },
-  BASIS: { color: "#0077BB", width: 3, dash: [3, 1.5] },
-  ERSCHL: { color: "#007A6E", width: 1.5, dash: [1, 1.5] },
+  RSV: { color: CYCLING, width: 6, dash: null },
+  HAUPT: { color: CYCLING, width: 4.5, dash: null },
+  BASIS: { color: CYCLING, width: 3, dash: [3, 1.5] },
+  ERSCHL: { color: NONE, width: 1.2, dash: null },
 };
 
 export const FACILITY_STYLE = {
-  separated_oneway_both: { color: "#117733", width: 4.5, dash: null },
-  separated_twoway: { color: "#007A6E", width: 4, dash: [4, 1.5] },
-  cycle_lane: { color: "#0077BB", width: 3.5, dash: [2, 1] },
-  cycle_street: { color: "#AA4499", width: 3.5, dash: null },
-  own_path: { color: "#332288", width: 3, dash: [0.6, 1.4] },
-  mixed: { color: "#555555", width: 1.5, dash: null },
+  separated_oneway_both: { color: CYCLING, width: 4.5, dash: null },
+  separated_twoway: { color: CYCLING, width: 4, dash: [4, 1.5] },
+  cycle_lane: { color: CYCLING, width: 3, dash: [2, 1] },
+  cycle_street: { color: CYCLING, width: 3.5, dash: [0.6, 1.4] },
+  own_path: { color: CYCLING, width: 2.5, dash: [1, 2] },
+  mixed: { color: NONE, width: 1.5, dash: null },
 };
 
 export const GAP_STYLE = {
-  missing: { color: "#CC3311", width: 4.5, dash: null },
-  wrong_type: { color: "#B35900", width: 3.5, dash: [3, 1.5] },
-  partial: { color: "#0077BB", width: 3, dash: [1.5, 1] },
-  too_narrow: { color: "#AA4499", width: 3.5, dash: [0.6, 1.4] },
-  none: { color: "#117733", width: 2, dash: null },
+  missing: { color: NEED, width: 4.5, dash: null },
+  wrong_type: { color: NEED, width: 3.5, dash: [3, 1.5] },
+  partial: { color: NEED, width: 3, dash: [1.5, 1] },
+  too_narrow: { color: NEED, width: 3.5, dash: [0.6, 1.4] },
+  none: { color: NONE, width: 1.5, dash: null },
 };
 
 export const LANES_STYLE = {
-  fewer: { color: "#117733", width: 4.5, dash: null },
-  same: { color: "#0077BB", width: 3, dash: [3, 1.5] },
-  more: { color: "#CC3311", width: 4.5, dash: [0.6, 1.4] },
-  shared: { color: "#555555", width: 1.2, dash: null },
+  fewer: { color: NEED, width: 4.5, dash: null },
+  same: { color: NONE, width: 1.5, dash: null },
+  more: { color: NEED, width: 3, dash: [2, 1.5] },
+  shared: { color: NONE, width: 1.2, dash: [2, 2] },
 };
 
 export const FIT_STYLE = {
-  fits: { color: "#117733", width: 3.5, dash: null },
-  fits_after_degrade: { color: "#B35900", width: 3.5, dash: [3, 1.5] },
-  does_not_fit: { color: "#CC3311", width: 3.5, dash: [0.6, 1.4] },
+  fits: { color: NONE, width: 1.5, dash: null },
+  fits_after_degrade: { color: NEED, width: 3, dash: [2, 1.5] },
+  does_not_fit: { color: NEED, width: 4.5, dash: null },
 };
 
 export const OFFICIAL_STYLE = {
-  Bestand: { color: "#117733", width: 4.5, dash: null },
-  "In Arbeit": { color: "#0077BB", width: 3.5, dash: [3, 1.5] },
-  planned: { color: "#AA4499", width: 3, dash: [0.6, 1.4] },
+  Bestand: { color: INK, width: 3, dash: null },
+  "In Arbeit": { color: INK, width: 2.5, dash: [3, 1.5] },
+  planned: { color: INK, width: 2, dash: [0.6, 1.4] },
 };
-export const REFERENCE_COLOR = "#767676"; // Soll network under the official one (comparison only)
+export const REFERENCE_COLOR = CYCLING; // Soll network under the official one (comparison only, drawn transparent)
 
 // Symbol shapes in a 16 x 16 box (legend SVG and map icons). fill = filled shape, stroke = outline only.
 export const SHAPES = {
@@ -103,14 +121,15 @@ export const SHAPES = {
 };
 
 export const JUNCTION_STYLE = {
-  roundabout: { color: "#0077BB", shape: "circle" },
-  signal: { color: "#CC3311", shape: "square" },
-  priority: { color: "#AA4499", shape: "triangle" },
-  continuous: { color: "#117733", shape: "diamond" },
-  equal: { color: "#332288", shape: "ring" },
-  grade_separated: { color: "#B35900", shape: "bar" },
+  roundabout: { color: INK, shape: "circle" },
+  signal: { color: INK, shape: "square" },
+  priority: { color: INK, shape: "triangle" },
+  continuous: { color: INK, shape: "diamond" },
+  equal: { color: INK, shape: "ring" },
+  grade_separated: { color: INK, shape: "bar" },
   none: { color: UNKNOWN, shape: "cross" },
 };
+export const JUNCTION_REBUILD = NEED; // same shape, need colour: rebuild needed
 
 // --- WCAG contrast -------------------------------------------------------------------------
 
@@ -140,6 +159,7 @@ export function allColors() {
     ...[CYCLE_CAT_STYLE, FACILITY_STYLE, GAP_STYLE, LANES_STYLE, FIT_STYLE, OFFICIAL_STYLE, JUNCTION_STYLE]
       .flatMap((st) => Object.values(st).map((x) => x.color)),
     REFERENCE_COLOR,
+    JUNCTION_REBUILD,
     UNKNOWN,
   ];
 }
