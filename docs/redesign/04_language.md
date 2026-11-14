@@ -53,7 +53,7 @@ Die wichtigsten Ersetzungen:
 | Kfz, DTV | Autoverkehr, Autos pro Tag |
 | Knotenpunkt, Knotentyp | Kreuzung, Art der Kreuzung |
 | Gehwegüberfahrt | durchgehender Gehweg |
-| RSV · HAUPT · BASIS · ERSCHL | Radschnellweg · Radroute · Bezirksroute · übrige Wege |
+| RSV · HAUPT · BASIS · ERSCHL | Radvorrangroute · Radroute · Bezirksroute · übrige Wege (korrigiert in Paket 4: die oberste Stufe ist keine Radschnellverbindung nach FGSV) |
 | Führungsform, Mischverkehr | Art des Radwegs, Rad auf der Fahrbahn |
 | Datenunsicherheit, Robustheit | Wie sicher ist das?, hängt an Annahmen |
 | Schwelle, Fallback | Grenzwert, Ersatzwert |

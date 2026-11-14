@@ -5,8 +5,8 @@
 # scope: rural = Regel betrifft nur außerorts (Kennzeichnung, Review 2026-11 F33).
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.9.0
-  date: 2026-11-08
+  version: 0.9.1
+  date: 2026-11-14
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
 
@@ -28,11 +28,17 @@ lanes:
   default_per_direction: {SW: null, GOW50: 1, GOW30: 1, ETW30: shared, ETW_ERF: shared, GOW80: 1, ETW60: shared, source_type: assumption, note: 'GOW30/ETW nach L-01 (CROW_GOW30_2023); GOW50/GOW80 Grundsatz so wenige wie möglich'}
   rules:
     - id: L-01
+      label_plain: "Ein Fahrstreifen bei Tempo 30"
+      explain_plain: "In Straßen mit Tempo 30 gibt es höchstens einen Fahrstreifen je Richtung."
+      why: "Das niederländische Regelwerk (CROW) sieht bei Tempo 30 höchstens einen Fahrstreifen je Richtung vor."
       status: draft
       rule: 'GOW30, ETW30, ETW_ERF: höchstens 1 Fahrstreifen je Richtung, keine Mittellinie auf GOW30'
       source: CROW_GOW30_2023
       source_type: swov_crow
     - id: L-02
+      label_plain: "Zwei Fahrstreifen nur bei Bedarf"
+      explain_plain: "Eine Hauptstraße mit Tempo 50 bekommt zwei Fahrstreifen je Richtung nur, wenn einer nicht reicht."
+      why: "Der Grundsatz lautet: so wenige Fahrstreifen wie möglich. Die Kapazitätswerte hat das Projekt gesetzt."
       status: draft
       rule: 'GOW50: 2 Fahrstreifen je Richtung nur wenn peak_h_dir > lane_capacity_veh_h * target_vc'
       source_type: assumption
@@ -40,30 +46,50 @@ lanes:
       target_vc: {value: 0.85, source_type: assumption}
       peak_h_dir_from_dtv: {factor: 0.055, note: '0,10 Spitzenstundenanteil x 0,55 Lastrichtung', source_type: assumption}
     - id: L-03
+      label_plain: "Mittelstreifen bei zwei Fahrstreifen"
+      explain_plain: "Bei zwei Fahrstreifen je Richtung trennt ein Mittelstreifen die Richtungen."
+      why: "Bei zwei Fahrstreifen je Richtung sieht das niederländische Regelwerk (CROW) einen Mittelstreifen vor."
       status: draft
       rule: 'Bei 2x2 bauliche Richtungstrennung (Mittelstreifen)'
       source: CROW_GOW30_2023
       source_type: swov_crow
     - id: L-04
+      label_plain: "Busspur statt zweitem Fahrstreifen"
+      explain_plain: "Fahren viele Busse, wird der zweite Fahrstreifen eine Busspur."
+      why: "Ab 20 Bussen je Spitzenstunde und Richtung ersetzt eine Busspur den zweiten Fahrstreifen. Das hat das Projekt gesetzt."
       status: draft
       rule: 'Busfahrstreifen statt 2. Kfz-Fahrstreifen, wenn bus_per_peak_h_dir >= bus_lane_trigger'
       source_type: assumption
       bus_lane_trigger: {value: 20, source_type: assumption}
     - id: L-05
+      label_plain: "Abbiegestreifen nur an Ampeln"
+      explain_plain: "Abbiegestreifen gibt es nur an Ampelkreuzungen mit Bedarf, nicht auf der Strecke."
+      why: "Das Streckenprofil hat keine Abbiegestreifen. Das Projekt hat das so gesetzt."
       status: draft
       rule: 'Abbiegestreifen nur an Knoten mit LSA und nachgewiesenem Bedarf; nicht im Strecken-Soll-Profil'
       source_type: assumption
     - id: L-06
+      label_plain: "Nicht mehr Fahrstreifen als heute"
+      explain_plain: "Der Entwurf plant nie mehr Fahrstreifen als heute, außer nach fachlicher Freigabe."
+      why: "Mehr Fahrstreifen sollen eine fachliche Entscheidung sein, keine Folge einer Rechenregel."
       status: draft
       rule: 'Kein Fahrstreifenzuwachs gegenüber Ist ohne fachliche Freigabe (overrides/lane_overrides.csv seit 0.6.0; ein freigegebener Eintrag ersetzt L-02 bis L-06)'
       source_type: assumption
     - id: L-07
+      label_plain: "Zu viel Verkehr für Tempo 30"
+      explain_plain: "Hinweis, wenn auf einer Hauptstraße mit Tempo 30 mehr Autos fahren, als ein Fahrstreifen schafft."
+      why: "Der Hinweis zeigt, wo die Verkehrsmenge einen Fahrstreifen überlastet. Er kennzeichnet nur, es folgt keine Automatik."
       status: draft
       rule: 'GOW30: Flag capacity_reduction_needed, wenn peak_h_dir > lane_capacity_veh_h * target_vc (Werte aus L-02); reduction_dtv = DTV - (lane_capacity_veh_h * target_vc / peak_h_dir_from_dtv.factor)'
       flag: capacity_reduction_needed
       values_from: L-02
       source_type: assumption
-      note: 'Review 2026-11 F01, E2 Option C (Kennzeichnung „Reduktion nötig“) als Rechenregel; GOW30 hat nach L-01 einen Fahrstreifen je Richtung. Mit den L-02-Werten liegt die Grenze bei 0,85 x 900 / 0,055 = rund 13 909 Kfz/Tag. Nur Kennzeichnung, keine Automatik (wie D6)'
+      note: >-
+        Kennzeichnung „Reduktion nötig“ als Rechenregel; GOW30 hat nach L-01 einen Fahrstreifen je Richtung. Mit den
+        L-02-Werten liegt die Grenze bei 0,85 x 900 / 0,055 = rund 13 909 Kfz/Tag. Nur Kennzeichnung, keine Automatik
+        (wie D6)
+      history:
+        - "Review 2026-11 F01, E2 Option C"
   lane_width_m:
     GOW50: {general: 3.25, with_bus: 3.50, source: RAST_06, source_type: assumption}
     GOW50_2x1_carriageway: {value: 6.50, source: RAST_06, source_type: assumption}
@@ -80,13 +106,13 @@ lanes:
 # ---------------------------------------------------------------
 placement:
   rules:
-    - {id: PL-01, rule: 'separated_oneway_both: je Richtung im Seitenraum rechts, zwischen Gehweg und Trennstreifen/Parken/Bäumen', source_type: assumption, note: 'vorher swov_crow ohne Quelle; CROW-Quelle ergänzen', status: draft}
-    - {id: PL-02, rule: 'separated_twoway einseitig nur, wenn eine Seite <= 1 Knoten je 300 m und keine Ziele (Wasser, Park, Bahn) oder Außerorts', source_type: assumption, status: inactive, scope: rural,
-       note: 'Inaktiv seit 0.7.0 (F33): separated_twoway vergibt nur die außerorts-Matrix (cycling_rules separation_matrix.rural, inaktiv); innerorts greift PL-02 nie. Profilbaustein in PRF-03 cycle_elements bleibt für die Aktivierung stehen'}
-    - {id: PL-03, rule: 'cycle_lane: am rechten Fahrbahnrand; bei Längsparken Trennstreifen buffer_to_parking', source: ERA_2010, source_type: de_regelwerk, note: 'Quelle ergänzt: buffer_to_parking stammt aus ERA_2010 (cycling_rules.widths_m.de)', status: draft}
-    - {id: PL-04, rule: 'Trennstreifen zur Fahrbahn bei separated: >= 0.75 m (Annahme 1.00 m bei GOW50 mit Bus)', source_type: assumption, status: draft}
-    - {id: PL-05, rule: 'Bushaltestellen: Radweg hinter der Haltestelle führen (Bushaltestelleninsel), wenn Breite reicht', source_type: assumption, status: draft}
-    - {id: PL-06, rule: 'Einbahnstraßen ETW30: Radverkehr in Gegenrichtung zulassen', source_type: assumption, status: draft}
+    - {id: PL-01, label_plain: "Radweg zwischen Gehweg und Fahrbahn", explain_plain: "Ein eigener Radweg liegt auf jeder Seite zwischen Gehweg und Trennstreifen.", why: "Das Projekt hat die Lage des Radwegs gesetzt. Sie wird noch geprüft.", rule: 'separated_oneway_both: je Richtung im Seitenraum rechts, zwischen Gehweg und Trennstreifen/Parken/Bäumen', source_type: assumption, note: 'vorher swov_crow ohne Quelle; CROW-Quelle ergänzen', status: draft}
+    - {id: PL-02, label_plain: "Radweg für beide Richtungen: wo", explain_plain: "Nur einseitig, bei wenigen Einmündungen und ohne Ziele; abgeschaltet, gilt nur außerorts.", why: "Das Projekt hat diese Bedingung gesetzt. Die Regel ist abgeschaltet, weil sie nur außerorts gilt.", history: ["inaktiv seit 0.7.0 (F33)"], rule: 'separated_twoway einseitig nur, wenn eine Seite <= 1 Knoten je 300 m und keine Ziele (Wasser, Park, Bahn) oder Außerorts', source_type: assumption, status: inactive, scope: rural,
+       note: "Inaktiv: separated_twoway vergibt nur die außerorts-Matrix (cycling_rules separation_matrix.rural, inaktiv); innerorts greift PL-02 nie. Profilbaustein in PRF-03 cycle_elements bleibt für die Aktivierung stehen"}
+    - {id: PL-03, label_plain: "Radstreifen am Fahrbahnrand", explain_plain: "Ein Radstreifen liegt rechts auf der Fahrbahn, mit Abstand zu parkenden Autos.", why: "Der Abstand zu Längsparken stammt aus den Empfehlungen für Radverkehrsanlagen.", rule: 'cycle_lane: am rechten Fahrbahnrand; bei Längsparken Trennstreifen buffer_to_parking', source: ERA_2010, source_type: de_regelwerk, note: 'Quelle ergänzt: buffer_to_parking stammt aus ERA_2010 (cycling_rules.widths_m.de)', status: draft}
+    - {id: PL-04, label_plain: "Abstand zur Fahrbahn", explain_plain: "Zwischen Radweg und Fahrbahn liegt ein Streifen von mindestens 0,75 m.", why: "Das Projekt hat das Maß gesetzt. Bei Hauptstraßen mit Bus nimmt es 1,00 Meter an.", rule: 'Trennstreifen zur Fahrbahn bei separated: >= 0.75 m (Annahme 1.00 m bei GOW50 mit Bus)', source_type: assumption, status: draft}
+    - {id: PL-05, label_plain: "Radweg hinter der Haltestelle", explain_plain: "An Bushaltestellen führt der Radweg hinter der Haltestelle vorbei, wenn Platz ist.", why: "Das Projekt hat diese Lage gesetzt. Mit den Daten lässt sie sich nicht prüfen.", rule: 'Bushaltestellen: Radweg hinter der Haltestelle führen (Bushaltestelleninsel), wenn Breite reicht', source_type: assumption, status: draft}
+    - {id: PL-06, label_plain: "Einbahnstraßen für Räder öffnen", explain_plain: "In Wohnstraßen dürfen Räder Einbahnstraßen in beide Richtungen fahren.", why: "Das Projekt hat das gesetzt. Räder können so in Gegenrichtung fahren und sparen Umwege.", rule: 'Einbahnstraßen ETW30: Radverkehr in Gegenrichtung zulassen', source_type: assumption, status: draft}
 
 # ---------------------------------------------------------------
 # 3. Raumaufteilung im verfügbaren Straßenraum
@@ -137,16 +163,34 @@ profile_assignment:
   source_type: assumption
   rules:
     - id: PRF-01
+      label_plain: "Fahrstreifen heute"
+      explain_plain: "Wie viele Fahrstreifen es heute gibt, aus amtlichen Daten oder OpenStreetMap."
+      why: "Die Zahl der Fahrstreifen heute ist die Basis für den Vergleich mit dem Ziel."
       description: 'Ist-Fahrstreifen je Richtung = max(lanes_official_in, lanes_official_gegen) (amtlich), sonst OSM lanes / Richtungen (aufgerundet). Einrichtungsverkehr, wenn eine amtliche Richtung 0 Fahrstreifen hat und bahnigkeit_official nicht 2 ist; bei bahnigkeit 2 beschreibt das Profil den ganzen Straßenraum mit beiden Richtungen (die Verkehrsfläche umfasst beide Fahrbahnen). Fehlt das DTV an GOW50: Soll = Ist (höchstens max_lanes_per_direction), confidence low; ohne Ist Standardwert lanes.default_per_direction'
       max_lanes_per_direction: 2
       max_lanes_note: 'L-02 kennt nur 1 oder 2 Fahrstreifen je Richtung'
       status: draft
     - id: PRF-02
+      label_plain: "Busse je Stunde"
+      explain_plain: "Wie viele Busse in der stärksten Stunde je Richtung fahren."
+      why: "Die Zahl der Busse in der stärksten Stunde entscheidet, ob eine Busspur nötig ist."
       description: 'Busse je Spitzenstunde und Richtung (L-04) aus GTFS: repräsentativer Werktag nach S-FEAT-08, Abfahrtsstunde der ersten Haltestelle je Fahrt (stop_times), Zuordnung shape -> Abschnitt wie S-FEAT-08 (S-CONF-02), Richtung = Lage von Anfangs- und Endpunkt des Abschnitts auf dem shape; je Richtung Fahrten je Stunde summiert, maßgeblich ist die stärkste Stunde der stärkeren Richtung. Straßenbahn: GTFS-Routen mit route_type in tram_route_types (Hamburg: keine)'
       tram_route_types: [0, 900, 901, 902, 903, 904, 905, 906]
       status: draft
     - id: PRF-03
-      description: 'Bausteine des gewünschten Profils je Kategorie: Gehwege beidseitig außer ETW_ERF (Mischfläche); Radanlage nach Führungsform (cycle_elements); Busfahrstreifen je Richtung bei bus_lane_soll; Straßenbahn nur, wenn vorhanden; Baumstreifen an tree_categories (tree_sides Seiten); Ladezone (loading_sides Seiten), wenn Geschäftsnutzung = shop_frontage_share >= rules.yaml C-G30-01 thresholds.frontage; Längsparken nur, wo OSM heute Parken am Fahrbahnrand zeigt (parking_positions), je Seite mit Parken (Wert no in der Liste = eine Seite ohne Parken), und nur nach Kategorie (parking_by_category, seit 0.9.0): none = kein Parken, as_ist = alle parking_positions, Liste = nur diese Positionen (Seiten: alle Werte erlaubt -> 2, sonst 1)'
+      label_plain: "Teile der Straße im Ziel"
+      explain_plain: "Welche Teile die Straße im Ziel hat: Gehwege, Radweg, Fahrbahn, Bäume, Parken, Ladezone."
+      why: "Eine Straße hat viele Aufgaben. Die Liste zeigt, was im Ziel Platz braucht."
+      description: >-
+        Bausteine des gewünschten Profils je Kategorie: Gehwege beidseitig außer ETW_ERF (Mischfläche); Radanlage nach
+        Führungsform (cycle_elements); Busfahrstreifen je Richtung bei bus_lane_soll; Straßenbahn nur, wenn vorhanden;
+        Baumstreifen an tree_categories (tree_sides Seiten); Ladezone (loading_sides Seiten), wenn Geschäftsnutzung =
+        shop_frontage_share >= rules.yaml C-G30-01 thresholds.frontage; Längsparken nur, wo OSM heute Parken am
+        Fahrbahnrand zeigt (parking_positions), je Seite mit Parken (Wert no in der Liste = eine Seite ohne Parken),
+        und nur nach Kategorie (parking_by_category): none = kein Parken, as_ist = alle parking_positions, Liste = nur
+        diese Positionen (Seiten: alle Werte erlaubt -> 2, sonst 1)
+      history:
+        - "seit 0.9.0: Parken nur nach Kategorie (parking_by_category)"
       sidewalk_sides: 2
       no_sidewalk_categories: [ETW_ERF]
       tree_categories: [GOW50, GOW30]
@@ -170,21 +214,74 @@ profile_assignment:
         own_path: {element: null, cycle_side: own_path}
       status: draft
     - id: PRF-04
-      description: 'Fahrbahnbreite: GOW50 1 Fahrstreifen je Richtung = lane_width_m.GOW50_2x1_carriageway (mit Bus im Mischverkehr GOW50_bus_carriageway), 2 je Richtung = 4 x GOW50.general plus Mittelstreifen median_min_m (L-03), neben Busfahrstreifen GOW50.general je Richtung; GOW30 mit Radfahrstreifen (seit 0.9.0, F04; die CROW-Spannen enthalten die Radfahrstreifen, includes_cycle_lanes) = max(untere Grenze des Profils, Kernfahrbahn + 2 x Radfahrstreifen-Sollbreite); schmales Profil (GOW30_narrow_profile) bis dessen max_dtv (auch ohne DTV) mit Kernfahrbahn = rules.yaml requirements.GOW30.profiles.narrow.centre_runner_max_m, sonst breites Profil (GOW30_wide_profile) mit Kernfahrbahn = obere Grenze von avoid_runner_m (Bereich avoid_runner_m meiden; über dessen max_dtv Flag gow30_dtv_above_profile); im Profil steht die Kernfahrbahn als carriageway, die Radfahrstreifen als eigene Bausteine. GOW30 mit Radweg (separated_*, auch bei gow30_high_volume aus S-05, F01) = rules.yaml requirements.GOW30.profiles.track.carriageway_min_m, Radwege nach PL-01; ETW30/ETW_ERF = ETW30_mixed (mit Bus ETW30_mixed.bus); Fahrradstraße = Sollbreite aus Prompt 18 (cycle_street_carriageway, mit Kfz-Verkehr with_motor_traffic, F18). Einrichtungsverkehr: GOW = GOW50.general (mit Bus with_bus) je Fahrstreifen, ETW = cycling_rules widths_m.project_target.cycle_street_carriageway (Kfz plus Rad in Gegenrichtung, PL-06). SW, GOW80, ETW60: keine Profilregeln (Flag no_profile_rules)'
+      label_plain: "Breite der Fahrbahn"
+      explain_plain: "Wie breit die Fahrbahn im Ziel ist, je nach Aufgabe und Fahrstreifen."
+      why: "Die Breite folgt aus Kategorie, Fahrstreifen, Bus und Radführung. Die Maße stammen aus den Quellen des Regelwerks."
+      description: >-
+        Fahrbahnbreite: GOW50 1 Fahrstreifen je Richtung = lane_width_m.GOW50_2x1_carriageway (mit Bus im Mischverkehr
+        GOW50_bus_carriageway), 2 je Richtung = 4 x GOW50.general plus Mittelstreifen median_min_m (L-03), neben
+        Busfahrstreifen GOW50.general je Richtung; GOW30 mit Radfahrstreifen (die CROW-Spannen enthalten die
+        Radfahrstreifen, includes_cycle_lanes) = max(untere Grenze des Profils, Kernfahrbahn + 2 x
+        Radfahrstreifen-Sollbreite); schmales Profil (GOW30_narrow_profile) bis dessen max_dtv (auch ohne DTV) mit
+        Kernfahrbahn = rules.yaml requirements.GOW30.profiles.narrow.centre_runner_max_m, sonst breites Profil
+        (GOW30_wide_profile) mit Kernfahrbahn = obere Grenze von avoid_runner_m (Bereich avoid_runner_m meiden; über
+        dessen max_dtv Flag gow30_dtv_above_profile); im Profil steht die Kernfahrbahn als carriageway, die
+        Radfahrstreifen als eigene Bausteine. GOW30 mit Radweg (separated_*, auch bei gow30_high_volume aus S-05) =
+        rules.yaml requirements.GOW30.profiles.track.carriageway_min_m, Radwege nach PL-01; ETW30/ETW_ERF =
+        ETW30_mixed (mit Bus ETW30_mixed.bus); Fahrradstraße = Sollbreite (cycle_street_carriageway, mit Kfz-Verkehr
+        with_motor_traffic). Einrichtungsverkehr: GOW = GOW50.general (mit Bus with_bus) je Fahrstreifen, ETW =
+        cycling_rules widths_m.project_target.cycle_street_carriageway (Kfz plus Rad in Gegenrichtung, PL-06). SW,
+        GOW80, ETW60: keine Profilregeln (Flag no_profile_rules)
+      history:
+        - "seit 0.9.0 (F04): GOW30 mit Radfahrstreifen = max(untere Grenze des Profils, Kernfahrbahn + 2 x Radfahrstreifen-Sollbreite)"
+        - "F01: GOW30 mit Radweg auch bei gow30_high_volume aus S-05"
+        - "Prompt 18, F18: Sollbreite der Fahrradstraße (cycle_street_carriageway, mit Kfz-Verkehr with_motor_traffic)"
       no_profile_categories: [SW, GOW80, ETW60]
       status: draft
     - id: PRF-05
-      description: 'Gewünschtes Profil = alle Bausteine aus PRF-03 in der Reihenfolge cross_section_allocation.fill_order mit Regelmaß (Gehweg standard, Radanlage Sollbreite aus Prompt 18, übrige elements_min_m). Passt, wenn total_required_m <= available_m. Maßgeblich ist width_p10_m (Variante Verkehrsfläche, S-XS-02); facade_width_p10_m (S-XS-03) wird gleich gerechnet und zeigt das Potenzial inkl. Vorgärten. Ohne Breite: fit_class leer, Flag width_unknown'
+      label_plain: "Passt alles hinein?"
+      explain_plain: "Alle Teile mit Regelmaß nebeneinander: Passt das in die Breite der Straße?"
+      why: "So lässt sich prüfen, ob das Ziel auf der vorhandenen Straße überhaupt möglich ist."
+      description: >-
+        Gewünschtes Profil = alle Bausteine aus PRF-03 in der Reihenfolge cross_section_allocation.fill_order mit
+        Regelmaß (Gehweg standard, Radanlage Sollbreite, übrige elements_min_m). Passt, wenn total_required_m <=
+        available_m. Maßgeblich ist width_p10_m (Variante Verkehrsfläche, S-XS-02); facade_width_p10_m (S-XS-03) wird
+        gleich gerechnet und zeigt das Potenzial inkl. Vorgärten. Ohne Breite: fit_class leer, Flag width_unknown
+      history:
+        - "Prompt 18: Sollbreite der Radanlage"
       status: draft
     - id: PRF-06
-      description: 'Passt das Profil nicht, werden die Schritte in cascade_order nacheinander angewendet und nach jedem Schritt neu geprüft; ein Schritt ohne Wirkung zählt nicht als angewendet. fallback = Fallback der Matrixzelle aus Prompt 18 (C-FAC-01, space_fits_preferred = false) mit dessen Sollbreite. D1 entfernt Parken (Ladezone bleibt, sie gibt es nur bei Geschäftsnutzung); D3 streicht den zweiten Kfz-Fahrstreifen und den Mittelstreifen (Busfahrstreifen bleibt); D2 setzt den neuen Baumstreifen auf 0 (Baumscheiben im Trenn- oder Seitenraum, Flag trees_as_pits; Bestandsbäume nicht erfasst, TODO existing_trees_conflict); D4 setzt Radanlage auf die Untergrenze aus C-FAC-04 floor und Gehweg auf min; D5 nur GOW50: Vorschlag GOW30 (C-G30-02) in cat_change_proposal, Profil mit GOW30-Fahrbahn und Führung der GOW30-Matrixzelle neu bilden, cat_final bleibt; D6 und D7 nur als Flag, wenn danach nicht passt (D7 nur im Radnetz, cycle_cat_final != none, und nur wenn die Radanlage eigene Breite im Profil belegt – Radweg oder Radfahrstreifen; bei Mischverkehr und Fahrradstraße bringt eine Verlegung keinen Platz). fit_class: fits ohne Schritt, fits_after_degrade nach D1-D5 oder fallback, sonst does_not_fit'
+      label_plain: "Abstriche, wenn es nicht passt"
+      explain_plain: "Passt es nicht, entfallen Schritt für Schritt Parken, Bäume oder ein Fahrstreifen."
+      why: "Wenn der Platz fehlt, muss etwas weichen. Die Reihenfolge ist vorher festgelegt und nachvollziehbar."
+      description: >-
+        Passt das Profil nicht, werden die Schritte in cascade_order nacheinander angewendet und nach jedem Schritt
+        neu geprüft; ein Schritt ohne Wirkung zählt nicht als angewendet. fallback = Fallback der Matrixzelle
+        (C-FAC-01, space_fits_preferred = false) mit dessen Sollbreite. D1 entfernt Parken (Ladezone bleibt, sie gibt
+        es nur bei Geschäftsnutzung); D3 streicht den zweiten Kfz-Fahrstreifen und den Mittelstreifen (Busfahrstreifen
+        bleibt); D2 setzt den neuen Baumstreifen auf 0 (Baumscheiben im Trenn- oder Seitenraum, Flag trees_as_pits;
+        Bestandsbäume nicht erfasst, TODO existing_trees_conflict); D4 setzt Radanlage auf die Untergrenze aus
+        C-FAC-04 floor und Gehweg auf min; D5 nur GOW50: Vorschlag GOW30 (C-G30-02) in cat_change_proposal, Profil mit
+        GOW30-Fahrbahn und Führung der GOW30-Matrixzelle neu bilden, cat_final bleibt; D6 und D7 nur als Flag, wenn
+        danach nicht passt (D7 nur im Radnetz, cycle_cat_final != none, und nur wenn die Radanlage eigene Breite im
+        Profil belegt – Radweg oder Radfahrstreifen; bei Mischverkehr und Fahrradstraße bringt eine Verlegung keinen
+        Platz). fit_class: fits ohne Schritt, fits_after_degrade nach D1-D5 oder fallback, sonst does_not_fit
+      history:
+        - "Prompt 18: Fallback der Matrixzelle mit Sollbreite"
       cascade_order: [D1, D3, D2, fallback, D4, D5, D6, D7]
       cascade_order_note: 'Seit 0.9.0 D3 vor D2 und fallback nach D2 (Review 2026-11 F17, Q1 b): „so wenige Fahrstreifen wie möglich“ – der zweite Kfz-Streifen fällt vor dem Grün; bis 0.8.0 [D1, D2, fallback, D3, ...]'
       flag_only_steps: [D6, D7]
       status: draft
     - id: PRF-07
+      label_plain: "Nicht prüfbar"
+      explain_plain: "Haltestellen und einseitige Radwege lassen sich mit den Daten nicht prüfen."
+      why: "Es gibt keine Daten für diese Fälle. Darum sagt der Entwurf offen, dass er nichts prüfen kann."
       description: 'PL-02 (Seite mit wenigen Knoten, keine Ziele) und PL-05 (Bushaltestelleninsel) sind mit den vorhandenen Daten nicht prüfbar: Zweirichtungsradweg aus der Matrix bleibt, Flag pl02_unchecked; Haltestellen nicht im Streckenprofil'
-      note: 'Teil PL-02 (Flag pl02_unchecked) betrifft nur außerorts und tritt nicht auf, solange separation_matrix.rural inaktiv ist (F33); Teil PL-05 gilt innerorts, darum bleibt PRF-07 draft'
+      note: >-
+        Teil PL-02 (Flag pl02_unchecked) betrifft nur außerorts und tritt nicht auf, solange separation_matrix.rural
+        inaktiv ist; Teil PL-05 gilt innerorts, darum bleibt PRF-07 draft
+      history:
+        - "F33: PL-02-Teil nur außerorts"
       status: draft
 
 # ---------------------------------------------------------------
@@ -211,60 +308,63 @@ junctions:
     source: [SWOV_ROT_2022, CROW_GOW30_2023, NL_MUNI_CASTRICUM_2020]
     source_type: swov_crow
     rows:
-      - {id: J-01, legs: 'GOW50+GOW50', if: 'entering_dtv_sum <= roundabout_max_dtv and space_radius_m >= roundabout_min_radius and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv and space_radius_m >= turbo_min_radius', else_then: turbo_roundabout, otherwise: signal_protected, note: 'Turbokreisel mit eigenem Platzbedarf turbo_min_radius (Review 2026-11 F24)', status: draft}
-      - {id: J-02, legs: 'GOW50+GOW30', same_as: J-01, status: draft}
-      - {id: J-03, legs: 'GOW30+GOW30', if: 'entering_dtv_sum <= roundabout_max_dtv and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv', else_then: turbo_roundabout, otherwise: signal_protected, fallback: priority_flat_coloured, note: 'CROW: bevorzugt Kreisverkehr; sonst Vorfahrtknoten mit eingefärbter Kreuzungsfläche. DTV-Grenzen wie J-01 (Entscheidung prstolpe 2026-11-07, open_questions 134); ohne Platz für den Kreisverkehr eingefärbte Vorfahrt (fallback)', status: draft}
-      - {id: J-04, legs: 'GOW50+ETW30', then: continuous_footway_exit, fallback: priority_raised, note: 'Gehwegüberfahrt bzw. Vorfahrt GOW mit Plateau', status: draft}
-      - {id: J-05, legs: 'GOW30+ETW30', then: continuous_footway_exit, fallback: priority_raised, source: CROW_GOW30_2023, status: draft}
-      - {id: J-06, legs: 'ETW30+ETW30', then: equal_right_before_left, source: SWOV_ROT_2022, status: draft}
-      - {id: J-07, legs: 'ETW30(cycle_street)+ETW30', then: priority_raised, note: 'Fahrradstraße hat Vorfahrt', source: NL_MUNI_CASTRICUM_2020, status: draft}
-      - {id: J-08, legs: 'cycle_path+GOW30', then: cycle_crossing_priority, note: 'Radweg mit Vorrang, aufgepflastert, rot', status: draft}
-      - {id: J-09, legs: 'cycle_path(RSV|HAUPT)+GOW50', if: 'entering_dtv_sum > grade_sep_min_dtv', then: grade_separated_cycle, otherwise: cycle_crossing_signal, note: 'Tunnel/Brücke bei hoher Belastung (DCE)', status: draft}
-      - {id: J-12, legs: 'cycle_path(RSV|HAUPT|BASIS)+ETW30', then: cycle_crossing_priority, note: 'eigenständiger Radweg des Radnetzes quert Erschließungsstraße: Radwegfurt mit Vorrang wie J-08 (Entscheidung prstolpe 2026-11-07, open_questions 133); Rechtslage (Vorrang selbständiger Radweg, StVO) prüfen', source: NL_MUNI_CASTRICUM_2020, status: draft}
-      - {id: J-13, legs: 'ETW30+ETW_ERF', then: continuous_footway_exit, note: 'Erschließungsstraße an Fußgängerzone bzw. verkehrsberuhigtem Bereich: Gehwegüberfahrt wie N6 (rules.yaml); prüft die Kategorie vor category_alias (Entscheidung prstolpe 2026-11-07, open_questions 135)', status: draft}
-      - {id: J-10, legs: 'cycle_path(RSV|HAUPT)+SW', then: grade_separated_cycle, note: 'planfreie Radquerung nur für eigenständige Hauptrouten (Review 2026-11 F08; vorher any+SW)', status: draft}
-      - {id: J-10b, legs: 'SW+GOW50|GOW30', same_as: J-01, source_type: assumption, note: 'Rampenknoten (*_link) plangleich; Radquerung nach JC-02/JC-03 (Review 2026-11 F08)', status: draft}
-      - {id: J-10c, legs: 'SW+ETW30|ETW_ERF', then: signal_protected, source_type: assumption, note: 'Rampe an Erschließungsstraße, Flag N5 sw_to_etw (Review 2026-11 F08)', status: draft}
-      - {id: J-10d, legs: 'SW+SW|cycle_path(BASIS|ERSCHL)', then: not_applicable, source_type: assumption, note: 'Autobahnknoten ohne Rad-/Fußverkehr; BASIS-Weg an SW: Lage prüfen. Review 2026-11 F08 schreibt SW+SW|cycle_path(BASIS|ERSCHL)+SW (gleichbedeutend)', status: draft}
-      - {id: J-14, legs: 'GOW50+ETW30', cycle_crossing: [RSV, HAUPT, BASIS], if: 'lanes_per_direction_max >= 2 or entering_dtv_sum > crossing_signal_min_dtv', then: cycle_crossing_signal, otherwise: continuous_footway_exit, source_type: assumption,
-         note: 'Radroute quert den Zug (Arme beidseits außerhalb des Zugs in der Radkategorie); sonst J-04 (Review 2026-11 F03, E5 b)', status: draft}
-      - {id: J-15, legs: 'cycle_path(BASIS|ERSCHL)+GOW50', if: 'lanes_per_direction_max >= 2 or entering_dtv_sum > crossing_signal_min_dtv', then: cycle_crossing_signal, otherwise: cycle_crossing_refuge, source_type: assumption, note: 'Review 2026-11 F10', status: draft}
-      - {id: J-16, legs: 'cycle_path(ERSCHL)+ETW30', then: equal_right_before_left, source_type: assumption, note: 'Rechtslage selbständiger Radweg an Straße prüfen (wie J-12); Review 2026-11 F10', status: draft}
-      - {id: J-11, legs: 'any with tram', then: signal_protected, status: draft}
+      - {id: J-01, label_plain: "Zwei Hauptstraßen mit Tempo 50", explain_plain: "Kreisverkehr, wenn Verkehr und Platz es erlauben, sonst Turbokreisel oder geschützte Ampel.", why: "Die Tabelle beruht auf niederländischen Quellen. Die Grenzen für den Verkehr hat das Projekt gesetzt.", history: ["Review 2026-11 F24"], legs: 'GOW50+GOW50', if: 'entering_dtv_sum <= roundabout_max_dtv and space_radius_m >= roundabout_min_radius and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv and space_radius_m >= turbo_min_radius', else_then: turbo_roundabout, otherwise: signal_protected, note: "Turbokreisel mit eigenem Platzbedarf turbo_min_radius", status: draft}
+      - {id: J-02, label_plain: "Hauptstraße 50 trifft Hauptstraße 30", explain_plain: "Wie bei zwei Hauptstraßen mit Tempo 50.", why: "Die Tabelle behandelt dieses Paar wie zwei Hauptstraßen mit Tempo 50.", legs: 'GOW50+GOW30', same_as: J-01, status: draft}
+      - {id: J-03, label_plain: "Zwei Hauptstraßen mit Tempo 30", explain_plain: "Kreisverkehr bei wenig Verkehr, sonst Turbokreisel oder Ampel; fehlt Platz, eingefärbte Vorfahrt.", why: "Das niederländische Regelwerk (CROW) bevorzugt den Kreisverkehr. Sonst folgt Vorfahrt mit eingefärbter Fläche.", history: ["Entscheidung prstolpe 2026-11-07, open_questions 134: DTV-Grenzen wie J-01"], legs: 'GOW30+GOW30', if: 'entering_dtv_sum <= roundabout_max_dtv and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv', else_then: turbo_roundabout, otherwise: signal_protected, fallback: priority_flat_coloured, note: "CROW: bevorzugt Kreisverkehr; sonst Vorfahrtknoten mit eingefärbter Kreuzungsfläche. DTV-Grenzen wie J-01; ohne Platz für den Kreisverkehr eingefärbte Vorfahrt (fallback)", status: draft}
+      - {id: J-04, label_plain: "Hauptstraße 50 trifft Wohnstraße", explain_plain: "Durchgehender Gehweg über die Einmündung.", why: "Die Einmündung bekommt eine Gehwegüberfahrt. Ersatzweise hat die Hauptstraße Vorfahrt mit Plateau.", legs: 'GOW50+ETW30', then: continuous_footway_exit, fallback: priority_raised, note: 'Gehwegüberfahrt bzw. Vorfahrt GOW mit Plateau', status: draft}
+      - {id: J-05, label_plain: "Hauptstraße 30 trifft Wohnstraße", explain_plain: "Durchgehender Gehweg über die Einmündung.", why: "Die Regel stützt sich auf das niederländische Regelwerk (CROW).", legs: 'GOW30+ETW30', then: continuous_footway_exit, fallback: priority_raised, source: CROW_GOW30_2023, status: draft}
+      - {id: J-06, label_plain: "Zwei Wohnstraßen", explain_plain: "Rechts vor links.", why: "Die Regel stützt sich auf einen SWOV-Bericht zu Kreisverkehren und Kreuzungen.", legs: 'ETW30+ETW30', then: equal_right_before_left, source: SWOV_ROT_2022, status: draft}
+      - {id: J-07, label_plain: "Fahrradstraße trifft Wohnstraße", explain_plain: "Die Fahrradstraße hat Vorfahrt, mit erhöhter Fläche.", why: "Die Fahrradstraße hat Vorfahrt. Das nennt eine niederländische Gemeinde in ihren Anforderungen.", legs: 'ETW30(cycle_street)+ETW30', then: priority_raised, note: 'Fahrradstraße hat Vorfahrt', source: NL_MUNI_CASTRICUM_2020, status: draft}
+      - {id: J-08, label_plain: "Radweg quert Hauptstraße 30", explain_plain: "Radüberweg mit Vorrang, rot und erhöht.", why: "Die Tabelle gibt dem eigenständigen Radweg an dieser Querung Vorrang.", legs: 'cycle_path+GOW30', then: cycle_crossing_priority, note: 'Radweg mit Vorrang, aufgepflastert, rot', status: draft}
+      - {id: J-09, label_plain: "Wichtiger Radweg quert Hauptstraße 50", explain_plain: "Brücke oder Tunnel ab 30 000 Autos am Tag, sonst Ampel für Räder.", why: "Die Dutch Cycling Embassy nennt Tunnel oder Brücke bei hoher Belastung. Die Grenze hat das Projekt gesetzt.", legs: 'cycle_path(RSV|HAUPT)+GOW50', if: 'entering_dtv_sum > grade_sep_min_dtv', then: grade_separated_cycle, otherwise: cycle_crossing_signal, note: 'Tunnel/Brücke bei hoher Belastung (DCE)', status: draft}
+      - {id: J-12, label_plain: "Radroute quert Wohnstraße", explain_plain: "Radüberweg mit Vorrang für den eigenständigen Radweg.", why: "Die Tabelle gibt dem eigenständigen Radweg Vorrang. Die Rechtslage ist noch zu prüfen.", history: ["Entscheidung prstolpe 2026-11-07, open_questions 133: Radwegfurt mit Vorrang wie J-08"], legs: 'cycle_path(RSV|HAUPT|BASIS)+ETW30', then: cycle_crossing_priority, note: "eigenständiger Radweg des Radnetzes quert Erschließungsstraße: Radwegfurt mit Vorrang wie J-08; Rechtslage (Vorrang selbständiger Radweg, StVO) prüfen", source: NL_MUNI_CASTRICUM_2020, status: draft}
+      - {id: J-13, label_plain: "Wohnstraße trifft Fußgängerzone", explain_plain: "Durchgehender Gehweg.", why: "Die Wohnstraße bekommt eine Gehwegüberfahrt zur Fußgängerzone. Das Projektteam hat das entschieden.", history: ["Entscheidung prstolpe 2026-11-07, open_questions 135"], legs: 'ETW30+ETW_ERF', then: continuous_footway_exit, note: "Erschließungsstraße an Fußgängerzone bzw. verkehrsberuhigtem Bereich: Gehwegüberfahrt wie N6 (rules.yaml); prüft die Kategorie vor category_alias", status: draft}
+      - {id: J-10, label_plain: "Wichtiger Radweg quert Schnellstraße", explain_plain: "Brücke oder Tunnel für eigenständige Radwege der beiden obersten Stufen.", why: "Die Regel gilt nur für eigenständige Hauptrouten.", history: ["Review 2026-11 F08; vorher any+SW"], legs: 'cycle_path(RSV|HAUPT)+SW', then: grade_separated_cycle, note: "planfreie Radquerung nur für eigenständige Hauptrouten", status: draft}
+      - {id: J-10b, label_plain: "Autobahnrampe an Hauptstraße", explain_plain: "Wie bei zwei Hauptstraßen: Kreisverkehr oder Ampel.", why: "Rampenknoten liegen auf Straßenhöhe. Sie werden wie zwei Hauptstraßen behandelt.", history: ["Review 2026-11 F08"], legs: 'SW+GOW50|GOW30', same_as: J-01, source_type: assumption, note: "Rampenknoten (*_link) plangleich; Radquerung nach JC-02/JC-03", status: draft}
+      - {id: J-10c, label_plain: "Autobahnrampe an Wohnstraße", explain_plain: "Geschützte Ampel.", why: "Eine Rampe an einer Wohnstraße bekommt eine geschützte Ampel. Das hat das Projekt gesetzt.", history: ["Review 2026-11 F08"], legs: 'SW+ETW30|ETW_ERF', then: signal_protected, source_type: assumption, note: "Rampe an Erschließungsstraße, Flag N5 sw_to_etw", status: draft}
+      - {id: J-10d, label_plain: "Autobahnknoten", explain_plain: "Für Rad- und Fußverkehr ist keine Kreuzungsart nötig.", why: "Ein Autobahnknoten hat keinen Rad- und Fußverkehr. Darum ist keine Kreuzungsart nötig.", history: ["Review 2026-11 F08"], legs: 'SW+SW|cycle_path(BASIS|ERSCHL)', then: not_applicable, source_type: assumption, note: "Autobahnknoten ohne Rad-/Fußverkehr; BASIS-Weg an SW: Lage prüfen. Der Review schreibt SW+SW|cycle_path(BASIS|ERSCHL)+SW (gleichbedeutend)", status: draft}
+      - {id: J-14, label_plain: "Radroute quert Hauptstraße 50 an einer Einmündung", explain_plain: "Ampel für Räder bei viel Verkehr oder zwei Fahrstreifen, sonst durchgehender Gehweg.", why: "Die Grenzen für Verkehr und Fahrstreifen hat das Projekt gesetzt. Sonst gilt der durchgehende Gehweg.", history: ["Review 2026-11 F03, E5 b"], legs: 'GOW50+ETW30', cycle_crossing: [RSV, HAUPT, BASIS], if: 'lanes_per_direction_max >= 2 or entering_dtv_sum > crossing_signal_min_dtv', then: cycle_crossing_signal, otherwise: continuous_footway_exit, source_type: assumption,
+         note: "Radroute quert den Zug (Arme beidseits außerhalb des Zugs in der Radkategorie); sonst J-04", status: draft}
+      - {id: J-15, label_plain: "Nebenweg quert Hauptstraße 50", explain_plain: "Ampel für Räder bei viel Verkehr, sonst Querung mit Mittelinsel.", why: "Die Grenzen hat das Projekt gesetzt. Die Mittelinsel lässt Räder in zwei Schritten queren.", history: ["Review 2026-11 F10"], legs: 'cycle_path(BASIS|ERSCHL)+GOW50', if: 'lanes_per_direction_max >= 2 or entering_dtv_sum > crossing_signal_min_dtv', then: cycle_crossing_signal, otherwise: cycle_crossing_refuge, source_type: assumption, status: draft}
+      - {id: J-16, label_plain: "Nebenweg trifft Wohnstraße", explain_plain: "Rechts vor links.", why: "Das Projekt hat das gesetzt. Die Rechtslage für selbständige Radwege ist noch zu prüfen.", history: ["Review 2026-11 F10"], legs: 'cycle_path(ERSCHL)+ETW30', then: equal_right_before_left, source_type: assumption, note: "Rechtslage selbständiger Radweg an Straße prüfen (wie J-12)", status: draft}
+      - {id: J-11, label_plain: "Kreuzung mit Straßenbahn", explain_plain: "Ampel, wenn eine Straßenbahn kreuzt; in Hamburg gibt es keinen Fall.", why: "Wo eine Straßenbahn kreuzt, gilt die geschützte Ampelkreuzung. In Hamburg kommt das nicht vor.", legs: 'any with tram', then: signal_protected, status: draft}
   thresholds:
-    roundabout_max_dtv: {value: 25000, source_type: assumption, note: 'Summe zufließender Kfz/24h einstreifiger Kreisverkehr; CROW/HBS prüfen'}
-    turbo_max_dtv: {value: 35000, source_type: assumption}
-    grade_sep_min_dtv: {value: 30000, source_type: assumption}
-    roundabout_min_radius: {value: 20, unit: m, note: 'Außendurchmesser ca. 40 m inkl. Radring; Platzbedarf entspricht etwa vierarmigem Knoten (DCE)', source_type: assumption}
-    turbo_min_radius: {value: 30, unit: m, source_type: assumption, status: draft, note: 'Turbokreisel mit Radring; am Original prüfen (Review 2026-11 F24, A8)'}
-    crossing_signal_min_dtv: {value: 12000, unit: Kfz/24h, source_type: assumption, status: draft, note: 'Summe Zufluss; ≈ 1 200 Kfz/h bei 10 % Spitzenstunde, zweistufige Querung über Mittelinsel bis etwa dahin (Review 2026-11 F03, A8)'}
+    roundabout_max_dtv: {label_plain: "höchster Autoverkehr für einen einspurigen Kreisverkehr", value: 25000, source_type: assumption, note: 'Summe zufließender Kfz/24h einstreifiger Kreisverkehr; CROW/HBS prüfen'}
+    turbo_max_dtv: {label_plain: "höchster Autoverkehr für einen Turbokreisel", value: 35000, source_type: assumption}
+    grade_sep_min_dtv: {label_plain: "Autoverkehr ab dem eine Brücke oder ein Tunnel nötig ist", value: 30000, source_type: assumption}
+    roundabout_min_radius: {label_plain: "Platz, den ein Kreisverkehr braucht", value: 20, unit: m, note: 'Außendurchmesser ca. 40 m inkl. Radring; Platzbedarf entspricht etwa vierarmigem Knoten (DCE)', source_type: assumption}
+    turbo_min_radius: {label_plain: "Platz, den ein Turbokreisel braucht", value: 30, unit: m, source_type: assumption, status: draft, note: 'Turbokreisel mit Radring; am Original prüfen (Review 2026-11 F24, A8)'}
+    crossing_signal_min_dtv: {label_plain: "Autoverkehr ab dem Räder eine Ampel zum Queren bekommen", value: 12000, unit: Kfz/24h, source_type: assumption, status: draft, note: 'Summe Zufluss; ≈ 1 200 Kfz/h bei 10 % Spitzenstunde, zweistufige Querung über Mittelinsel bis etwa dahin (Review 2026-11 F03, A8)'}
   cyclist_treatment:
     # applies_to (Zuordnung in pipeline/c07_junctions.py, Annahme 2026-11-06): Liste von Klauseln, eine passende genügt.
     # types = Soll-Knotentypen; cycle_cats = mindestens ein Arm dieser Radkategorie (bei crossing_categories: ein Arm
     # außerhalb des durchgehenden Zugs); crossing_categories = Kategorie des Zugs (erster Teil des Kategoriepaars), den
     # diese Radroute quert. Bedingungen einer Klausel gelten zusammen.
-    - {id: JC-01, rule: 'Kreisverkehr innerorts mit umlaufendem Radweg, Radverkehr bevorrechtigt', source: SWOV_ROT_2022, source_type: swov_crow, note: 'CROW-Empfehlung innerorts; SWOV: Wartepflicht sicherer – Zielkonflikt dokumentieren. Deutsches Recht: Vorrang nur bei fahrbahnnaher Führung, StVO/VwV prüfen', status: draft,
+    - {id: JC-01, label_plain: "Kreisverkehr: Rad hat Vorrang", explain_plain: "Im Kreisverkehr hat der umlaufende Radweg Vorrang.", why: "Das niederländische Regelwerk (CROW) empfiehlt das innerorts. SWOV hält Wartepflicht für sicherer.", rule: 'Kreisverkehr innerorts mit umlaufendem Radweg, Radverkehr bevorrechtigt', source: SWOV_ROT_2022, source_type: swov_crow, note: 'CROW-Empfehlung innerorts; SWOV: Wartepflicht sicherer – Zielkonflikt dokumentieren. Deutsches Recht: Vorrang nur bei fahrbahnnaher Führung, StVO/VwV prüfen', status: draft,
        applies_to: [{types: [roundabout_single_lane_cycle_priority]}]}
-    - {id: JC-02, rule: 'LSA-Knoten als geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor Kfz, indirektes Linksabbiegen', source: [DCE_INFRA, SWOV_FS_2023], source_type: swov_crow, status: draft,
+    - {id: JC-02, label_plain: "Geschützte Ampelkreuzung", explain_plain: "Eckinseln, abgesetzter Radüberweg, Wartefläche vor den Autos, Linksabbiegen in zwei Schritten.", why: "Die Gestaltung stützt sich auf die Dutch Cycling Embassy und SWOV.", rule: 'LSA-Knoten als geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor Kfz, indirektes Linksabbiegen', source: [DCE_INFRA, SWOV_FS_2023], source_type: swov_crow, status: draft,
        applies_to: [{types: [signal_protected]}]}
-    - {id: JC-03, rule: 'Furten im Zuge RSV/HAUPT: Breite = Radwegbreite, rot, aufgepflastert wo Vorrang', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft,
+    - {id: JC-03, label_plain: "Radüberweg auf wichtigen Routen", explain_plain: "So breit wie der Radweg, rot, erhöht wo Vorrang.", why: "Die Furt ist so breit wie der Radweg und rot. Das nennt eine niederländische Gemeinde.", rule: 'Furten im Zuge RSV/HAUPT: Breite = Radwegbreite, rot, aufgepflastert wo Vorrang', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft,
        applies_to: [{types: [cycle_crossing_priority, cycle_crossing_signal, signal_protected, priority_raised, priority_flat_coloured], cycle_cats: [RSV, HAUPT]},
                     {types: [cycle_crossing_priority]}],
        note_applies: 'eigenständige Radwegfurt mit Vorrang immer rot und aufgepflastert (Typbeschreibung J-08), auch im BASIS-Netz'}
-    - {id: JC-04, rule: 'Mittelinsel für Querung GOW durch Radroute >= 4.00 m (RSV), >= 3.00 m (HAUPT), >= 2.50 m (BASIS)', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft,
+    - {id: JC-04, label_plain: "Mittelinsel zum Queren", explain_plain: "Insel in der Hauptstraße, 2,50 bis 4,00 m breit je nach Route.", why: "Die Breiten stammen von einer niederländischen Gemeinde. Für die Radvorrangroute nimmt das Projekt Platz für ein Lastenrad mit Anhänger an.", rule: 'Mittelinsel für Querung GOW durch Radroute >= 4.00 m (RSV), >= 3.00 m (HAUPT), >= 2.50 m (BASIS)', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft,
        applies_to: [{types: [cycle_crossing_priority, cycle_crossing_signal, priority_raised, priority_flat_coloured, continuous_footway_exit, cycle_crossing_refuge], cycle_cats: [RSV, HAUPT, BASIS], crossing_categories: [GOW50, GOW30]},
                     {types: [cycle_crossing_refuge]}],
        note_applies: 'cycle_crossing_refuge hat die Mittelinsel immer (Typbeschreibung J-15); für ERSCHL nennt median_width_m keinen Wert',
        median_width_m: {RSV: {value: 4.00, source_type: assumption, note: 'Lastenrad mit Anhänger (Review 2026-11 F24, A8)'}, HAUPT: 3.00, BASIS: 2.50}}
-    - {id: JC-05, rule: 'Freies Rechtsabbiegen für Rad an LSA, wo sicher', source_type: assumption, status: draft,
+    - {id: JC-05, label_plain: "Freies Rechtsabbiegen für Räder", explain_plain: "An Ampeln dürfen Räder rechts abbiegen, wo es sicher ist.", why: "Das Projekt hat diese Regel gesetzt; sie wird noch geprüft.", rule: 'Freies Rechtsabbiegen für Rad an LSA, wo sicher', source_type: assumption, status: draft,
        applies_to: [{types: [signal_protected]}]}
-    - {id: JC-06, rule: 'Turbokreisverkehr: umlaufender Radweg abgesetzt, Radverkehr wartepflichtig; im RSV/HAUPT-Netz planfreie Querung prüfen (Flag turbo_grade_sep_check)', source_type: assumption, status: draft,
-       note: 'Review 2026-11 F02, A3: NL-Praxis führt Rad am Turbokreisel wartepflichtig oder planfrei; Turbokreisel sind kein deutsches Regelelement. Quelle (CROW/Fietsberaad) ergänzen',
+    - {id: JC-06, label_plain: "Turbokreisel: Rad wartet", explain_plain: "Am Turbokreisel wartet das Rad; auf wichtigen Routen Brücke oder Tunnel prüfen.", why: "In den Niederlanden warten Räder am Turbokreisel oder queren planfrei. In Deutschland ist er kein Regelelement.", history: ["Review 2026-11 F02, A3"], rule: 'Turbokreisverkehr: umlaufender Radweg abgesetzt, Radverkehr wartepflichtig; im RSV/HAUPT-Netz planfreie Querung prüfen (Flag turbo_grade_sep_check)', source_type: assumption, status: draft,
+       note: "NL-Praxis führt Rad am Turbokreisel wartepflichtig oder planfrei; Turbokreisel sind kein deutsches Regelelement. Quelle (CROW/Fietsberaad) ergänzen",
        applies_to: [{types: [turbo_roundabout]}],
        flag: turbo_grade_sep_check, flag_cycle_cats: [RSV, HAUPT]}
   # Verfahren der Stufe c07 (pipeline/c07_junctions.py, prompts/20_junctions.md). Alle Werte Annahmen, status draft.
   method:
     - id: J-M-01
+      label_plain: "Was ist eine Kreuzung?"
+      explain_plain: "Treffpunkte von drei oder mehr Straßenstücken oder von Radweg und Straße; nahe Punkte gelten als eine Kreuzung."
+      why: "Damit man Kreuzungen zählen und bewerten kann, braucht es eine klare Definition."
       rule: 'Knoten = Knoten des Straßengraphen (Abschnitte mit cat_final) mit Grad >= 3 sowie Knoten, an denen ein eigenständiger Radweg (Radgraph kind path, kein begleitender Radweg) auf einen Straßenabschnitt trifft. Knoten, die über einen Straßenabschnitt von höchstens cluster_radius_m verbunden sind, und Knoten desselben Kreisverkehrs bilden einen Knotenpunkt (zweibahnige Straßen, Kreisverkehre).'
       source_type: assumption
       status: draft
@@ -273,6 +373,9 @@ junctions:
       cycle_path_network_cats: [RSV, HAUPT, BASIS]
       note: 'Eigenständiger Radweg = Kante kind path ohne sidepath_of, die highway in cycle_path_highways hat oder zum Radnetz (cycle_path_network_cats) gehört; sonst würde jeder Gehweg-Anschluss ein Knotenpunkt.'
     - id: J-M-02
+      label_plain: "Straßen an der Kreuzung"
+      explain_plain: "Welche Straßen auf die Kreuzung treffen und wie viele Autos zufließen."
+      why: "Die Art der Kreuzung hängt davon ab, welche Straßen sich treffen. Die Arme zeigen das."
       rule: 'Arme = Straßenabschnitte und eigenständige Radwege, die den Knotenpunkt verlassen (innere Abschnitte zählen nicht), Richtungsfahrbahnen nach arm_merge zusammengefasst. entering_dtv_sum = Summe über die Kfz-Arme von dtv_share_entering x DTV des Arms. Arme ohne DTV: ETW-Arme zählen 0 (DTV dort fast nie erfasst), fehlt DTV an einem GOW/SW-Arm, ist die Summe eine Untergrenze (Flag dtv_partial); fehlt sie an allen GOW/SW-Armen, ist sie unbekannt (Flag dtv_unknown).'
       source_type: assumption
       status: draft
@@ -281,12 +384,18 @@ junctions:
       arm_merge: 'Richtungsfahrbahnen: Arme mit gleichem Straßennamen und gleichem DTV, deren Richtung vom Knotenpunkt aus um höchstens arm_merge_angle_deg abweicht, bilden einen Arm (DTV einmal, höchste Kategorie und Radkategorie). Grund: der amtliche DTV steht auf beiden Richtungsfahrbahnen als Querschnittswert. Die Richtung wird zum Punkt im Abstand search_radius_m (J-M-03) entlang des Arms gemessen.'
       arm_merge_angle_deg: {value: 30, unit: deg, source_type: assumption, note: 'gegenüberliegende Arme ca. 180°, abzweigende ca. 90°'}
     - id: J-M-03
+      label_plain: "Platz an der Kreuzung"
+      explain_plain: "Größter Kreis, der in die Straßenfläche an der Kreuzung passt."
+      why: "Ein Kreisverkehr braucht Platz. Der größte Kreis zeigt, ob er passt."
       rule: 'space_radius_m = Radius des größten einbeschriebenen Kreises in der ALKIS-Verkehrsfläche (nutzart aus S-XS-02), zugeschnitten auf search_radius_m um die Knoten des Knotenpunkts; ganz von Verkehrsfläche umschlossene Inseln (Mittelinseln bestehender Kreisverkehre, Dreiecksinseln) zählen als Fläche. Ohne Verkehrsfläche am Knoten: unbekannt (Flag space_unknown).'
       source_type: assumption
       status: draft
       search_radius_m: {value: 40, unit: m, source_type: assumption, note: 'doppelter roundabout_min_radius, damit ein Kreisverkehr um den Knoten Platz finden kann'}
       tolerance_m: {value: 0.5, unit: m, source_type: assumption, note: 'Rechengenauigkeit des einbeschriebenen Kreises'}
     - id: J-M-04
+      label_plain: "Welches Straßenpaar zählt"
+      explain_plain: "Die wichtigste durchgehende Straße und die wichtigste querende Straße bestimmen die Art der Kreuzung."
+      why: "Eine Kreuzung hat viele Arme. Die wichtigste Verbindung entscheidet über die Art."
       rule: 'Kategoriepaar wie N6 (rules.yaml): höchste Straßenkategorie (bis zu zwei ihrer Arme = durchgehender Zug) und höchste der übrigen Arme; Rang nach N6.category_rank. Bleibt neben dem Zug keine Straße, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Zeilen mit ETW_ERF (J-13) prüfen das Paar vor category_alias, alle übrigen danach. Kategorien ohne eigene Zeile der Tabelle werden über category_alias abgebildet (Flag category_alias).'
       source: [SWOV_FS_2023]
       source_type: assumption
@@ -294,6 +403,9 @@ junctions:
       note: 'prompts/20 nennt „die beiden ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50. Die N6-Lesart (Zug zählt einmal) ist als Annahme gewählt, docs/open_questions.md.'
       category_alias: {ETW_ERF: ETW30}
     - id: J-M-05
+      label_plain: "Reihenfolge der Tabelle"
+      explain_plain: "Die erste passende Zeile der Kreuzungstabelle entscheidet."
+      why: "Mehrere Zeilen könnten passen. Die feste Reihenfolge sorgt für ein eindeutiges Ergebnis."
       rule: 'Zeilen der Entscheidungstabelle in evaluation_order prüfen; die erste Zeile, deren legs passen, entscheidet. same_as übernimmt Bedingungen und Typen der genannten Zeile. Ist eine Bedingung wegen fehlender Werte unbekannt, gilt on_unknown (Flag condition_unknown, confidence low).'
       source_type: assumption
       status: draft
@@ -306,6 +418,9 @@ junctions:
       fallback_note: 'fallback einer Zeile gilt, wenn then ein Kreisverkehr ist und der Platz nicht reicht; sonst bleibt fallback als Alternative im rule_trace'
       note: 'on_unknown then = sicherster Typ der Zeile (Kreisverkehr) als Vorschlag, bis Werte vorliegen'
     - id: J-M-06
+      label_plain: "Kreuzung heute"
+      explain_plain: "Ob es heute eine Ampel oder einen Kreisverkehr gibt, aus OpenStreetMap."
+      why: "Ohne die Kreuzung heute lässt sich kein Unterschied zum Ziel zeigen."
       rule: 'junction_type_ist aus OSM: junction=roundabout/circular an einem Arm oder inneren Abschnitt -> roundabout; highway=traffic_signals im Umkreis signal_radius_m eines Knotens -> signal (jede Ampel zählt nur für den nächstgelegenen Knotenpunkt, signal_assignment) (mit traffic_calming=table -> signal_plateau); nur table -> plateau; sonst none_mapped. Handlungsbedarf, wenn Ist nicht in ist_check[Soll].ok und nicht in not_checkable liegt.'
       signal_radius_m: {value: 30, unit: m, source_type: assumption, check: 'Ampeln sind oft an der Haltlinie erfasst', note: 'aus rules.yaml N6 übernommen (Review 2026-11 F09)'}
       signal_assignment: nearest_junction
@@ -328,6 +443,9 @@ junctions:
         not_applicable: {ok: [roundabout, signal, signal_plateau, none_mapped], not_checkable: []}
       note: 'Geschützte Kreuzung, eingefärbte Fläche, Gehwegüberfahrt und Furtgestaltung sind in OSM kaum erfasst; dort not_checkable statt Abweichung. Ein Knoten mit gemeinsamem OSM-Knoten ist nie planfrei, daher bei grade_separated_cycle immer Handlungsbedarf.'
     - id: J-M-07
+      label_plain: "Rangfolge beim Umbau"
+      explain_plain: "Zuerst Kreuzungen mit vielen Radunfällen, dann wichtige Radrouten, dann viel Autoverkehr."
+      why: "Nicht alle Kreuzungen können sofort umgebaut werden. Die Reihenfolge zeigt, wo es am dringendsten ist."
       rule: 'Priorität der Knoten mit Handlungsbedarf: absteigend nach Radunfällen (Unfallatlas, je Unfall der nächste Knotenpunkt im Umkreis cluster_radius_m), dann Radkategorie des ranghöchsten Arms, dann Kfz-Zufluss. Unfälle werden nur als Anzahl je Knotenpunkt gespeichert.'
       source_type: assumption
       status: draft

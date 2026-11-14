@@ -220,7 +220,7 @@ def test_junction_profile():
     assert p["ist"]["text"] == TEXTS["cycling"]["junction_ist"]["none_mapped"]
     assert p["result"]["text"] == TEXTS["cycling"]["junction_result"]["not_checkable"]
     assert p["rule"]["id"] == "J-04" and "GOW50+ETW30" in p["rule"]["text"]
-    assert p["treatment"] == "Mittelinsel für die Querung."
+    assert p["treatment"] == LABELS.treatments["JC-04"]  # explain_plain from design_rules.yaml (redesign E5)
     assert p["conflicts"] == [TEXTS["cycling"]["junction_flags"]["dtv_partial"]]
     assert [leg["name"] for leg in p["legs"]] == ["Hauptstraße", "Hauptstraße", "Nebenweg"]
     assert p["legs"][0]["facility_text"] == TEXTS["cycling"]["facility"]["separated_oneway_both"]
@@ -261,3 +261,12 @@ def test_segment_block_rsv_fgsv_candidate_and_confidence():
     assert c["fgsv_text"] is None and c["confidence_text"] == t["no_run"]
     assert xc.segment_cycling_block(pd.Series(_fac_row()), pd.Series(_xs_row()), None, LABELS)["rsv"] is None
     json.dumps(b)
+
+
+def test_junction_treatment_text_comes_from_the_rule_file():
+    """Redesign E5: the cyclist note of a junction profile is explain_plain of JC-01..JC-06 (design_rules.yaml),
+    plain language without codes; the text table in pipeline/lib/junctions.py is only the fallback."""
+    import re
+    assert set(LABELS.treatments) == {"JC-01", "JC-02", "JC-03", "JC-04", "JC-05", "JC-06"}
+    for jc, text in LABELS.treatments.items():
+        assert not re.search(r"\b(RSV|HAUPT|BASIS|LSA|Kfz)\b", text), jc

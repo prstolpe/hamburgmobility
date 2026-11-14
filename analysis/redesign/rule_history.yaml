@@ -1,0 +1,381 @@
+# Verlauf (history) aus description/note der Regeln herausgelöst (Entscheidung E5 c).
+# Pro Regel-ID: file, optional neue description/note (null = Notiz entfällt), history = Liste kurzer Zeichenketten.
+
+C-RUR-01:
+  file: config/rules.yaml
+  note: "Inaktiv: Für outside_builtup_area gibt es keine Datenquelle (C-MISS-01); die Regel greift nie und senkt confidence nicht. Bei Aktivierung `or in_hvs` ergänzen (wie C-GOW-01), sonst wird eine HVS außerorts mit niedrigem conn_score ETW60."
+  history:
+    - "inaktiv seit 0.17.0 (F28)"
+
+C-GOW-01:
+  file: config/rules.yaml
+  note: "in_hvs wirkt nur als eigener Auslöser, nicht im conn_score. conn_gow 0,87 ist kalibriert: gewählt ist der zweistellige Wert, bei dem die km der Abschnitte ohne HVS, die die Kaskade zu GOW macht (cat_proposed GOW50/GOW30, in_hvs false, Arbeitsgebiet), dem Lauf 0.17.0 (= 0.16.0) am nächsten kommen: 82,6 km mit 0,87 (0,88: 67,8 km). Rechnung mit den Normwerten aus features.parquet, danach Kontrolllauf der Kaskade; Ergebnis im CHANGELOG 0.18.0."
+  history:
+    - "seit 0.18.0 (F13, Entscheidung Q3 b 2026-11-08): in_hvs wirkt nur noch als eigener Auslöser, nicht mehr im conn_score"
+    - "seit 0.18.0 (F13, Entscheidung Q3 b 2026-11-08): conn_gow neu kalibriert auf 0,87 (vorher 0,6 mit in_hvs im Score; Vergleichswert vorher: 78,0 km)"
+
+C-G30-01:
+  file: config/rules.yaml
+  note: "Umfeld vor heutiger Verkehrsmenge: keine DTV-Obergrenze. GOW30 über dem CROW-Profil zeigt der Soll-Querschnitt mit Flag gow30_dtv_above_profile (setzt weniger Kfz-Verkehr voraus). Es löst nur eine Schule oder Kita mit Grundstück höchstens access_radius vom Abschnitt aus; die 150 m (sensitive_radius) gelten nur für die Priorität (P-RISK-01 school_kita_radius_m). Näherung: Schulen und Kitas kommen aus OSM (Fläche oder Punkt); gemessen wird der Abstand zur Fläche, bei Punkten zum Punkt (S-FEAT-06, docs/open_questions.md). Der Teil crossing_demand ist stillgelegt (C-MISS-01, status inactive)."
+  history:
+    - "0.14.0: DTV-Obergrenze eingeführt; zurückgenommen (Entscheidung prstolpe 2026-11-07)"
+    - "seit 0.18.0 (F07, Entscheidung Q2 b 2026-11-08): nur Schule oder Kita mit Grundstück höchstens access_radius vom Abschnitt; vorher jede im Umkreis sensitive_radius 150 m"
+    - "seit 0.18.0 (F07, Entscheidung Q2 b 2026-11-08): die 150 m gelten nur noch für die Priorität"
+    - "crossing_demand stillgelegt (F25)"
+
+C-G30-02:
+  file: config/rules.yaml
+  note: "Nur über den Raum. Ein vorhandener Radweg zählt nicht (CROW-Auslöser b fragt, ob ein ausreichender Radweg realisierbar ist). bus_route = Busse je Spitzenstunde und Richtung nach PRF-02 >= S-FEAT-08 bus_route_min_peak_h_dir (s04). Flag existing_track_below_floor (c05), wenn die Ist-Breite des Radwegs bekannt ist und unter der Untergrenze C-FAC-04 floor liegt."
+  history:
+    - "seit 0.18.0 (F06): nur über den Raum"
+
+C-MISS-01:
+  file: config/rules.yaml
+  note: "Defaults gelten nur für fehlende Werte und zählen als Fallback-Quelle (C-CONF-01), außer sie stehen in C-CONF-01 global_caveats. Ein Default mit status inactive ersetzt jeden Wert (stillgelegter Teil einer Bedingung)."
+  history:
+    - "Entscheidung Projektteam 2026-10-28"
+
+C-CONF-01:
+  file: config/rules.yaml
+  note: "Es zählen nur Eingangswerte, die das Ergebnis einer Regel bestimmt haben: bei wahrem „oder“ der sicherste wahre Teil, bei falschem „und“ der sicherste falsche Teil, sonst alle Teile. Die confidence des Abschnitts ist das Minimum über alle geprüften Regeln des Entscheidungswegs. Ist die when-Bedingung einer Fallback-Quelle unbekannt, zählt der Wert als Fallback."
+  history:
+    - "Prompt 08, Entscheidung Projektteam 2026-10-28"
+
+S-NET-03:
+  file: config/rules.yaml
+  note: "guide.md 3.2 Stufe 2 nennt auch Querschnittswechsel."
+  history:
+    - "Querschnittsdaten liegen erst nach Prompt 07 vor"
+
+S-NET-04:
+  file: config/rules.yaml
+  note: "Beispiel: Amselweg in Eimsbüttel (track, vehicle=destination). Neue Einmündungen teilen bestehende Abschnitte. Nicht in der Betweenness (S-FEAT-02 exclude_highway), weil es kein Standardtempo für diese Klassen gibt."
+  history:
+    - "Entscheidung Projektteam 2026-11-04: benannte Zufahrten ins Netz (Beispiel Amselweg)"
+    - "bei Einführung: deren segment_id änderte sich einmalig (overrides.csv war leer)"
+
+S-CONF-04:
+  file: config/rules.yaml
+  description: "in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist. partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist (in_hvs_source neighbour); Wege aus S-NET-04 (service, track) nie"
+  note: "Ersatz für die HVS-Karte 2023 (HH_HVS_2023, nur PDF) und den WFS Strategisches Straßennetz (HTTP 404). Stand 2019; Abweichungen zur Karte 2023 sind möglich."
+  history:
+    - "seit 0.16.0: partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist (in_hvs_source neighbour)"
+    - "Entscheidung Projektteam 2026-10-28: DTV-Linien 2019 als Ersatzquelle"
+
+S-FEAT-01:
+  file: config/rules.yaml
+  note: "Gleiche Werte erhalten den kleinsten Rang ihrer Gruppe, damit der kleinste Wert auf 0 fällt: ohne Bus (rund 70 % der Abschnitte) bus_trips_weekday_norm 0, Sackgassen mit Betweenness 0 ebenso. Ohne Streuung (ein Wert oder alle gleich) ist der Normwert 0. in_hvs geht als 0/1 ein, shop_frontage_share ist schon ein Anteil 0-1 und wird nicht umgerechnet. Folge: conn_gow 0,6 bedeutet bei einem einzelnen Merkmal 'oberste 40 %'. Das Arbeitsgebiet ist ganz Hamburg (ohne Neuwerk und ohne die ländlichen Stadtteile aus config/project.yaml): Der Rang gilt stadtweit, damit derselbe Abschnitt in jedem Bezirk gleich bewertet wird. Schwellen wie conn_gow wirken auf die stadtweite Verteilung."
+  history:
+    - "seit 0.5.0: gleiche Werte erhalten den kleinsten Rang ihrer Gruppe; vorher mittlerer Rang (ohne Bus bus_trips_weekday_norm 0,35 statt 0)"
+    - "seit 0.13.0 (Entscheidung Projektteam 2026-11-04): Arbeitsgebiet ganz Hamburg, Rang stadtweit; Schwellen wie conn_gow unverändert"
+    - "Entscheidung Projektteam 2026-10-28"
+
+S-FEAT-03:
+  file: config/rules.yaml
+  note: "Gebäude aus ALKIS (WFS_HH_ALKIS_vereinfacht, ave:GebaeudeBauwerk). Nur gebnutzbez Gebaeude (Bauteile liegen in Gebäuden und würden doppelt zählen), ohne unterirdische Objekte (Tiefgaragen, Bunker). Puffer mit runden Enden."
+  history:
+    - "seit 0.6.0: ALKIS statt OSM"
+
+S-FEAT-04:
+  file: config/rules.yaml
+  note: "Zensus-Gitter 2022 (sources.yaml population_grid, Abruf 2026-10-28) liegt in data/raw und wird genutzt; Abschnitte ohne Zelle im Puffer haben 0 Einwohner (Zellen ohne Einwohner fehlen in der Datei)."
+  history:
+    - "Notiz aktualisiert in 0.17.0 (F31)"
+
+S-FEAT-05:
+  file: config/rules.yaml
+  description: "Anteil Erdgeschoss mit Publikumsnutzung = Anteil der ALKIS-Gebäude im Puffer mit Publikumsnutzung (Gebäudefunktion oder OSM-shop/amenity-Punkt im Gebäude); Nebengebäude zählen nicht; ohne Gebäude im Puffer 0 (keine Publikumsnutzung)"
+  note: "ALKIS-Gebäude (Auswahl wie S-FEAT-03) mit Gebäudefunktion `funktion`; die Listen enthalten nur Werte, die in den Daten vorkommen (Abruf 2026-10-28). Schulen und Kitas zählen hier nicht, weil sie über S-FEAT-06 schon in place_score eingehen. Bürogebäude zählen nicht (kein Publikumsverkehr). Zählt Gebäude, nicht Fassadenlänge; das Geschoss von OSM-POIs wird nicht geprüft. amenity_excluded: Stadtmöblierung ohne Publikumsverkehr."
+  history:
+    - "seit 0.16.0 (Entscheidung prstolpe 2026-11-07): ohne Gebäude im Puffer 0"
+    - "seit 0.6.0: ALKIS-Gebäude"
+
+S-FEAT-06:
+  file: config/rules.yaml
+  note: "Zwei Spalten mit derselben Rechnung: schools_or_kitas_within_m (place_score, P-RISK-01) und school_or_kita_access_m (C-G30-01, access_radius). Näherung für den Zugang: Eingänge sind nicht erfasst, die amtliche Quelle fehlt (sources.yaml schools/kitas ohne Endpunkt). OSM-Flächen sind meist das Schulgrundstück, bei Kitas teils nur das Gebäude; Punkte (Schulen 58 von 558, Kitas 434 von 987, Abruf 2026-11-04) zählen mit dem Abstand zum Punkt. amenity=school umfasst auch berufsbildende Schulen (docs/open_questions.md)."
+  history:
+    - "seit 0.18.0 (F07): zwei Spalten statt einer (neu school_or_kita_access_m für C-G30-01)"
+
+S-FEAT-08:
+  file: config/rules.yaml
+  note: "Repräsentativer Werktag = der Dienstag, Mittwoch oder Donnerstag in der Gültigkeit des Feeds mit den meisten aktiven service_id (calendar und calendar_dates). route_types: 3 und 7xx (Bus) nach GTFS-Spezifikation bzw. erweiterten Routentypen. GTFS des HVV (sources.yaml gtfs_hvv, Abruf 2026-10-28) liegt in data/raw und wird genutzt; fehlt der Datensatz, ist bus_trips_weekday null. Zusätzlich bus_peak_h_dir = Busse je Spitzenstunde und Richtung nach design_rules PRF-02 (gleiche Rechnung wie c06) und bus_route = bus_peak_h_dir >= bus_route_min_peak_h_dir (C-G30-02)."
+  history:
+    - "Notiz aktualisiert in 0.17.0 (F31)"
+    - "seit 0.18.0 (F06): zusätzlich bus_peak_h_dir und bus_route"
+
+S-FEAT-10:
+  file: config/rules.yaml
+  note: "cycle_track_tag: cycleway[:both|left|right] = track oder separate, oder bicycle = use_sidepath; nur Eingang für S-FEAT-13. cycle_lane_present: cycleway… = lane. centre_line: lane_markings. parking: parking:[both|left|right] bzw. parking:lane:… (altes Schema). crossings/traffic_calming: Knoten highway=crossing bzw. traffic_calming=* höchstens node_snap_m vom Abschnitt. Fehlende Tags heißen 'unbekannt', nicht 'nein'."
+  history:
+    - "bis 0.19.0: separated_cycle_track_present (statt cycle_track_tag); seit 0.20.0 nur Eingang für S-FEAT-13 (Review 2026-11 F26)"
+
+S-FEAT-11:
+  file: config/rules.yaml
+  note: "Für D-DES-01 (GOW50: Parallelroute mildert, ersetzt aber nicht) und C-FAC-01 (Flag parallel_cycle_route). Berechnet nur für Abschnitte, deren Soll-Kategorie die Anforderung applies_to_requirement hat (requirements.*.cycling). Gezählt wird nur das Soll-Radnetz RSV/HAUPT/BASIS mit Umweg <= P-DIR-01; berechnet in der Stufe c03b nach dem Soll-Radnetz."
+  history:
+    - "seit 0.20.0 (Review 2026-11 F21): nur das Soll-Radnetz RSV/HAUPT/BASIS mit Umweg <= P-DIR-01 statt jedes OSM-Radwegs und des amtlichen Radnetzes im 200-m-Puffer (Parkwege dienten bisher als Ersatz)"
+
+S-FEAT-12:
+  file: config/rules.yaml
+  note: "Anbaufreie Hauptverkehrsstraßen innerorts (RIN VS II-III, keine Kraftfahrstraße) bleiben GOW50; keine eigene Kategorie. Nutzung nur als Flag gow50_anbaufrei (cat_final GOW50 und anbaufrei) im Steckbrief und in D-SPD-01 (Hinweis statt Stärke bei Ist-Tempo >= anbaufrei_hint.min_ist_kmh). Gemessen wird die Länge des Abschnitts außerhalb der Vereinigung aller Gebäude- und Knotenpuffer; die eigenen Endknoten zählen mit, wenn sie Einmündungen sind. Nach den E1-Stichproben prüfen, ob der Umfang eine Kategorie rechtfertigt."
+  history:
+    - "seit 0.18.0 (F23, Entscheidung Q4 a 2026-11-08): anbaufrei als Flag, keine eigene Kategorie"
+
+S-FEAT-13:
+  file: config/rules.yaml
+  note: "Stufe c03b (pipeline/c03b_ist_facility.py) nach dem Radgraphen. Eingänge: S-FEAT-10 cycle_track_tag und cycle_lane_present, amtliche Fahrradstraßen, cycleway-Werte der Straßenkanten und begleitende Radwege (sidepath_of) des Radgraphen. separated_cycle_track_present bleibt dreiwertig (S-FEAT-10): unbekannt, wenn die Ist-Klasse no nur aus fehlenden OSM-Angaben folgt (kein cycleway-Tag, kein begleitender Radweg, keine Fahrradstraße). Abschnitte mit Radweg-Tag, aber ohne begleitenden Radweg im Radgraphen (Kante mit C-IMP-07 statt C-IMP-03) zählen nach C-FAC-05 als Radweg und stehen als Prüfliste in reports/ist_facility.md (Flag track_tag_only)."
+  history:
+    - "seit 0.20.0 (Review 2026-11 F26, Entscheidungsvorlage E9): ist_facility einmal je Abschnitt; vorher gab es drei Definitionen (S-FEAT-10 Tag, C-PRI-02 Radgraph, C-FAC-05)"
+
+S-XS-07:
+  file: config/rules.yaml
+  note: "Betrifft v. a. kurze Knotenstücke, deren Transekte alle verworfen werden. Ohne Namen bleibt die Breite leer."
+  history:
+    - "Entscheidung prstolpe 2026-11-07 (Stapel 5, open_questions Querschnitt)"
+
+N3:
+  file: config/rules.yaml
+  note: "Barrieren (Bahn, Flüsse/Kanäle, ohne Tunnel) begrenzen Flächen wie GOW/SW-Linien; gleiche Werte wie cycling_rules.yaml C-NET-07. Flächen aus GOW/SW-Linien und Stadtgrenze; Flächen am Rand des Arbeitsgebiets sind unvollständig und werden nicht markiert. Für „sehr lange Grenze im Verhältnis zur Fläche“ (guide.md 1.5) gibt es keine Schwelle; die Kompaktheit wird nur berichtet (docs/open_questions.md)."
+  history:
+    - "Barrieren wie C-NET-07: Entscheidung prstolpe 2026-11-07 (Stapel 5)"
+
+N5:
+  file: config/rules.yaml
+  note: "Übergänge werden je Knoten gelistet; ob eine Torsituation vorhanden ist, lässt sich aus den Daten nicht ablesen (docs/open_questions.md). Direkter Übergang: Abschnitt mit Tempo >= min_speed_kmh (Soll-Tempo, bei SW travel_speed_kmh) trifft auf eine Kategorie mit Soll-Tempo target_speed_kmh. GOW80 und ETW60 in gate_transitions sind außerorts und ohne Wirkung, solange C-RUR-01 inaktiv ist."
+  history:
+    - "seit 0.17.0 (F28): C-RUR-01 inaktiv, daher GOW80/ETW60 in gate_transitions ohne Wirkung"
+
+N6:
+  file: config/rules.yaml
+  note: "Eine Wahrheit für den Soll-Knotentyp. Der Typ kommt aus der Stufe c07 (pipeline/c07_junctions.py, design_rules.yaml junctions); der N6-Teil des Berichts läuft darum nach c07 und steht in reports/junctions.md (Abschnitt N6). signal_radius_m steht jetzt in design_rules J-M-06. category_rank bleibt, J-M-04 verweist darauf."
+  history:
+    - "Review 2026-11 F09: eine Wahrheit für den Soll-Knotentyp; node_types, ist_check und thresholds.signal_radius_m entfallen (signal_radius_m jetzt design_rules J-M-06)"
+
+P-RISK-01:
+  file: config/rules.yaml
+  note: "Unfälle an Knoten gehen an genau einen der anliegenden Abschnitte (den nächsten); vorerst so belassen, mit der Webkarte erneut prüfen. Nur aggregiert je Abschnitt gespeichert."
+  history:
+    - "Entscheidung Projektteam 2026-10-28: Knotenunfälle dem nächsten Abschnitt zuordnen"
+
+H-STR-01:
+  file: config/rules.yaml
+  description: "Kurze Läufe (unter min_run_m aus N2) auf einem Straßenzug angleichen, wiederholt bis nichts mehr wechselt: (1) ETW30 zwischen zwei GOW-Läufen -> GOW (niedrigeres Soll-Tempo der Nachbarn); (2) GOW zwischen zwei ETW30-Läufen -> ETW30; (3) GOW50 zwischen zwei GOW30-Läufen oder am Zugende neben GOW30 -> GOW30; (4) GOW30 zwischen GOW50 (oder am Zugende neben GOW50) bleibt und wird in die angrenzenden GOW50-Abschnitte verlängert (kürzerer Nachbar zuerst), bis min_run_m erreicht ist. Lückenschluss: ein GOW50-Lauf zwischen zwei GOW30-Läufen wird GOW30, wenn er kürzer als gap_close_m ist (statt min_run_m)."
+  note: "Homogenität des Straßenzugs (SWOV); bei 50 gegen 30 gewinnt das niedrigere Tempo. Straßenzug wie N2. Abschnitte mit approved override werden nicht verändert. max_passes ist nur eine technische Grenze. Das Ergebnis der Kaskade bleibt als cat_cascade erhalten. gap_close_m: Der Review nennt den Lückenschluss bei Regel (4); umgesetzt ist er beim Fall „GOW50 zwischen zwei GOW30“ (Schritt 3), weil nur dort eine Lücke zwischen zwei Tempo-30-Strecken geschlossen wird; Regel (4) verlängert kurze GOW30-Läufe und behält min_run_m. Am Zugende gilt weiter min_run_m."
+  history:
+    - "seit 0.18.0 (F07, Q2 b): Lückenschluss mit gap_close_m"
+    - "Entscheidung Projektteam 2026-11-04: Harmonisierung entlang des Straßenzugs"
+V-INV-01:
+  file: config/rules.yaml
+  note: "no_profile_categories steht nur in design_rules PRF-04 (eine Quelle); außerorts ist die Matrix inaktiv"
+  history:
+    - "außerorts Matrix inaktiv (F28)"
+
+V-INV-09:
+  file: config/rules.yaml
+  note: "Die Kaskade (cat_cascade, tests/test_classification_data.py) hält die Invariante ein; cat_final verletzt sie bei 20 HVS-Abschnitten (0,8 km), die die Harmonisierung H-STR-01 Schritt (2) „GOW zwischen zwei ETW30-Läufen -> ETW30“ herabstuft. Offene Frage V-INV-09; die Regel bleibt bis zur Entscheidung unverändert."
+  history:
+    - "Review 2026-11 P6: offene Frage V-INV-09"
+
+C-PRI-02:
+  file: config/cycling_rules.yaml
+  description: "Ist-Führung je Kante: Straßenkanten und ihre begleitenden Radwege (sidepath_of) übernehmen die Ist-Führung ihres Abschnitts aus rules.yaml S-FEAT-13 (Stufe c03b, Regeln von C-FAC-05). Übrige Kanten (eigenständige Wege, Kanten ohne Abschnitt) aus der Bedingung der Ist-Widerstandsregel (C-IMP-xx, when, by_condition) und den OSM-cycleway-Werten; begleitende Radwege ohne Abschnittswert: Einrichtungsradweg, wenn nur eine Richtung befahrbar ist, sonst Zweirichtungsradweg. Eine Straßenkante mit begleitendem Radweg übernimmt dessen Breite, Belag und Beleuchtung (Radfahrende nutzen den Radweg). Fähren und Straßenkanten ohne Ist-Regel: unbekannt"
+  note: "Eine Ist-Führung je Abschnitt für c04, c05 und s08 (Invariante V-INV-08)"
+  history:
+    - "seit 0.11.0: Ist-Führung der Straßenkanten aus S-FEAT-13 (Regeln von C-FAC-05)"
+    - "bis 0.10.0: eigene Definition aus dem Radgraphen (jeder in beiden Richtungen befahrbare begleitende Radweg = Zweirichtungsradweg; Radweg-Tag ohne begleitenden Radweg = Fahrbahnführung)"
+    - "Review 2026-11 F26 (E9): eine Ist-Führung je Abschnitt"
+
+C-PRI-05:
+  file: config/cycling_rules.yaml
+  description: "P-DIR-02/03 Halte und Zeitverlust je Route: ein Halt an jeder LSA (OSM highway=traffic_signals) an Knoten der Route und an inneren Knoten ihrer Kanten, und an jedem Knoten ohne LSA, an dem eine vorfahrtberechtigte Straße (C-GRAPH-05) anliegt, wenn mindestens eine der Routenkanten dort (an den Routenenden: die eine Kante) nicht vorfahrtberechtigt ist, wie die Knotenwartezeiten im Radgraphen; begleitende Radwege haben den Vorrang ihrer Straße. Zeitverlust = Halte x routing_impedance.factors signal_delay_s bzw. give_way_delay_s. Kanten: Halte der Kante (LSA, Wartepflicht an beiden Enden) je km. Soll = Ist"
+  history:
+    - "Soll = Ist bis Prompt 20 (Soll-Knotentypen)"
+
+C-PRI-10:
+  file: config/cycling_rules.yaml
+  description: "P-ATT-01 Grünanteil im Puffer buffer_m um die Kante: Fläche aus ALKIS-Nutzung (nutzart in green_nutzart) und OSM-Bäumen (natural=tree als Kreis mit tree_crown_radius_m, natural=tree_row als Linie mit demselben Puffer), ohne Doppelzählung. Score = min(Grünanteil / target_share, 1). Kein Straßenbaumkataster (sources.yaml street_trees ohne Endpunkt). Soll = Ist"
+  history:
+    - "Entscheidung 2026-11-06: ohne Straßenbaumkataster rechnen"
+
+C-IMP-04:
+  file: config/cycling_rules.yaml
+  note: "Verkehrsberuhigter Bereich (Z. 325.1) und Fußgängerzone mit Radfreigabe nur in Schrittgeschwindigkeit."
+  history:
+    - "seit 0.10.0 (Review 2026-11 F15): Schrittgeschwindigkeit; vorher etw30_mixed"
+
+C-NET-01:
+  file: config/cycling_rules.yaml
+  description: "Korridorpunkte: Innenstadt, Schnellbahn-Umsteigeknoten, Hochschulen, Arbeitsplatzschwerpunkte; Punkte näher als merge_m werden zusammengefasst. Bezirks- und Stadtteilzentren fehlen (Quelle centres ohne Endpunkt)"
+  history:
+    - "Entscheidung 2026-11-06: ohne Zentren rechnen"
+
+C-NET-03:
+  file: config/cycling_rules.yaml
+  note: "Faktoren aus routing_impedance.factors; keine neuen Zahlen. Netzentwurf ungerichtet (günstigere Richtung)."
+  history:
+    - "bis 0.9.0: soll_factors je cat_final (GOW30 immer gow30_cycle_lane, ETW_ERF etw30_mixed)"
+
+C-NET-05:
+  file: config/cycling_rules.yaml
+  description: "Bonus für Kanten des amtlichen Radnetzes (alle Status): Widerstand x multiplier, wenn mindestens min_overlap der Kantenlänge im Puffer match_buffer_m um das amtliche Radnetz liegt. Vergleich im Report: official_status = amtliches Netz, planned_status = geplant"
+  history:
+    - "Entscheidung 2026-11-06: Vergleich amtliches Netz gegen geplant im Report"
+
+S-03:
+  file: config/cycling_rules.yaml
+  note: "Die Matrix vergibt innerorts nie separated_twoway; als Soll-Regel wirkt S-03 nur außerorts. Bleibt draft, weil C-PRI-03 (partial_note) einen Ist-Zweirichtungsradweg mit S-03 als Teilerfüllung begründet"
+  history:
+    - "F33: Soll-Wirkung nur außerorts"
+
+S-05:
+  file: config/cycling_rules.yaml
+  note: "Radfahrstreifen bei 20–40 Tsd. Kfz/Tag inkl. Bus/Lkw sind sicherheitlich nicht vertretbar; „Umfeld vor Verkehrsmenge“ (Kategorie) bleibt, korrigiert wird nur die Führungsform. Ohne DTV greift S-05 nicht"
+  history:
+    - "Review 2026-11 F01"
+
+C-FAC-01:
+  file: config/cycling_rules.yaml
+  description: "Soll-Führung = separation_matrix[cat_final][cycle_cat_final] (außerorts separation_matrix.rural); vorher die Zelle high_volume der Zeile, wenn dtv_official > deren dtv_above (S-05, GOW30). Zelle mit preferred/fallback: preferred; fallback nur, wenn space_fits_preferred = false. Ist der Raum noch nicht geprüft, bleibt preferred und das Flag fallback_check_p19 wird gesetzt. ETW60: fallback mixed nur bei DTV <= separation_matrix.mixed_rural_max_dtv. cycle_cat_final je Abschnitt = höchste Radkategorie seiner Straßenkanten und begleitenden Radwege (category_order), ohne Kante: none. Parallelroute wie D-DES-01 (parallel_route): ohne baulichen Radweg (S-FEAT-13) und mit Parallelroute im Soll-Radnetz (rules.yaml S-FEAT-11) Flag parallel_route.flag; die Soll-Führung bleibt"
+  history:
+    - "Prompt 19: Raumprüfung space_fits_preferred für fallback"
+
+C-FAC-02:
+  file: config/cycling_rules.yaml
+  description: "Fahrradstraße nur, wenn Kfz/Tag <= cycle_street.max_motor_vehicles_day und Radverkehr in der Spitzenstunde (cyc_peak_h, beide Richtungen) >= Kfz in der Spitzenstunde (DTV x motor_peak_hour_share). Sonst Soll mixed und Flag cycle_street_blocked („Kfz-Menge reduzieren (Filter) oder Route verlegen“). Fehlt das DTV: Bedingung vorläufig erfüllt, Flag dtv_unknown (Erschließungsstraßen ohne Zählung gelten als schwach belastet). Ausnahme dtv_proxy: dann Bedingung unbekannt (Trace-Ergebnis null), Soll bleibt, Flag filter_needed"
+  history:
+    - "Entscheidung Projektteam 2026-11-06: Erschließungsstraßen ohne Zählung gelten als schwach belastet"
+
+C-FAC-03:
+  file: config/cycling_rules.yaml
+  description: "Prüfung S-04 bei Soll mixed: Kfz/h = DTV x motor_peak_hour_share (beide Richtungen) gegen separation_matrix S-04 mixed_max_kfz_h; überschritten: Flag mixed_over_s04 (Soll bleibt mixed, Maßnahme Verkehrsmenge senken). Fahrbahnbreite (width_median_m) wird nur protokolliert. Fehlt das DTV: vorläufig erfüllt, Flag dtv_unknown; trifft C-FAC-02 dtv_proxy zu: Bedingung unbekannt, Flag filter_needed"
+  history:
+    - "F19: Flag filter_needed bei dtv_proxy"
+
+C-FAC-04:
+  file: config/cycling_rules.yaml
+  description: "Soll-Breite = widths_m.project_target der Führung und Radkategorie plus intensity_upgrade (oneway: cyc_peak_h je Richtung, twoway: beide Richtungen), nie unter der Untergrenze (floor). Mischverkehr ohne Sollbreite; eigene Trasse wie Zweirichtungsradweg; Fahrradstraße mit Kfz-Verkehr (cycle_street_motor_traffic) = cycle_street_carriageway.with_motor_traffic, ohne = value. Vergleichswerte für den Steckbrief: DE-Regelmaß und NL-Hauptnetz. Pfade relativ zu widths_m"
+  history:
+    - "seit 0.7.0: eigene Trasse wie Zweirichtungsradweg"
+    - "F18: Fahrradstraße mit Kfz-Verkehr = with_motor_traffic, ohne = value"
+
+C-FAC-05:
+  file: config/cycling_rules.yaml
+  description: "Ist-Führung aus OSM je Abschnitt, erste zutreffende Klasse in Reihenfolge von ist_classes: cycle_street (fahrradstrasse_official oder OSM bicycle_road/cyclestreet = yes), track (cycleway*-Wert in track_values, Radweg-Tag cycle_track_tag nach rules.yaml S-FEAT-10 oder begleitender Radweg sidepath_of), lane (lane_values oder cycle_lane_present), shared_lane (shared_values), sonst no (auch ohne cycleway-Tag). Abbildung auf die Führungsnamen mit to_facility; begleitende Radwege auf beiden Straßenseiten -> separated_oneway_both, nur auf einer Seite und in beiden Richtungen befahrbar -> twoway_track_facility. Berechnet einmal je Abschnitt in der Stufe c03b als rules.yaml S-FEAT-13; c04 (C-PRI-02), c05 und s08 lesen das Ergebnis. Ist-Breite (in c05) aus OSM wie C-PRI-08"
+  history:
+    - "seit 0.11.0 (F26/E9): einmal je Abschnitt in c03b als S-FEAT-13"
+
+L-07:
+  file: config/design_rules.yaml
+  note: "Kennzeichnung „Reduktion nötig“ als Rechenregel; GOW30 hat nach L-01 einen Fahrstreifen je Richtung. Mit den L-02-Werten liegt die Grenze bei 0,85 x 900 / 0,055 = rund 13 909 Kfz/Tag. Nur Kennzeichnung, keine Automatik (wie D6)"
+  history:
+    - "Review 2026-11 F01, E2 Option C"
+
+PL-02:
+  file: config/design_rules.yaml
+  note: "Inaktiv: separated_twoway vergibt nur die außerorts-Matrix (cycling_rules separation_matrix.rural, inaktiv); innerorts greift PL-02 nie. Profilbaustein in PRF-03 cycle_elements bleibt für die Aktivierung stehen"
+  history:
+    - "inaktiv seit 0.7.0 (F33)"
+
+PRF-03:
+  file: config/design_rules.yaml
+  description: "Bausteine des gewünschten Profils je Kategorie: Gehwege beidseitig außer ETW_ERF (Mischfläche); Radanlage nach Führungsform (cycle_elements); Busfahrstreifen je Richtung bei bus_lane_soll; Straßenbahn nur, wenn vorhanden; Baumstreifen an tree_categories (tree_sides Seiten); Ladezone (loading_sides Seiten), wenn Geschäftsnutzung = shop_frontage_share >= rules.yaml C-G30-01 thresholds.frontage; Längsparken nur, wo OSM heute Parken am Fahrbahnrand zeigt (parking_positions), je Seite mit Parken (Wert no in der Liste = eine Seite ohne Parken), und nur nach Kategorie (parking_by_category): none = kein Parken, as_ist = alle parking_positions, Liste = nur diese Positionen (Seiten: alle Werte erlaubt -> 2, sonst 1)"
+  history:
+    - "seit 0.9.0: Parken nur nach Kategorie (parking_by_category)"
+
+PRF-04:
+  file: config/design_rules.yaml
+  description: "Fahrbahnbreite: GOW50 1 Fahrstreifen je Richtung = lane_width_m.GOW50_2x1_carriageway (mit Bus im Mischverkehr GOW50_bus_carriageway), 2 je Richtung = 4 x GOW50.general plus Mittelstreifen median_min_m (L-03), neben Busfahrstreifen GOW50.general je Richtung; GOW30 mit Radfahrstreifen (die CROW-Spannen enthalten die Radfahrstreifen, includes_cycle_lanes) = max(untere Grenze des Profils, Kernfahrbahn + 2 x Radfahrstreifen-Sollbreite); schmales Profil (GOW30_narrow_profile) bis dessen max_dtv (auch ohne DTV) mit Kernfahrbahn = rules.yaml requirements.GOW30.profiles.narrow.centre_runner_max_m, sonst breites Profil (GOW30_wide_profile) mit Kernfahrbahn = obere Grenze von avoid_runner_m (Bereich avoid_runner_m meiden; über dessen max_dtv Flag gow30_dtv_above_profile); im Profil steht die Kernfahrbahn als carriageway, die Radfahrstreifen als eigene Bausteine. GOW30 mit Radweg (separated_*, auch bei gow30_high_volume aus S-05) = rules.yaml requirements.GOW30.profiles.track.carriageway_min_m, Radwege nach PL-01; ETW30/ETW_ERF = ETW30_mixed (mit Bus ETW30_mixed.bus); Fahrradstraße = Sollbreite (cycle_street_carriageway, mit Kfz-Verkehr with_motor_traffic). Einrichtungsverkehr: GOW = GOW50.general (mit Bus with_bus) je Fahrstreifen, ETW = cycling_rules widths_m.project_target.cycle_street_carriageway (Kfz plus Rad in Gegenrichtung, PL-06). SW, GOW80, ETW60: keine Profilregeln (Flag no_profile_rules)"
+  history:
+    - "seit 0.9.0 (F04): GOW30 mit Radfahrstreifen = max(untere Grenze des Profils, Kernfahrbahn + 2 x Radfahrstreifen-Sollbreite)"
+    - "F01: GOW30 mit Radweg auch bei gow30_high_volume aus S-05"
+    - "Prompt 18, F18: Sollbreite der Fahrradstraße (cycle_street_carriageway, mit Kfz-Verkehr with_motor_traffic)"
+
+PRF-05:
+  file: config/design_rules.yaml
+  description: "Gewünschtes Profil = alle Bausteine aus PRF-03 in der Reihenfolge cross_section_allocation.fill_order mit Regelmaß (Gehweg standard, Radanlage Sollbreite, übrige elements_min_m). Passt, wenn total_required_m <= available_m. Maßgeblich ist width_p10_m (Variante Verkehrsfläche, S-XS-02); facade_width_p10_m (S-XS-03) wird gleich gerechnet und zeigt das Potenzial inkl. Vorgärten. Ohne Breite: fit_class leer, Flag width_unknown"
+  history:
+    - "Prompt 18: Sollbreite der Radanlage"
+
+PRF-06:
+  file: config/design_rules.yaml
+  description: "Passt das Profil nicht, werden die Schritte in cascade_order nacheinander angewendet und nach jedem Schritt neu geprüft; ein Schritt ohne Wirkung zählt nicht als angewendet. fallback = Fallback der Matrixzelle (C-FAC-01, space_fits_preferred = false) mit dessen Sollbreite. D1 entfernt Parken (Ladezone bleibt, sie gibt es nur bei Geschäftsnutzung); D3 streicht den zweiten Kfz-Fahrstreifen und den Mittelstreifen (Busfahrstreifen bleibt); D2 setzt den neuen Baumstreifen auf 0 (Baumscheiben im Trenn- oder Seitenraum, Flag trees_as_pits; Bestandsbäume nicht erfasst, TODO existing_trees_conflict); D4 setzt Radanlage auf die Untergrenze aus C-FAC-04 floor und Gehweg auf min; D5 nur GOW50: Vorschlag GOW30 (C-G30-02) in cat_change_proposal, Profil mit GOW30-Fahrbahn und Führung der GOW30-Matrixzelle neu bilden, cat_final bleibt; D6 und D7 nur als Flag, wenn danach nicht passt (D7 nur im Radnetz, cycle_cat_final != none, und nur wenn die Radanlage eigene Breite im Profil belegt – Radweg oder Radfahrstreifen; bei Mischverkehr und Fahrradstraße bringt eine Verlegung keinen Platz). fit_class: fits ohne Schritt, fits_after_degrade nach D1-D5 oder fallback, sonst does_not_fit"
+  history:
+    - "Prompt 18: Fallback der Matrixzelle mit Sollbreite"
+
+PRF-07:
+  file: config/design_rules.yaml
+  note: "Teil PL-02 (Flag pl02_unchecked) betrifft nur außerorts und tritt nicht auf, solange separation_matrix.rural inaktiv ist; Teil PL-05 gilt innerorts, darum bleibt PRF-07 draft"
+  history:
+    - "F33: PL-02-Teil nur außerorts"
+
+J-01:
+  file: config/design_rules.yaml
+  note: "Turbokreisel mit eigenem Platzbedarf turbo_min_radius"
+  history:
+    - "Review 2026-11 F24"
+
+J-03:
+  file: config/design_rules.yaml
+  note: "CROW: bevorzugt Kreisverkehr; sonst Vorfahrtknoten mit eingefärbter Kreuzungsfläche. DTV-Grenzen wie J-01; ohne Platz für den Kreisverkehr eingefärbte Vorfahrt (fallback)"
+  history:
+    - "Entscheidung prstolpe 2026-11-07, open_questions 134: DTV-Grenzen wie J-01"
+
+J-12:
+  file: config/design_rules.yaml
+  note: "eigenständiger Radweg des Radnetzes quert Erschließungsstraße: Radwegfurt mit Vorrang wie J-08; Rechtslage (Vorrang selbständiger Radweg, StVO) prüfen"
+  history:
+    - "Entscheidung prstolpe 2026-11-07, open_questions 133: Radwegfurt mit Vorrang wie J-08"
+
+J-13:
+  file: config/design_rules.yaml
+  note: "Erschließungsstraße an Fußgängerzone bzw. verkehrsberuhigtem Bereich: Gehwegüberfahrt wie N6 (rules.yaml); prüft die Kategorie vor category_alias"
+  history:
+    - "Entscheidung prstolpe 2026-11-07, open_questions 135"
+
+J-10:
+  file: config/design_rules.yaml
+  note: "planfreie Radquerung nur für eigenständige Hauptrouten"
+  history:
+    - "Review 2026-11 F08; vorher any+SW"
+
+J-10b:
+  file: config/design_rules.yaml
+  note: "Rampenknoten (*_link) plangleich; Radquerung nach JC-02/JC-03"
+  history:
+    - "Review 2026-11 F08"
+
+J-10c:
+  file: config/design_rules.yaml
+  note: "Rampe an Erschließungsstraße, Flag N5 sw_to_etw"
+  history:
+    - "Review 2026-11 F08"
+
+J-10d:
+  file: config/design_rules.yaml
+  note: "Autobahnknoten ohne Rad-/Fußverkehr; BASIS-Weg an SW: Lage prüfen. Der Review schreibt SW+SW|cycle_path(BASIS|ERSCHL)+SW (gleichbedeutend)"
+  history:
+    - "Review 2026-11 F08"
+
+J-14:
+  file: config/design_rules.yaml
+  note: "Radroute quert den Zug (Arme beidseits außerhalb des Zugs in der Radkategorie); sonst J-04"
+  history:
+    - "Review 2026-11 F03, E5 b"
+
+J-15:
+  file: config/design_rules.yaml
+  note: null
+  history:
+    - "Review 2026-11 F10"
+
+J-16:
+  file: config/design_rules.yaml
+  note: "Rechtslage selbständiger Radweg an Straße prüfen (wie J-12)"
+  history:
+    - "Review 2026-11 F10"
+
+JC-06:
+  file: config/design_rules.yaml
+  note: "NL-Praxis führt Rad am Turbokreisel wartepflichtig oder planfrei; Turbokreisel sind kein deutsches Regelelement. Quelle (CROW/Fietsberaad) ergänzen"
+  history:
+    - "Review 2026-11 F02, A3"
