@@ -60,6 +60,14 @@ describe("cycling layers", () => {
     }
   });
 
+  it("draws the white centre stripe of the Radvorrangroute above its line and in the legend", () => {
+    const ls = sfpLayers({ ...DEFAULTS, theme: "rad", view: "ziel", layer: "cnet" }, META);
+    const ids = ls.map((l) => l.id);
+    expect(ids).toContain("main-cc-RSV-inner");
+    expect(ids.indexOf("main-cc-RSV-inner")).toBeGreaterThan(ids.indexOf("main-cc-RSV"));
+    expect(legendHtml("cnet", META)).toContain('stroke="#ffffff"');
+  });
+
   it("junction groups have distinct shapes", () => {
     const shapes = Object.values(JUNCTION_STYLE).map((s) => s.shape);
     expect(new Set(shapes).size).toBe(shapes.length);

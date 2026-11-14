@@ -195,7 +195,11 @@ export function sfpLayers(state, meta) {
       out.push({ id: `casing-${srcLayer}`, type: "line", source: src, "source-layer": srcLayer, filter: cyclingFilter(state, srcLayer),
         layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": CASING, "line-width": zoomWidth(7) } });
     }
-    for (const g of lines) out.push(lineLayer(`main-${g.key}`, g, cyclingFilter(state, g.srcLayer)));
+    for (const g of lines) {
+      out.push(lineLayer(`main-${g.key}`, g, cyclingFilter(state, g.srcLayer)));
+      // Radvorrangroute: white centre stripe on top (double line), so the level does not depend on width alone
+      if (g.inner) out.push(lineLayer(`main-${g.key}-inner`, { ...g, color: g.inner.color, width: g.inner.width, dash: null }, cyclingFilter(state, g.srcLayer)));
+    }
     for (const g of gs.filter((x) => x.kind === "symbol")) out.push(symbolLayer(`main-${g.key}`, g, cyclingFilter(state, g.srcLayer)));
   } else {
     out.push({ id: "casing", type: "line", source: SRC, "source-layer": SEG, filter,
@@ -269,7 +273,8 @@ export function legendHtml(layer, meta) {
     if (g.kind === "symbol") return `<li>${shapeSvg(g.shape, g.color, 18)}<span>${esc(g.label)}</span></li>`;
     const dash = g.dash ? `stroke-dasharray="${g.dash.map((d) => d * 4).join(" ")}"` : "";
     const w = typeof g.width === "number" ? Math.max(2, Math.min(g.width, 6)) : 4;
-    return `<li><svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${CASING}" stroke-width="${w + 4}" stroke-linecap="round"/><line x1="2" y1="7" x2="34" y2="7" stroke="${g.color}" stroke-width="${w}" ${dash}/></svg><span>${esc(g.label)}</span></li>`;
+    const inner = g.inner ? `<line x1="2" y1="7" x2="34" y2="7" stroke="${g.inner.color}" stroke-width="${Math.max(1, g.inner.width)}"/>` : "";
+    return `<li><svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${CASING}" stroke-width="${w + 4}" stroke-linecap="round"/><line x1="2" y1="7" x2="34" y2="7" stroke="${g.color}" stroke-width="${w}" ${dash}/>${inner}</svg><span>${esc(g.label)}</span></li>`;
   });
   if (layer === "cgap" && meta.overview?.mesh_gaps) {
     items.unshift(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${NEED}" fill-opacity="0.2" stroke="${NEED}" stroke-dasharray="4 2"/></svg><span>Netz zu weitmaschig (Fläche)</span></li>`);

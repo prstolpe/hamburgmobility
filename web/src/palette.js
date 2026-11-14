@@ -66,7 +66,7 @@ export const OVERLAY_COLORS = { bus: "#4a4a4a", cyc: CYCLING, fac: INK, acc: INK
 // --- cycling layers: one colour, hierarchy by width, type by dash -----------------------------
 
 export const CYCLE_CAT_STYLE = {
-  RSV: { color: CYCLING, width: 6, dash: null },
+  RSV: { color: CYCLING, width: 7, dash: null, inner: { color: CASING, width: 1.6 } }, // double line: white centre stripe
   HAUPT: { color: CYCLING, width: 4.5, dash: null },
   BASIS: { color: CYCLING, width: 3, dash: [3, 1.5] },
   ERSCHL: { color: NONE, width: 1.2, dash: null },
