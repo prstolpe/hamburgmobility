@@ -46,6 +46,13 @@ describe("one meaning per colour", () => {
 });
 
 describe("redundant encoding", () => {
+  it("Radvorrangroute is a double line (white centre stripe), Radroute solid, Bezirksroute dashed", () => {
+    expect(CYCLE_CAT_STYLE.RSV.inner).toMatchObject({ color: "#ffffff" });
+    expect(CYCLE_CAT_STYLE.RSV.inner.width).toBeLessThan(CYCLE_CAT_STYLE.RSV.width / 2);
+    expect(CYCLE_CAT_STYLE.HAUPT.inner).toBeUndefined();
+    expect(CYCLE_CAT_STYLE.BASIS.dash).toBeTruthy();
+  });
+
   it("speed classes differ in width or dash, not only in colour", () => {
     const keys = SPEED_CLASSES.map(key);
     expect(new Set(keys).size).toBe(keys.length);
