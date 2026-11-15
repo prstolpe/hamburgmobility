@@ -4,7 +4,7 @@ Deep sections stay plain dicts; the cross-checks below validate provenance, ids,
 facility names. Rule texts stay strings; later prompts (16–18) evaluate them. Prompt 15 adds cycle_graph,
 demand_model and routing_impedance.ist_mapping, whose condition names are fixed here; prompt 16 adds
 network_design (C-NET-01..13); prompt 17 adds principle_scoring (C-PRI-01..16); prompt 18 adds
-facility_assignment (C-FAC-01..07).
+facility_assignment (C-FAC-01..07 without 03).
 """
 
 import re
@@ -31,8 +31,8 @@ HIGH_VOLUME_KEY = "high_volume"
 # Path prefix of high_volume.dtv_above: a value in config/rules.yaml (resolved in pipeline/lib/principles.py).
 RULES_REF_PREFIX = "rules."
 # Condition names of routing_impedance.ist_mapping; evaluated in pipeline/lib/cycle_graph.py.
-IMPEDANCE_CONDITIONS = {"cycle_street", "own_path", "separated_track", "low_speed_access_road", "low_speed_with_lane",
-                        "low_speed_mixed", "other", "unpaved_or_cobbles"}
+IMPEDANCE_CONDITIONS = {"cycle_street", "own_path", "separated_track", "low_speed_access_road",
+                        "low_speed_main_road", "other", "unpaved_or_cobbles"}
 # Factor keys that are delays (seconds), not length factors.
 DELAY_KEYS = {"signal_delay_s", "give_way_delay_s"}
 ASSIGNMENT_METHODS = {"stochastic", "aon"}
@@ -47,7 +47,7 @@ SOLL_FACTOR_LEVELS = {"HAUPT", "BASIS"}
 PRINCIPLE_RULE_IDS = {f"C-PRI-{i:02d}" for i in range(1, 17)}
 # Score forms of C-PRI-01; evaluated in pipeline/lib/principles.py.
 SCORE_FORMS = {"share", "ratio", "inverse_ratio", "excess", "percentile_inverse"}
-FACILITY_RULE_IDS = {f"C-FAC-0{i}" for i in range(1, 8)}
+FACILITY_RULE_IDS = {f"C-FAC-0{i}" for i in range(1, 8)} - {"C-FAC-03"}   # C-FAC-03 merged into S-04 (alias)
 # Ist classes of C-FAC-05 (prompts/18); evaluated in pipeline/lib/facility.py.
 IST_CLASSES = {"cycle_street", "track", "lane", "shared_lane", "no"}
 # Flags of pipeline/lib/facility.py that C-FAC-07 may name.
@@ -292,7 +292,7 @@ def width_ref(widths: dict, path: str):
     return node
 
 
-def _check_facility_assignment(section: dict, widths: dict) -> None:
+def _check_facility_assignment(section: dict, widths: dict, separation_matrix: dict) -> None:
     rules = _rules_by_id(section, FACILITY_RULE_IDS, "facility_assignment")
     if set(rules["C-FAC-01"]["category_order"]) != CYCLE_CATEGORIES:
         raise ValueError(f"facility_assignment C-FAC-01: category_order must name {sorted(CYCLE_CATEGORIES)}")
@@ -336,9 +336,10 @@ def _check_facility_assignment(section: dict, widths: dict) -> None:
     unknown = set(rules["C-FAC-07"]["lowers_confidence"]) - FACILITY_FLAGS
     if unknown:
         raise ValueError(f"facility_assignment C-FAC-07: unknown flags {sorted(unknown)}")
-    share = rules["C-FAC-03"]["motor_peak_hour_share"]["value"]
+    s04 = next(r for r in separation_matrix["rules"] if r["id"] == "S-04")
+    share = s04["motor_peak_hour_share"]["value"]
     if not 0 < share <= 1:
-        raise ValueError("facility_assignment C-FAC-03: motor_peak_hour_share must be in (0, 1]")
+        raise ValueError("separation_matrix S-04: motor_peak_hour_share must be in (0, 1]")
 
 
 class CyclingRuleSet(_Strict):
@@ -393,5 +394,5 @@ class CyclingRuleSet(_Strict):
         _check_demand_model(self.demand_model)
         _check_network_design(self.network_design, self.routing_impedance)
         _check_principle_scoring(self.principle_scoring, self.principles, self.routing_impedance, self.widths_m)
-        _check_facility_assignment(self.facility_assignment, self.widths_m)
+        _check_facility_assignment(self.facility_assignment, self.widths_m, self.separation_matrix)
         return self

@@ -118,7 +118,7 @@ def build(params: cg.GraphParams, pbf, seg: gpd.GeoDataFrame, signal_nodes: set,
     s = seg.set_index("segment_id")
     speed = s["speed_ist_kmh"].astype("Float64").fillna(s["travel_speed_kmh"].astype("Float64"))
     imp_cache: dict = {}
-    factors, rules_, traces, prio = [], [], [], []
+    factors, rules_, traces, prio, split = [], [], [], [], []
     for wid, sid, hw in zip(edges["way_id"].astype("int64"), edges["segment_id"], edges["highway"]):
         key = (wid, sid)
         if key not in imp_cache:
@@ -127,13 +127,17 @@ def build(params: cg.GraphParams, pbf, seg: gpd.GeoDataFrame, signal_nodes: set,
             sp = speed.get(sid) if sid is not None else None
             fstr = bool(s.at[sid, "fahrradstrasse_official"]) if sid is not None and pd.notna(s.at[sid, "fahrradstrasse_official"]) else False
             f, rule, trace = cg.impedance(kind, hw, tags, cat, sp, fstr, params)
-            imp_cache[key] = (f, rule, json.dumps(trace, ensure_ascii=False), kind == "road" and cg.is_priority(cat, hw, params))
-        f, rule, trace, p = imp_cache[key]
+            lane = bool(trace["inputs"]["cycleway"] and set(trace["inputs"]["cycleway"]) & cg.LANE_VALUES)
+            imp_cache[key] = (f, rule, json.dumps(trace, ensure_ascii=False), kind == "road" and cg.is_priority(cat, hw, params),
+                              lane if rule in params.imp_aliases else None)
+        f, rule, trace, p, sp_ = imp_cache[key]
+        split.append(sp_)
         factors.append(f)
         rules_.append(rule)
         traces.append(trace)
         prio.append(p)
     edges["factor"], edges["imp_rule"], edges["impedance_trace"], edges["priority"] = factors, rules_, traces, prio
+    edges[cg.SPLIT_COLUMN] = pd.Series(split, index=edges.index, dtype="object")
     edges["delay_v"], edges["delay_u"] = cg.node_delays(edges["u"].to_numpy(), edges["v"].to_numpy(),
                                                         edges["priority"].to_numpy(), signal_nodes, params)
     edges["name"] = edges["name"].where(edges["name"].notna(), None)
@@ -141,7 +145,7 @@ def build(params: cg.GraphParams, pbf, seg: gpd.GeoDataFrame, signal_nodes: set,
 
     t1 = time.perf_counter()
     cyc = cg.merge_edges(edges[["u", "v", "way_id", "name", "highway", "kind", "imp_rule", "factor", "fwd_ok", "bwd_ok",
-                                "segment_id", "delay_v", "delay_u", "impedance_trace", "priority", "geometry"]],
+                                "segment_id", "delay_v", "delay_u", "impedance_trace", "priority", "geometry", cg.SPLIT_COLUMN]],
                          carry=("impedance_trace", "priority"))
     cyc["n_signals"] = _signals_on(cyc, edges, signal_nodes)
     stats["t_merge_s"] = time.perf_counter() - t1

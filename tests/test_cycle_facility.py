@@ -323,3 +323,14 @@ def test_dtv_proxy_on_mixed_and_not_with_dtv():
     known = fa.soll_facility("ETW30", "ERSCHL", 500, 10, True, P, shortcut=True, betweenness=1.0)
     assert P.proxy.flag not in known.flags                        # DTV known: the proxy is not used
     assert fa.soll_facility("ETW30", "ERSCHL", None, 10, True, P, shortcut=None, betweenness=math.nan).flags == ["dtv_unknown"]
+
+
+def test_s04_carries_peak_share_and_alias():
+    """K5: motor_peak_hour_share and the DTV rule moved from C-FAC-03 to S-04; the trace carries the alias."""
+    s04 = next(x for x in CYC.separation_matrix["rules"] if x["id"] == "S-04")
+    assert s04["aliases"] == ["C-FAC-03"] and s04["motor_peak_hour_share"]["value"] == 0.10
+    assert "C-FAC-03" not in [x["id"] for x in CYC.facility_assignment["rules"]]
+    assert P.motor_peak_share == s04["motor_peak_hour_share"]["value"]
+    r = fa.soll_facility("ETW30", "BASIS", 1000, cyc_peak_both=10, space_fits_preferred=True, p=P)
+    step = next(t for t in r.trace if t["id"] == "S-04")
+    assert step["aliases"] == ["C-FAC-03"] and step["values"]["motor_peak_h"] == pytest.approx(100.0)

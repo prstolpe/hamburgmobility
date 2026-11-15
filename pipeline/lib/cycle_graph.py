@@ -43,6 +43,7 @@ class GraphParams:
     give_way_delay_s: float
     factors: dict
     imp_rules: tuple  # (id, when, factor key, is_multiplier)
+    imp_aliases: dict  # rule id -> former ids (C-IMP-06 merged into C-IMP-05), written into the trace
     imp_by_highway: dict  # rule id -> {highway: factor key}; such highways meet the rule regardless of speed (C-IMP-04, F15)
     low_speed_max_kmh: float
     access_categories: frozenset
@@ -74,6 +75,7 @@ class GraphParams:
             give_way_delay_s=float(imp["factors"]["give_way_delay_s"]),
             factors=factors,
             imp_rules=tuple((r["id"], r["when"], r.get("factor", r.get("multiply")), "multiply" in r) for r in m["rules"]),
+            imp_aliases={r["id"]: list(r["aliases"]) for r in m["rules"] if r.get("aliases")},
             imp_by_highway={r["id"]: dict(r["factor_by_highway"]) for r in m["rules"] if r.get("factor_by_highway")},
             low_speed_max_kmh=float(m["low_speed_max_kmh"]),
             access_categories=frozenset(m["access_categories"]),
@@ -162,8 +164,7 @@ def impedance(kind: str, highway: str, tags: dict, cat, speed, fahrradstrasse: b
         "own_path": kind == "path",
         "separated_track": road and bool(cyc & TRACK_VALUES),
         "low_speed_access_road": road and low and access,
-        "low_speed_with_lane": road and low and bool(cyc & LANE_VALUES),
-        "low_speed_mixed": road and low,
+        "low_speed_main_road": road and low,
         "other": True,
         "unpaved_or_cobbles": surface in params.unpaved_surfaces,
     }
@@ -183,6 +184,7 @@ def impedance(kind: str, highway: str, tags: dict, cat, speed, fahrradstrasse: b
             rules.append(rule_id)
             keys.append(key)
     trace = {"rules": rules, "factor_keys": keys, "factor": round(factor, 4),
+             **({"aliases": params.imp_aliases[chosen]} if chosen in params.imp_aliases else {}),
              "inputs": {"kind": kind, "highway": highway, "cat_final": cat, "speed_kmh": speed,
                         "fahrradstrasse_official": bool(fahrradstrasse), "cycleway": sorted(cyc) or None,
                         "bicycle_road": tags.get("bicycle_road"), "surface": surface}}
@@ -216,6 +218,9 @@ def node_delays(u: np.ndarray, v: np.ndarray, priority: np.ndarray, signal_nodes
 
 
 DIFFER = ["segment_ref", "kind", "highway", "imp_rule"]
+# Optional column of the input: edges whose rule covers former sub-rules (C-IMP-05 took over C-IMP-06) stay separate
+# edges as before, so edge_id and the edge partition do not change with the merge of the rules.
+SPLIT_COLUMN = "imp_split"
 
 
 def merge_edges(edges: gpd.GeoDataFrame, carry: tuple[str, ...] = ()) -> gpd.GeoDataFrame:
@@ -228,7 +233,7 @@ def merge_edges(edges: gpd.GeoDataFrame, carry: tuple[str, ...] = ()) -> gpd.Geo
     """
     e = edges.reset_index(drop=True).rename(columns={"segment_id": "segment_ref"})
     e["_const"] = None
-    merged = segments_from_edges(e, differ=DIFFER, split_attribute="_const", min_length_m=math.inf,
+    merged = segments_from_edges(e, differ=DIFFER + ([SPLIT_COLUMN] if SPLIT_COLUMN in e.columns else []), split_attribute="_const", min_length_m=math.inf,
                                  split_rule_id="", prefix=EDGE_ID_PREFIX, return_members=True)
     lengths = e.geometry.length.to_numpy()
     factor = e["factor"].to_numpy(dtype="float64")
@@ -250,7 +255,7 @@ def merge_edges(edges: gpd.GeoDataFrame, carry: tuple[str, ...] = ()) -> gpd.Geo
         merged[c] = vals
     merged = merged.rename(columns={"segment_id": "edge_id", "segment_ref": "segment_id"})
     merged["segment_id"] = merged["segment_id"].where(merged["segment_id"].notna(), None)
-    return merged.drop(columns=["maxspeed_osm", "split_rule", "member_rows", "member_forward"])
+    return merged.drop(columns=["maxspeed_osm", "split_rule", "member_rows", "member_forward", SPLIT_COLUMN], errors="ignore")
 
 
 # --- C-GRAPH-03 ferries ------------------------------------------------------------------------

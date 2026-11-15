@@ -1,6 +1,6 @@
 """Cycle facility and width per street segment (prompts/18, rules C-FAC-01..07 in config/cycling_rules.yaml).
 
-Soll facility from the separation matrix with the cycle street (C-FAC-02) and mixed-traffic (S-04, C-FAC-03)
+Soll facility from the separation matrix with the cycle street (C-FAC-02) and mixed-traffic (S-04, formerly C-FAC-03)
 checks, target width (C-FAC-04), Ist class from OSM (C-FAC-05), gap (C-FAC-06) and confidence (C-FAC-07).
 Every value comes in through FacilityParams. The matrix lookup and the width rule are shared with
 pipeline/lib/principles.py (FacilityParams carries the attribute names those functions read).
@@ -70,6 +70,7 @@ class FacilityParams:
     cs_motor_traffic: bool         # C-FAC-04 cycle_street_motor_traffic (F18), read by principles.required_width
     proxy: DtvProxy | None = None  # C-FAC-02 dtv_proxy (F19)
     parallel_flag: str | None = None  # C-FAC-01 parallel_route.flag (F21)
+    s04_aliases: tuple = ()        # S-04 aliases (C-FAC-03 merged into S-04), written into its trace entry
 
     @classmethod
     def from_rules(cls, cyc: CyclingRuleSet, road: RuleSet | None = None) -> "FacilityParams":
@@ -87,11 +88,11 @@ class FacilityParams:
             matrix=cyc.separation_matrix,
             category_order=tuple(r["C-FAC-01"]["category_order"]),
             cs_max_dtv=float(cyc.cycle_street["max_motor_vehicles_day"]["value"]),
-            motor_peak_share=float(r["C-FAC-03"]["motor_peak_hour_share"]["value"]),
+            motor_peak_share=float(s04["motor_peak_hour_share"]["value"]),
             s04_max_kfz_h=float(s04["mixed_max_kfz_h"]),
             rural_mixed_max_dtv=float(cyc.separation_matrix["mixed_rural_max_dtv"]["value"]),
             cs_dtv_missing_met=bool(r["C-FAC-02"]["dtv_missing_counts_as_met"]),
-            s04_dtv_missing_met=bool(r["C-FAC-03"]["dtv_missing_counts_as_met"]),
+            s04_dtv_missing_met=bool(s04["dtv_missing_counts_as_met"]),
             required_by_facility=dict(c04["target_by_facility"]),
             project_target=target,
             intensity_upgrade=tuple((*pr.parse_upgrade(u["if"]), float(u["add_m"])) for u in target["intensity_upgrade"]),
@@ -115,6 +116,7 @@ class FacilityParams:
             cs_motor_traffic=pr.cycle_street_motor_traffic(cyc),
             proxy=DtvProxy.from_rule(r["C-FAC-02"].get("dtv_proxy")),
             parallel_flag=(r["C-FAC-01"].get("parallel_route") or {}).get("flag"),
+            s04_aliases=tuple(s04.get("aliases") or ()),
         )
 
 
@@ -160,7 +162,7 @@ def _raw_cell(cat_final: str, cycle_cat: str, p: FacilityParams):
 
 def soll_facility(cat_final, cycle_cat, dtv, cyc_peak_both, space_fits_preferred, p: FacilityParams,
                   shortcut=None, betweenness=None) -> SollResult:
-    """Soll facility after C-FAC-01 (matrix), C-FAC-02 (cycle street) and C-FAC-03 (S-04).
+    """Soll facility after C-FAC-01 (matrix), C-FAC-02 (cycle street) and S-04 (formerly C-FAC-03).
 
     shortcut (N4 shortcut flag) and betweenness (betweenness_norm) feed the dtv_proxy of C-FAC-02/03 (F19): without
     a DTV and with a proxy hit the condition is unknown (trace result None) and the segment gets filter_needed;
@@ -230,7 +232,8 @@ def soll_facility(cat_final, cycle_cat, dtv, cyc_peak_both, space_fits_preferred
                 _add(res.flags, p.proxy.flag)
         else:
             ok = motor_peak <= p.s04_max_kfz_h
-        res.trace.append({"id": "S-04", "result": None if proxy_hit else ok, "values": {
+        res.trace.append({"id": "S-04", **({"aliases": list(p.s04_aliases)} if p.s04_aliases else {}),
+                          "result": None if proxy_hit else ok, "values": {
             "dtv": dtv, "motor_peak_hour_share": p.motor_peak_share, "motor_peak_h": motor_peak, "mixed_max_kfz_h": p.s04_max_kfz_h,
             **proxy_values}})
         if not ok:

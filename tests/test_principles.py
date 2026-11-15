@@ -403,3 +403,25 @@ def test_soll_facility_matches_golden_cases(props):
     preferred, fallback = pr.soll_facility(props["cat_final"], props["cycle_cat"] or "none", params, props.get("dtv"))
     expected = preferred if props.get("space_fits_preferred", True) is not False or fallback is None else fallback
     assert expected == props["expected_facility"]
+
+
+def test_inactive_checks_change_neither_scores_nor_coverage():
+    """K9: P-COM-03 and P-ATT-02 are inactive but stay in C-PRI-16 unavailable; params and confidence equal the
+    ones with both checks switched to draft."""
+    cyc = load_cycling_rules()
+    checks = {c["id"]: c for p in cyc.principles.values() for c in p["checks"]}
+    assert checks["P-COM-03"]["status"] == checks["P-ATT-02"]["status"] == "inactive"
+    assert {"P-COM-03", "P-ATT-02", "P-SAF-02"} <= set(P.unavailable)
+    raw = cyc.model_dump(by_alias=True)
+    for p in raw["principles"].values():
+        for c in p["checks"]:
+            if c["id"] in ("P-COM-03", "P-ATT-02"):
+                c["status"] = "draft"
+    P2 = pr.PrincipleParams.from_rules(type(cyc)(**raw), load_rules())
+    for f in ("unavailable", "check_principle", "forms", "weights", "network_only"):
+        assert getattr(P, f) == getattr(P2, f)
+    n = 3
+    known = {c: np.full(n, 0.0 if c in P.unavailable else 1.0) for c in P.check_principle}
+    appl = {c: np.ones(n, dtype=bool) for c in P.check_principle}
+    assert np.allclose(pr.confidence(known, appl, P), pr.confidence(known, appl, P2))
+    assert np.all(pr.confidence(known, appl, P) < 1.0)

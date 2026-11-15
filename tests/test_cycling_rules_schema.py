@@ -415,7 +415,7 @@ def test_rejects_unknown_confidence_flag(cyc):
 
 
 def test_rejects_facility_rule_without_status(cyc):
-    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-03").pop("status")), "status")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _by_id(d["separation_matrix"]["rules"], "S-04").pop("status")), "status")
 
 
 # --- prompt 19: profile_assignment (design_rules.yaml) -------------------------------------------
@@ -476,7 +476,7 @@ def test_inactive_rules_and_blocks():
     assert _by_id(cycling.separation_matrix["rules"], "S-03")["scope"] == "rural"
     every = all_rule_ids(load_rules(), cycling, design)
     active = active_rule_ids(load_rules(), cycling, design)
-    assert set(every) - set(active) == {"C-RUR-01", "PL-02"}
+    assert set(every) - set(active) == {"C-RUR-01", "PL-02", "P-COM-03", "P-ATT-02"}
     assert collect_ids({"status": "inactive", "rules": [{"id": "X-01", "status": "draft"}]}, active_only=True) == []
 
 
