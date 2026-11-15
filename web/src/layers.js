@@ -105,7 +105,7 @@ function discGroups(meta) {
   ];
   if (discLegend === "b") {
     return [...DISC_STRENGTH.map((c, i) => ({ key: `dm-${c.key}`, label: c.label, color: NEED, width: c.width, dash: c.dash,
-      filter: ["all", known("dt"), [">=", dm, c.lo], ...(i ? [["<", dm, DISC_STRENGTH[i - 1].lo]] : [])] })), ...rest];
+      filter: ["all", known("dt"), known("dm"), [">=", dm, c.lo], ...(i ? [["<", dm, DISC_STRENGTH[i - 1].lo]] : [])] })), ...rest];
   }
   return [
     ...Object.entries(DISC_TYPE_STYLE).map(([t, s]) => ({
@@ -236,7 +236,7 @@ export function sfpLayers(state, meta) {
   } else {
     out.push({ id: "casing", type: "line", source: SRC, "source-layer": SEG, filter,
       layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": CASING, "line-width": zoomWidth(8) } });
+      paint: { "line-color": CASING, "line-width": zoomWidth(state.layer === "disc" ? 10 : 8) } }); // disc: up to 7 px lines
     for (const g of groups(state.layer, meta)) out.push(lineLayer(`main-${g.key}`, g, filter));
   }
   if (state.overlays.includes("bus")) {
@@ -271,7 +271,7 @@ export function sfpLayers(state, meta) {
 // Basemap labels above the data (prompt 25): Stadtteil and place names get a white halo and darker text, minor
 // street names only from zoom 15 so they do not cover the data lines.
 const LABEL_TUNING = {
-  places_subplace: { paint: { "text-color": "#4a4a4a", "text-halo-color": CASING, "text-halo-width": 2 } },
+  places_subplace: { paint: { "text-color": "#4a4a4a" /* token text2 */, "text-halo-color": CASING, "text-halo-width": 2 } },
   places_locality: { paint: { "text-halo-color": CASING, "text-halo-width": 2 } },
   roads_labels_minor: { minzoom: 15, paint: { "text-halo-color": CASING, "text-halo-width": 1.5 } },
   roads_labels_major: { paint: { "text-halo-color": CASING, "text-halo-width": 1.5 } },
@@ -297,7 +297,7 @@ export const LAYER_INFO = {
   disc: { title: "Abweichung", text: "Wo die Straße heute nicht zu ihrer Aufgabe passt, zum Beispiel weil das Tempo zu hoch ist." },
   prio: { title: "Dringlichkeit", text: "Wo eine Abweichung und viele Unfälle, Schulen oder Radverkehr zusammenkommen." },
   width: { title: "Breite der Straße", text: "Breite von Grundstück zu Grundstück an der engsten Stelle. Breite Linie heißt: breite Straße." },
-  feas: { title: "Regelprofil der Aufgabe", text: "Passt die Regel-Aufteilung der Aufgabe in die Straße? (Ohne Radweg-Details; die Ansicht „Passt das Ziel?“ ist genauer.)" },
+  feas: { title: "Regelprofil der Aufgabe", text: "Passt die Regel-Aufteilung der Aufgabe in die Straße? Ohne Radweg-Details." },
   hvs: { title: "Hauptverkehrsstraßen (Vergleich)", text: "Die amtliche Liste der Hauptverkehrsstraßen zum Vergleich mit der Aufgabe im Entwurf." },
   cnet: { title: "Radnetz im Ziel", cycling: true, text: "Das vorgeschlagene Radnetz. Eine breite Linie heißt: wichtige Route." },
   cfac: { title: "Radweg im Ziel", cycling: true, text: "Welche Art Radweg die Straße im Ziel haben soll – nach der Prüfung, ob der Platz reicht." },

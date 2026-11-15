@@ -35,7 +35,7 @@ export const THEMES = {
 };
 /** Enabled views of a theme as [id, view] pairs, in order. */
 export const viewsOf = (theme) => Object.entries(THEMES[theme]?.views ?? {}).filter(([, v]) => v.enabled !== false);
-const firstView = (theme) => viewsOf(theme)[0][0];
+const firstView = (theme) => viewsOf(theme)[0]?.[0] ?? null; // every theme keeps one enabled view (test/state.test.js)
 const isEnabled = (theme, view) => viewsOf(theme).some(([v]) => v === view);
 export const layerOf = (theme, view) => THEMES[theme]?.views[view]?.layer ?? null;
 // old ?layer= links: also map disabled views, withView() then falls back to the theme's first enabled view

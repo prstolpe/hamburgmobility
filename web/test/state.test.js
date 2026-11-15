@@ -35,6 +35,10 @@ describe("themes and views", () => {
 describe("disabled views", () => {
   const disabled = [["rad", "luecken"], ["rad", "radweg"], ["platz", "ziel"], ["platz", "breite"], ["platz", "regelprofil"]];
 
+  it("every theme keeps at least one enabled view", () => {
+    for (const t of Object.keys(THEMES)) expect(viewsOf(t).length, t).toBeGreaterThan(0);
+  });
+
   it("are kept in THEMES but not offered", () => {
     for (const [t, v] of disabled) {
       expect(THEMES[t].views[v].enabled, `${t}/${v}`).toBe(false);

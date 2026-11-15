@@ -30,7 +30,8 @@ Die Karten heißen im Code „Themen“ (`THEMES` in `web/src/state.js`). Jede A
 | `web/e2e/site.spec.js:41-42` (`ready()` wartet auf `#banner-text`) | Test | wartet auf `#foot-version`; neuer Test „kein Band“ |
 | `analysis/redesign/ui/lib.mjs:36`, `analysis/review_2026_11/ui/lib.mjs:33` | Analyse-Skripte | warten auf Fußzeile (Fallback Band) |
 | `analysis/review_2026_11/ui/heuristics.mjs:196-214` (Prüfung „Band sichtbar“) | Analyse | übersprungen, wenn kein Band |
-| `analysis/redesign/ui/capture.mjs:78-82` | Analyse | Band optional |
+| `analysis/redesign/ui/capture.mjs:78-82`, `analysis/redesign/readability.py:149` | Analyse | Band optional |
+| `analysis/review_2026_11/ui/heuristics.mjs:278` (Ladezeitmessung wartet auf `#banner-text`) | Analyse | wartet auf Fußzeile (Nachtrag nach Review) |
 | `docs/redesign/tokens.json:40, 86` (`notice`) | Leitlinie | als „entfallen“ markiert, Token `logo` ergänzt |
 | `docs/redesign/03_design_system.md:120` | Leitlinie | „kein Kopfband mehr, nicht wieder einbauen“ |
 | `docs/redesign/02_information_architecture.md:36, 170-171` | Leitlinie | angepasst |
@@ -55,6 +56,7 @@ der Fußzeile, `meta.disclaimer` in der Methoden-Zusammenfassung (`web/src/metho
 | `web/test/method.test.js:114-127` und „news placeholders“ | Test | entfernt; Test „kein Link auf #methode/neu“ |
 | `web/test/state.test.js` (Unterseite `neu`) | Test | erwartet Rückfall auf Zusammenfassung |
 | `web/e2e/site.spec.js:20` (axe-Seite „Methode Neu“) | Test | entfernt |
+| `analysis/redesign/ui/p3_method.mjs:6`, `analysis/redesign/p3_readability.py:55` | Analyse | `neu` bzw. `news` optional (Nachtrag nach Review) |
 | `prompts/24…:114` („Was ist neu“-Eintrag verlangt) | Auftrag | jetzt `CHANGELOG.md` |
 | `docs/redesign/impl_method.md:14`, `02_information_architecture.md:135`, `decisions.md:60` | Leitlinie | als entfallen markiert (decisions.md: Paketbeschreibung historisch, unverändert) |
 | `CHANGELOG.md` | Repository | bleibt, neuer Eintrag |

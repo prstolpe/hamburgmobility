@@ -275,7 +275,7 @@ async function loadRun(base, kind, profile) {
   cdp.on("Network.loadingFinished", (e) => { const r = reqs.get(e.requestId); if (r) r.bytes = e.encodedDataLength; });
   const t0 = Date.now();
   await page.goto(new URL("#karte", base).href);
-  await page.waitForFunction(() => document.querySelector("#banner-text")?.textContent.includes("Datenstand"), null, { timeout: 120_000 });
+  await page.waitForFunction(() => (document.querySelector("#foot-version") ?? document.querySelector("#banner-text"))?.textContent.includes("Datenstand"), null, { timeout: 120_000 });
   const tMeta = Date.now() - t0;
   await page.waitForFunction(() => document.querySelector("#map canvas"), null, { timeout: 120_000 });
   const tCanvas = Date.now() - t0;

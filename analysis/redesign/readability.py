@@ -146,7 +146,8 @@ def website_units():
             units.append(("Webseite", f"Steckbrief {cat}", s["heading"], s["text"]))
     for s in c["junction"]["sections"]:
         units.append(("Webseite", "Steckbrief Knoten", s["heading"], s["text"]))
-    units.append(("Webseite", "Rahmen", "Banner", c["chrome"]["banner"]))
+    if c["chrome"].get("banner"):  # no banner since prompt 25
+        units.append(("Webseite", "Rahmen", "Banner", c["chrome"]["banner"]))
     units.append(("Webseite", "Rahmen", "Filter", c["chrome"]["filter_text"]))
     return units
 

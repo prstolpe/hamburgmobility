@@ -1,33 +1,39 @@
 # Barrierefreiheit der Webseite (axe-core)
 
-Erzeugt: 2026-11-11T21:33:17Z mit `npm --prefix web run a11y` (Playwright, axe-core 4.13.0, Regeln WCAG 2.0/2.1/2.2 A und AA) gegen `vite preview` mit den Daten aus data/out. Geräte: Desktop Chrome und Pixel 7 (emuliert).
+Erzeugt: 2026-11-15T14:16:07Z mit `npm --prefix web run a11y` (Playwright, axe-core 4.13.0, Regeln WCAG 2.0/2.1/2.2 A und AA) gegen `vite preview` mit den Daten aus data/out. Geräte: Desktop Chrome und Pixel 7 (emuliert).
 
 Ergebnis: **0 kritisch, 0 schwerwiegend, 0 mittel, 0 gering.**
 
 | Gerät | Seite | Verstöße | bestanden | manuell prüfen |
 | --- | --- | --- | ---: | ---: |
-| desktop | Karte | keine | 29 | 2 |
-| desktop | Karte mit Steckbrief | keine | 34 | 2 |
-| desktop | Tabelle (Bezirk wählen) | keine | 25 | 0 |
-| desktop | Tabelle | keine | 25 | 0 |
+| desktop | Karte | keine | 30 | 2 |
+| desktop | Karte mit Steckbrief | keine | 32 | 2 |
+| desktop | Bezirke | keine | 27 | 0 |
+| desktop | Bezirk Eimsbüttel | keine | 30 | 0 |
+| desktop | Bezirk mit Tabelle | keine | 33 | 0 |
 | desktop | Methode | keine | 26 | 0 |
-| desktop | Radnetz | keine | 26 | 0 |
-| desktop | Karte Radanlagen Soll/Ist | keine | 29 | 2 |
-| desktop | Karte Knotenpunkte mit Steckbrief | keine | 31 | 2 |
-| desktop | Downloads | keine | 24 | 0 |
-| desktop | Quellen und Lizenzen | keine | 25 | 0 |
-| desktop | Impressum | keine | 23 | 0 |
-| mobile | Karte | keine | 29 | 2 |
-| mobile | Karte mit Steckbrief | keine | 34 | 2 |
-| mobile | Tabelle (Bezirk wählen) | keine | 25 | 0 |
-| mobile | Tabelle | keine | 26 | 1 |
+| desktop | Methode Kapitel Radnetz | keine | 29 | 0 |
+| desktop | Methode Regeln | keine | 27 | 0 |
+| desktop | Karte Radnetz | keine | 30 | 2 |
+| desktop | Karte Fahrstreifen | keine | 31 | 2 |
+| desktop | Karte Abweichung | keine | 31 | 2 |
+| desktop | Karte Kreuzungen mit Steckbrief | keine | 31 | 2 |
+| desktop | Daten | keine | 30 | 0 |
+| desktop | Impressum | keine | 26 | 0 |
+| mobile | Karte | keine | 31 | 2 |
+| mobile | Karte mit Steckbrief | keine | 31 | 2 |
+| mobile | Bezirke | keine | 27 | 0 |
+| mobile | Bezirk Eimsbüttel | keine | 30 | 0 |
+| mobile | Bezirk mit Tabelle | keine | 33 | 1 |
 | mobile | Methode | keine | 26 | 0 |
-| mobile | Radnetz | keine | 27 | 1 |
-| mobile | Karte Radanlagen Soll/Ist | keine | 29 | 2 |
-| mobile | Karte Knotenpunkte mit Steckbrief | keine | 31 | 2 |
-| mobile | Downloads | keine | 24 | 0 |
-| mobile | Quellen und Lizenzen | keine | 26 | 1 |
-| mobile | Impressum | keine | 23 | 0 |
+| mobile | Methode Kapitel Radnetz | keine | 29 | 0 |
+| mobile | Methode Regeln | keine | 27 | 0 |
+| mobile | Karte Radnetz | keine | 31 | 2 |
+| mobile | Karte Fahrstreifen | keine | 31 | 2 |
+| mobile | Karte Abweichung | keine | 31 | 2 |
+| mobile | Karte Kreuzungen mit Steckbrief | keine | 31 | 2 |
+| mobile | Daten | keine | 30 | 1 |
+| mobile | Impressum | keine | 26 | 0 |
 
 ## Nicht automatisch prüfbar (offen)
 

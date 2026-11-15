@@ -21,7 +21,7 @@ const MAPS = {
   knoten: "theme=knoten",
 };
 const ZOOMS = [11, 13, 15];
-const PAGES = { methode: "#methode", "methode-neu": "#methode/neu", impressum: "#impressum" };
+const PAGES = { methode: "#methode", impressum: "#impressum" };
 const VIEWPORTS = { desktop: { width: 1440, height: 900 }, mobile: { width: 390, height: 844 } };
 
 const browser = await chromium.launch();
