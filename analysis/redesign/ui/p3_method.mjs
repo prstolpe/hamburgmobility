@@ -1,9 +1,9 @@
 // Screenshots of the method page, Part B package 3 (prompt 24): summary, one chapter, the rule reference with one rule
-// open, and "Was ist neu", on desktop (1440 px) and mobile (390 px). Output: docs/redesign/img/p3-*.jpg.
+// open, on desktop (1440 px) and mobile (390 px). Output: docs/redesign/img/p3-*.jpg.
 import { chromium, newPage, open, shot } from "./lib.mjs";
 
-const VIEWS = [["methode", "#methode"], ["kapitel", "#methode/radnetz"], ["regel", "#methode/regeln?regel=C-G30-02"],
-  ["neu", "#methode/neu"]];
+const VIEWS = [["methode", "#methode"], ["kapitel", "#methode/radnetz"], ["regel", "#methode/regeln?regel=C-G30-02"]];
+// "Was ist neu" (#methode/neu) was removed in prompt 25
 const browser = await chromium.launch();
 const errors = [];
 for (const kind of ["desktop", "mobile"]) {

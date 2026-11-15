@@ -2,11 +2,11 @@ import "./style.css";
 import { dataHtml } from "./datapage.js";
 import { bindDistrictPage, districtHtml, districtListHtml } from "./districts.js";
 import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO } from "./layers.js";
-import { chapterHtml, newsHtml, referenceHtml, referenceListHtml, resolveRule, summaryHtml } from "./method.js";
+import { chapterHtml, referenceHtml, referenceListHtml, resolveRule, summaryHtml } from "./method.js";
 import { imprintHtml } from "./pages.js";
 import { junctionHtml, segmentHtml } from "./profile.js";
 import { setupSearch } from "./search.js";
-import { parseHash, THEMES, toHash, withView } from "./state.js";
+import { parseHash, THEMES, toHash, viewsOf, withView } from "./state.js";
 import { renderTable } from "./table.js";
 import { esc } from "./util.js";
 
@@ -41,15 +41,14 @@ function setState(patch, { push = false } = {}) {
 // --- map controls: themes above the map, legend and further views next to it ------------------
 
 function themesHtml() {
-  const th = THEMES[state.theme];
-  const views = Object.entries(th.views).filter(([, v]) => !v.level);
+  const views = viewsOf(state.theme).filter(([, v]) => !v.level);
   return `${Object.entries(THEMES).map(([k, t]) => `<button type="button" data-theme="${k}" aria-pressed="${k === state.theme}">${esc(t.title)}</button>`).join("")}
     ${views.length > 1 ? `<span class="views" role="group" aria-label="Ansicht"><span class="views-label">Ansicht:</span>${views.map(([k, v]) =>
       `<button type="button" data-view="${k}" aria-pressed="${k === state.view}">${esc(v.label)}</button>`).join("")}</span>` : ""}`;
 }
 
 function controlsHtml() {
-  const more = Object.entries(THEMES).flatMap(([t, th]) => Object.entries(th.views).filter(([, v]) => v.level === 3)
+  const more = Object.entries(THEMES).flatMap(([t, th]) => viewsOf(t).filter(([, v]) => v.level === 3)
     .map(([v, x]) => `<li><button type="button" class="link" data-theme-view="${t}:${v}" aria-pressed="${state.theme === t && state.view === v}">${esc(th.title)}: ${esc(x.label)}</button></li>`)).join("");
   const overlays = Object.entries(OVERLAY_INFO).map(([k, v]) => `<label class="opt">
     <input type="checkbox" name="ov" value="${k}" ${state.overlays.includes(k) ? "checked" : ""}> ${esc(v)}</label>`).join("");
@@ -208,9 +207,11 @@ async function renderDistricts() {
   });
 }
 
+const ORG_NAME = "Hamburg Mobility Revolution";
+
 // --- method page ------------------------------------------------------------------------------
 
-let rulesData, changelogText;
+let rulesData;
 let ruleQuery = { q: "", onlyAssumption: false };
 
 async function loadRules() {
@@ -238,9 +239,6 @@ async function renderMethod() {
         const li = document.getElementById(`regel-${resolveRule(data.rules, state.rule)}`);
         if (li) { li.querySelector("details")?.setAttribute("open", ""); li.scrollIntoView(); }
       }
-    } else if (sub === "neu") {
-      changelogText ??= await fetch("changelog.md").then((r) => (r.ok ? r.text() : ""));
-      sec.innerHTML = newsHtml(method, meta, changelogText);
     } else sec.innerHTML = chapterHtml(method, sub, (await loadRules()).rules, meta);
   } catch (err) {
     sec.dataset.loaded = "";
@@ -268,8 +266,8 @@ async function render() {
   }
   const titles = { bezirke: "Bezirke", methode: "Methode", daten: "Daten", impressum: "Impressum" };
   const chapter = meta.method?.chapters?.find((c) => c.key === state.sub);
-  const subTitle = state.page !== "methode" ? null : state.sub === "regeln" ? "Alle Regeln" : state.sub === "neu" ? "Was ist neu" : chapter?.title;
-  document.title = `${meta.site_title}${titles[state.page] ? ` – ${subTitle ? `${titles.methode}: ${subTitle}` : titles[state.page]}` : ""}`;
+  const subTitle = state.page !== "methode" ? null : state.sub === "regeln" ? "Alle Regeln" : chapter?.title;
+  document.title = `${meta.site_title}${titles[state.page] ? ` – ${subTitle ? `${titles.methode}: ${subTitle}` : titles[state.page]}` : ""} · ${ORG_NAME}`;
   if (state.page === "karte") {
     renderControls();
     renderIntro();
@@ -306,8 +304,7 @@ async function init() {
   const streets = await json("search.json");
   const junctions = meta.overview ? await json("search_junctions.json").catch(() => []) : [];
   for (const s of streets) for (const id of s.ids) idToStreet.set(id, s);
-  $("#banner-text").textContent = `${meta.disclaimer}. Datenstand ${new Date(meta.data_date).toLocaleDateString("de-DE")}, Regelwerk ${meta.rules_version}.`;
-  $("#foot-version").textContent = `Version ${meta.version}`;
+  $("#foot-version").textContent = `Version ${meta.version} · Datenstand ${new Date(meta.data_date).toLocaleDateString("de-DE")}`;
   bindControls();
   const entries = [...streets.map((s) => ({ ...s, kind: "seg" })), ...junctions.map((j) => ({ ...j, kind: "jct" }))];
   setupSearch($("#search"), $("#search-list"), entries, (s) => {

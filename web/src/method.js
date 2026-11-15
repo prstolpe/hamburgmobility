@@ -54,7 +54,7 @@ export function summaryHtml(method, meta = {}) {
   <section aria-labelledby="m-chapters"><h2 id="m-chapters">Die Kapitel</h2>
     <ol class="chapter-list">${chapters(method).map((c) => `<li><a href="#methode/${esc(c.key)}"><strong>${plain(c.title, v)}</strong></a>
       <p>${plain(c.l1, v)}</p></li>`).join("")}</ol></section>
-  <p class="method-links"><a href="#methode/regeln">Alle Regeln</a> · <a href="#methode/neu">Was ist neu</a></p>`;
+  <p class="method-links"><a href="#methode/regeln">Alle Regeln</a></p>`;
 }
 
 // --- rule details (level 3) ----------------------------------------------------------------
@@ -173,21 +173,4 @@ export function referenceHtml(method, rules, opts = {}, versions = {}, repo = nu
     <label class="opt"><input id="rule-assume" type="checkbox"${opts.onlyAssumption ? " checked" : ""}> nur Annahmen</label>
   </form>
   <div id="rule-list">${referenceListHtml(method, rules, opts, repo)}</div>`;
-}
-
-// --- news ------------------------------------------------------------------------------------
-
-export function newsHtml(method, meta, changelogMd = "") {
-  const v = method.vars ?? {};
-  const news = method.news ?? [];
-  const date = (d) => (d && !Number.isNaN(Date.parse(d)) ? new Date(d).toLocaleDateString("de-DE") : d);
-  return `
-  <p class="crumb"><a href="#methode">← ${plain(method.title, v)}</a></p>
-  <h1>Was ist neu</h1>
-  <p>Aktuelle Version: ${esc(meta.version)} (Regelwerk ${esc(meta.rules_version)}, Datenstand ${esc(date(meta.data_date))})</p>
-  ${news.length ? `<ul class="news plain">${news.map((n) => `<li><h2>${plain(n.title, v)}</h2>
-    <p class="t-small">${esc(date(n.date))}${n.version ? ` · Regelwerk ${esc(n.version)}` : ""}</p>
-    ${n.text ? `<p>${plain(n.text, v)}</p>` : ""}
-    ${n.items?.length ? `<ul>${n.items.map((i) => `<li>${plain(i, v)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>` : "<p>Noch keine Einträge.</p>"}
-  <details class="level l3"><summary>Alle Änderungen (CHANGELOG)</summary><div class="changelog">${marked.parse(changelogMd || "")}</div></details>`;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chapterHtml, filterRules, fill, newsHtml, referenceHtml, ruleDetailsHtml, SOURCE_TYPE_TEXT, summaryHtml } from "../src/method.js";
+import { chapterHtml, filterRules, fill, referenceHtml, ruleDetailsHtml, SOURCE_TYPE_TEXT, summaryHtml } from "../src/method.js";
 
 const method = {
   title: "So entsteht der Entwurf",
@@ -34,8 +34,9 @@ describe("summaryHtml", () => {
     expect(html).toContain("Text &lt;b&gt;1&lt;/b&gt;");
     expect(html).not.toContain("{");
   });
-  it("links chapters, reference and news and shows the disclaimer", () => {
-    for (const h of ["#methode/aufgabe", "#methode/radnetz", "#methode/regeln", "#methode/neu"]) expect(html).toContain(`href="${h}"`);
+  it("links chapters and the reference (no news page) and shows the disclaimer", () => {
+    for (const h of ["#methode/aufgabe", "#methode/radnetz", "#methode/regeln"]) expect(html).toContain(`href="${h}"`);
+    expect(html).not.toContain("#methode/neu");
     expect(html).toContain("Nicht amtlich");
     expect(html.match(/<h1>/g)).toHaveLength(1);
   });
@@ -111,22 +112,6 @@ describe("filterRules / referenceHtml", () => {
   });
 });
 
-describe("newsHtml", () => {
-  const meta = { version: "0.21.1+x", rules_version: "0.21.1", data_date: "2026-10-28" };
-  it("empty news, version line and changelog", () => {
-    const html = newsHtml(method, meta, "# Changelog\n\n- eins");
-    expect(html).toContain("Noch keine Einträge.");
-    expect(html).toContain("Aktuelle Version: 0.21.1+x (Regelwerk 0.21.1, Datenstand 28.10.2026)");
-    expect(html).toContain("Alle Änderungen (CHANGELOG)");
-    expect(html).toContain("<li>eins</li>");
-  });
-  it("renders entries", () => {
-    const html = newsHtml({ ...method, news: [{ date: "2026-11-01", version: "0.22", title: "Neu <1>", text: "T", items: ["a"] }] }, meta, "");
-    expect(html).toContain("Neu &lt;1&gt;");
-    expect(html).not.toContain("Noch keine Einträge");
-  });
-});
-
 describe("former rule ids", () => {
   it("resolves an alias to the rule that took it over", async () => {
     const { resolveRule, ruleDetailsHtml } = await import("../src/method.js");
@@ -135,14 +120,5 @@ describe("former rule ids", () => {
     expect(resolveRule(rules, "J-03")).toBe("J-03");
     expect(resolveRule(rules, "X-9")).toBe("X-9");
     expect(ruleDetailsHtml({ id: "J-01", aliases: ["J-02"], file: "design_rules.yaml", section: "junctions" })).toContain("früher auch <code>J-02</code>");
-  });
-});
-
-describe("news placeholders", () => {
-  it("fills {name} in news items", async () => {
-    const { newsHtml } = await import("../src/method.js");
-    const html = newsHtml({ vars: { n_rules: 188 }, news: [{ title: "T", text: "x", items: ["{n_rules} statt 196"] }] },
-      { version: "1", rules_version: "1", data_date: "2026-10-28" });
-    expect(html).toContain("188 statt 196");
   });
 });

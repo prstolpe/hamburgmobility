@@ -4,7 +4,7 @@ import * as maplibregl from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
-import { sfpLayers } from "./layers.js";
+import { beforeIdFor, firstSymbolId, sfpLayers, tuneLabels } from "./layers.js";
 import { CASING, JUNCTION_REBUILD, JUNCTION_STYLE, RURAL_FILL, SHAPES } from "./palette.js";
 import { dataUrl } from "./util.js";
 
@@ -61,7 +61,7 @@ function style(meta, tilesBase) {
       sfp: { type: "vector", url: `pmtiles://${dataUrl("tiles/segments.pmtiles", tilesBase)}`, promoteId: "id",
         attribution: "Straßenfunktionsplan (Entwurf, nicht amtlich) · Datenstand " + meta.data_date },
     },
-    layers: basemapLayers("protomaps", flavor, { lang: "de" }),
+    layers: tuneLabels(basemapLayers("protomaps", flavor, { lang: "de" })),
   };
 }
 
@@ -82,21 +82,23 @@ export function createMap(container, meta, state, { onSelect, onSelectJunction, 
     "Karte der Soll-Kategorien. Mit Pfeiltasten verschieben, Plus und Minus zoomen. Alle Inhalte auch in der Tabellenansicht.");
 
   let current = [];
+  let labelId;
   function apply(st) {
     for (const id of current) if (map.getLayer(id)) map.removeLayer(id);
     const ls = sfpLayers(st, meta);
     ensureSources(map, meta, ls, tilesBase);
-    for (const l of ls) map.addLayer(l);
+    for (const l of ls) map.addLayer(l, beforeIdFor(l, labelId));
     current = ls.map((l) => l.id);
   }
 
   map.on("load", () => {
+    labelId = firstSymbolId(map.getStyle().layers);
+    // Rural Stadtteile: not classified (config/project.yaml, rural_exclude); under the district line
+    map.addSource("rural", { type: "geojson", data: dataUrl("rural_excluded.geojson") });
+    map.addLayer({ id: "rural-fill", type: "fill", source: "rural", paint: { "fill-color": RURAL_FILL, "fill-opacity": 0.18 } }, labelId);
     map.addSource("district", { type: "geojson", data: dataUrl("districts.geojson") });
     map.addLayer({ id: "district-line", type: "line", source: "district",
-      paint: { "line-color": "#333333", "line-width": 1.5, "line-dasharray": [4, 2] } });
-    // Rural Stadtteile: not classified (config/project.yaml, rural_exclude)
-    map.addSource("rural", { type: "geojson", data: dataUrl("rural_excluded.geojson") });
-    map.addLayer({ id: "rural-fill", type: "fill", source: "rural", paint: { "fill-color": RURAL_FILL, "fill-opacity": 0.18 } });
+      paint: { "line-color": "#333333", "line-width": 1.5, "line-dasharray": [4, 2] } }, labelId);
     apply(state);
   });
   map.on("click", (ev) => {

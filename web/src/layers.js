@@ -35,6 +35,8 @@ function cyclingFilter(state, srcLayer) {
 }
 
 const zoomWidth = (w) => ["interpolate", ["linear"], ["zoom"], 10, w * 0.4, 14, w, 17, w * 2];
+// the same zoom scaling for a data-driven width expression (zoom must be the outermost input)
+const zoomWidthExpr = (e) => ["interpolate", ["linear"], ["zoom"], 10, ["*", 0.4, e], 14, e, 17, ["*", 2, e]];
 const known = (attr) => ["has", attr];
 const notAssessed = (attr, label) => ({ key: `${attr}_unknown`, label, color: UNKNOWN, width: 1.2, dash: [1, 1.5], filter: ["!", known(attr)] });
 
@@ -75,6 +77,28 @@ function cyclingGroups(layer, meta) {
   }
 }
 
+// Legend of "Abweichung" (prompt 25, item 5, variant a chosen): one statement per type (dash), the strength as width.
+// Display only: the strength classes group disc_max (0.5 steps) into three widths, rules and data unchanged.
+const DISC_WIDTH = { small: 2.5, medium: 4.5, large: 7 }; // below 1.5, 1.5 to below 2.5, from 2.5
+const dm = ["coalesce", ["get", "dm"], 0];
+const discWidth = zoomWidthExpr(["step", dm, DISC_WIDTH.small, 1.5, DISC_WIDTH.medium, 2.5, DISC_WIDTH.large]);
+const DISC_TEXT = {
+  D1: "Heute zu schnell oder gebaut wie eine Hauptstraße",
+  D2: "Hauptstraße, aber es fehlt Gestaltung, z. B. ein Radweg",
+  D3: "beides",
+};
+
+function discGroups(meta) {
+  return [
+    ...Object.entries(DISC_TYPE_STYLE).map(([t, s]) => ({
+      key: t, label: DISC_TEXT[t] ?? meta.glossary?.terms?.[t]?.plain ?? meta.discrepancy_types[t], filter: ["==", ["get", "dt"], t],
+      color: s.color, dash: s.dash, width: discWidth, legendWidth: 4,
+    })),
+    { key: "none", label: "passt bereits", color: NONE, width: 1.2, dash: null, filter: ["all", ["!", known("dt")], known("dm")] },
+    { key: "unchecked", label: "nicht prüfbar (Angaben fehlen)", color: UNKNOWN, width: 1.2, dash: [1, 1.5], filter: ["!", known("dm")] },
+  ];
+}
+
 /** Thematic groups of the active layer: [{key, label, filter, color, width, dash, src?, srcLayer?, kind?, reference?}] */
 export function groups(layer, meta) {
   if (CYCLING_LAYERS.includes(layer)) return cyclingGroups(layer, meta);
@@ -96,15 +120,7 @@ export function groups(layer, meta) {
       return out;
     }
     case "disc":
-      return [
-        ...Object.entries(DISC_TYPE_STYLE).map(([t, s]) => ({
-          key: t, label: meta.glossary?.terms?.[t]?.plain ?? meta.discrepancy_types[t], filter: ["==", ["get", "dt"], t], color: s.color, dash: s.dash,
-          width: ["match", ["get", "dm"], 3, 6, 2, 4.5, 3],
-        })),
-        { key: "none", label: "passt zum Ziel", color: NONE, width: 1.2, dash: null,
-          filter: ["all", ["!", known("dt")], known("dm")] },
-        { key: "unchecked", label: "nicht prüfbar", color: UNKNOWN, width: 1.2, dash: [1, 1.5], filter: ["!", known("dm")] },
-      ];
+      return discGroups(meta);
     case "width": {
       const lo = meta.width_classes_m.ETW30;
       const hi = meta.width_classes_m.GOW50;
@@ -204,7 +220,7 @@ export function sfpLayers(state, meta) {
   } else {
     out.push({ id: "casing", type: "line", source: SRC, "source-layer": SEG, filter,
       layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": CASING, "line-width": zoomWidth(8) } });
+      paint: { "line-color": CASING, "line-width": zoomWidth(state.layer === "disc" ? 10 : 8) } }); // disc: up to 7 px lines
     for (const g of groups(state.layer, meta)) out.push(lineLayer(`main-${g.key}`, g, filter));
   }
   if (state.overlays.includes("bus")) {
@@ -236,19 +252,41 @@ export function sfpLayers(state, meta) {
   return out;
 }
 
+// Basemap labels above the data (prompt 25): Stadtteil and place names get a white halo and darker text, minor
+// street names only from zoom 15 so they do not cover the data lines.
+const LABEL_TUNING = {
+  places_subplace: { paint: { "text-color": "#4a4a4a" /* token text2 */, "text-halo-color": CASING, "text-halo-width": 2 } },
+  places_locality: { paint: { "text-halo-color": CASING, "text-halo-width": 2 } },
+  roads_labels_minor: { minzoom: 15, paint: { "text-halo-color": CASING, "text-halo-width": 1.5 } },
+  roads_labels_major: { paint: { "text-halo-color": CASING, "text-halo-width": 1.5 } },
+};
+
+export function tuneLabels(layers) {
+  return layers.map((l) => {
+    const t = LABEL_TUNING[l.id];
+    return t ? { ...l, ...(t.minzoom ? { minzoom: Math.max(t.minzoom, l.minzoom ?? 0) } : {}), paint: { ...l.paint, ...t.paint } } : l;
+  });
+}
+
+/** Id of the first basemap label layer: data layers are inserted below it, so names stay readable. */
+export const firstSymbolId = (layers) => layers.find((l) => l.type === "symbol")?.id;
+
+/** Junction symbols stay on top of the labels (they are the data of the junction view). */
+export const beforeIdFor = (layer, labelId) => (layer.type === "symbol" ? undefined : labelId);
+
 // One sentence per view, plain language (docs/redesign/04_language.md); titles of the views are in state.js THEMES.
 export const LAYER_INFO = {
   cat: { title: "Aufgabe der Straße", text: "Welche Aufgabe jede Straße haben soll. Die Farbe zeigt das Tempo im Ziel, die Breite, wie stark die Straße verbindet." },
   speed: { title: "Tempo heute", text: "Welches Tempo heute gilt (amtlich, sonst OpenStreetMap). Gleiche Farben wie im Ziel: So sieht man, wo sich das Tempo ändert." },
-  disc: { title: "Abweichung", text: "Wo die Straße heute nicht zu ihrer Aufgabe passt, zum Beispiel weil das Tempo zu hoch ist. Breite Linie heißt: große Abweichung." },
+  disc: { title: "Abweichung", text: "Wo die Straße heute nicht zu ihrer Aufgabe passt, zum Beispiel weil das Tempo zu hoch ist." },
   prio: { title: "Dringlichkeit", text: "Wo eine Abweichung und viele Unfälle, Schulen oder Radverkehr zusammenkommen." },
   width: { title: "Breite der Straße", text: "Breite von Grundstück zu Grundstück an der engsten Stelle. Breite Linie heißt: breite Straße." },
-  feas: { title: "Regelprofil der Aufgabe", text: "Passt die Regel-Aufteilung der Aufgabe in die Straße? (Ohne Radweg-Details; die Ansicht „Passt das Ziel?“ ist genauer.)" },
+  feas: { title: "Regelprofil der Aufgabe", text: "Passt die Regel-Aufteilung der Aufgabe in die Straße? Ohne Radweg-Details." },
   hvs: { title: "Hauptverkehrsstraßen (Vergleich)", text: "Die amtliche Liste der Hauptverkehrsstraßen zum Vergleich mit der Aufgabe im Entwurf." },
   cnet: { title: "Radnetz im Ziel", cycling: true, text: "Das vorgeschlagene Radnetz. Eine breite Linie heißt: wichtige Route." },
   cfac: { title: "Radweg im Ziel", cycling: true, text: "Welche Art Radweg die Straße im Ziel haben soll – nach der Prüfung, ob der Platz reicht." },
   cgap: { title: "Lücken", cycling: true, text: "Wo auf dem Radnetz ein passender Radweg fehlt, und wo das Netz zu weitmaschig ist." },
-  lanes: { title: "Fahrstreifen", cycling: true, text: "Wo das Ziel weniger Fahrstreifen für Autos hat als heute." },
+  lanes: { title: "Fahrstreifen", cycling: true, text: "Wie viele Fahrstreifen für Autos die Straße im Ziel hat – und wo es weniger sind als heute." },
   cfit: { title: "Passt das Ziel?", cycling: true, text: "Passen Gehwege, Radweg, Fahrbahn, Bäume und Parken des Ziels in die Straße?" },
   jct: { title: "Kreuzungen", cycling: true, text: "Welche Art Kreuzung das Ziel ist. Die Form zeigt die Art, Orange heißt: Umbau nötig. Sichtbar ab Zoomstufe 12." },
   coff: { title: "Amtliches Radnetz", cycling: true, text: "Das amtliche Radnetz Hamburg zum Vergleich; darunter hell das vorgeschlagene Radnetz." },
@@ -268,14 +306,23 @@ export function shapeSvg(shape, color, size = 16) {
 }
 
 /** Legend as HTML (line samples as inline SVG, decorative; the text carries the meaning). */
+function lineSample(g, maxWidth = 6) {
+  const dash = g.dash ? `stroke-dasharray="${g.dash.map((d) => d * 4).join(" ")}"` : "";
+  const w = Math.max(2, Math.min(g.legendWidth ?? (typeof g.width === "number" ? g.width : 4), maxWidth));
+  const inner = g.inner ? `<line x1="2" y1="7" x2="34" y2="7" stroke="${g.inner.color}" stroke-width="${Math.max(1, g.inner.width)}"/>` : "";
+  return `<svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${CASING}" stroke-width="${w + 4}" stroke-linecap="round"/><line x1="2" y1="7" x2="34" y2="7" stroke="${g.color}" stroke-width="${w}" ${dash}/>${inner}</svg>`;
+}
+
 export function legendHtml(layer, meta) {
+  const disc = layer === "disc";
   const items = groups(layer, meta).map((g) => {
     if (g.kind === "symbol") return `<li>${shapeSvg(g.shape, g.color, 18)}<span>${esc(g.label)}</span></li>`;
-    const dash = g.dash ? `stroke-dasharray="${g.dash.map((d) => d * 4).join(" ")}"` : "";
-    const w = typeof g.width === "number" ? Math.max(2, Math.min(g.width, 6)) : 4;
-    const inner = g.inner ? `<line x1="2" y1="7" x2="34" y2="7" stroke="${g.inner.color}" stroke-width="${Math.max(1, g.inner.width)}"/>` : "";
-    return `<li><svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${CASING}" stroke-width="${w + 4}" stroke-linecap="round"/><line x1="2" y1="7" x2="34" y2="7" stroke="${g.color}" stroke-width="${w}" ${dash}/>${inner}</svg><span>${esc(g.label)}</span></li>`;
+    return `<li>${lineSample(g, disc ? 9 : 6)}<span>${esc(g.label)}</span></li>`;
   });
+  if (disc) {
+    // strength as width: one line with a thin and a wide sample
+    items.push(`<li class="legend-scale">${lineSample({ color: NEED, width: DISC_WIDTH.small })}${lineSample({ color: NEED, width: DISC_WIDTH.large }, 9)}<span>breiter = größere Abweichung</span></li>`);
+  }
   if (layer === "cgap" && meta.overview?.mesh_gaps) {
     items.unshift(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${NEED}" fill-opacity="0.2" stroke="${NEED}" stroke-dasharray="4 2"/></svg><span>Netz zu weitmaschig (Fläche)</span></li>`);
   }
@@ -288,5 +335,6 @@ export function legendHtml(layer, meta) {
     if (layer === "jct") notes.push('<p class="muted">Orange und größer: heutiger Knoten passt nicht zum Soll (Umbau nötig).</p>');
     if (layer === "coff") notes.push(`<p class="muted">${esc(meta.cycling.official_attribution ?? "")}</p>`);
   }
-  return `${notes.join("")}<ul class="legend">${items.join("")}</ul>`;
+  const more = disc ? '<p class="legend-more"><a href="#methode/abweichung">Was heißt das?</a></p>' : "";
+  return `${notes.join("")}<ul class="legend">${items.join("")}</ul>${more}`;
 }

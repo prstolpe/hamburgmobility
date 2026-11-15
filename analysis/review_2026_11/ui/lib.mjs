@@ -30,7 +30,8 @@ export async function newPage(browser, kind) {
 /** Load a hash route and wait until meta.json, search.json and (on the map page) the canvas are ready. */
 export async function open(page, hash = "#karte", { settle = 2500 } = {}) {
   await page.goto(new URL(hash, BASE).href);
-  await page.waitForFunction(() => document.querySelector("#banner-text")?.textContent.includes("Datenstand"), null, { timeout: 30_000 });
+  // the banner was removed in prompt 25: version and Datenstand are in the footer since then (older sites: banner)
+  await page.waitForFunction(() => (document.querySelector("#foot-version") ?? document.querySelector("#banner-text"))?.textContent.includes("Datenstand"), null, { timeout: 30_000 });
   if (hash.startsWith("#karte")) await page.waitForFunction(() => document.querySelector("#map canvas"), null, { timeout: 30_000 });
   await page.waitForTimeout(settle);
 }

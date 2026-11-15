@@ -33,7 +33,7 @@ heute (`seg=`, `jct=`).
 Startseite hat:
 
 - Ebene 1: einen Satz, was das ist („Ein Vorschlag, welche Aufgabe jede Straße in Hamburg hat – und was sich dafür
-  ändern müsste“), den Hinweis auf den Entwurfsstatus und eine Suche nach Straße oder Kreuzung.
+  ändern müsste“), den Hinweis auf den Entwurfsstatus (seit prompts/25 als Titelzusatz und in der Fußzeile, kein Band) und eine Suche nach Straße oder Kreuzung.
 - Drei Einstiege: „Meine Straße“ (Suche), „Mein Bezirk“ (Bezirkskarten), „Radnetz“ (Karte, Thema Radnetz).
 - Ebene 2: „Was ist das, was zeigt es, was nicht“ (dieselben drei Absätze wie die Methoden-Zusammenfassung, eine Quelle).
 
@@ -57,8 +57,8 @@ noch 5 Entscheidungen beim Einstieg):
 |---|---|---|---|
 | **Aufgabe und Tempo** | Soll-Kategorie | heute: Ist-Tempo; Vergleich (Ebene 3): Hauptverkehrsstraßen der BVM | cat, speed, hvs |
 | **Heute und Ziel** | Abweichung heute – Ziel (Stärke als Linienbreite) | Priorität (Abweichung × Risiko) | disc |
-| **Platz in der Straße** | Passt der Ziel-Querschnitt? | Fahrstreifen heute ↔ Ziel; Straßenraumbreite (Ebene 3) | cfit, lanes, width, feas* |
-| **Radnetz** | Radnetz Ziel (4 Stufen) | Radwege heute ↔ Ziel (Lücken); amtliches Radnetz (Vergleich) | cnet, cfac, cgap, coff |
+| **Fahrstreifen** (früher „Platz in der Straße“) | Fahrstreifen heute ↔ Ziel | – (seit prompts/25 per `enabled: false` ausgeblendet: „Passt das Ziel?“, Breite, Regelprofil) | lanes (cfit, width, feas ausgeblendet) |
+| **Radnetz** | Radnetz Ziel (4 Stufen) | amtliches Radnetz (Vergleich); „Radweg“ und „Lücken“ seit prompts/25 vorläufig ausgeblendet | cnet, coff (cfac, cgap ausgeblendet) |
 | **Kreuzungen** | Kreuzungstyp Ziel, Umbau nötig hervorgehoben | heute (OpenStreetMap) | jct |
 
 \* Heute gibt es zwei Machbarkeitsaussagen: „Machbarkeit“ (feas, Regelprofil der Kategorie) und „Querschnitt passt?“
@@ -132,7 +132,7 @@ und nicht mehr in einer Kürzeltabelle.
 | Kapitel 6 Wie sicher ist das? | ein Satz (siehe unten) | Daten und Annahmen getrennt erklärt | C-CONF-01, V-SENS-*, Annahmen-Liste |
 | Kapitel 7 Daten und Grenzen | „Woher die Daten kommen“ | Grenzen je Datenquelle | sources.yaml, Lizenzen |
 | **Regelreferenz** | `label_plain` je Regel | `explain_plain`, `why` | technische Felder, Schwellen mit Quelle, source_type, status, Tests, Häufigkeit im Lauf (aus `01_rules_inventory.csv`) |
-| Was ist neu | Datum, Version, ein Satz | Liste der Änderungen | CHANGELOG |
+| ~~Was ist neu~~ | entfallen (prompts/25): keine Changelog-Seite auf der Webseite; `CHANGELOG.md` bleibt im Repository, Version und Datenstand stehen in der Fußzeile | | |
 
 Die Regelreferenz wird beim Export aus den Regeldateien erzeugt (`label_plain`, `explain_plain`, `why`, siehe A5). Der
 Kaskadentext der Methode kommt aus derselben Quelle. Heute ist er in `web/src/pages.js` von Hand nachgeschrieben.
@@ -167,8 +167,8 @@ Vorschlag:
 4. **Karte:** eine Ansicht „unsicher“ (gestrichelte Überlagerung) in Ebene 3 „Mehr Ebenen“, nicht standardmäßig.
 5. **Annahmen** heißen überall „Annahme“ (statt `assumption`) und verlinken die Regelreferenz. Die Zusammenfassung der
    Methode sagt einmal, wie viele Werte Annahmen sind (aus `source_type`).
-6. **Entwurfsstatus:** Der Hinweis „nicht amtlicher Diskussionsentwurf“ bleibt dauerhaft sichtbar. Er wird aber eine
-   schmale Zeile statt drei Zeilen am Smartphone.
+6. **Entwurfsstatus:** ~~Der Hinweis bleibt dauerhaft sichtbar als Zeile.~~ Seit prompts/25_cleanup_logo.md kein
+   Kopfband mehr: Titelzusatz „– Entwurf“, Zeile in der Fußzeile, Hinweis in Methode und Impressum.
 
 ## Wireframes
 

@@ -7,7 +7,7 @@ from make validate) and writes data/out/:
   downloads/  segments.parquet (GeoParquet), segments.geojson, segments.csv, rules.yaml, overrides.csv,
               datenbeschreibung.md
   segments/{segment_id}.json  profile per segment (plain-text reasons from rule_trace)
-  search.json, table.json, meta.json, district.geojson, licenses.md, changelog.md
+  search.json, table.json, meta.json, district.geojson, licenses.md
   tiles/segments.pmtiles      tippecanoe, layers segments and facilities, zoom 10-16
   cycling (prompt 21, if the cycling stages have run): tiles/cycling.pmtiles (layers cycle_network, cycle_segments,
   cycle_official), tiles/junctions.pmtiles (junctions), junctions/{node_id}.json, a `cycling` block in every segment
@@ -607,7 +607,6 @@ def main() -> int:
     meta["method"] = write_rule_reference(meta, texts["method"], with_cycling=bool(cyc))
     write_json(OUT_DIR / "meta.json", meta)
     shutil.copy(REPO_ROOT / "docs" / "licenses.md", OUT_DIR / "licenses.md")
-    shutil.copy(REPO_ROOT / "CHANGELOG.md", OUT_DIR / "changelog.md")
 
     facilities = facilities_frame()
     try:

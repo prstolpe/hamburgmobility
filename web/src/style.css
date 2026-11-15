@@ -46,16 +46,17 @@ a:hover { text-decoration-thickness: 2px; }
 .skip:focus { left: 0; }
 .muted { color: var(--muted); }
 
-/* notice: always visible, never closable */
-.banner { background: var(--ink); color: #fff; padding: var(--s1) var(--margin); font-size: .875rem; line-height: 20px; }
-.banner strong { font-weight: 600; }
-
-/* header on the grid: title 3 columns, navigation, search 4 columns */
+/* header on the grid: logo and title 5 columns, navigation 4, search 3. No draft banner (removed in prompt 25): the
+   draft status is the title suffix "– Entwurf", a footer line and the method/imprint pages. */
 header.site { display: grid; grid-template-columns: repeat(var(--cols), 1fr); column-gap: var(--gutter); row-gap: var(--s2);
   align-items: center; padding: var(--s3) var(--margin); border-bottom: 1px solid var(--ink); }
-.site-title { grid-column: span 3; margin: 0; font-weight: 700; font-size: 1.25rem; line-height: 28px; }
+.site-title { grid-column: span 5; margin: 0; font-weight: 700; font-size: 1.25rem; line-height: 28px; }
 .site-title .muted { font-weight: 400; }
-nav.main { grid-column: span 6; display: flex; flex-wrap: wrap; gap: 0 var(--s3); }
+/* logo: letter height = title line height (28 px), left on column 1, one space unit (16 px) to the title */
+.site-title a.home { display: inline-flex; align-items: center; gap: var(--s3); }
+.site-title .logo { display: block; height: 28px; width: auto; flex: none; }
+.site-title .short { display: none; }
+nav.main { grid-column: span 4; display: flex; flex-wrap: wrap; gap: 0 var(--s3); }
 nav.main a { padding: var(--s1) 0; min-height: 44px; display: inline-flex; align-items: center; text-decoration: none;
   font-weight: 600; border-bottom: 2px solid transparent; }
 nav.main a[aria-current="page"] { border-bottom-color: var(--ink); }
@@ -67,10 +68,12 @@ nav.main a:hover { border-bottom-color: var(--line); }
 #search-list li { padding: var(--s2) var(--s3); cursor: pointer; }
 #search-list li[aria-selected="true"], #search-list li:hover { background: var(--surface); }
 @media (max-width: 1199px) {
-  .site-title { grid-column: span 3; } nav.main { grid-column: span 5; } .search { grid-column: 1 / -1; }
+  .site-title { grid-column: span 4; } nav.main { grid-column: span 4; } .search { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
   .site-title, nav.main, .search { grid-column: 1 / -1; }
+  .site-title .long { display: none; }
+  .site-title .short { display: inline; }
 }
 
 main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -157,6 +160,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .legend { list-style: none; margin: var(--s2) 0; padding: 0; }
 .legend li { display: flex; align-items: center; gap: var(--s2); padding: 2px 0; }
 .legend svg { flex: none; background: #d9d9d9; }
+.legend-more { margin: 0 0 var(--s2); }
 
 /* profile: right column on desktop, sheet from below on phones */
 .panel { position: fixed; z-index: 30; top: 0; right: 0; bottom: 0; width: max(24rem, calc(3 * var(--col) + 2 * var(--gutter) + 2 * var(--margin)));
@@ -220,7 +224,7 @@ table.compact td { text-align: right; }
 /* page "Methode" */
 .crumb { margin: 0 0 var(--s2); }
 ul.plain { list-style: none; padding: 0; margin: 0 0 var(--s3); }
-ul.points > li, ul.rules > li, ul.news > li { padding: var(--s2) 0; border-top: 1px solid var(--line); }
+ul.points > li, ul.rules > li { padding: var(--s2) 0; border-top: 1px solid var(--line); }
 ul.points p, ul.rules > li > p { margin: var(--s1) 0 0; }
 .chapter-list { padding-left: var(--s4); }
 .chapter-list li { padding: var(--s2) 0; }
@@ -233,5 +237,5 @@ ul.points p, ul.rules > li > p { margin: var(--s1) 0 0; }
 .rules code, .tech code { overflow-wrap: anywhere; }
 dl.tech dd { margin: 0 0 var(--s1) var(--s3); }
 .rules li:target { background: var(--surface); }
-.prose pre, .changelog { overflow-x: auto; max-width: 100%; }
+.prose pre { overflow-x: auto; max-width: 100%; }
 .prose { overflow-wrap: break-word; }

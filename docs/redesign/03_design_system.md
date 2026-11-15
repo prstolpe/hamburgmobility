@@ -117,7 +117,7 @@ Alle Komponenten sind im Prototyp umgesetzt (`prototypes/redesign/shared/tokens.
 
 | Komponente | Regel |
 |---|---|
-| Hinweis Entwurfsstatus | eine Zeile, schwarz, immer sichtbar, nicht schließbar. Am Smartphone abgeschnitten mit „…“, ganzer Text im Impressum und als `title`. |
+| Hinweis Entwurfsstatus | **Kein Kopfband mehr** (prompts/25_cleanup_logo.md, 2026-11). Der Status steht unaufdringlich im Titelzusatz „– Entwurf“, in der Fußzeile („unabhängiges, nicht amtliches Projekt“), in der Methode und im Impressum. Nicht wieder als Band einbauen. |
 | Kopf | Name und Untertitel (3 Spalten), 5 Menüpunkte (5 Spalten), Suche (4 Spalten); aktive Seite 2 px unterstrichen; am Smartphone Menü-Schaltfläche und Suche in voller Breite |
 | Themen-Umschalter | 5 Schaltflächen (44 px hoch), gewählt = schwarze Fläche; daneben „Ansicht: Ziel/heute“ als Segment-Schalter mit `aria-pressed`; am Smartphone waagerecht scrollbar |
 | Legende | siehe Karte; Region mit `tabindex=0` (axe: scrollbarer Bereich muss per Tastatur erreichbar sein) |

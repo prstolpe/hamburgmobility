@@ -52,7 +52,8 @@ def after_texts() -> dict:
     for c in m["chapters"]:
         out[f"Kapitel {c['title']}"] = md_plain(f"{c['l1']}\n{c['l2']}")
     out["Regelreferenz (Einleitung)"] = md_plain(m["reference"]["intro"])
-    out["Was ist neu"] = md_plain("\n".join(f"{n['title']}. {n['text']}\n" + "\n".join(n["items"]) for n in m["news"]))
+    if m.get("news"):  # removed in prompt 25 (no "Was ist neu" page)
+        out["Was ist neu"] = md_plain("\n".join(f"{n['title']}. {n['text']}\n" + "\n".join(n["items"]) for n in m["news"]))
     return out
 
 

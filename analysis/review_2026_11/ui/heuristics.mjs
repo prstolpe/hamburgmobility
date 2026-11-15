@@ -193,8 +193,15 @@ if (want("profiles")) {
   await page.context().close();
 }
 
-// 6. draft marking: banner visible in the first screen of each view
-if (want("draft")) {
+async function hasBanner(browser) {
+  const page = await newPage(browser, "desktop");
+  await open(page, "#karte", { settle: 500 });
+  return (await page.$(".banner")) !== null;
+}
+
+// 6. draft marking: banner visible in the first screen of each view. Obsolete since prompt 25 (no banner; title suffix
+// and footer instead): the check is skipped when the page has no banner.
+if (want("draft") && await hasBanner(browser)) {
   const res = [];
   for (const kind of ["desktop", "mobile"]) {
     const page = await newPage(browser, kind);
@@ -268,7 +275,7 @@ async function loadRun(base, kind, profile) {
   cdp.on("Network.loadingFinished", (e) => { const r = reqs.get(e.requestId); if (r) r.bytes = e.encodedDataLength; });
   const t0 = Date.now();
   await page.goto(new URL("#karte", base).href);
-  await page.waitForFunction(() => document.querySelector("#banner-text")?.textContent.includes("Datenstand"), null, { timeout: 120_000 });
+  await page.waitForFunction(() => (document.querySelector("#foot-version") ?? document.querySelector("#banner-text"))?.textContent.includes("Datenstand"), null, { timeout: 120_000 });
   const tMeta = Date.now() - t0;
   await page.waitForFunction(() => document.querySelector("#map canvas"), null, { timeout: 120_000 });
   const tCanvas = Date.now() - t0;

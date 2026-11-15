@@ -13,7 +13,7 @@ weitermachen.
 |---|---|---|---|---|---|
 | E1 | Startseite und Varianten | a so lassen · b Variante A „Karte zuerst“ · c Variante B „Überblick zuerst“ · d B als Startseite, A als Karte | d | b| |
 | E2 | Informationsarchitektur | a so lassen · b drei Ebenen überall, 5 Menüpunkte (Start, Karte, Bezirke, Methode, Daten), Impressum im Fuß · c wie b, aber ohne Startseite | b | b| da a für E1 gewählt wurde, checken, ob karte benötigt wird. **Geklärt 14.11.2026:** Karte ist die Startseite, Menü mit 4 Punkten (Karte · Bezirke · Methode · Daten), keine eigene Startseite; beim ersten Besuch ein schließbarer Kasten „Was ist das?“ (2 Sätze, Suche, Link zur Methode) auf der Karte; Logo führt zur Karte.|
-| E3 | Kartenebenen | a 13 Ebenen wie heute · b 5 Themen mit je 2–3 Ansichten · c wie b und dazu „alle Ebenen“ auf Ebene 3 für Fachleute | b |b | |
+| E3 | Kartenebenen | a 13 Ebenen wie heute · b 5 Themen mit je 2–3 Ansichten · c wie b und dazu „alle Ebenen“ auf Ebene 3 für Fachleute | b |b | Nachtrag 2026-11 (prompts/25): „Passt das Ziel?“ ausgeblendet (verwirrt); die Machbarkeit steht nur noch im Steckbrief. |
 | E3b | Zwei Machbarkeitsaussagen | a beide zeigen · b nur „Passt das Ziel?“ (Querschnitt mit Radweg) sichtbar, Regelprofil auf Ebene 3 | b |b | |
 | E3c | Unsicherheit | a Ampel und zwei Robustheits-Abschnitte wie heute · b ein Merkmal „Wie sicher ist das?“, nur „unsicher“ (7,3 % der km) erscheint auf Ebene 2 | b |b | |
 | E4 | Einfache Sprache und Glossar | a so lassen · b Regeln aus `04_language.md` und `glossary.yaml` überall · c wie b, aber heutige Kategorienamen (Stadtmagistrale …) behalten | b |b | |

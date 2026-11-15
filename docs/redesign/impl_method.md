@@ -11,7 +11,7 @@ Keine Regel, keine Schwelle und kein Ergebnis wurde geändert.
 | Zusammenfassung | „Was ist das?“ (2 Sätze), je 3 Punkte „Was zeigt der Entwurf?“ / „Was zeigt er nicht?“ | je Punkt ein Absatz, Anteil der Annahmen | Links in die Kapitel | `#methode` |
 | 7 Kapitel | ein Satz | Erklärung (80–290 Wörter) | jede Regel des Kapitels mit `label_plain` und `explain_plain`, aufklappbar „Details und Quellen“ | `#methode/<kapitel>` |
 | Alle Regeln | `label_plain` | `explain_plain`, Kennzeichen „Annahme“ | `why`, Regel-ID, Datei, Status, Art der Quelle, Quellen mit Link, Werte mit Einheit, technische Felder, Geschichte, wie oft die Regel im Lauf entschieden hat, Link auf die Regeldatei | `#methode/regeln`, `#methode/regeln?regel=C-G30-02` |
-| Was ist neu | Datum, Titel, ein Satz | Liste der Änderungen | CHANGELOG | `#methode/neu` |
+| ~~Was ist neu~~ | entfallen mit prompts/25 (`#methode/neu` führt auf `#methode`) | | | |
 
 - Die Seite „Radnetz“ ist jetzt Kapitel 4 der Methode. Der alte Link `#radnetz` führt auf `#methode/radnetz`.
 - Im Steckbrief verlinkt jede Regel-ID (Begründung, Entscheidungsweg, Kreuzung) auf ihre Stelle in der Regelreferenz.
