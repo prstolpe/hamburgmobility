@@ -325,7 +325,7 @@ async function init() {
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape" && !$("#panel").hidden) setState({ seg: null, jct: null });
   });
-  for (const a of document.querySelectorAll("nav.main a, a.home, .site-foot a")) {
+  for (const a of document.querySelectorAll("nav.main a, a.home, .site-foot a[href^='#']")) {
     a.addEventListener("click", (ev) => {
       ev.preventDefault();
       const page = a.getAttribute("href").slice(1);
