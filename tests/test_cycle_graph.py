@@ -85,7 +85,7 @@ def test_low_speed_access_road():
 
 def test_low_speed_main_road_with_and_without_lane():
     assert _imp(cat="GOW30", speed=30, tags={"cycleway": "lane"})[:2] == (F["gow30_cycle_lane"], "C-IMP-05")
-    assert _imp(cat="GOW30", speed=30)[:2] == (F["gow30_cycle_lane"], "C-IMP-06")
+    assert _imp(cat="GOW30", speed=30)[:2] == (F["gow30_cycle_lane"], "C-IMP-05")
 
 
 def test_fast_roads_and_unknown_speed_fall_to_other():
@@ -230,3 +230,21 @@ def test_walking_pace_in_living_street_and_pedestrian_zone():
     assert _imp(kind="path", highway="pedestrian", tags={"bicycle": "yes"}, speed=None)[1] == "C-IMP-02"
     # residential access road unchanged
     assert _imp(cat="ETW30", highway="residential", speed=30)[:2] == (F["etw30_mixed"], "C-IMP-04")
+
+
+def test_c_imp_06_merged_into_c_imp_05():
+    """K4: GOW30 without a lane keeps factor 1.25 (via C-IMP-05); C-IMP-06 lives on as alias, trace carries it."""
+    f, rule, trace = _imp(cat="GOW30", speed=30)
+    assert (f, rule) == (1.25, "C-IMP-05") and trace["aliases"] == ["C-IMP-06"]
+    ids = [r["id"] for r in load_cycling_rules().routing_impedance["ist_mapping"]["rules"]]
+    assert "C-IMP-06" not in ids
+    assert "aliases" not in _imp(cat="GOW50", speed=50)[2]
+
+
+def test_c_imp_05_ist_facility_unchanged():
+    """Lane -> cycle_lane, no lane -> mixed, as with the former two rules (C-PRI-02 by_condition + lane_upgrade)."""
+    from pipeline.lib import principles as pr
+    from pipeline.lib.rules import load_rules
+    pp = pr.PrincipleParams.from_rules(load_cycling_rules(), load_rules())
+    assert pr.ist_facility("road", "C-IMP-05", ["lane"], None, pp) == "cycle_lane"
+    assert pr.ist_facility("road", "C-IMP-05", None, None, pp) == "mixed"

@@ -1,4 +1,4 @@
-"""Network coherence rules N1–N5 and N7 (guide 1.5 and 3.2 Stufe 6, prompts/09); N6 runs after c07 (F09).
+"""Network coherence rules N1–N5 (guide 1.5 and 3.2 Stufe 6, prompts/09); N7 is part of N2 (K1); N6 is gone (K6, junction part in c07).
 
 All functions read the proposed categories and return flags; they never change a category.
 A flag is a dict {"id": rule id, "flag": code, "inputs": {...}}; results are dicts
@@ -26,8 +26,11 @@ _SNAP_M = 0.01
 _MIN_SHARED_EDGE_M = 1.0
 
 
-def _flag(rule_id: str, flag: str, **inputs) -> dict:
-    return {"id": rule_id, "flag": flag, "inputs": inputs}
+def _flag(rule_id: str, flag: str, aliases: list[str] | None = None, **inputs) -> dict:
+    entry = {"id": rule_id, "flag": flag, "inputs": inputs}
+    if aliases:
+        entry["aliases"] = aliases  # former rule ids (rules.yaml aliases), kept so old traces stay readable
+    return entry
 
 
 def _add(flags: Flags, sid: str, entry: dict) -> None:
@@ -111,7 +114,7 @@ def n1_dead_ends(g: nx.MultiGraph, rules, area_edge_nodes: set, city_boundary) -
     return flags, ends
 
 
-# --- N2 / N7 Inseln --------------------------------------------------------------------------
+# --- N2 Inseln (with smoothing proposal, formerly N7) --------------------------------------------------------------------------
 
 
 def _bearing_out(geom: LineString, at_start: bool, sample_m: float) -> float:
@@ -189,7 +192,8 @@ def strokes(g: nx.MultiGraph, rules) -> list[list[str]]:
 
 def n2_islands(g: nx.MultiGraph, rules) -> Flags:
     """N2: run of one category shorter than min_run_m between two runs of the same other category.
-    N7: smoothing proposal (that other category) as a separate flag."""
+    Proposal (formerly N7, now part of N2): that other category as a second flag, rule id N2 with alias N7;
+    the flag string N7_smooth:<cat> stays unchanged (public column `flags`)."""
     min_run = rules.coherence_rule("N2").param("min_run_m")
     edge = {k: d for _, _, k, d in g.edges(keys=True, data=True)}
     flags: Flags = {}
@@ -208,7 +212,7 @@ def n2_islands(g: nx.MultiGraph, rules) -> Flags:
                 for sid in sids:
                     _add(flags, sid, _flag("N2", "N2_island", cat=cat, neighbour_cat=before,
                                            run_m=round(length, 1), min_run_m=min_run))
-                    _add(flags, sid, _flag("N7", f"N7_smooth:{before}", proposed=before, current=cat))
+                    _add(flags, sid, _flag("N2", f"N7_smooth:{before}", aliases=["N7"], proposed=before, current=cat))
     return flags
 
 
@@ -389,7 +393,5 @@ def n5_transitions(g: nx.MultiGraph, rules) -> tuple[Flags, list[dict]]:
     return flags, nodes
 
 
-# --- N6 ----------------------------------------------------------------------------------------
-# Since rules.yaml 0.19.0 (Review 2026-11 F09) the Soll junction type comes from design_rules.junctions (stage c07);
-# the N6 part of the check (junctions without a Soll type, N5 transitions at junctions) is written by
-# pipeline/c07_junctions.py (reports/junctions.md). Nothing is computed here.
+# N6 is gone (K6): the Soll junction type comes from design_rules.junctions (stage c07); the part of the check
+# (junctions without a Soll type, N5 transitions at junctions) is written by pipeline/c07_junctions.py.

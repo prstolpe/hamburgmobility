@@ -6,8 +6,8 @@ Junctions (J-M-01): nodes of the street graph (segments with cat_final) with deg
 cycle path meets a street; nodes joined by a short street segment or on the same roundabout form one junction.
 Legs with category, cycle category, Soll facility and DTV (J-M-02), space from the ALKIS traffic area (J-M-03),
 decision table J-01..J-16 (J-M-04, J-M-05; Soll lanes per arm from c06 for J-14/J-15), cyclist treatment
-JC-01..JC-06, Ist type from OSM (J-M-06), priority (J-M-07) and overrides/junction_overrides.csv (approved only).
-Also writes the N6 part of the coherence check (rules.yaml N6 since 0.19.0, Review 2026-11 F09): junctions without a
+JC-01..JC-04, JC-06, Ist type from OSM (J-M-06), priority (J-M-07) and overrides/junction_overrides.csv (approved only).
+Also writes the junction part of the coherence check (section "Übergänge (N5)", formerly rule N6, K6): junctions without a
 Soll type and N5 transitions at junctions, from data/interim/coherence_nodes.parquet (N5 of stage s06).
 Writes data/interim/junctions.parquet (points), reports/junctions.md and reports/junctions_review.csv.
 """
@@ -28,6 +28,7 @@ from shapely.geometry import MultiPoint, Point
 from config.schema.cycling_model import NO_CYCLE_CATEGORY
 from config.schema.design_model import IST_JUNCTION_TYPES, NOT_APPLICABLE
 from pipeline.c04_principles import ALKIS_PATH, SIGNALS_PATH, _links, load_crashes
+from pipeline.lib import junction_filter as jf
 from pipeline.lib import junctions as jn
 from pipeline.lib import overrides as ov
 from pipeline.lib.area import read_work_area, sample_by_district
@@ -372,13 +373,13 @@ def n5_by_junction(n5: pd.DataFrame, node_to: dict) -> pd.DataFrame:
 
 
 def n6_section(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> list[str]:
-    """N6 (rules.yaml since 0.19.0, F09): junctions without a Soll type and N5 transitions at junctions."""
+    """Section "Übergänge (N5)" (formerly N6, K6): junctions without a Soll type and N5 transitions at junctions."""
     missing = out[out["junction_type_final"].isna()]
     na = out[out["junction_type_final"] == NOT_APPLICABLE]
-    lines = ["", "## N6 Netzkohärenz: Knotenpunkte ohne Soll-Typ und Übergänge (N5)", "",
+    lines = ["", "## Übergänge (N5)", "",
              f"Seit rules.yaml {ctx['rules_version']} (Review 2026-11 F09) gibt es nur noch einen Soll-Knotentyp: den dieser "
-             "Stufe (design_rules.yaml junctions). N6 meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 "
-             "(Torsituation, aus der Stufe s06); der frühere N6-Abgleich mit eigener Tabelle und Ist-Prüfung entfällt.", "",
+             "Stufe (design_rules.yaml junctions). Dieser Abschnitt meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 "
+             "(Torsituation, aus der Stufe s06); die frühere Regel N6 mit eigener Tabelle und Ist-Prüfung entfällt.", "",
              f"- Ohne Soll-Typ (`no_rule`): {_fmt(len(missing))}"
              + (" – Paare: " + ", ".join(f"{k} {v}" for k, v in missing["pair"].fillna("–").value_counts().items()) if len(missing) else "")
              + ".",
@@ -401,19 +402,23 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
     lines = [
         "# Knotenpunkte: Soll-Knotentyp und Radverkehrsführung (Stufe c07)", "",
         f"Erzeugt {_now()} mit pipeline/c07_junctions.py · design_rules.yaml {ctx['design_version']} · nicht amtlicher "
-        "Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. "
+        "Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-04, JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. "
         "Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.", "",
         "## Kurzfassung", "",
         f"- {_fmt(n)} Knotenpunkte aus {_fmt(ctx['n_nodes'])} Netzknoten (Grad ≥ 3: {_fmt(ctx['n_deg3'])}, Kreuzungen "
         f"eigenständiger Radwege: {_fmt(ctx['n_path_nodes'])}); {_fmt((out['n_members'] > 1).sum())} Knotenpunkte fassen "
         f"mehrere Netzknoten zusammen (Radius {ctx['cluster_radius']:g} m, Kreisverkehre ganz). Größter Knotenpunkt: "
         f"{out['n_members'].max()} Netzknoten, Ausdehnung bis {_fmt(out['extent_m'].max(), 0)} m.",
+        f"- Armfilter (J-M-01): von {_fmt(ctx['n_candidates'])} Knotenpunkten vor dem Filter haben "
+        f"{_fmt(ctx['n_pseudo_joined'] + ctx['n_pseudo_dropped'])} weniger als {ctx['min_arms']} Arme und keinen "
+        f"eigenständigen Radweg (Scheinknoten, meist Teilung in zwei Fahrbahnen): {_fmt(ctx['n_pseudo_joined'])} gehören "
+        f"zur nächsten Kreuzung derselben Straße (bis {ctx['pseudo_join_m']:g} m), {_fmt(ctx['n_pseudo_dropped'])} entfallen.",
         f"- Soll-Typ vergeben: {_fmt(out['junction_type_soll'].notna().sum())}; ohne passende Zeile (`no_rule`): "
         f"{_fmt(out['junction_type_soll'].isna().sum())}.",
         f"- Handlungsbedarf (Ist passt nicht zum Soll): {_fmt(out['action_needed'].sum())} Knotenpunkte; nicht prüfbar: "
         f"{_fmt((out['ist_result'] == 'not_checkable').sum())}; passt: {_fmt((out['ist_result'] == 'match').sum())}.",
         f"- Overrides angewendet: {_fmt((out['junction_type_source'] == 'override').sum())} (overrides/junction_overrides.csv, nur approved).",
-        f"- Straßenbahn an keinem Arm: der GTFS-Feed enthält {ctx['tram_routes']} Straßenbahnrouten; J-11 greift daher nicht."
+        f"- Straßenbahn an keinem Arm: der GTFS-Feed enthält {ctx['tram_routes']} Straßenbahnrouten; tram_present ist daher überall falsch."
         if ctx["tram_routes"] == 0 else f"- Straßenbahn an {_fmt(out['tram_present'].sum())} Knotenpunkten.",
         "- confidence: " + ", ".join(f"{k} {_fmt((out['confidence'] == k).sum())}" for k in jn.CONFIDENCE) + ".",
         "",
@@ -421,12 +426,16 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
         "1. **Knoten (J-M-01):** Knoten des Straßengraphen (Abschnitte mit cat_final) mit Grad ≥ 3 und Knoten, an denen "
         "ein eigenständiger Radweg (kein begleitender Radweg; highway=cycleway oder RSV/HAUPT/BASIS) auf eine Straße trifft. "
         "Knoten, die über einen Straßenabschnitt ≤ Clusterradius verbunden sind, und alle Knoten eines Kreisverkehrs bilden einen Knotenpunkt. "
-        "node_id = kleinste OSM-Knoten-ID des Knotenpunkts.",
+        "Armfilter: Ein Knotenpunkt braucht mindestens min_arms Arme nach dem Zusammenfassen der Richtungsfahrbahnen oder "
+        "einen eigenständigen Radweg; ein Scheinknoten bis pseudo_join_m vor einer Kreuzung derselben Straße gehört zu ihr, "
+        "sonst entfällt er. Angeschlossene Scheinknoten zählen nur als Knoten und für die Unfälle; Arme, Zufluss, Platz, "
+        "heutige Ampel und Lage bleiben die der Kreuzung selbst. node_id = kleinste OSM-Knoten-ID des Knotenpunkts vor "
+        "dem Anschluss von Scheinknoten.",
         "2. **Arme (J-M-02):** Abschnitte und eigenständige Radwege, die den Knotenpunkt verlassen. Zufluss = ½ × DTV je "
         "Kfz-Arm; ETW-Arme ohne DTV zählen 0, fehlt DTV an einem GOW/SW-Arm, ist die Summe eine Untergrenze.",
         "3. **Platz (J-M-03):** Radius des größten einbeschriebenen Kreises in der ALKIS-Verkehrsfläche im Umkreis "
         f"{ctx['search_radius']:g} m.",
-        "4. **Kategoriepaar (J-M-04):** Rang nach N6.category_rank – durchgehender Zug (höchste Kategorie, bis zu zwei Arme) und höchste übrige "
+        "4. **Kategoriepaar (J-M-04):** Rang nach category_rank – durchgehender Zug (höchste Kategorie, bis zu zwei Arme) und höchste übrige "
         "Straße; bleibt keine, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Der Prompt nennt „die beiden "
         "ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50 (offene Frage).",
         "5. **Entscheidung (J-M-05):** Zeilen in der Reihenfolge " + ", ".join(ctx["order"]) + "; erste passende gilt. "
@@ -511,7 +520,7 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
               "- DTV nur aus der HVS-Zählung 2019; an ETW-Armen fast nie vorhanden (zählt 0).",
               "- Platz aus der ALKIS-Verkehrsfläche ohne Gebäude, Bäume oder Leitungen; Kreisverkehr-Platzbedarf "
               "(roundabout_min_radius) ist eine Annahme.",
-              "- Ist-Typ: Gehwegüberfahrten, Vorfahrtregelung und Furtgestaltung sind in OSM kaum erfasst (N6, offene Frage).",
+              "- Ist-Typ: Gehwegüberfahrten, Vorfahrtregelung und Furtgestaltung sind in OSM kaum erfasst (offene Frage).",
               "- Radunfälle werden dem nächsten Knotenpunkt im Clusterradius zugeordnet und nur als Anzahl gespeichert.",
               "",
               "Quellen: OpenStreetMap-Mitwirkende (ODbL); Freie und Hansestadt Hamburg, ALKIS und Verkehrsmengen "
@@ -580,10 +589,18 @@ def main() -> int:
     deg = Counter(list(seg["node_u"].astype(int)) + list(seg["node_v"].astype(int)))
     path_nodes = (set(paths["node_u"].astype(int)) | set(paths["node_v"].astype(int))) & set(deg)
     legs = describe_legs(clusters, seg, paths, pts, m["J-M-02"], search)
-    tick(f"{sum(len(v) for v in clusters.values())} nodes -> {len(clusters)} junctions")
+    n_before = len(clusters)
+    joined, pseudo = jf.filter_pseudo(clusters, legs, pts, jf.FilterParams.from_rule(m["J-M-01"]))
+    # Arms, inflow, space, signals and position stay those of the junction itself (core nodes; the legs of a real
+    # cluster do not depend on the other clusters); joined pseudo nodes only count as members (node list, crashes).
+    core = {r: clusters[r] for r in joined}
+    clusters = joined
+    tick(f"{sum(len(v) for v in clusters.values())} nodes -> {len(clusters)} junctions (arm filter J-M-01: {n_before} "
+         f"candidates, {len(pseudo['joined'])} pseudo-junctions joined, {len(pseudo['dropped'])} dropped)")
 
     roots = sorted(clusters)
-    member_geoms = gpd.GeoSeries([MultiPoint([pts[n] for n in clusters[r]]) for r in roots], crs=WORK_CRS)
+    member_geoms = gpd.GeoSeries([MultiPoint([pts[n] for n in core[r]]) for r in roots], crs=WORK_CRS)
+    all_geoms = gpd.GeoSeries([MultiPoint([pts[n] for n in clusters[r]]) for r in roots], crs=WORK_CRS)
     j = pd.DataFrame({"node_id": [str(r) for r in roots], "members": [clusters[r] for r in roots]})
     j["n_members"] = j["members"].map(len)
     j["extent_m"] = [shapely.minimum_bounding_radius(g) * 2 for g in member_geoms]
@@ -607,7 +624,7 @@ def main() -> int:
     res = classify(j, p)
     j = j.join(res)
     crashes, years = load_crashes(manifest)
-    cc = crash_counts(member_geoms, crashes, radius)
+    cc = crash_counts(all_geoms, crashes, radius)
     del crashes
     j["crashes_cyc"], j["crashes_cyc_severe"] = cc["crashes_cyc"].to_numpy(), cc["crashes_cyc_severe"].to_numpy()
     tick(f"classified; crashes {min(years)}–{max(years)}")
@@ -648,7 +665,9 @@ def main() -> int:
     viewers = load_viewers()
     sample = sample_by_district(out, SAMPLE_SIZE, SAMPLE_SEED, id_col="node_id")
     review_sample(out, viewers).to_csv(REVIEW_PATH, index=False)
-    ctx = {"design_version": design.meta.version, "n_nodes": len(pts), "n_deg3": sum(1 for d in deg.values() if d >= 3),
+    ctx = {"n_candidates": n_before, "n_pseudo_joined": len(pseudo["joined"]), "n_pseudo_dropped": len(pseudo["dropped"]),
+           "min_arms": int(m["J-M-01"]["min_arms"]["value"]), "pseudo_join_m": float(m["J-M-01"]["pseudo_join_m"]["value"]),
+           "design_version": design.meta.version, "n_nodes": len(pts), "n_deg3": sum(1 for d in deg.values() if d >= 3),
            "n_path_nodes": len(path_nodes), "cluster_radius": radius, "search_radius": search,
            "signal_radius": signal_radius, "rules_version": rules.meta.version, "order": p.order, "types": p.types, "tram_routes": _tram_routes(design),
            "crash_years": f"{min(years)}–{max(years)}", "top": out.loc[act.index[:TOP_N]], "sample": sample}

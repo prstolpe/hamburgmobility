@@ -1,6 +1,6 @@
 # Radverkehrsnachfrage (Stufe c02)
 
-Erzeugt 2026-11-11T21:09:01+00:00 mit pipeline/c02_cycle_demand.py · cycling_rules.yaml 0.11.0 · nicht amtlicher Entwurf. Alle Modellparameter sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
+Erzeugt 2026-11-15T01:52:41+00:00 mit pipeline/c02_cycle_demand.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Modellparameter sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
 
 ## Kurzfassung
 
@@ -27,9 +27,9 @@ Erzeugt 2026-11-11T21:09:01+00:00 mit pipeline/c02_cycle_demand.py · cycling_ru
 
 | Lauf | Laufzeit s | Fahrten (Modell) | mittlere Weglänge km (Widerstand) | Quellzonen ohne Ziel im Band |
 | ---: | ---: | ---: | ---: | ---: |
-| 1 | 25 | 1 808 530 | 6.35 | 0 |
-| 2 | 25 | 1 808 530 | 6.35 | 0 |
-| 3 | 25 | 1 808 530 | 6.35 | 0 |
+| 1 | 24 | 1 808 530 | 6.35 | 0 |
+| 2 | 24 | 1 808 530 | 6.35 | 0 |
+| 3 | 24 | 1 808 530 | 6.35 | 0 |
 
 Modellfahrten haben keine absolute Einheit (1 Fahrt je Einwohner); erst der Kalibrierfaktor macht daraus Rad/Werktag.
 

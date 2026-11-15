@@ -1,6 +1,6 @@
 # Soll-Radnetz: Hierarchie und Lückenschluss (Stufe c03)
 
-Erzeugt 2026-11-11T21:10:37+00:00 mit pipeline/c03_cycle_network.py · cycling_rules.yaml 0.11.0 · nicht amtlicher Entwurf. Alle Entwurfsparameter (C-NET-01…13) sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
+Erzeugt 2026-11-15T01:54:11+00:00 mit pipeline/c03_cycle_network.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Entwurfsparameter (C-NET-01…13) sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
 
 ## Kurzfassung
 

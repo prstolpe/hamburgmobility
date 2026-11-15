@@ -73,7 +73,7 @@ export function ruleDetailsHtml(rule, repo = null) {
   const d = rule.decides;
   return `
     ${rule.why ? `<h4>Warum?</h4><p>${esc(rule.why)}</p>` : ""}
-    <p class="t-small">Regel <code>${esc(rule.id)}</code> · Datei ${esc(rule.file)}, Abschnitt ${esc(rule.section)} · Status: ${esc(STATUS_TEXT[rule.status] ?? rule.status)}</p>
+    <p class="t-small">Regel <code>${esc(rule.id)}</code>${rule.aliases?.length ? ` (früher auch ${rule.aliases.map((x) => `<code>${esc(x)}</code>`).join(", ")})` : ""} · Datei ${esc(rule.file)}, Abschnitt ${esc(rule.section)} · Status: ${esc(STATUS_TEXT[rule.status] ?? rule.status)}</p>
     <p class="t-small">Art der Quelle: ${esc(sourceTypeText(rule.source_type))}</p>
     ${src.length ? `<h4>Quellen</h4><ul class="t-small sources">${src.map((s) => {
       const label = `${esc(s.title ?? s.key)}${s.date ? ` (${esc(s.date)})` : ""}`;
@@ -123,6 +123,12 @@ export function chapterHtml(method, key, rules = [], meta = {}) {
     ${prev ? `<a href="#methode/${esc(prev.key)}" rel="prev">← ${plain(prev.title, v)}</a>` : "<span></span>"}
     ${next ? `<a href="#methode/${esc(next.key)}" rel="next">${plain(next.title, v)} →</a>` : "<span></span>"}
   </nav>`;
+}
+
+/** A rule id or a former id (alias of a merged rule) -> the current rule id. */
+export function resolveRule(rules, id) {
+  if (rules.some((r) => r.id === id)) return id;
+  return rules.find((r) => r.aliases?.includes(id))?.id ?? id;
 }
 
 // --- reference -------------------------------------------------------------------------------
@@ -179,9 +185,9 @@ export function newsHtml(method, meta, changelogMd = "") {
   <p class="crumb"><a href="#methode">← ${plain(method.title, v)}</a></p>
   <h1>Was ist neu</h1>
   <p>Aktuelle Version: ${esc(meta.version)} (Regelwerk ${esc(meta.rules_version)}, Datenstand ${esc(date(meta.data_date))})</p>
-  ${news.length ? `<ul class="news plain">${news.map((n) => `<li><h2>${esc(n.title)}</h2>
+  ${news.length ? `<ul class="news plain">${news.map((n) => `<li><h2>${plain(n.title, v)}</h2>
     <p class="t-small">${esc(date(n.date))}${n.version ? ` · Regelwerk ${esc(n.version)}` : ""}</p>
-    ${n.text ? `<p>${esc(n.text)}</p>` : ""}
-    ${n.items?.length ? `<ul>${n.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>` : "<p>Noch keine Einträge.</p>"}
+    ${n.text ? `<p>${plain(n.text, v)}</p>` : ""}
+    ${n.items?.length ? `<ul>${n.items.map((i) => `<li>${plain(i, v)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>` : "<p>Noch keine Einträge.</p>"}
   <details class="level l3"><summary>Alle Änderungen (CHANGELOG)</summary><div class="changelog">${marked.parse(changelogMd || "")}</div></details>`;
 }

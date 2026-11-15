@@ -95,6 +95,8 @@ class _Strict(BaseModel):
     explain_plain: str | None = None
     why: str | None = None
     history: list[str] | None = None
+    # Former ids merged into this rule (redesign 2026-11, package 5): old links, traces and overrides stay readable.
+    aliases: list[str] | None = None
 
 
 class Meta(_Strict):
@@ -210,9 +212,6 @@ class CoherenceRule(BaseModel):
     restricted_categories: list[str] = []
     # N5
     gate_transitions: list[GateTransition] = []
-    # N6 (since 0.19.0, Review 2026-11 F09: the Soll junction type comes from design_rules.junctions, stage c07)
-    category_rank: list[str] = []
-    source_of_truth: str | None = None
 
     def param(self, name: str) -> float:
         """Numeric parameter: flat key (e.g. min_run_m) or thresholds entry."""
@@ -225,7 +224,7 @@ class CoherenceRule(BaseModel):
 
     def categories_used(self) -> set[str]:
         cats = (set(self.gow_categories) | set(self.end_ok_categories) | set(self.etw_categories)
-                | set(self.restricted_categories) | set(self.category_rank))
+                | set(self.restricted_categories))
         for g in self.gate_transitions:
             cats |= set(g.from_) | set(g.to)
         return cats
@@ -681,8 +680,6 @@ class RuleSet(_Strict):
             unknown = sorted(rule.categories_used() - set(cats))
             if unknown:
                 raise ValueError(f"{path}: unknown categories {unknown}")
-            if rule.category_rank and (set(rule.category_rank) != set(cats) or len(rule.category_rank) != len(cats)):
-                raise ValueError(f"{path}.category_rank must list every category exactly once")
             for removed in ("node_types", "ist_check"):
                 if removed in (rule.model_extra or {}):
                     raise ValueError(f"{path}.{removed}: removed in 0.19.0 (F09); Soll junction type from design_rules.junctions")

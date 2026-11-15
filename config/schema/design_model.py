@@ -25,7 +25,7 @@ _LEG_TOKEN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 # Row keys naming a junction type.
 TYPE_KEYS = ("then", "else_then", "otherwise", "fallback")
 # Rules of profile_assignment read by pipeline/lib/profile.py (prompt 19).
-PROFILE_RULE_IDS = {"PRF-01", "PRF-02", "PRF-03", "PRF-04", "PRF-05", "PRF-06", "PRF-07"}
+PROFILE_RULE_IDS = {"PRF-01", "PRF-02", "PRF-03", "PRF-04", "PRF-05", "PRF-06"}
 # Values of PRF-03 parking_by_category besides a list of parking positions (Review 2026-11 F11).
 PARKING_BY_CATEGORY_WORDS = {"none", "as_ist"}
 # Cascade step that switches to the fallback facility of the matrix cell (not a degrade step).
@@ -157,6 +157,9 @@ def _check_junction_method(j: Junctions, types: set, row_ids: set) -> None:
     alias = j.method_rule("J-M-04")["category_alias"]
     if not (set(alias) | set(alias.values())) <= EXPECTED_CATEGORIES:
         raise ValueError("J-M-04.category_alias: unknown categories")
+    rank = j.method_rule("J-M-04")["category_rank"]
+    if len(rank) != len(set(rank)) or set(rank) != EXPECTED_CATEGORIES:
+        raise ValueError("J-M-04.category_rank must list every category exactly once")
     if not set(j.method_rule("J-M-02")["zero_dtv_categories"]) <= EXPECTED_CATEGORIES:
         raise ValueError("J-M-02.zero_dtv_categories: unknown categories")
     if "value" not in (j.method_rule("J-M-06").get("signal_radius_m") or {}):

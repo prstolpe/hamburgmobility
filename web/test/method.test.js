@@ -126,3 +126,23 @@ describe("newsHtml", () => {
     expect(html).not.toContain("Noch keine Einträge");
   });
 });
+
+describe("former rule ids", () => {
+  it("resolves an alias to the rule that took it over", async () => {
+    const { resolveRule, ruleDetailsHtml } = await import("../src/method.js");
+    const rules = [{ id: "J-01", aliases: ["J-02"] }, { id: "J-03" }];
+    expect(resolveRule(rules, "J-02")).toBe("J-01");
+    expect(resolveRule(rules, "J-03")).toBe("J-03");
+    expect(resolveRule(rules, "X-9")).toBe("X-9");
+    expect(ruleDetailsHtml({ id: "J-01", aliases: ["J-02"], file: "design_rules.yaml", section: "junctions" })).toContain("früher auch <code>J-02</code>");
+  });
+});
+
+describe("news placeholders", () => {
+  it("fills {name} in news items", async () => {
+    const { newsHtml } = await import("../src/method.js");
+    const html = newsHtml({ vars: { n_rules: 188 }, news: [{ title: "T", text: "x", items: ["{n_rules} statt 196"] }] },
+      { version: "1", rules_version: "1", data_date: "2026-10-28" });
+    expect(html).toContain("188 statt 196");
+  });
+});

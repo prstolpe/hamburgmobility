@@ -740,3 +740,28 @@ Entscheidungen prstolpe 2026-11-07 (docs/open_questions.md, Prompts 08, 14, 19).
   mit `label_plain`, `explain_plain`, `why`, technischen Feldern, Schwellen, Quellen, Status und wie oft sie im Lauf
   entschieden hat. Jede Regel gehört über ihren Abschnitt zu genau einem Kapitel (`method.chapters[].sections`, Test).
 - Keine Regel, keine Schwelle und kein Ergebnis geändert.
+
+## rules.yaml 0.22.0, cycling_rules.yaml 0.12.0, design_rules.yaml 0.10.0, plain_language.yaml 0.11.1 – 2026-11-15 (Redesign 2026-11, Paket 5)
+Regeln zusammengelegt (K1–K9, freigegeben in docs/redesign/decisions.md): 196 → 188 Regeln. Alte IDs bleiben als
+`aliases` der übernehmenden Regel lesbar (Schema-Feld neu); Trace-Einträge der übernehmenden Regel tragen `aliases`;
+die Webseite löst alte IDs in Links auf. Kein Override nennt eine alte ID (Test).
+- K1: N7 (Glättungsvorschlag) ist Teil von N2 (`proposal`). `coherence_trace` nennt N2 mit Alias N7; die Flag-Zeichenkette
+  `N7_smooth:<Kategorie>` bleibt unverändert.
+- K6: N6 gestrichen (seit 0.19.0 nur Verweis); `category_rank` steht jetzt bei design_rules J-M-04 (Alias N6). Der
+  Berichtsteil in reports/junctions.md heißt „Übergänge (N5)“.
+- K2: JC-05 (freies Rechtsabbiegen) ist Baustein von JC-02 mit eigener Quelle `assumption`; `cyclist_treatment` nennt an
+  den geschützten Ampelkreuzungen nur noch JC-02.
+- K3: J-02 (GOW50+GOW30) in J-01 aufgenommen (`legs: GOW50+GOW50|GOW30`); `decision_rule` J-02 → J-01, Kreuzungsart gleich.
+- K7: PRF-07 gestrichen, der Hinweis „mit den Daten nicht prüfbar“ steht in der note von PL-05.
+- K8: J-11 (Straßenbahn) gestrichen; `not tram_present` bleibt in J-01/J-03.
+- K4: C-IMP-06 in C-IMP-05 (Hauptstraße bis Tempo 30, mit oder ohne Radstreifen, Faktor gow30_cycle_lane); neue
+  Bedingung `low_speed_main_road`. Kanten bleiben wie bisher getrennt (eigener Trennschlüssel), damit edge_id stabil bleibt.
+- K5: C-FAC-03 in S-04 (`motor_peak_hour_share` 0,10 und Regel für fehlenden DTV jetzt dort).
+- K9: P-COM-03 (Steigung) und P-ATT-02 (Lärm) `inactive`; sie bleiben in C-PRI-16 `unavailable`, Punktzahl und
+  Datenlage gleich.
+
+Kreuzungen, Armfilter (design_rules J-M-01, neue Werte `min_arms` 3 und `pseudo_join_m` 60 m, beide Annahme): Ein
+Knotenpunkt braucht mindestens drei Arme nach dem Zusammenfassen der Richtungsfahrbahnen oder einen eigenständigen
+Radweg. Punkte, an denen sich eine Straße nur in zwei Fahrbahnen teilt, sind keine Kreuzung mehr: bis 60 m vor einer
+Kreuzung derselben Straße gehören sie zu ihr (nur Knotenliste und Unfälle; Arme, Zufluss, Platz, Ampel und Lage bleiben
+die der Kreuzung), sonst entfallen sie. Wirkung: docs/redesign/impl_rule_consolidation.md.

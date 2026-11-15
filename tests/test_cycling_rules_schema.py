@@ -158,7 +158,7 @@ def test_rejects_unknown_name_in_junction_condition(des):
 
 def test_rejects_unknown_same_as(des):
     def mutate(d):
-        _by_id(d["junctions"]["decision_table"]["rows"], "J-02")["same_as"] = "J-99"
+        _by_id(d["junctions"]["decision_table"]["rows"], "J-10b")["same_as"] = "J-99"
     _rejects(DesignRuleSet, _mutated(des, mutate), "J-99")
 
 
@@ -415,7 +415,7 @@ def test_rejects_unknown_confidence_flag(cyc):
 
 
 def test_rejects_facility_rule_without_status(cyc):
-    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _fac(d, "C-FAC-03").pop("status")), "status")
+    _rejects(CyclingRuleSet, _mutated(cyc, lambda d: _by_id(d["separation_matrix"]["rules"], "S-04").pop("status")), "status")
 
 
 # --- prompt 19: profile_assignment (design_rules.yaml) -------------------------------------------
@@ -458,7 +458,7 @@ def test_rejects_unknown_category_in_profile_rules(des):
 
 
 def test_rejects_profile_rule_missing(des):
-    _rejects(DesignRuleSet, _mutated(des, lambda d: d["profile_assignment"]["rules"].pop()), "PRF-07")
+    _rejects(DesignRuleSet, _mutated(des, lambda d: d["profile_assignment"]["rules"].pop()), "PRF-06")
 
 
 # --- review 2026-11, P0: status inactive, scope, half-open intensity classes ---------------------------------
@@ -476,7 +476,7 @@ def test_inactive_rules_and_blocks():
     assert _by_id(cycling.separation_matrix["rules"], "S-03")["scope"] == "rural"
     every = all_rule_ids(load_rules(), cycling, design)
     active = active_rule_ids(load_rules(), cycling, design)
-    assert set(every) - set(active) == {"C-RUR-01", "PL-02"}
+    assert set(every) - set(active) == {"C-RUR-01", "PL-02", "P-COM-03", "P-ATT-02"}
     assert collect_ids({"status": "inactive", "rules": [{"id": "X-01", "status": "draft"}]}, active_only=True) == []
 
 

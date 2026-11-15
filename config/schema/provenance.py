@@ -12,7 +12,7 @@ from typing import Any
 from config.schema.rules_model import INACTIVE, SourceType, Status
 
 # Keys that describe an entry instead of holding a value.
-META_KEYS = {"label_plain", "explain_plain", "why", "history", "source", "source_type", "status", "note", "unit", "description", "label_de", "nl", "url", "title"}
+META_KEYS = {"label_plain", "explain_plain", "why", "history", "aliases", "source", "source_type", "status", "note", "unit", "description", "label_de", "nl", "url", "title"}
 
 
 def _is_number(x: Any) -> bool:

@@ -2,7 +2,7 @@ import "./style.css";
 import { dataHtml } from "./datapage.js";
 import { bindDistrictPage, districtHtml, districtListHtml } from "./districts.js";
 import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO } from "./layers.js";
-import { chapterHtml, newsHtml, referenceHtml, referenceListHtml, summaryHtml } from "./method.js";
+import { chapterHtml, newsHtml, referenceHtml, referenceListHtml, resolveRule, summaryHtml } from "./method.js";
 import { imprintHtml } from "./pages.js";
 import { junctionHtml, segmentHtml } from "./profile.js";
 import { setupSearch } from "./search.js";
@@ -133,6 +133,12 @@ function renderIntro() {
 
 // --- panel -----------------------------------------------------------------------------------
 
+let redirects = null;
+async function junctionRedirects() {
+  redirects ??= await json("junction_redirects.json").catch(() => ({}));
+  return redirects;
+}
+
 async function openPanel(id, kind = "seg") {
   const panel = $("#panel");
   const body = $("#panel-body");
@@ -150,7 +156,10 @@ async function openPanel(id, kind = "seg") {
       $("#panel-show").hidden = !idToStreet.get(id);
     }
   } catch {
-    body.innerHTML = "<p>Steckbrief nicht gefunden.</p>";
+    // a pseudo-junction joined by the arm filter (J-M-01) redirects to its junction; a dropped one gets a note
+    const to = kind === "jct" ? (await junctionRedirects())[id] : null;
+    if (to) { setState({ jct: to, seg: null }); return; }
+    body.innerHTML = `<p>${esc(kind === "jct" ? meta.site_texts?.junction_gone ?? "Steckbrief nicht gefunden." : "Steckbrief nicht gefunden.")}</p>`;
   }
   panel.focus();
   mapView?.resize();
@@ -226,7 +235,7 @@ async function renderMethod() {
       sec.innerHTML = referenceHtml(method, data.rules, ruleQuery, data.versions, meta.github_repo);
       bindReference(sec, data);
       if (state.rule) {
-        const li = document.getElementById(`regel-${state.rule}`);
+        const li = document.getElementById(`regel-${resolveRule(data.rules, state.rule)}`);
         if (li) { li.querySelector("details")?.setAttribute("open", ""); li.scrollIntoView(); }
       }
     } else if (sub === "neu") {

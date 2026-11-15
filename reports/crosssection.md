@@ -1,6 +1,6 @@
 # Querschnittsbericht – Stufe 7
 
-Erzeugt: 2026-11-11T21:01:43+00:00 von `pipeline/s07_crosssection.py`, rules.yaml 0.20.0. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-15T01:46:03+00:00 von `pipeline/s07_crosssection.py`, rules.yaml 0.22.0. Nicht amtlicher Entwurf.
 
 ## Kennzahlen
 

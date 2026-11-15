@@ -47,6 +47,15 @@ def test_cycle_path_is_second_road_only_without_other_street():
     assert pair == ("GOW30", "ETW30") and "cycle_path_ignored" in flags
 
 
+def test_rank_comes_from_j_m_04_category_rank():
+    """K6: the rank of the category pair is J-M-04.category_rank (formerly rules.yaml N6)."""
+    order = DESIGN.junctions.method_rule("J-M-04")["category_rank"]
+    assert P.rank == {c: i for i, c in enumerate(order)}
+    assert order[0] == "SW" and sorted(order) == sorted(P.rank)
+    pair, _ = jn.category_pair([leg("GOW30"), leg("GOW50"), leg("SW")], P)
+    assert pair[0] == "SW"
+
+
 def test_alias_maps_etw_erf():
     pair, flags = jn.category_pair([leg("ETW30"), leg("ETW30"), leg("ETW_ERF")], P)
     assert pair == ("ETW30", "ETW30") and "category_alias" in flags
@@ -135,7 +144,7 @@ def test_cycle_path_basis_or_erschl_across_gow50(cycle_cat):
 
 
 def test_sw_rows_before_tram():
-    # Review 2026-11 F08: SW+GOW50 is a ramp node decided like J-01 (J-10b), still before the tram row J-11
+    # Review 2026-11 F08: SW+GOW50 is a ramp node decided like J-01 (J-10b), J-11 (tram) was removed in package 5 K8
     r = jn.decide(props([leg("SW"), leg("SW"), leg("GOW50", "HAUPT")], tram_present=True), P)
     assert r["rule_id"] == "J-10b" and r["junction_type_soll"] == "signal_protected"
 
@@ -374,3 +383,55 @@ def test_junction_override_validation(kw, match):
 def test_junction_override_file_is_valid_header():
     df = ov.read_overrides(ov.JUNCTION_OVERRIDES_PATH)
     assert list(df.columns) == ov.JUNCTION_COLUMNS
+
+
+# --- rule consolidation (redesign 2026-11, package 5: K2, K3, K7, K8) -----------------------------------------
+
+
+def _row(rid):
+    return next(r for r in DESIGN.junctions.decision_table.rows if r.id == rid)
+
+
+def test_j01_covers_gow50_with_gow30_like_the_former_j02():
+    """K3: J-01 takes over GOW50+GOW30; trace names J-01 with alias J-02."""
+    assert "J-02" not in {r.id for r in DESIGN.junctions.decision_table.rows}
+    assert (_row("J-01").model_extra or {})["aliases"] == ["J-02"]
+    for dtv in (1000.0, T["roundabout_max_dtv"] + 1, T["turbo_max_dtv"] + 1):
+        mixed = jn.decide(props([leg("GOW50", "HAUPT"), leg("GOW30")], entering_dtv_sum=dtv), P)
+        same = jn.decide(props([leg("GOW50", "HAUPT"), leg("GOW50")], entering_dtv_sum=dtv), P)
+        assert mixed["rule_id"] == "J-01" and mixed["junction_type_soll"] == same["junction_type_soll"]
+        assert mixed["pair"] == ("GOW50", "GOW30")
+        decided = mixed["rule_trace_junction"][-1]
+        assert decided["id"] == "J-01" and decided["aliases"] == ["J-02"]
+    high = jn.decide(props([leg("GOW50", "HAUPT"), leg("GOW30")], entering_dtv_sum=T["turbo_max_dtv"] + 1), P)
+    assert high["junction_type_soll"] == "signal_protected"
+
+
+def test_j01_does_not_swallow_other_pairs():
+    assert jn.decide(props([leg("GOW30"), leg("GOW30")]), P)["rule_id"] == "J-03"
+    assert jn.decide(props([leg("GOW50"), leg("ETW30")]), P)["rule_id"] != "J-01"
+
+
+def test_signal_protected_gets_only_jc02():
+    """K2: JC-05 is a component of JC-02; the node carries JC-02 once."""
+    legs = [leg("GOW50", "HAUPT"), leg("GOW30")]
+    ids = jn.treatments("signal_protected", ("GOW50", "GOW30"), legs, P)
+    assert "JC-02" in ids and "JC-05" not in ids
+    jc02 = next(e for e in P.treatments if e["id"] == "JC-02")
+    assert jc02["aliases"] == ["JC-05"] and "freies Rechtsabbiegen" in jc02["rule"]
+    assert [c["source_type"] for c in jc02["components"]] == ["assumption"]
+    assert "JC-05" not in jn.TREATMENT_DE and "Rechtsabbiegen" in jn.TREATMENT_DE["JC-02"]
+
+
+def test_j11_removed_and_evaluation_order_valid():
+    """K8: no tram row; every remaining row is in evaluation_order exactly once."""
+    assert "J-11" not in P.rows and "J-11" not in P.order and not any(r.tram for r in P.rows.values())
+    assert sorted(P.order) == sorted(P.rows) and len(set(P.order)) == len(P.order)
+
+
+def test_prf07_removed_and_note_moved_to_pl05():
+    """K7: PRF-07 is gone; its hint lives in the note of PL-05."""
+    ids = {r["id"] for r in DESIGN.profile_assignment["rules"]}
+    assert "PRF-07" not in ids and "PRF-06" in ids
+    pl05 = next(r for r in DESIGN.placement["rules"] if r["id"] == "PL-05")
+    assert "nicht prüfbar" in pl05["note"] and "Streckenprofil" in pl05["note"]

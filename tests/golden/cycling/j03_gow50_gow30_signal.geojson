@@ -31,7 +31,6 @@
         "signal_present_ist": true,
         "expected_junction_type": "signal_protected",
         "expected_rules": [
-          "J-02",
           "J-01"
         ],
         "expected_cyclist_treatment": [

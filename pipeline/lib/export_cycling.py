@@ -270,6 +270,12 @@ def _rule_text(r: pd.Series, labels: Labels) -> dict | None:
     return {"id": rid, "text": text}
 
 
+def junction_redirects(j: pd.DataFrame) -> dict:
+    """member node -> node_id of its junction, for every member that is not the junction's own id. Old links to a
+    pseudo-junction joined by the arm filter (design_rules J-M-01) open the junction it belongs to."""
+    return {str(n): str(nid) for nid, ms in zip(j["node_id"], j["member_nodes"]) for n in json.loads(ms) if str(n) != str(nid)}
+
+
 def junction_profile(r: pd.Series, labels: Labels, version: str) -> dict:
     """Junction profile ("Steckbrief Knoten"): Soll and Ist type, cyclist treatment, reason, conflicts."""
     t = labels.t

@@ -1,6 +1,6 @@
 # Ist-Führung und Parallelroute je Abschnitt (Stufe c03b)
 
-Erzeugt 2026-11-11T21:10:45+00:00 mit pipeline/c03b_ist_facility.py · rules.yaml 0.20.0 · cycling_rules.yaml 0.11.0 · nicht amtlicher Entwurf. Regeln S-FEAT-13 und S-FEAT-11 (Review 2026-11 F26/E9, F21), source_type assumption, status draft.
+Erzeugt 2026-11-15T01:54:19+00:00 mit pipeline/c03b_ist_facility.py · rules.yaml 0.22.0 · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Regeln S-FEAT-13 und S-FEAT-11 (Review 2026-11 F26/E9, F21), source_type assumption, status draft.
 
 Eine Ist-Führung je Abschnitt nach den Regeln von C-FAC-05 (Fahrradstraße, Radweg mit begleitenden Radwegen je Seite, Streifen, Sharrow/Busspur, keine). Die Prinzipienbewertung (c04, C-PRI-02), die Führungsform (c05, C-FAC-05) und die Diskrepanz (s08, D-DES-01/D-USE-01) lesen sie; bis rules.yaml 0.19.0 gab es drei Definitionen. `separated_cycle_track_present` = Ist-Führung Radweg je Seite oder Zweirichtungsradweg; unbekannt, wenn die Ist-Klasse „keine“ nur aus fehlenden OSM-Angaben folgt (S-FEAT-10).
 

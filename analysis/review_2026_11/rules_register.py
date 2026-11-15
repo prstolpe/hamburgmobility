@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FILES = ["config/rules.yaml", "config/cycling_rules.yaml", "config/design_rules.yaml"]
 OUT = ROOT / "docs/review/2026-11/regelregister.xlsx"
 
-META_KEYS = {"label_plain", "explain_plain", "why", "history", "source", "source_type", "status", "note", "unit", "description", "label_de", "nl", "url", "title"}
+META_KEYS = {"label_plain", "explain_plain", "why", "history", "aliases", "source", "source_type", "status", "note", "unit", "description", "label_de", "nl", "url", "title"}
 SKIP_TOP = {"meta", "sources"}
 TEXT_KEYS = ["description", "rule", "metric", "check"]
 REVIEW_OPTIONS = ["offen", "ok", "ändern", "Frage", "streichen"]

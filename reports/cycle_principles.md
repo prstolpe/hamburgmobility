@@ -1,6 +1,6 @@
 # Fünf Prinzipien: Bewertung des Soll-Radnetzes (Stufe c04)
 
-Erzeugt 2026-11-11T21:14:03+00:00 mit pipeline/c04_principles.py · cycling_rules.yaml 0.11.0 · nicht amtlicher Entwurf. Alle Bewertungsregeln (C-PRI-01…16) und die Gewichte sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
+Erzeugt 2026-11-15T01:57:40+00:00 mit pipeline/c04_principles.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Bewertungsregeln (C-PRI-01…16) und die Gewichte sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
 
 **score_ist** bewertet den heutigen Zustand der Soll-Route, **score_soll** den Zustand nach regelkonformem Ausbau (Führung nach Trennungsmatrix, Sollbreite, geschlossene Decke, Beleuchtung). Die Differenz ist der Handlungsbedarf. Fehlende Daten senken die confidence, nicht den Score.
 

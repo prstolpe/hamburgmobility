@@ -7,8 +7,8 @@
 #   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
 #   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.21.1
-  date: 2026-11-14
+  version: 0.22.0
+  date: 2026-11-15
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
   note: "Schwellen mit source_type=assumption sind Setzungen und vor dem ersten Lauf fachlich zu prüfen."
@@ -842,12 +842,16 @@ coherence:
       boundary_tolerance_m: {label_plain: "Abstand zur Stadtgrenze, der als Ende zählt", value: 50, unit: m, source_type: assumption, check: "Stadtgrenze = OSM admin_level 4 Hamburg"}
   - id: N2
     label_plain: "Kurze Inseln melden"
-    explain_plain: "Hinweis, wenn ein kurzes Stück eine andere Aufgabe hat als die Straße davor und dahinter."
-    why: "Eine kurze Insel in einem gleichen Straßenzug fällt auf. Der Hinweis lenkt den Blick darauf."
+    explain_plain: "Hinweis auf ein kurzes Stück mit anderer Aufgabe als davor und dahinter. Vorschlag: Aufgabe der Nachbarn, erst nach Freigabe."
+    why: "Eine kurze Insel in einem gleichen Straßenzug fällt auf. Der Hinweis lenkt den Blick darauf und schlägt die Aufgabe der Nachbarn vor."
     rule: "Kategoriewechsel < min_run_m zwischen gleichen Kategorien markieren"
+    proposal: "Insel erhält die Kategorie der gleichen Nachbarn (nur Vorschlag, keine Umklassifizierung; Übernahme über overrides/overrides.csv mit review_status approved)"
+    aliases: [N7]
     min_run_m: 200
     source_type: assumption
     status: draft
+    history:
+      - "Redesign 2026-11 K1: N7 (Glättungsvorschlag für genau diese Inseln) in N2 aufgenommen; alte ID N7 bleibt als Alias"
     note: >-
       Ein Straßenzug läuft an Knoten mit Grad 2 immer weiter, an Knoten mit Grad >= 3 zu dem Abschnitt mit der
       kleinsten Richtungsänderung, wenn beide Abschnitte sich gegenseitig wählen und die Änderung höchstens
@@ -912,31 +916,6 @@ coherence:
     thresholds:
       min_speed_kmh: {label_plain: "Tempo ab dem ein Übergang als schnell gilt", value: 70, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
       target_speed_kmh: {label_plain: "Tempo der Straße nach dem Übergang", value: 30, unit: km/h, source: CROW_GOW30_2023, source_type: swov_crow}
-  - id: N6
-    label_plain: "Kreuzungsart aus der Kreuzungstabelle"
-    explain_plain: "Verweis: Die Art der Kreuzung kommt aus der Kreuzungstabelle."
-    why: "Die Kreuzungsart steht schon in einer eigenen Tabelle. Der Verweis verhindert zwei verschiedene Ergebnisse."
-    rule: "Soll-Knotentyp aus design_rules.junctions (c07, junction_type_soll); N6 listet nur Knotenpunkte ohne Soll-Typ und Übergänge nach N5"
-    source: [SWOV_FS_2023, CROW_GOW30_2023]
-    source_type: swov_crow
-    status: draft
-    source_of_truth: design_rules.junctions.decision_table
-    note: >-
-      Eine Wahrheit für den Soll-Knotentyp. Der Typ kommt aus der Stufe c07 (pipeline/c07_junctions.py,
-      design_rules.yaml junctions); der N6-Teil des Berichts läuft darum nach c07 und steht in reports/junctions.md
-      (Abschnitt N6). signal_radius_m steht jetzt in design_rules J-M-06. category_rank bleibt, J-M-04 verweist
-      darauf.
-    history:
-      - "Review 2026-11 F09: eine Wahrheit für den Soll-Knotentyp; node_types, ist_check und thresholds.signal_radius_m entfallen (signal_radius_m jetzt design_rules J-M-06)"
-    category_rank: [SW, GOW80, GOW50, GOW30, ETW60, ETW30, ETW_ERF]
-  - id: N7
-    label_plain: "Vorschlag zum Angleichen"
-    explain_plain: "Vorschlag, eine kurze Insel an ihre gleichen Nachbarn anzugleichen; gilt erst nach fachlicher Freigabe."
-    why: "Die Insel soll die Kategorie ihrer gleichen Nachbarn bekommen. Das gilt nur nach einer Freigabe."
-    rule: "Glättungsvorschlag: Insel aus N2 erhält die Kategorie der gleichen Nachbarn (nur Vorschlag, keine Umklassifizierung)"
-    source_type: assumption
-    status: draft
-    note: "Übernahme nur über overrides/overrides.csv mit review_status approved."
 
 # ---------------------------------------------------------------
 # Diskrepanz ("grijze wegen") und Priorisierung (pipeline/s08_discrepancy.py, guide.md 1.6, prompts/10)

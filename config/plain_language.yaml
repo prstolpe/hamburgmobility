@@ -5,8 +5,9 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.11.0
+  version: 0.11.1
   date: 2026-11-15
+# 0.11.1: Verweis auf die Netzprüfungen N1–N5 (N6, N7 zusammengelegt bzw. gestrichen, Redesign 2026-11 Paket 5).
 # 0.11.0: Seite „Methode“ (Redesign 2026-11, Paket 3): Abschnitt method mit Zusammenfassung, Kapiteln, Regelreferenz
 #   und „Was ist neu“.
 # 0.10.0: Einfache Sprache nach config/glossary.yaml (Redesign 2026-11, Entscheidung E4 b); Datenbeschreibung (columns)
@@ -126,6 +127,7 @@ site:
   intro: "Dieser Entwurf schlägt für jede Straße in Hamburg eine Aufgabe vor: verbinden, erschließen oder Aufenthalt. Daraus folgt, wie schnell Autos fahren sollen und wie die Straße aussehen sollte. Das ist ein Vorschlag zur Diskussion, keine Planung der Stadt."
   intro_hint: "Suchen Sie oben Ihre Straße oder tippen Sie eine Linie auf der Karte an."
   intro_more: "Wie der Entwurf entsteht"
+  junction_gone: "Diese Kreuzung gibt es im Entwurf nicht mehr. Punkte, an denen sich eine Straße nur in zwei Fahrbahnen teilt, zählen seit November 2026 nicht mehr als Kreuzung."
 
 # Sätze der Bezirksseite (web, Redesign 2026-11 Paket 2). Platzhalter {name} usw. füllt die Webseite aus districts/<bezirk>.json.
 overview:
@@ -185,7 +187,7 @@ columns:
   feasibility_GOW50: "Passt der Querschnitt einer Stadtmagistrale: fits, tight, does_not_fit"
   feasibility_GOW30_narrow: "Passt der schmale Querschnitt einer Stadtstraße 30"
   feasibility_ETW30: "Passt der Querschnitt einer Quartiersstraße"
-  flags: "Hinweise der Netzprüfung (N1–N7)"
+  flags: "Hinweise der Netzprüfung (N1–N5)"
   disc_speed: "Tempo-Diskrepanz 0–3 (leer = nicht prüfbar)"
   disc_design: "Gestaltungs-Diskrepanz 0–3"
   disc_use: "Nutzungs-Diskrepanz 0–3"
@@ -587,7 +589,7 @@ method:
     - date: "2026-11-15"
       version: "0.21.1"
       title: "Neue Webseite in einfacher Sprache"
-      text: "Die Webseite ist neu gestaltet und in einfacher Sprache geschrieben. Die Ergebnisse sind gleich geblieben."
+      text: "Die Webseite ist neu gestaltet und in einfacher Sprache geschrieben. Die Aufgaben der Straßen sind gleich geblieben."
       items:
         - "Die Karte ist die Startseite. Das Menü hat vier Punkte: Karte, Bezirke, Methode, Daten."
         - "Fünf Themen ersetzen die 13 Ebenen der Karte. Jede Farbe hat nur eine Bedeutung."
@@ -596,3 +598,5 @@ method:
         - "Eine Angabe „Wie sicher ist das?“ ersetzt Ampel und Robustheit."
         - "Neu ist die Seite „Bezirke“ mit Kennzahlen und den dringendsten Straßen, Kreuzungen und Lücken im Radnetz."
         - "Die Methode hat eine Zusammenfassung, sieben Kapitel und eine Liste aller Regeln mit Erklärung und Grund."
+        - "Weniger Kreuzungen auf der Karte: Teilt sich eine Straße nur in zwei Fahrbahnen, ist das keine Kreuzung mehr."
+        - "Das Regelwerk ist kürzer: {n_rules} statt 196 Regeln. Regeln, die dasselbe tun, sind zusammengelegt."

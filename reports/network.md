@@ -1,11 +1,11 @@
 # Netzbericht – Abschnitte (Stufe 2)
 
-Erzeugt: 2026-11-04T21:29:22+00:00 von `pipeline/s02_network.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-15T01:38:28+00:00 von `pipeline/s02_network.py`. Nicht amtlicher Entwurf.
 
 ## Eingabe
 
 - OSM-Auszug: `data/raw/osm/hamburg_2026-10-28.osm.pbf` (Abruf 2026-10-28, SHA-256 `700d2e2603a7ffb5…`)
-- Regelwerk: config/rules.yaml 0.13.0
+- Regelwerk: config/rules.yaml 0.22.0
 - highway-Klassen: motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link, unclassified, residential, living_street, pedestrian, service, track
 - Netz für ganz Hamburg berechnet, damit IDs nicht vom Zuschnitt des Arbeitsgebiets abhängen.
 - Bezirk je Abschnitt: Bezirk mit dem größten Längenanteil; Neuwerk/Scharhörn und Flächen außerhalb Hamburgs bleiben ohne Bezirk (config/project.yaml, area).
