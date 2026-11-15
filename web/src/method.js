@@ -185,9 +185,9 @@ export function newsHtml(method, meta, changelogMd = "") {
   <p class="crumb"><a href="#methode">← ${plain(method.title, v)}</a></p>
   <h1>Was ist neu</h1>
   <p>Aktuelle Version: ${esc(meta.version)} (Regelwerk ${esc(meta.rules_version)}, Datenstand ${esc(date(meta.data_date))})</p>
-  ${news.length ? `<ul class="news plain">${news.map((n) => `<li><h2>${esc(n.title)}</h2>
+  ${news.length ? `<ul class="news plain">${news.map((n) => `<li><h2>${plain(n.title, v)}</h2>
     <p class="t-small">${esc(date(n.date))}${n.version ? ` · Regelwerk ${esc(n.version)}` : ""}</p>
-    ${n.text ? `<p>${esc(n.text)}</p>` : ""}
-    ${n.items?.length ? `<ul>${n.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>` : "<p>Noch keine Einträge.</p>"}
+    ${n.text ? `<p>${plain(n.text, v)}</p>` : ""}
+    ${n.items?.length ? `<ul>${n.items.map((i) => `<li>${plain(i, v)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>` : "<p>Noch keine Einträge.</p>"}
   <details class="level l3"><summary>Alle Änderungen (CHANGELOG)</summary><div class="changelog">${marked.parse(changelogMd || "")}</div></details>`;
 }

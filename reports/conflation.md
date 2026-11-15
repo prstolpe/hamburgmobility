@@ -1,13 +1,13 @@
 # Conflation amtlich ↔ OSM (Stufe 3)
 
-Erzeugt: 2026-11-07T14:42:56+00:00 von `pipeline/s03_conflate.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-15T01:39:24+00:00 von `pipeline/s03_conflate.py`. Nicht amtlicher Entwurf.
 
 ## Datengrundlage
 
 - Abschnitte: `data/interim/segments.parquet` (36 526 Abschnitte Hamburg)
 - Arbeitsgebiet: Hamburg (7 Bezirke) + 500 m; abgeglichen werden Abschnitte, die ganz darin liegen (34 702). Außerhalb bleibt `match_quality` leer.
 - Nicht bewertet (ländliche Stadtteile, config/project.yaml rural_exclude): 1 478 Abschnitte, 436.0 km – Bergedorf 317.1 km, Harburg 118.9 km
-- Regelwerk: config/rules.yaml 0.16.0
+- Regelwerk: config/rules.yaml 0.22.0
 
 | Schlüssel | Quelle / Ebene | Objekte | Abruf | Lizenz |
 | --- | --- | ---: | --- | --- |
@@ -31,7 +31,7 @@ Erzeugt: 2026-11-07T14:42:56+00:00 von `pipeline/s03_conflate.py`. Nicht amtlich
 - **S-CONF-01** (assumption, draft): Linienabgleich amtlich -> Abschnitt: Kandidaten im Puffer, Filter nach Richtungswinkel und Überdeckungsanteil, Zuordnung nach Hausdorff-Abstand; buffer_m = 15 m (assumption); max_angle_deg = 20 Grad (ungerichtet, 0-90) (assumption); min_overlap_share = 0.6 Anteil 0-1 (assumption)
 - **S-CONF-02** (assumption, draft): Zonen (Tempo 30, Tempo 20, verkehrsberuhigte Bereiche) über Längenanteil zuordnen; min_length_share = 0.5 Anteil 0-1 der Abschnittslänge (assumption)
 - **S-CONF-03** (hamburg, draft): Zeitlich begrenzte Regelungen (sonderregelung) getrennt speichern, nie als Regeltempo
-- **S-CONF-04** (hamburg, draft): in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist. Seit 0.16.0: partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist (in_hvs_source neighbour); Wege aus S-NET-04 (service, track) nie
+- **S-CONF-04** (hamburg, draft): in_hvs aus den DTV-Linien der Hauptverkehrsstraßen 2019 (match_quality exact), weil HH-SIB nicht erreichbar ist. partial zählt, wenn der Abschnitt über Abschnitte gleichen Namens mit einem exact-Treffer verbunden ist (in_hvs_source neighbour); Wege aus S-NET-04 (service, track) nie
 
 ## Trefferquote (Arbeitsgebiet, 34 702 Abschnitte)
 

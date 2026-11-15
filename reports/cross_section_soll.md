@@ -1,6 +1,6 @@
 # Soll-Querschnitt: Fahrstreifen, Lage der Radanlagen, Raumaufteilung (Stufe c06)
 
-Erzeugt 2026-11-11T21:14:19+00:00 mit pipeline/c06_cross_section_soll.py · design_rules.yaml 0.9.0 · cycling_rules.yaml 0.11.0 · nicht amtlicher Entwurf. Regeln L-01…07, PL-01…06 und PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.
+Erzeugt 2026-11-15T01:57:56+00:00 mit pipeline/c06_cross_section_soll.py · design_rules.yaml 0.10.0 · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Regeln L-01…07, PL-01…06 und PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.
 
 Verfügbare Breite = width_p10_m der Variante Verkehrsfläche (maßgeblich); die Variante Fassade zeigt das Potenzial inklusive Vorgärten. Das gewünschte Profil enthält Gehwege (Regelmaß), die Radanlage mit Sollbreite aus Prompt 18, ÖPNV, Fahrbahn, Trennstreifen, Bäume (GOW), Ladezone bei Geschäftsnutzung und Parken nur dort, wo OSM heute Parken zeigt (Entscheidung 2026-11-06) und die Kategorie es erlaubt (PRF-03 parking_by_category: GOW50 und ETW_ERF keins, GOW30 nur Parkstreifen, ETW30 wie Ist). Passt es nicht, gilt die Kaskade D1, D3, D2, Fallback, D4, D5, D6, D7 (PRF-06).
 
@@ -183,7 +183,7 @@ Weniger Kfz-Fahrstreifen je Richtung im Soll: 418.9 km (davon an GOW50 113.8 km)
 | `no_profile_rules` | keine Profilregeln (SW, GOW80, ETW60 oder ohne Kategorie, PRF-04) | 2 294 | 799.6 |
 | `dtv_unknown` | DTV fehlt an GOW50 – Fahrstreifen = Ist (PRF-01), confidence low | 371 | 29.5 |
 | `lanes_capped_l06` | Soll-Fahrstreifen auf Ist begrenzt (L-06, kein Override) | 256 | 35.8 |
-| `pl02_unchecked` | Zweirichtungsradweg: Seitenbedingung PL-02 nicht prüfbar (PRF-07) | 0 | 0.0 |
+| `pl02_unchecked` | Zweirichtungsradweg: Seitenbedingung PL-02 nicht prüfbar | 0 | 0.0 |
 | `trees_as_pits` | neuer Baumstreifen entfällt, Bäume als Baumscheiben im Trenn- oder Seitenraum (D2) | 1 883 | 250.7 |
 | `gow30_dtv_above_profile` | GOW30 mit DTV über dem breiten CROW-Profil (Soll-Führung Radweg, S-05) | 3 194 | 337.5 |
 | `capacity_reduction_needed` | GOW30: Kfz-Menge über der Kapazität eines Fahrstreifens je Richtung – Reduktion nötig (L-07) | 3 272 | 342.9 |

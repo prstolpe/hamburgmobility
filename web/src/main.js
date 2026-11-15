@@ -133,6 +133,12 @@ function renderIntro() {
 
 // --- panel -----------------------------------------------------------------------------------
 
+let redirects = null;
+async function junctionRedirects() {
+  redirects ??= await json("junction_redirects.json").catch(() => ({}));
+  return redirects;
+}
+
 async function openPanel(id, kind = "seg") {
   const panel = $("#panel");
   const body = $("#panel-body");
@@ -150,7 +156,10 @@ async function openPanel(id, kind = "seg") {
       $("#panel-show").hidden = !idToStreet.get(id);
     }
   } catch {
-    body.innerHTML = "<p>Steckbrief nicht gefunden.</p>";
+    // a pseudo-junction joined by the arm filter (J-M-01) redirects to its junction; a dropped one gets a note
+    const to = kind === "jct" ? (await junctionRedirects())[id] : null;
+    if (to) { setState({ jct: to, seg: null }); return; }
+    body.innerHTML = `<p>${esc(kind === "jct" ? meta.site_texts?.junction_gone ?? "Steckbrief nicht gefunden." : "Steckbrief nicht gefunden.")}</p>`;
   }
   panel.focus();
   mapView?.resize();

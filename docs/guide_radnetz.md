@@ -292,11 +292,13 @@ in design_rules.yaml 0.2.0 (Setzungen sind Annahmen, status draft):
     `cycle_crossing_refuge`); ERSCHL-Wege an ETW30 rechts vor links (J-16, Rechtslage prüfen) (F10).
 - Umsetzung (pipeline/c07_junctions.py, Verfahren J-M-01…07): Knotenpunkte aus Netzknoten mit Grad ≥ 3 und
   Anschlüssen eigenständiger Radwege, nahe Knoten und Kreisverkehre zusammengefasst; Richtungsfahrbahnen als ein Arm;
-  Kategoriepaar mit dem Rang aus N6 (rules.yaml); Platz aus der ALKIS-Verkehrsfläche; Soll-Fahrstreifen je Arm aus c06;
+  Armfilter: Knotenpunkte mit weniger als drei Armen und ohne eigenständigen Radweg (Teilung einer Straße in zwei
+  Fahrbahnen) gehören bis 60 m zur nächsten Kreuzung derselben Straße oder entfallen (J-M-01, seit design_rules 0.10.0);
+  Kategoriepaar mit dem Rang aus J-M-04 (bis rules.yaml 0.21 bei N6); Platz aus der ALKIS-Verkehrsfläche; Soll-Fahrstreifen je Arm aus c06;
   Ist-Typ aus OSM (Ampeln im Umkreis J-M-06.signal_radius_m). Alle Verfahrensschritte sind Annahmen [B].
-- Es gibt nur einen Soll-Knotentyp: den dieser Stufe. Der N6-Teil der Netzkohärenz (Knotenpunkte ohne Soll-Typ,
+- Es gibt nur einen Soll-Knotentyp: den dieser Stufe. Der frühere N6-Teil der Netzkohärenz (Knotenpunkte ohne Soll-Typ,
   Übergänge nach N5) läuft darum nach c07 und steht in reports/junctions.md (Review 2026-11 F09).
-- Ergebnis, Ist → Soll, Prioritäten, planfreie Querungen und N6: reports/junctions.md;
+- Ergebnis, Ist → Soll, Prioritäten, planfreie Querungen und Übergänge (N5): reports/junctions.md;
   Prüfliste je Soll-Typ: reports/junctions_review.csv.
 
 ## 7. Grenzen

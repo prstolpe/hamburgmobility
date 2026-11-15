@@ -428,7 +428,9 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
         "Knoten, die über einen Straßenabschnitt ≤ Clusterradius verbunden sind, und alle Knoten eines Kreisverkehrs bilden einen Knotenpunkt. "
         "Armfilter: Ein Knotenpunkt braucht mindestens min_arms Arme nach dem Zusammenfassen der Richtungsfahrbahnen oder "
         "einen eigenständigen Radweg; ein Scheinknoten bis pseudo_join_m vor einer Kreuzung derselben Straße gehört zu ihr, "
-        "sonst entfällt er. node_id = kleinste OSM-Knoten-ID des Knotenpunkts vor dem Anschluss von Scheinknoten.",
+        "sonst entfällt er. Angeschlossene Scheinknoten zählen nur als Knoten und für die Unfälle; Arme, Zufluss, Platz, "
+        "heutige Ampel und Lage bleiben die der Kreuzung selbst. node_id = kleinste OSM-Knoten-ID des Knotenpunkts vor "
+        "dem Anschluss von Scheinknoten.",
         "2. **Arme (J-M-02):** Abschnitte und eigenständige Radwege, die den Knotenpunkt verlassen. Zufluss = ½ × DTV je "
         "Kfz-Arm; ETW-Arme ohne DTV zählen 0, fehlt DTV an einem GOW/SW-Arm, ist die Summe eine Untergrenze.",
         "3. **Platz (J-M-03):** Radius des größten einbeschriebenen Kreises in der ALKIS-Verkehrsfläche im Umkreis "
@@ -588,13 +590,17 @@ def main() -> int:
     path_nodes = (set(paths["node_u"].astype(int)) | set(paths["node_v"].astype(int))) & set(deg)
     legs = describe_legs(clusters, seg, paths, pts, m["J-M-02"], search)
     n_before = len(clusters)
-    clusters, pseudo = jf.filter_pseudo(clusters, legs, pts, jf.FilterParams.from_rule(m["J-M-01"]))
-    legs = describe_legs(clusters, seg, paths, pts, m["J-M-02"], search)
+    joined, pseudo = jf.filter_pseudo(clusters, legs, pts, jf.FilterParams.from_rule(m["J-M-01"]))
+    # Arms, inflow, space, signals and position stay those of the junction itself (core nodes; the legs of a real
+    # cluster do not depend on the other clusters); joined pseudo nodes only count as members (node list, crashes).
+    core = {r: clusters[r] for r in joined}
+    clusters = joined
     tick(f"{sum(len(v) for v in clusters.values())} nodes -> {len(clusters)} junctions (arm filter J-M-01: {n_before} "
          f"candidates, {len(pseudo['joined'])} pseudo-junctions joined, {len(pseudo['dropped'])} dropped)")
 
     roots = sorted(clusters)
-    member_geoms = gpd.GeoSeries([MultiPoint([pts[n] for n in clusters[r]]) for r in roots], crs=WORK_CRS)
+    member_geoms = gpd.GeoSeries([MultiPoint([pts[n] for n in core[r]]) for r in roots], crs=WORK_CRS)
+    all_geoms = gpd.GeoSeries([MultiPoint([pts[n] for n in clusters[r]]) for r in roots], crs=WORK_CRS)
     j = pd.DataFrame({"node_id": [str(r) for r in roots], "members": [clusters[r] for r in roots]})
     j["n_members"] = j["members"].map(len)
     j["extent_m"] = [shapely.minimum_bounding_radius(g) * 2 for g in member_geoms]
@@ -618,7 +624,7 @@ def main() -> int:
     res = classify(j, p)
     j = j.join(res)
     crashes, years = load_crashes(manifest)
-    cc = crash_counts(member_geoms, crashes, radius)
+    cc = crash_counts(all_geoms, crashes, radius)
     del crashes
     j["crashes_cyc"], j["crashes_cyc_severe"] = cc["crashes_cyc"].to_numpy(), cc["crashes_cyc_severe"].to_numpy()
     tick(f"classified; crashes {min(years)}–{max(years)}")

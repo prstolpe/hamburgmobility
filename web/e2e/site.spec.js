@@ -204,3 +204,12 @@ test.afterAll(async ({}, info) => {
   const path = new URL(`../test-results/axe-${info.project.name}.json`, import.meta.url);
   writeFileSync(path, JSON.stringify(results, null, 1));
 });
+
+test("arm filter: old link to a lane-split point opens its junction, a dropped one explains why", async ({ page }) => {
+  // 53120722 (Rentzelstraße, carriageway split) joined 16334337 An der Verbindungsbahn / Rentzelstraße (J-M-01)
+  await ready(page, "#karte?theme=knoten&jct=53120722");
+  await expect(page).toHaveURL(/jct=16334337/);
+  await expect(page.locator("#panel-title")).toContainText("Rentzelstraße");
+  await page.goto("/#karte?theme=knoten&jct=10031912535");
+  await expect(page.locator("#panel-body")).toContainText("gibt es im Entwurf nicht mehr");
+});

@@ -382,6 +382,7 @@ def write_junction_profiles(c: dict, version: str) -> int:
         p["robustness"] = xc.robustness(c["rob"].get(("junction", p["id"])))
         write_json(OUT_DIR / "junctions" / f"{p['id']}.json", p)
         n += 1
+    write_json(OUT_DIR / "junction_redirects.json", xc.junction_redirects(c["j"]))
     return n
 
 

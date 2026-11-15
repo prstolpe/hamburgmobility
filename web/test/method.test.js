@@ -137,3 +137,12 @@ describe("former rule ids", () => {
     expect(ruleDetailsHtml({ id: "J-01", aliases: ["J-02"], file: "design_rules.yaml", section: "junctions" })).toContain("früher auch <code>J-02</code>");
   });
 });
+
+describe("news placeholders", () => {
+  it("fills {name} in news items", async () => {
+    const { newsHtml } = await import("../src/method.js");
+    const html = newsHtml({ vars: { n_rules: 188 }, news: [{ title: "T", text: "x", items: ["{n_rules} statt 196"] }] },
+      { version: "1", rules_version: "1", data_date: "2026-10-28" });
+    expect(html).toContain("188 statt 196");
+  });
+});

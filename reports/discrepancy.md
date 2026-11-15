@@ -1,6 +1,6 @@
 # Diskrepanz und Priorisierung – Stufe 8
 
-Erzeugt: 2026-11-11T21:10:51+00:00 von `pipeline/s08_discrepancy.py`, rules.yaml 0.20.0. Nicht amtlicher Entwurf. Top 30: `reports/priority_top30.md`.
+Erzeugt: 2026-11-15T01:54:25+00:00 von `pipeline/s08_discrepancy.py`, rules.yaml 0.22.0. Nicht amtlicher Entwurf. Top 30: `reports/priority_top30.md`.
 
 ## Prüfungen
 

@@ -1,6 +1,6 @@
 # Kohärenzbericht – Stufe 6
 
-Erzeugt: 2026-11-11T21:06:57+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0.20.0. Nicht amtlicher Entwurf: Die Regeln markieren nur; nichts wird umklassifiziert. Entscheidungen über overrides/overrides.csv.
+Erzeugt: 2026-11-15T01:50:44+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0.22.0. Nicht amtlicher Entwurf: Die Regeln markieren nur; nichts wird umklassifiziert. Entscheidungen über overrides/overrides.csv.
 
 ## Kennzahlen
 
@@ -14,20 +14,19 @@ Erzeugt: 2026-11-11T21:06:57+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0
 | N3 | Kleiner Aufenthaltsbereich | 2 013 | 130.3 | 2 013 | 130.3 |
 | N4 | Schleichverkehr über ETW | 9 026 | 1003.0 | 8 995 | 1000.0 |
 | N5 | Direkter Übergang ≥ 70 → 30 | 41 | 9.4 | 40 | 9.3 |
-| N7 | Glättungsvorschlag | 74 | 4.7 | 73 | 4.6 |
 
 km mit Flag je Bezirk und Regel:
 
-| Bezirk | km geprüft | N1 | N2 | N3 | N4 | N5 | N7 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Altona | 620.5 | 2.8 | 0.3 | 6.7 | 149.3 | 0.1 | 0.3 |
-| Bergedorf | 209.3 | 4.2 | 0.1 | 3.6 | 34.7 | 0.1 | 0.1 |
-| Eimsbüttel | 470.4 | 1.9 | 0.3 | 9.6 | 134.8 | 0.0 | 0.3 |
-| Hamburg-Mitte | 881.3 | 8.7 | 1.2 | 62.7 | 163.6 | 6.6 | 1.2 |
-| Hamburg-Nord | 563.3 | 6.0 | 0.7 | 35.0 | 195.3 | 0.7 | 0.7 |
-| Harburg | 465.2 | 4.9 | 1.3 | 9.3 | 49.4 | 1.8 | 1.3 |
-| Wandsbek | 1030.4 | 3.8 | 0.7 | 3.3 | 272.8 | 0.0 | 0.7 |
-| ohne Bezirk | 146.9 | 0.4 | 0.1 | 0.0 | 3.1 | 0.1 | 0.1 |
+| Bezirk | km geprüft | N1 | N2 | N3 | N4 | N5 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Altona | 620.5 | 2.8 | 0.3 | 6.7 | 149.3 | 0.1 |
+| Bergedorf | 209.3 | 4.2 | 0.1 | 3.6 | 34.7 | 0.1 |
+| Eimsbüttel | 470.4 | 1.9 | 0.3 | 9.6 | 134.8 | 0.0 |
+| Hamburg-Mitte | 881.3 | 8.7 | 1.2 | 62.7 | 163.6 | 6.6 |
+| Hamburg-Nord | 563.3 | 6.0 | 0.7 | 35.0 | 195.3 | 0.7 |
+| Harburg | 465.2 | 4.9 | 1.3 | 9.3 | 49.4 | 1.8 |
+| Wandsbek | 1030.4 | 3.8 | 0.7 | 3.3 | 272.8 | 0.0 |
+| ohne Bezirk | 146.9 | 0.4 | 0.1 | 0.0 | 3.1 | 0.1 |
 
 Karte: `reports/coherence_flags.geojson` (EPSG:4326; Ebenen segment, node, area; Eigenschaft `rule`), z. B. in QGIS oder geojson.io öffnen.
 
@@ -37,7 +36,7 @@ Karte: `reports/coherence_flags.geojson` (EPSG:4326; Ebenen segment, node, area;
 | --- | --- | --- |
 | segment_id unverändert | ok | 36526 Abschnitte |
 | cat_proposed unverändert (keine Umklassifizierung) | ok | Vergleich mit Eingabe |
-| flags nur im Arbeitsgebiet, gültiges JSON mit bekannten Regel-IDs | ok | N1, N2, N3, N4, N5, N6, N7 |
+| flags nur im Arbeitsgebiet, gültiges JSON mit bekannten Regel-IDs | ok | N1, N2, N3, N4, N5 |
 
 ## N1 Durchgängigkeit
 
@@ -70,11 +69,11 @@ Häufigste Straßen mit offenem GOW-Ende:
 | Kandinskyallee | GOW30 | 2 |
 | Lohe | GOW30 | 2 |
 
-## N2 Kategorie-Inseln und N7 Glättungsvorschläge
+## N2 Kategorie-Inseln und Glättungsvorschläge
 
 Straßenzug: an Knoten mit Grad 2 immer weiter, an Kreuzungen zum gegenseitig besten Abschnitt mit höchstens 30° Richtungsänderung. Insel = Lauf einer Kategorie unter 200 m zwischen zwei Läufen gleicher anderer Kategorie. 74 Abschnitte (4.7 km).
 
-| Vorschlag (N7) neu ← bisher | Abschnitte |
+| Vorschlag (N2) neu ← bisher | Abschnitte |
 | --- | ---: |
 | ETW30 ← ETW_ERF | 59 |
 | ETW_ERF ← ETW30 | 14 |
@@ -944,9 +943,9 @@ Meistgenutzte ETW-Abschnitte:
 
 Direkter Übergang ≥ 70 km/h → 30-km/h-Kategorie (Flag auf der 30-Seite): 36 Knoten, 41 Abschnitte.
 
-## N6 Knotentypen
+## Knotentypen
 
-Seit rules.yaml 0.19.0 (Review 2026-11 F09) gibt es nur einen Soll-Knotentyp: den der Stufe c07 (design_rules.yaml junctions). Der N6-Teil der Prüfung läuft darum nach c07 und steht in reports/junctions.md (Abschnitt „N6 Netzkohärenz“): Knotenpunkte ohne Soll-Typ und Übergänge nach N5 je Knotenpunkt. Abschnitte tragen kein N6-Flag mehr.
+Seit rules.yaml 0.19.0 (Review 2026-11 F09) gibt es nur einen Soll-Knotentyp: den der Stufe c07 (design_rules.yaml junctions). Der Knotenteil der Prüfung läuft darum nach c07 und steht in reports/junctions.md (Abschnitt „Übergänge (N5)“): Knotenpunkte ohne Soll-Typ und Übergänge nach N5 je Knotenpunkt. Abschnitte tragen kein Knotentyp-Flag.
 
 ## Stichprobe: 30 zufällige markierte Abschnitte in Hamburg (7 Bezirke), nach Bezirk geschichtet (Seed 42)
 
@@ -994,7 +993,7 @@ Fachlich durchsehen: Ist das Flag berechtigt? **Durchsicht: offen.**
 
 ## Korrekturebene (Stufe 6b)
 
-Erzeugt: 2026-11-11T21:06:59+00:00 von `pipeline/s06b_overrides.py`, rules.yaml 0.20.0. Quelle: `overrides/overrides.csv`; übernommen wird nur review_status = approved. cat_proposed bleibt unverändert, cat_final steht daneben.
+Erzeugt: 2026-11-15T01:50:46+00:00 von `pipeline/s06b_overrides.py`, rules.yaml 0.22.0. Quelle: `overrides/overrides.csv`; übernommen wird nur review_status = approved. cat_proposed bleibt unverändert, cat_final steht daneben.
 
 | review_status | Einträge |
 | --- | ---: |

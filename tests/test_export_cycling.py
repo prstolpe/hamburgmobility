@@ -270,3 +270,9 @@ def test_junction_treatment_text_comes_from_the_rule_file():
     assert set(LABELS.treatments) == {"JC-01", "JC-02", "JC-03", "JC-04", "JC-06"}
     for jc, text in LABELS.treatments.items():
         assert not re.search(r"\b(RSV|HAUPT|BASIS|LSA|Kfz)\b", text), jc
+
+
+def test_junction_redirects_map_member_nodes_to_their_junction():
+    # arm filter (J-M-01, redesign 2026-11 package 5): old links to a joined pseudo-junction open the real junction
+    j = pd.DataFrame({"node_id": ["3", "20"], "member_nodes": ["[1, 2, 3, 4]", "[20]"]})
+    assert xc.junction_redirects(j) == {"1": "3", "2": "3", "4": "3"}

@@ -5,8 +5,8 @@
 # scope: rural = Regel betrifft nur außerorts (Kennzeichnung, Review 2026-11 F33).
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.9.1
-  date: 2026-11-14
+  version: 0.10.0
+  date: 2026-11-15
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
 
@@ -351,7 +351,7 @@ junctions:
       label_plain: "Was ist eine Kreuzung?"
       explain_plain: "Treffpunkte von drei oder mehr Straßen oder von Radweg und Straße. Teilt sich eine Straße nur in zwei Fahrbahnen, ist das keine Kreuzung."
       why: "Damit man Kreuzungen zählen und bewerten kann, braucht es eine klare Definition."
-      rule: 'Knoten = Knoten des Straßengraphen (Abschnitte mit cat_final) mit Grad >= 3 sowie Knoten, an denen ein eigenständiger Radweg (Radgraph kind path, kein begleitender Radweg) auf einen Straßenabschnitt trifft. Knoten, die über einen Straßenabschnitt von höchstens cluster_radius_m verbunden sind, und Knoten desselben Kreisverkehrs bilden einen Knotenpunkt (zweibahnige Straßen, Kreisverkehre). Armfilter: Ein Knotenpunkt braucht mindestens min_arms Arme nach arm_merge (J-M-02) oder einen eigenständigen Radweg; sonst ist er ein Scheinknoten. Ein Scheinknoten, der höchstens pseudo_join_m von einem Knoten einer echten Kreuzung entfernt ist, an die eine seiner Straßen (gleicher Name) anschließt, gehört zur nächsten solchen Kreuzung (deren node_id bleibt); sonst entfällt er.'
+      rule: 'Knoten = Knoten des Straßengraphen (Abschnitte mit cat_final) mit Grad >= 3 sowie Knoten, an denen ein eigenständiger Radweg (Radgraph kind path, kein begleitender Radweg) auf einen Straßenabschnitt trifft. Knoten, die über einen Straßenabschnitt von höchstens cluster_radius_m verbunden sind, und Knoten desselben Kreisverkehrs bilden einen Knotenpunkt (zweibahnige Straßen, Kreisverkehre). Armfilter: Ein Knotenpunkt braucht mindestens min_arms Arme nach arm_merge (J-M-02) oder einen eigenständigen Radweg; sonst ist er ein Scheinknoten. Ein Scheinknoten, der höchstens pseudo_join_m von einem Knoten einer echten Kreuzung entfernt ist, an die eine seiner Straßen (gleicher Name) anschließt, gehört zur nächsten solchen Kreuzung: Er zählt zu ihren Knoten und seine Unfälle zu ihren Unfällen; node_id, Arme, Zufluss, Platz, heutige Ampel und Lage bleiben die der Kreuzung selbst. Sonst entfällt er.'
       history:
         - "Armfilter (min_arms, pseudo_join_m) seit Redesign 2026-11, Paket 5"
       source_type: assumption

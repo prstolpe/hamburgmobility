@@ -1,6 +1,6 @@
 # Führungsform und Breite der Radanlagen (Stufe c05)
 
-Erzeugt 2026-11-11T21:14:10+00:00 mit pipeline/c05_facility.py · cycling_rules.yaml 0.11.0 · nicht amtlicher Entwurf. Regeln C-FAC-01…07 sind Annahmen (source_type assumption, status draft); Trennungsmatrix und Breiten nach config/cycling_rules.yaml.
+Erzeugt 2026-11-15T01:57:48+00:00 mit pipeline/c05_facility.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Regeln C-FAC-01…07 sind Annahmen (source_type assumption, status draft); Trennungsmatrix und Breiten nach config/cycling_rules.yaml.
 
 Soll-Führung = Trennungsmatrix (cat_final × cycle_cat_final). Bei Zellen mit Fallback bleibt bis Prompt 19 die bevorzugte Führung (Flag fallback_check_p19). Fehlt die Kfz-Menge, gelten Fahrradstraßen- und S-04-Bedingung vorläufig als erfüllt (Entscheidung 2026-11-06, Flag dtv_unknown).
 
