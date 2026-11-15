@@ -111,7 +111,7 @@ placement:
        note: "Inaktiv: separated_twoway vergibt nur die außerorts-Matrix (cycling_rules separation_matrix.rural, inaktiv); innerorts greift PL-02 nie. Profilbaustein in PRF-03 cycle_elements bleibt für die Aktivierung stehen"}
     - {id: PL-03, label_plain: "Radstreifen am Fahrbahnrand", explain_plain: "Ein Radstreifen liegt rechts auf der Fahrbahn, mit Abstand zu parkenden Autos.", why: "Der Abstand zu Längsparken stammt aus den Empfehlungen für Radverkehrsanlagen.", rule: 'cycle_lane: am rechten Fahrbahnrand; bei Längsparken Trennstreifen buffer_to_parking', source: ERA_2010, source_type: de_regelwerk, note: 'Quelle ergänzt: buffer_to_parking stammt aus ERA_2010 (cycling_rules.widths_m.de)', status: draft}
     - {id: PL-04, label_plain: "Abstand zur Fahrbahn", explain_plain: "Zwischen Radweg und Fahrbahn liegt ein Streifen von mindestens 0,75 m.", why: "Das Projekt hat das Maß gesetzt. Bei Hauptstraßen mit Bus nimmt es 1,00 Meter an.", rule: 'Trennstreifen zur Fahrbahn bei separated: >= 0.75 m (Annahme 1.00 m bei GOW50 mit Bus)', source_type: assumption, status: draft}
-    - {id: PL-05, label_plain: "Radweg hinter der Haltestelle", explain_plain: "An Bushaltestellen führt der Radweg hinter der Haltestelle vorbei, wenn Platz ist.", why: "Das Projekt hat diese Lage gesetzt. Mit den Daten lässt sie sich nicht prüfen.", rule: 'Bushaltestellen: Radweg hinter der Haltestelle führen (Bushaltestelleninsel), wenn Breite reicht', source_type: assumption, status: draft}
+    - {id: PL-05, label_plain: "Radweg hinter der Haltestelle", explain_plain: "An Bushaltestellen führt der Radweg hinter der Haltestelle vorbei, wenn Platz ist.", why: "Das Projekt hat diese Lage gesetzt. Mit den Daten lässt sie sich nicht prüfen.", rule: 'Bushaltestellen: Radweg hinter der Haltestelle führen (Bushaltestelleninsel), wenn Breite reicht', source_type: assumption, note: 'mit den vorhandenen Daten nicht prüfbar; Haltestellen nicht im Streckenprofil', status: draft}
     - {id: PL-06, label_plain: "Einbahnstraßen für Räder öffnen", explain_plain: "In Wohnstraßen dürfen Räder Einbahnstraßen in beide Richtungen fahren.", why: "Das Projekt hat das gesetzt. Räder können so in Gegenrichtung fahren und sparen Umwege.", rule: 'Einbahnstraßen ETW30: Radverkehr in Gegenrichtung zulassen', source_type: assumption, status: draft}
 
 # ---------------------------------------------------------------
@@ -272,17 +272,6 @@ profile_assignment:
       cascade_order_note: 'Seit 0.9.0 D3 vor D2 und fallback nach D2 (Review 2026-11 F17, Q1 b): „so wenige Fahrstreifen wie möglich“ – der zweite Kfz-Streifen fällt vor dem Grün; bis 0.8.0 [D1, D2, fallback, D3, ...]'
       flag_only_steps: [D6, D7]
       status: draft
-    - id: PRF-07
-      label_plain: "Nicht prüfbar"
-      explain_plain: "Haltestellen und einseitige Radwege lassen sich mit den Daten nicht prüfen."
-      why: "Es gibt keine Daten für diese Fälle. Darum sagt der Entwurf offen, dass er nichts prüfen kann."
-      description: 'PL-02 (Seite mit wenigen Knoten, keine Ziele) und PL-05 (Bushaltestelleninsel) sind mit den vorhandenen Daten nicht prüfbar: Zweirichtungsradweg aus der Matrix bleibt, Flag pl02_unchecked; Haltestellen nicht im Streckenprofil'
-      note: >-
-        Teil PL-02 (Flag pl02_unchecked) betrifft nur außerorts und tritt nicht auf, solange separation_matrix.rural
-        inaktiv ist; Teil PL-05 gilt innerorts, darum bleibt PRF-07 draft
-      history:
-        - "F33: PL-02-Teil nur außerorts"
-      status: draft
 
 # ---------------------------------------------------------------
 # 4. Knotenpunkte
@@ -308,8 +297,7 @@ junctions:
     source: [SWOV_ROT_2022, CROW_GOW30_2023, NL_MUNI_CASTRICUM_2020]
     source_type: swov_crow
     rows:
-      - {id: J-01, label_plain: "Zwei Hauptstraßen mit Tempo 50", explain_plain: "Kreisverkehr, wenn Verkehr und Platz es erlauben, sonst Turbokreisel oder geschützte Ampel.", why: "Die Tabelle beruht auf niederländischen Quellen. Die Grenzen für den Verkehr hat das Projekt gesetzt.", history: ["Review 2026-11 F24"], legs: 'GOW50+GOW50', if: 'entering_dtv_sum <= roundabout_max_dtv and space_radius_m >= roundabout_min_radius and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv and space_radius_m >= turbo_min_radius', else_then: turbo_roundabout, otherwise: signal_protected, note: "Turbokreisel mit eigenem Platzbedarf turbo_min_radius", status: draft}
-      - {id: J-02, label_plain: "Hauptstraße 50 trifft Hauptstraße 30", explain_plain: "Wie bei zwei Hauptstraßen mit Tempo 50.", why: "Die Tabelle behandelt dieses Paar wie zwei Hauptstraßen mit Tempo 50.", legs: 'GOW50+GOW30', same_as: J-01, status: draft}
+      - {id: J-01, label_plain: "Zwei Hauptstraßen, mindestens eine mit Tempo 50", explain_plain: "Kreisverkehr, wenn Verkehr und Platz es erlauben, sonst Turbokreisel oder geschützte Ampel.", why: "Die Tabelle beruht auf niederländischen Quellen. Die Grenzen für den Verkehr hat das Projekt gesetzt. Trifft Tempo 50 auf Tempo 30, gilt dasselbe wie bei zwei Hauptstraßen mit Tempo 50.", history: ["Review 2026-11 F24", "Paket 5 K3: J-02 (GOW50+GOW30) aufgenommen"], aliases: [J-02], legs: 'GOW50+GOW50|GOW30', if: 'entering_dtv_sum <= roundabout_max_dtv and space_radius_m >= roundabout_min_radius and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv and space_radius_m >= turbo_min_radius', else_then: turbo_roundabout, otherwise: signal_protected, note: "Turbokreisel mit eigenem Platzbedarf turbo_min_radius", status: draft}
       - {id: J-03, label_plain: "Zwei Hauptstraßen mit Tempo 30", explain_plain: "Kreisverkehr bei wenig Verkehr, sonst Turbokreisel oder Ampel; fehlt Platz, eingefärbte Vorfahrt.", why: "Das niederländische Regelwerk (CROW) bevorzugt den Kreisverkehr. Sonst folgt Vorfahrt mit eingefärbter Fläche.", history: ["Entscheidung prstolpe 2026-11-07, open_questions 134: DTV-Grenzen wie J-01"], legs: 'GOW30+GOW30', if: 'entering_dtv_sum <= roundabout_max_dtv and not tram_present', then: roundabout_single_lane_cycle_priority, else_if: 'entering_dtv_sum <= turbo_max_dtv', else_then: turbo_roundabout, otherwise: signal_protected, fallback: priority_flat_coloured, note: "CROW: bevorzugt Kreisverkehr; sonst Vorfahrtknoten mit eingefärbter Kreuzungsfläche. DTV-Grenzen wie J-01; ohne Platz für den Kreisverkehr eingefärbte Vorfahrt (fallback)", status: draft}
       - {id: J-04, label_plain: "Hauptstraße 50 trifft Wohnstraße", explain_plain: "Durchgehender Gehweg über die Einmündung.", why: "Die Einmündung bekommt eine Gehwegüberfahrt. Ersatzweise hat die Hauptstraße Vorfahrt mit Plateau.", legs: 'GOW50+ETW30', then: continuous_footway_exit, fallback: priority_raised, note: 'Gehwegüberfahrt bzw. Vorfahrt GOW mit Plateau', status: draft}
       - {id: J-05, label_plain: "Hauptstraße 30 trifft Wohnstraße", explain_plain: "Durchgehender Gehweg über die Einmündung.", why: "Die Regel stützt sich auf das niederländische Regelwerk (CROW).", legs: 'GOW30+ETW30', then: continuous_footway_exit, fallback: priority_raised, source: CROW_GOW30_2023, status: draft}
@@ -327,7 +315,6 @@ junctions:
          note: "Radroute quert den Zug (Arme beidseits außerhalb des Zugs in der Radkategorie); sonst J-04", status: draft}
       - {id: J-15, label_plain: "Nebenweg quert Hauptstraße 50", explain_plain: "Ampel für Räder bei viel Verkehr, sonst Querung mit Mittelinsel.", why: "Die Grenzen hat das Projekt gesetzt. Die Mittelinsel lässt Räder in zwei Schritten queren.", history: ["Review 2026-11 F10"], legs: 'cycle_path(BASIS|ERSCHL)+GOW50', if: 'lanes_per_direction_max >= 2 or entering_dtv_sum > crossing_signal_min_dtv', then: cycle_crossing_signal, otherwise: cycle_crossing_refuge, source_type: assumption, status: draft}
       - {id: J-16, label_plain: "Nebenweg trifft Wohnstraße", explain_plain: "Rechts vor links.", why: "Das Projekt hat das gesetzt. Die Rechtslage für selbständige Radwege ist noch zu prüfen.", history: ["Review 2026-11 F10"], legs: 'cycle_path(ERSCHL)+ETW30', then: equal_right_before_left, source_type: assumption, note: "Rechtslage selbständiger Radweg an Straße prüfen (wie J-12)", status: draft}
-      - {id: J-11, label_plain: "Kreuzung mit Straßenbahn", explain_plain: "Ampel, wenn eine Straßenbahn kreuzt; in Hamburg gibt es keinen Fall.", why: "Wo eine Straßenbahn kreuzt, gilt die geschützte Ampelkreuzung. In Hamburg kommt das nicht vor.", legs: 'any with tram', then: signal_protected, status: draft}
   thresholds:
     roundabout_max_dtv: {label_plain: "höchster Autoverkehr für einen einspurigen Kreisverkehr", value: 25000, source_type: assumption, note: 'Summe zufließender Kfz/24h einstreifiger Kreisverkehr; CROW/HBS prüfen'}
     turbo_max_dtv: {label_plain: "höchster Autoverkehr für einen Turbokreisel", value: 35000, source_type: assumption}
@@ -342,7 +329,8 @@ junctions:
     # diese Radroute quert. Bedingungen einer Klausel gelten zusammen.
     - {id: JC-01, label_plain: "Kreisverkehr: Rad hat Vorrang", explain_plain: "Im Kreisverkehr hat der umlaufende Radweg Vorrang.", why: "Das niederländische Regelwerk (CROW) empfiehlt das innerorts. SWOV hält Wartepflicht für sicherer.", rule: 'Kreisverkehr innerorts mit umlaufendem Radweg, Radverkehr bevorrechtigt', source: SWOV_ROT_2022, source_type: swov_crow, note: 'CROW-Empfehlung innerorts; SWOV: Wartepflicht sicherer – Zielkonflikt dokumentieren. Deutsches Recht: Vorrang nur bei fahrbahnnaher Führung, StVO/VwV prüfen', status: draft,
        applies_to: [{types: [roundabout_single_lane_cycle_priority]}]}
-    - {id: JC-02, label_plain: "Geschützte Ampelkreuzung", explain_plain: "Eckinseln, abgesetzter Radüberweg, Wartefläche vor den Autos, Linksabbiegen in zwei Schritten.", why: "Die Gestaltung stützt sich auf die Dutch Cycling Embassy und SWOV.", rule: 'LSA-Knoten als geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor Kfz, indirektes Linksabbiegen', source: [DCE_INFRA, SWOV_FS_2023], source_type: swov_crow, status: draft,
+    - {id: JC-02, label_plain: "Geschützte Ampelkreuzung", explain_plain: "Eckinseln, abgesetzter Radüberweg, Wartefläche vor den Autos, Linksabbiegen in zwei Schritten. Rechtsabbiegen für Räder ist frei, wo es sicher ist.", why: "Die Gestaltung stützt sich auf die Dutch Cycling Embassy und SWOV. Das freie Rechtsabbiegen hat das Projekt gesetzt; es wird noch geprüft.", rule: 'LSA-Knoten als geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor Kfz, indirektes Linksabbiegen; freies Rechtsabbiegen für Rad, wo sicher', source: [DCE_INFRA, SWOV_FS_2023], source_type: swov_crow, status: draft, aliases: [JC-05],
+       components: [{name: free_right_turn, rule: 'Freies Rechtsabbiegen für Rad an LSA, wo sicher', source_type: assumption, note: 'früher JC-05; Projektannahme, wird noch geprüft'}],
        applies_to: [{types: [signal_protected]}]}
     - {id: JC-03, label_plain: "Radüberweg auf wichtigen Routen", explain_plain: "So breit wie der Radweg, rot, erhöht wo Vorrang.", why: "Die Furt ist so breit wie der Radweg und rot. Das nennt eine niederländische Gemeinde.", rule: 'Furten im Zuge RSV/HAUPT: Breite = Radwegbreite, rot, aufgepflastert wo Vorrang', source: NL_MUNI_CASTRICUM_2020, source_type: swov_crow, status: draft,
        applies_to: [{types: [cycle_crossing_priority, cycle_crossing_signal, signal_protected, priority_raised, priority_flat_coloured], cycle_cats: [RSV, HAUPT]},
@@ -353,8 +341,6 @@ junctions:
                     {types: [cycle_crossing_refuge]}],
        note_applies: 'cycle_crossing_refuge hat die Mittelinsel immer (Typbeschreibung J-15); für ERSCHL nennt median_width_m keinen Wert',
        median_width_m: {RSV: {value: 4.00, source_type: assumption, note: 'Lastenrad mit Anhänger (Review 2026-11 F24, A8)'}, HAUPT: 3.00, BASIS: 2.50}}
-    - {id: JC-05, label_plain: "Freies Rechtsabbiegen für Räder", explain_plain: "An Ampeln dürfen Räder rechts abbiegen, wo es sicher ist.", why: "Das Projekt hat diese Regel gesetzt; sie wird noch geprüft.", rule: 'Freies Rechtsabbiegen für Rad an LSA, wo sicher', source_type: assumption, status: draft,
-       applies_to: [{types: [signal_protected]}]}
     - {id: JC-06, label_plain: "Turbokreisel: Rad wartet", explain_plain: "Am Turbokreisel wartet das Rad; auf wichtigen Routen Brücke oder Tunnel prüfen.", why: "In den Niederlanden warten Räder am Turbokreisel oder queren planfrei. In Deutschland ist er kein Regelelement.", history: ["Review 2026-11 F02, A3"], rule: 'Turbokreisverkehr: umlaufender Radweg abgesetzt, Radverkehr wartepflichtig; im RSV/HAUPT-Netz planfreie Querung prüfen (Flag turbo_grade_sep_check)', source_type: assumption, status: draft,
        note: "NL-Praxis führt Rad am Turbokreisel wartepflichtig oder planfrei; Turbokreisel sind kein deutsches Regelelement. Quelle (CROW/Fietsberaad) ergänzen",
        applies_to: [{types: [turbo_roundabout]}],
@@ -416,7 +402,7 @@ junctions:
       rule: 'Zeilen der Entscheidungstabelle in evaluation_order prüfen; die erste Zeile, deren legs passen, entscheidet. same_as übernimmt Bedingungen und Typen der genannten Zeile. Ist eine Bedingung wegen fehlender Werte unbekannt, gilt on_unknown (Flag condition_unknown, confidence low).'
       source_type: assumption
       status: draft
-      evaluation_order: [J-10, J-10d, J-10c, J-10b, J-11, J-09, J-15, J-08, J-12, J-16, J-07, J-13, J-14, J-01, J-02, J-03, J-04, J-05, J-06]
+      evaluation_order: [J-10, J-10d, J-10c, J-10b, J-09, J-15, J-08, J-12, J-16, J-07, J-13, J-14, J-01, J-03, J-04, J-05, J-06]
       evaluation_note: 'Reihenfolge nach Review 2026-11 F08 (J-10, J-10d, J-10c, J-10b vorn) und F03 (J-14 vor J-01); J-15/J-16 betreffen nur Paare mit cycle_path und stehen bei J-09/J-12'
       on_unknown: then
       fallback_if: {types: [roundabout_single_lane_cycle_priority, roundabout_single_lane_cycle_yield, turbo_roundabout], condition: 'space_radius_m < roundabout_min_radius',

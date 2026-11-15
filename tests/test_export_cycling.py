@@ -267,6 +267,6 @@ def test_junction_treatment_text_comes_from_the_rule_file():
     """Redesign E5: the cyclist note of a junction profile is explain_plain of JC-01..JC-06 (design_rules.yaml),
     plain language without codes; the text table in pipeline/lib/junctions.py is only the fallback."""
     import re
-    assert set(LABELS.treatments) == {"JC-01", "JC-02", "JC-03", "JC-04", "JC-05", "JC-06"}
+    assert set(LABELS.treatments) == {"JC-01", "JC-02", "JC-03", "JC-04", "JC-06"}
     for jc, text in LABELS.treatments.items():
         assert not re.search(r"\b(RSV|HAUPT|BASIS|LSA|Kfz)\b", text), jc

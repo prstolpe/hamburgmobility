@@ -6,7 +6,7 @@ Junctions (J-M-01): nodes of the street graph (segments with cat_final) with deg
 cycle path meets a street; nodes joined by a short street segment or on the same roundabout form one junction.
 Legs with category, cycle category, Soll facility and DTV (J-M-02), space from the ALKIS traffic area (J-M-03),
 decision table J-01..J-16 (J-M-04, J-M-05; Soll lanes per arm from c06 for J-14/J-15), cyclist treatment
-JC-01..JC-06, Ist type from OSM (J-M-06), priority (J-M-07) and overrides/junction_overrides.csv (approved only).
+JC-01..JC-04, JC-06, Ist type from OSM (J-M-06), priority (J-M-07) and overrides/junction_overrides.csv (approved only).
 Also writes the junction part of the coherence check (section "Übergänge (N5)", formerly rule N6, K6): junctions without a
 Soll type and N5 transitions at junctions, from data/interim/coherence_nodes.parquet (N5 of stage s06).
 Writes data/interim/junctions.parquet (points), reports/junctions.md and reports/junctions_review.csv.
@@ -402,7 +402,7 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
     lines = [
         "# Knotenpunkte: Soll-Knotentyp und Radverkehrsführung (Stufe c07)", "",
         f"Erzeugt {_now()} mit pipeline/c07_junctions.py · design_rules.yaml {ctx['design_version']} · nicht amtlicher "
-        "Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. "
+        "Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-04, JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. "
         "Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.", "",
         "## Kurzfassung", "",
         f"- {_fmt(n)} Knotenpunkte aus {_fmt(ctx['n_nodes'])} Netzknoten (Grad ≥ 3: {_fmt(ctx['n_deg3'])}, Kreuzungen "
@@ -418,7 +418,7 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
         f"- Handlungsbedarf (Ist passt nicht zum Soll): {_fmt(out['action_needed'].sum())} Knotenpunkte; nicht prüfbar: "
         f"{_fmt((out['ist_result'] == 'not_checkable').sum())}; passt: {_fmt((out['ist_result'] == 'match').sum())}.",
         f"- Overrides angewendet: {_fmt((out['junction_type_source'] == 'override').sum())} (overrides/junction_overrides.csv, nur approved).",
-        f"- Straßenbahn an keinem Arm: der GTFS-Feed enthält {ctx['tram_routes']} Straßenbahnrouten; J-11 greift daher nicht."
+        f"- Straßenbahn an keinem Arm: der GTFS-Feed enthält {ctx['tram_routes']} Straßenbahnrouten; tram_present ist daher überall falsch."
         if ctx["tram_routes"] == 0 else f"- Straßenbahn an {_fmt(out['tram_present'].sum())} Knotenpunkten.",
         "- confidence: " + ", ".join(f"{k} {_fmt((out['confidence'] == k).sum())}" for k in jn.CONFIDENCE) + ".",
         "",

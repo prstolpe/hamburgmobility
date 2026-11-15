@@ -158,7 +158,7 @@ def test_rejects_unknown_name_in_junction_condition(des):
 
 def test_rejects_unknown_same_as(des):
     def mutate(d):
-        _by_id(d["junctions"]["decision_table"]["rows"], "J-02")["same_as"] = "J-99"
+        _by_id(d["junctions"]["decision_table"]["rows"], "J-10b")["same_as"] = "J-99"
     _rejects(DesignRuleSet, _mutated(des, mutate), "J-99")
 
 
@@ -458,7 +458,7 @@ def test_rejects_unknown_category_in_profile_rules(des):
 
 
 def test_rejects_profile_rule_missing(des):
-    _rejects(DesignRuleSet, _mutated(des, lambda d: d["profile_assignment"]["rules"].pop()), "PRF-07")
+    _rejects(DesignRuleSet, _mutated(des, lambda d: d["profile_assignment"]["rules"].pop()), "PRF-06")
 
 
 # --- review 2026-11, P0: status inactive, scope, half-open intensity classes ---------------------------------
