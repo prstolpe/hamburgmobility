@@ -7,7 +7,6 @@ const search = JSON.parse(readFileSync(new URL("../../data/out/search.json", imp
 const SEG = search.find((s) => s.name === "Hallerstraße")?.ids[0] ?? search[0].ids[0];
 const meta = JSON.parse(readFileSync(new URL("../../data/out/meta.json", import.meta.url)));
 const JCT = meta.cycling ? readdirSync(new URL("../../data/out/junctions/", import.meta.url)).sort()[0].replace(".json", "") : null;
-const RAD_VIEWS = ["ziel", "radweg", "luecken"];
 const PAGES = {
   "Karte": "#karte",
   "Karte mit Steckbrief": `#karte?seg=${SEG}`,
@@ -17,8 +16,9 @@ const PAGES = {
   "Methode": "#methode",
   "Methode Kapitel Radnetz": "#methode/radnetz",
   "Methode Regeln": "#methode/regeln",
-  "Methode Neu": "#methode/neu",
-  "Karte Radnetz Lücken": "#karte?theme=rad&view=luecken",
+  "Karte Radnetz": "#karte?theme=rad",
+  "Karte Fahrstreifen": "#karte?theme=platz",
+  "Karte Abweichung": "#karte?theme=abweichung",
   "Karte Kreuzungen mit Steckbrief": `#karte?theme=knoten&jct=${JCT}&map=15/53.56/9.99`,
   "Daten": "#daten",
   "Impressum": "#impressum",
@@ -38,8 +38,7 @@ async function ready(page, hash) {
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
   await page.goto(`/${hash}`);
-  await expect(page.locator("#banner-text")).toContainText("Nicht amtlicher Diskussionsentwurf");
-  await expect(page.locator("#banner-text")).toContainText("Datenstand"); // set after meta.json and search.json
+  await expect(page.locator("#foot-version")).toContainText("Datenstand"); // set after meta.json and search.json
   return errors;
 }
 
@@ -74,10 +73,34 @@ test("theme and view switch are reflected in the URL", async ({ page }) => {
 });
 
 test("old layer link is rewritten", async ({ page }) => {
-  await ready(page, "#karte?layer=cgap");
-  await expect(page).toHaveURL(/theme=rad/);
-  await expect(page).toHaveURL(/view=luecken/);
+  await ready(page, "#karte?layer=prio");
+  await expect(page).toHaveURL(/theme=abweichung/);
+  await expect(page).toHaveURL(/view=prio/);
   await expect(page).not.toHaveURL(/layer=/);
+});
+
+test("links to switched-off views open the theme's default view (prompt 25)", async ({ page }) => {
+  await ready(page, "#karte?theme=rad&view=luecken");
+  await expect(page).toHaveURL(/theme=rad/);
+  await expect(page).not.toHaveURL(/view=/);
+  await ready(page, "#karte?layer=cfit");
+  await page.reload(); // a hash-only goto does not reload; old links are rewritten on load
+  await expect(page).toHaveURL(/theme=platz/);
+  await expect(page).not.toHaveURL(/view=/);
+  await expect(page.locator("#themes .views")).toHaveCount(0); // one view left: no view switcher
+  await expect(page.locator("#layer-text")).toContainText("Fahrstreifen");
+});
+
+test("no draft banner, no news page; draft note in title and footer (prompt 25)", async ({ page }) => {
+  await ready(page, "#karte");
+  await expect(page.locator(".banner")).toHaveCount(0);
+  await expect(page.locator(".site-title")).toContainText("Entwurf");
+  await expect(page.locator(".site-foot")).toContainText("nicht amtlich");
+  await expect(page.locator(".site-title img")).toHaveAttribute("alt", "HMR – Hamburg Mobility Revolution");
+  await expect(page.locator('a[href="#methode/neu"]')).toHaveCount(0);
+  await ready(page, "#methode/neu");
+  await page.reload();
+  await expect(page).toHaveURL(/#methode$/);
 });
 
 test("district page lists 7 districts and opens Eimsbüttel", async ({ page }) => {
@@ -142,11 +165,9 @@ test("cycling layers switch without errors and show the draft note", async ({ pa
   test.skip(!meta.cycling, "no cycling layers in this export");
   const errors = await ready(page, "#karte?map=14/53.57/9.97");
   await page.waitForFunction(() => document.querySelector("#map canvas"));
-  await page.locator('#themes button[data-theme="rad"]').click();
-  await expect(page).toHaveURL(/theme=rad/);
-  for (const key of RAD_VIEWS.slice(1)) {
-    await page.locator(`button[data-view="${key}"]`).click();
-    await expect(page).toHaveURL(new RegExp(`view=${key}`));
+  for (const theme of ["rad", "platz"]) {
+    await page.locator(`#themes button[data-theme="${theme}"]`).click();
+    await expect(page).toHaveURL(new RegExp(`theme=${theme}`));
     await expect(page.locator("#legend .note")).toContainText("nicht amtlich");
     await page.waitForTimeout(800);
   }

@@ -1,7 +1,7 @@
 // URL state with themes and views (redesign 2026-11, package 2; docs/redesign/02_information_architecture.md,
 // table "Alte Links bleiben gültig"): one test per row of the redirect table.
 import { describe, expect, it } from "vitest";
-import { DEFAULTS, layerOf, parseHash, THEMES, toHash } from "../src/state.js";
+import { DEFAULTS, layerOf, parseHash, THEMES, toHash, viewsOf } from "../src/state.js";
 
 describe("themes and views", () => {
   it("every theme view maps to a map layer", () => {
@@ -15,7 +15,7 @@ describe("themes and views", () => {
   });
 
   it("round-trips theme, view and the other fields", () => {
-    const s = { ...DEFAULTS, page: "karte", theme: "rad", view: "luecken", layer: "cgap", overlays: ["acc"], cats: ["GOW30"],
+    const s = { ...DEFAULTS, page: "karte", theme: "abweichung", view: "prio", layer: "prio", overlays: ["acc"], cats: ["GOW30"],
       dts: ["D1"], prmin: 1, bz: "Altona", seg: "seg_00ab", jct: null, table: false, map: { zoom: 14, lat: 53.57, lon: 9.95 } };
     expect(parseHash(toHash(s))).toEqual(s);
   });
@@ -31,19 +31,42 @@ describe("themes and views", () => {
   });
 });
 
+// prompt 25: views switched off by configuration (enabled: false), not deleted
+describe("disabled views", () => {
+  const disabled = [["rad", "luecken"], ["rad", "radweg"], ["platz", "ziel"], ["platz", "breite"], ["platz", "regelprofil"]];
+
+  it("are kept in THEMES but not offered", () => {
+    for (const [t, v] of disabled) {
+      expect(THEMES[t].views[v].enabled, `${t}/${v}`).toBe(false);
+      expect(viewsOf(t).map(([k]) => k)).not.toContain(v);
+    }
+    expect(viewsOf("platz").map(([k]) => k)).toEqual(["fahrstreifen"]);
+    expect(viewsOf("rad").map(([k]) => k)).toEqual(["ziel", "amtlich"]);
+  });
+
+  it("shared links fall back to the theme's default view", () => {
+    for (const [t, v] of disabled) {
+      const s = parseHash(`#karte?theme=${t}&view=${v}`);
+      expect([s.theme, s.view], `${t}/${v}`).toEqual([t, viewsOf(t)[0][0]]);
+    }
+    expect(toHash(parseHash("#karte?theme=platz&view=ziel"))).toBe("#karte?theme=platz");
+    expect(parseHash("#karte?theme=platz").layer).toBe("lanes");
+  });
+});
+
 describe("old links are rewritten", () => {
   const rows = [
     ["#karte?layer=cat", "aufgabe", "ziel"],
     ["#karte?layer=speed", "aufgabe", "heute"],
     ["#karte?layer=hvs", "aufgabe", "hvs"],
     ["#karte?layer=disc", "abweichung", "ziel"],
-    ["#karte?layer=width", "platz", "breite"],
-    ["#karte?layer=feas", "platz", "regelprofil"],
-    ["#karte?layer=cfit", "platz", "ziel"],
+    ["#karte?layer=width", "platz", "fahrstreifen"], // view disabled (prompt 25)
+    ["#karte?layer=feas", "platz", "fahrstreifen"], // view disabled
+    ["#karte?layer=cfit", "platz", "fahrstreifen"], // view disabled
     ["#karte?layer=lanes", "platz", "fahrstreifen"],
     ["#karte?layer=cnet", "rad", "ziel"],
-    ["#karte?layer=cfac", "rad", "radweg"],
-    ["#karte?layer=cgap", "rad", "luecken"],
+    ["#karte?layer=cfac", "rad", "ziel"], // view disabled
+    ["#karte?layer=cgap", "rad", "ziel"], // view disabled
     ["#karte?layer=coff", "rad", "amtlich"],
     ["#karte?layer=jct", "knoten", "ziel"],
   ];
@@ -84,11 +107,11 @@ describe("old links are rewritten", () => {
 });
 
 describe("method sub pages", () => {
-  it("parses chapters, reference and news; unknown sub falls back to the summary", () => {
+  it("parses chapters and the reference; unknown sub (also the removed news page) falls back to the summary", () => {
     expect(parseHash("#methode")).toMatchObject({ page: "methode", sub: null, rule: null });
     expect(parseHash("#methode/platz").sub).toBe("platz");
     expect(parseHash("#methode/regeln").sub).toBe("regeln");
-    expect(parseHash("#methode/neu").sub).toBe("neu");
+    expect(parseHash("#methode/neu").sub).toBeNull(); // news page removed (prompt 25)
     expect(parseHash("#methode/gibtesnicht").sub).toBeNull();
   });
 
@@ -98,7 +121,7 @@ describe("method sub pages", () => {
   });
 
   it("round-trips sub and rule", () => {
-    for (const h of ["#methode", "#methode/knoten", "#methode/neu", "#methode/regeln", "#methode/regeln?regel=C-G30-02"]) {
+    for (const h of ["#methode", "#methode/knoten", "#methode/regeln", "#methode/regeln?regel=C-G30-02"]) {
       expect(toHash(parseHash(h))).toBe(h);
     }
   });

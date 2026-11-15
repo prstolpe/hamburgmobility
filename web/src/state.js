@@ -7,28 +7,38 @@ export const PAGES = ["karte", "bezirke", "methode", "daten", "impressum"];
 const PAGE_ALIASES = { tabelle: "bezirke", downloads: "daten", quellen: "daten" };
 export const CYCLING_LAYER_KEYS = ["cnet", "cfac", "cgap", "lanes", "cfit", "jct", "coff"];
 export const LAYERS = ["cat", "speed", "disc", "prio", "width", "feas", "hvs", ...CYCLING_LAYER_KEYS];
-// sub pages of "methode": chapters (keys as in meta.method.chapters), the rule reference and the news page
-export const METHOD_SUBS = ["aufgabe", "abweichung", "platz", "radnetz", "knoten", "sicherheit", "daten", "regeln", "neu"];
+// sub pages of "methode": chapters (keys as in meta.method.chapters) and the rule reference; the news page
+// (#methode/neu) was removed in prompt 25, old links fall back to the summary
+export const METHOD_SUBS = ["aufgabe", "abweichung", "platz", "radnetz", "knoten", "sicherheit", "daten", "regeln"];
 export const OVERLAYS = ["bus", "cyc", "fac", "acc"];
 
-// theme -> {title, views: {view: {label, layer, level}}}; level 3 views are offered under "Mehr Ansichten"
+// theme -> {title, views: {view: {label, layer, level, enabled}}}; level 3 views are offered under "Mehr Ansichten".
+// enabled: false switches a view off without deleting it (prompt 25): no button, no data, links fall back to the
+// theme's first enabled view. To switch a view back on, delete its `enabled: false`.
 export const THEMES = {
   aufgabe: { title: "Aufgabe und Tempo", views: {
     ziel: { label: "Ziel", layer: "cat" }, heute: { label: "heute", layer: "speed" },
     hvs: { label: "Hauptverkehrsstraßen (Vergleich)", layer: "hvs", level: 3 } } },
   abweichung: { title: "Heute und Ziel", views: {
     ziel: { label: "Abweichung", layer: "disc" }, prio: { label: "Dringlichkeit", layer: "prio" } } },
-  platz: { title: "Platz in der Straße", views: {
-    ziel: { label: "Passt das Ziel?", layer: "cfit" }, fahrstreifen: { label: "Fahrstreifen", layer: "lanes" },
-    breite: { label: "Breite der Straße", layer: "width", level: 3 },
-    regelprofil: { label: "Regelprofil der Aufgabe", layer: "feas", level: 3 } } },
+  platz: { title: "Fahrstreifen", views: {
+    ziel: { label: "Passt das Ziel?", layer: "cfit", enabled: false },
+    fahrstreifen: { label: "Fahrstreifen", layer: "lanes" },
+    breite: { label: "Breite der Straße", layer: "width", level: 3, enabled: false },
+    regelprofil: { label: "Regelprofil der Aufgabe", layer: "feas", level: 3, enabled: false } } },
   rad: { title: "Radnetz", views: {
-    ziel: { label: "Ziel", layer: "cnet" }, radweg: { label: "Radweg", layer: "cfac" }, luecken: { label: "Lücken", layer: "cgap" },
+    ziel: { label: "Ziel", layer: "cnet" },
+    radweg: { label: "Radweg", layer: "cfac", enabled: false },
+    luecken: { label: "Lücken", layer: "cgap", enabled: false },
     amtlich: { label: "amtliches Netz", layer: "coff", level: 3 } } },
   knoten: { title: "Kreuzungen", views: { ziel: { label: "Ziel", layer: "jct" } } },
 };
-const firstView = (theme) => Object.keys(THEMES[theme].views)[0];
+/** Enabled views of a theme as [id, view] pairs, in order. */
+export const viewsOf = (theme) => Object.entries(THEMES[theme]?.views ?? {}).filter(([, v]) => v.enabled !== false);
+const firstView = (theme) => viewsOf(theme)[0][0];
+const isEnabled = (theme, view) => viewsOf(theme).some(([v]) => v === view);
 export const layerOf = (theme, view) => THEMES[theme]?.views[view]?.layer ?? null;
+// old ?layer= links: also map disabled views, withView() then falls back to the theme's first enabled view
 const OLD_LAYER = Object.fromEntries(Object.entries(THEMES).flatMap(([t, th]) =>
   Object.entries(th.views).map(([v, x]) => [x.layer, [t, v]])));
 
@@ -42,7 +52,7 @@ const list = (v, allowed) => (v ? v.split(",").filter((x) => !allowed || allowed
 /** Set theme/view (falling back to valid values) and the derived map layer. */
 export function withView(state, theme, view) {
   const t = THEMES[theme] ? theme : DEFAULTS.theme;
-  const v = THEMES[t].views[view] ? view : firstView(t);
+  const v = isEnabled(t, view) ? view : firstView(t);
   return { ...state, theme: t, view: v, layer: layerOf(t, v) };
 }
 

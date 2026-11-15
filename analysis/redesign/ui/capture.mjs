@@ -79,7 +79,7 @@ for (const kind of ["desktop", "mobile"]) {
   if (kind === "desktop") {
     await open(page, "#karte");
     result.chrome = {
-      banner: await page.textContent(".banner"),
+      banner: (await page.$(".banner")) ? await page.textContent(".banner") : null, // no banner since prompt 25
       title: await page.textContent(".site-title"),
       nav: await page.$$eval("nav.main a", (as) => as.map((a) => a.innerText.trim())),
       controls_summary: await page.evaluate(() => document.querySelector("#controls-body summary")?.innerText ?? ""),

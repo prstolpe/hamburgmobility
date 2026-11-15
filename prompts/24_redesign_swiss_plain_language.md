@@ -9,7 +9,7 @@
 - Work in plan mode first. Show me the plan for Part A with a rough time estimate before starting.
 - Branch `redesign/2026-11`. In Part A, do not change `web/`, the rule files, `overrides/` or published data. Allowed: `analysis/redesign/`, `prototypes/redesign/`, `docs/redesign/`, dry runs to `data/scenarios/redesign/`.
 - Detect the current rule structure (`config/*.yaml` or a unified `rules/` folder, if Prompt 22 introduced one) and work with what exists.
-- Keep stable: `segment_id`, `node_id`, rule IDs (merged rules keep their old IDs as aliases), overrides, shareable URLs (old parameters redirect), the permanent notice "nicht amtlicher Diskussionsentwurf", `docs/source_policy.md`, WCAG 2.2 AA, no tracking, no external font or script services (self-host fonts).
+- Keep stable: `segment_id`, `node_id`, rule IDs (merged rules keep their old IDs as aliases), overrides, shareable URLs (old parameters redirect), the notice "nicht amtlicher Diskussionsentwurf" (since prompt 25 no banner: title suffix, footer, method and imprint), `docs/source_policy.md`, WCAG 2.2 AA, no tracking, no external font or script services (self-host fonts).
 - Back every finding with evidence: screenshots, counts, example IDs, readability scores. No guesses presented as findings.
 
 ## Part A – Analyse and propose (then STOP)
@@ -57,7 +57,7 @@ Translate Swiss design principles into concrete, documented design tokens and co
 - **Colour:** neutral base (black, white, greys) and few functional accents; one colour meaning per concept across the whole site; colour-blind safe palettes for the map with redundant encoding (line style, width, symbol); contrast ≥ 4.5:1 for text.
 - **Map styling:** muted greyscale base map so the data stands out; line width shows hierarchy; legends written in plain words next to the map, not hidden.
 - **Objectivity and white space:** no ornament, no shadows or gradients, content first; clear alignment; restrained motion.
-- **Components:** header, theme switcher, legend, profile panel (desktop side panel, mobile bottom sheet), level-2/3 disclosure ("Mehr erfahren", "Details und Quellen"), district cards, tables, cross-section drawing, notice banner.
+- **Components:** header, theme switcher, legend, profile panel (desktop side panel, mobile bottom sheet), level-2/3 disclosure ("Mehr erfahren", "Details und Quellen"), district cards, tables, cross-section drawing (the notice banner was removed in prompt 25).
 
 Build **two variants** within these principles (e.g. "map-first" vs. "overview-first"), each as a clickable prototype in `prototypes/redesign/<variant>/` on real data for one district, with desktop and mobile screenshots, pros and cons and effort.
 
@@ -111,4 +111,4 @@ Work in packages, each on its own branch, in this order:
 4. **Rule-file language** (new plain-language fields, clearer descriptions). Prove identical classification outputs (hash comparison); bump patch version; CHANGELOG entry.
 5. **Rule consolidation**, only for rules marked "approve": tests first, then YAML and code; keep old IDs as aliases in `rule_trace`; bump minor version; full before/after report (`docs/redesign/impl_rule_consolidation.md`) with changed km/nodes and a map; check overrides for orphans (report, don't delete).
 
-For each package: tests green, determinism check (two runs, identical output), preview build (not the live site), desktop and mobile screenshots, axe-core result, readability scores for changed texts, a short report in `docs/redesign/impl_<package>.md`. Then **stop for my OK** before merge and deployment to GitHub Pages. Finally add a "Was ist neu" entry with date and version to the website.
+For each package: tests green, determinism check (two runs, identical output), preview build (not the live site), desktop and mobile screenshots, axe-core result, readability scores for changed texts, a short report in `docs/redesign/impl_<package>.md`. Then **stop for my OK** before merge and deployment to GitHub Pages. Finally add an entry to `CHANGELOG.md` (since prompt 25 the website has no "Was ist neu" page).

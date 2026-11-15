@@ -72,6 +72,9 @@ function changes(p) {
   return out;
 }
 
+// the map view "Passt das Ziel?" is switched off (prompt 25): the profile explains the feasibility on its own
+const FIT_EXPLAIN = "Gezählt sind Gehwege, Radweg, Fahrbahn, Bäume und Parken des Ziels nebeneinander, an der engsten Stelle der Straße.";
+
 function fitStatement(p) {
   const pr = p.cycling?.profile;
   if (pr?.fit_text) {
@@ -127,7 +130,7 @@ export function segmentHtml(p, meta, pageUrl, { level2Open = true } = {}) {
       <p>${esc(WHY_INTRO[code] ?? "")} ${yes.map(esc).join(" ")}</p>
       <h3>Was ändert sich?</h3>
       ${ch.length ? `<ul>${ch.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "<p>Für die Aufgabe der Straße ist kein Umbau nötig.</p>"}
-      ${fit ? `<p class="fit">${esc(fit.text)}</p>` : ""}
+      ${fit ? `<h3>Hat das Ziel Platz?</h3><p class="fit">${esc(fit.text)}</p>${fit.drawing ? `<p class="t-small">${FIT_EXPLAIN}</p>` : ""}` : ""}
       ${xs}
       ${measure ? `<p class="note">${esc(sentence(measure))}</p>` : ""}
       ${c.uncertain ? UNSURE : ""}

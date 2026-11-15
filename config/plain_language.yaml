@@ -5,8 +5,10 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.11.1
+  version: 0.12.0
   date: 2026-11-15
+# 0.12.0: Aufräumen 2026-11 (prompts/25): Abschnitt method.news („Was ist neu“) entfernt, die Seite entfällt;
+#   Texte zu ausgeblendeten Kartenansichten angepasst.
 # 0.11.1: Verweis auf die Netzprüfungen N1–N5 (N6, N7 zusammengelegt bzw. gestrichen, Redesign 2026-11 Paket 5).
 # 0.11.0: Seite „Methode“ (Redesign 2026-11, Paket 3): Abschnitt method mit Zusammenfassung, Kapiteln, Regelreferenz
 #   und „Was ist neu“.
@@ -584,19 +586,3 @@ method:
   reference:
     title: "Alle Regeln"
     intro: "Hier stehen alle Regeln aus den drei Regeldateien. Jede hat einen einfachen Namen, eine Erklärung und einen Grund. Technische Angaben und Quellen kann man aufklappen. „Annahme“ steht bei Werten, die das Projekt ohne Quelle gesetzt hat."
-  # Was ist neu (neueste zuerst): date, version (Regelwerk), title, text (ein Satz), items (Liste)
-  news:
-    - date: "2026-11-15"
-      version: "0.21.1"
-      title: "Neue Webseite in einfacher Sprache"
-      text: "Die Webseite ist neu gestaltet und in einfacher Sprache geschrieben. Die Aufgaben der Straßen sind gleich geblieben."
-      items:
-        - "Die Karte ist die Startseite. Das Menü hat vier Punkte: Karte, Bezirke, Methode, Daten."
-        - "Fünf Themen ersetzen die 13 Ebenen der Karte. Jede Farbe hat nur eine Bedeutung."
-        - "Die Aufgaben der Straßen haben einfache Namen, zum Beispiel „Hauptstraße mit Tempo 30“ statt „Stadtstraße 30“."
-        - "Steckbriefe zeigen zuerst das Wichtigste. Mehr steht unter „Mehr erfahren“ und „Details und Quellen“."
-        - "Eine Angabe „Wie sicher ist das?“ ersetzt Ampel und Robustheit."
-        - "Neu ist die Seite „Bezirke“ mit Kennzahlen und den dringendsten Straßen, Kreuzungen und Lücken im Radnetz."
-        - "Die Methode hat eine Zusammenfassung, sieben Kapitel und eine Liste aller Regeln mit Erklärung und Grund."
-        - "Weniger Kreuzungen auf der Karte: Teilt sich eine Straße nur in zwei Fahrbahnen, ist das keine Kreuzung mehr."
-        - "Das Regelwerk ist kürzer: {n_rules} statt 196 Regeln. Regeln, die dasselbe tun, sind zusammengelegt."

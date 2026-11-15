@@ -53,7 +53,9 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
 - Folgeaufträge (noch offen): prompts/22_target_scenario.md (Zielszenario statt heutiger Mengen),
   prompts/23_junction_performance.md (Wartezeiten an Knotenpunkten Ist/Soll),
   prompts/24_redesign_swiss_plain_language.md (Redesign der Webseite, einfache Sprache, schlankere Regeln;
-  Teil A in docs/redesign/, Teil B erst nach docs/redesign/decisions.md).
+  Teil A in docs/redesign/, Teil B erst nach docs/redesign/decisions.md),
+  prompts/25_cleanup_logo.md (Aufräumen: kein Kopfband, keine Changelog-Seite, Ansichten per `enabled: false` in
+  web/src/state.js ausgeblendet, Logo HMR; Bericht in docs/cleanup/2026-11/).
 - docs/guide_radnetz.md – Methodik mit Quellen. Bei Fachfragen zum Radnetz zuerst hier nachsehen.
 - config/cycling_rules.yaml – Radnetzkategorien, Prinzipien, Trennungsmatrix, Breiten.
 - config/design_rules.yaml – Fahrstreifen, Lage der Radanlagen, Raumaufteilung, Knotenpunkte.

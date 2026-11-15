@@ -765,3 +765,16 @@ Knotenpunkt braucht mindestens drei Arme nach dem Zusammenfassen der Richtungsfa
 Radweg. Punkte, an denen sich eine Straße nur in zwei Fahrbahnen teilt, sind keine Kreuzung mehr: bis 60 m vor einer
 Kreuzung derselben Straße gehören sie zu ihr (nur Knotenliste und Unfälle; Arme, Zufluss, Platz, Ampel und Lage bleiben
 die der Kreuzung), sonst entfallen sie. Wirkung: docs/redesign/impl_rule_consolidation.md.
+
+## plain_language.yaml 0.12.0 – 2026-11-15 (Aufräumen 2026-11, prompts/25_cleanup_logo.md)
+Keine Regeländerung. Webseite:
+- Kopfband „Entwurf …“ entfernt; der Status steht im Titelzusatz „– Entwurf“, in der Fußzeile („unabhängiges, nicht
+  amtliches Projekt“, Version, Datenstand), in der Methode und im Impressum.
+- Seite „Was ist neu“ (`#methode/neu`) entfernt, alte Links führen auf `#methode`; `method.news` aus
+  plain_language.yaml gestrichen; `s09_export` kopiert `CHANGELOG.md` nicht mehr nach data/out. Diese Datei bleibt.
+- Kartenansichten per `enabled: false` (web/src/state.js) vorläufig ausgeblendet, nicht gelöscht: Radnetz „Radweg“ und
+  „Lücken“; „Platz in der Straße“ zeigt nur noch „Fahrstreifen“ (ausgeblendet: „Passt das Ziel?“, Breite, Regelprofil).
+  Geteilte Links auf ausgeblendete Ansichten öffnen die Standardansicht der Karte; deren Daten werden nicht geladen.
+- Legende „Abweichung“ in einfacher Sprache, zwei Varianten zur Auswahl; Stärke in drei Breiten (nur Darstellung).
+- Stadtteilnamen über den Datenlinien (Datenebenen unter der ersten Beschriftungsebene, weißer Halo).
+- Logo „HMR“ (Hamburg Mobility Revolution) im Kopf, Favicons und Open-Graph-Bild.

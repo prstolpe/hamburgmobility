@@ -193,8 +193,15 @@ if (want("profiles")) {
   await page.context().close();
 }
 
-// 6. draft marking: banner visible in the first screen of each view
-if (want("draft")) {
+async function hasBanner(browser) {
+  const page = await newPage(browser, "desktop");
+  await open(page, "#karte", { settle: 500 });
+  return (await page.$(".banner")) !== null;
+}
+
+// 6. draft marking: banner visible in the first screen of each view. Obsolete since prompt 25 (no banner; title suffix
+// and footer instead): the check is skipped when the page has no banner.
+if (want("draft") && await hasBanner(browser)) {
   const res = [];
   for (const kind of ["desktop", "mobile"]) {
     const page = await newPage(browser, kind);
