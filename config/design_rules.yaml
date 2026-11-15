@@ -363,12 +363,16 @@ junctions:
   method:
     - id: J-M-01
       label_plain: "Was ist eine Kreuzung?"
-      explain_plain: "Treffpunkte von drei oder mehr Straßenstücken oder von Radweg und Straße; nahe Punkte gelten als eine Kreuzung."
+      explain_plain: "Treffpunkte von drei oder mehr Straßen oder von Radweg und Straße. Teilt sich eine Straße nur in zwei Fahrbahnen, ist das keine Kreuzung."
       why: "Damit man Kreuzungen zählen und bewerten kann, braucht es eine klare Definition."
-      rule: 'Knoten = Knoten des Straßengraphen (Abschnitte mit cat_final) mit Grad >= 3 sowie Knoten, an denen ein eigenständiger Radweg (Radgraph kind path, kein begleitender Radweg) auf einen Straßenabschnitt trifft. Knoten, die über einen Straßenabschnitt von höchstens cluster_radius_m verbunden sind, und Knoten desselben Kreisverkehrs bilden einen Knotenpunkt (zweibahnige Straßen, Kreisverkehre).'
+      rule: 'Knoten = Knoten des Straßengraphen (Abschnitte mit cat_final) mit Grad >= 3 sowie Knoten, an denen ein eigenständiger Radweg (Radgraph kind path, kein begleitender Radweg) auf einen Straßenabschnitt trifft. Knoten, die über einen Straßenabschnitt von höchstens cluster_radius_m verbunden sind, und Knoten desselben Kreisverkehrs bilden einen Knotenpunkt (zweibahnige Straßen, Kreisverkehre). Armfilter: Ein Knotenpunkt braucht mindestens min_arms Arme nach arm_merge (J-M-02) oder einen eigenständigen Radweg; sonst ist er ein Scheinknoten. Ein Scheinknoten, der höchstens pseudo_join_m von einem Knoten einer echten Kreuzung entfernt ist, an die eine seiner Straßen (gleicher Name) anschließt, gehört zur nächsten solchen Kreuzung (deren node_id bleibt); sonst entfällt er.'
+      history:
+        - "Armfilter (min_arms, pseudo_join_m) seit Redesign 2026-11, Paket 5"
       source_type: assumption
       status: draft
       cluster_radius_m: {value: 25, unit: m, source_type: assumption, note: 'Startwert aus prompts/20_junctions.md'}
+      min_arms: {value: 3, unit: Arme, source_type: assumption, note: 'Arme nach dem Zusammenfassen der Richtungsfahrbahnen (J-M-02 arm_merge); weniger Arme ohne eigenständigen Radweg = Scheinknoten (Teilung einer Straße in zwei Fahrbahnen). Redesign 2026-11, Paket 5'}
+      pseudo_join_m: {value: 60, unit: m, source_type: assumption, note: 'Scheinknoten bis zu diesem Abstand von einem Knoten einer echten Kreuzung derselben Straße gehören zu ihr, sonst entfallen sie. Analyse Redesign 2026-11: 834 von 1 847 Scheinknoten liegen bis 60 m vor einer echten Kreuzung; 50 m Clusterradius hätte 4 184 echte Kreuzungen verschmolzen'}
       cycle_path_highways: [cycleway]
       cycle_path_network_cats: [RSV, HAUPT, BASIS]
       note: 'Eigenständiger Radweg = Kante kind path ohne sidepath_of, die highway in cycle_path_highways hat oder zum Radnetz (cycle_path_network_cats) gehört; sonst würde jeder Gehweg-Anschluss ein Knotenpunkt.'

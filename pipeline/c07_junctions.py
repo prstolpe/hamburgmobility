@@ -28,6 +28,7 @@ from shapely.geometry import MultiPoint, Point
 from config.schema.cycling_model import NO_CYCLE_CATEGORY
 from config.schema.design_model import IST_JUNCTION_TYPES, NOT_APPLICABLE
 from pipeline.c04_principles import ALKIS_PATH, SIGNALS_PATH, _links, load_crashes
+from pipeline.lib import junction_filter as jf
 from pipeline.lib import junctions as jn
 from pipeline.lib import overrides as ov
 from pipeline.lib.area import read_work_area, sample_by_district
@@ -408,6 +409,10 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
         f"eigenständiger Radwege: {_fmt(ctx['n_path_nodes'])}); {_fmt((out['n_members'] > 1).sum())} Knotenpunkte fassen "
         f"mehrere Netzknoten zusammen (Radius {ctx['cluster_radius']:g} m, Kreisverkehre ganz). Größter Knotenpunkt: "
         f"{out['n_members'].max()} Netzknoten, Ausdehnung bis {_fmt(out['extent_m'].max(), 0)} m.",
+        f"- Armfilter (J-M-01): von {_fmt(ctx['n_candidates'])} Knotenpunkten vor dem Filter haben "
+        f"{_fmt(ctx['n_pseudo_joined'] + ctx['n_pseudo_dropped'])} weniger als {ctx['min_arms']} Arme und keinen "
+        f"eigenständigen Radweg (Scheinknoten, meist Teilung in zwei Fahrbahnen): {_fmt(ctx['n_pseudo_joined'])} gehören "
+        f"zur nächsten Kreuzung derselben Straße (bis {ctx['pseudo_join_m']:g} m), {_fmt(ctx['n_pseudo_dropped'])} entfallen.",
         f"- Soll-Typ vergeben: {_fmt(out['junction_type_soll'].notna().sum())}; ohne passende Zeile (`no_rule`): "
         f"{_fmt(out['junction_type_soll'].isna().sum())}.",
         f"- Handlungsbedarf (Ist passt nicht zum Soll): {_fmt(out['action_needed'].sum())} Knotenpunkte; nicht prüfbar: "
@@ -421,7 +426,9 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
         "1. **Knoten (J-M-01):** Knoten des Straßengraphen (Abschnitte mit cat_final) mit Grad ≥ 3 und Knoten, an denen "
         "ein eigenständiger Radweg (kein begleitender Radweg; highway=cycleway oder RSV/HAUPT/BASIS) auf eine Straße trifft. "
         "Knoten, die über einen Straßenabschnitt ≤ Clusterradius verbunden sind, und alle Knoten eines Kreisverkehrs bilden einen Knotenpunkt. "
-        "node_id = kleinste OSM-Knoten-ID des Knotenpunkts.",
+        "Armfilter: Ein Knotenpunkt braucht mindestens min_arms Arme nach dem Zusammenfassen der Richtungsfahrbahnen oder "
+        "einen eigenständigen Radweg; ein Scheinknoten bis pseudo_join_m vor einer Kreuzung derselben Straße gehört zu ihr, "
+        "sonst entfällt er. node_id = kleinste OSM-Knoten-ID des Knotenpunkts vor dem Anschluss von Scheinknoten.",
         "2. **Arme (J-M-02):** Abschnitte und eigenständige Radwege, die den Knotenpunkt verlassen. Zufluss = ½ × DTV je "
         "Kfz-Arm; ETW-Arme ohne DTV zählen 0, fehlt DTV an einem GOW/SW-Arm, ist die Summe eine Untergrenze.",
         "3. **Platz (J-M-03):** Radius des größten einbeschriebenen Kreises in der ALKIS-Verkehrsfläche im Umkreis "
@@ -580,7 +587,11 @@ def main() -> int:
     deg = Counter(list(seg["node_u"].astype(int)) + list(seg["node_v"].astype(int)))
     path_nodes = (set(paths["node_u"].astype(int)) | set(paths["node_v"].astype(int))) & set(deg)
     legs = describe_legs(clusters, seg, paths, pts, m["J-M-02"], search)
-    tick(f"{sum(len(v) for v in clusters.values())} nodes -> {len(clusters)} junctions")
+    n_before = len(clusters)
+    clusters, pseudo = jf.filter_pseudo(clusters, legs, pts, jf.FilterParams.from_rule(m["J-M-01"]))
+    legs = describe_legs(clusters, seg, paths, pts, m["J-M-02"], search)
+    tick(f"{sum(len(v) for v in clusters.values())} nodes -> {len(clusters)} junctions (arm filter J-M-01: {n_before} "
+         f"candidates, {len(pseudo['joined'])} pseudo-junctions joined, {len(pseudo['dropped'])} dropped)")
 
     roots = sorted(clusters)
     member_geoms = gpd.GeoSeries([MultiPoint([pts[n] for n in clusters[r]]) for r in roots], crs=WORK_CRS)
@@ -648,7 +659,9 @@ def main() -> int:
     viewers = load_viewers()
     sample = sample_by_district(out, SAMPLE_SIZE, SAMPLE_SEED, id_col="node_id")
     review_sample(out, viewers).to_csv(REVIEW_PATH, index=False)
-    ctx = {"design_version": design.meta.version, "n_nodes": len(pts), "n_deg3": sum(1 for d in deg.values() if d >= 3),
+    ctx = {"n_candidates": n_before, "n_pseudo_joined": len(pseudo["joined"]), "n_pseudo_dropped": len(pseudo["dropped"]),
+           "min_arms": int(m["J-M-01"]["min_arms"]["value"]), "pseudo_join_m": float(m["J-M-01"]["pseudo_join_m"]["value"]),
+           "design_version": design.meta.version, "n_nodes": len(pts), "n_deg3": sum(1 for d in deg.values() if d >= 3),
            "n_path_nodes": len(path_nodes), "cluster_radius": radius, "search_radius": search,
            "signal_radius": signal_radius, "rules_version": rules.meta.version, "order": p.order, "types": p.types, "tram_routes": _tram_routes(design),
            "crash_years": f"{min(years)}–{max(years)}", "top": out.loc[act.index[:TOP_N]], "sample": sample}

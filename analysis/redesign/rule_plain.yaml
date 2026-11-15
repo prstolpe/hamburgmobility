@@ -387,7 +387,7 @@ JC-05:     {label_plain: "Freies Rechtsabbiegen für Räder", explain_plain: "An
             why: "Das Projekt hat diese Regel gesetzt; sie wird noch geprüft."}
 JC-06:     {label_plain: "Turbokreisel: Rad wartet", explain_plain: "Am Turbokreisel wartet das Rad; auf wichtigen Routen Brücke oder Tunnel prüfen.",
             why: "In den Niederlanden warten Räder am Turbokreisel oder queren planfrei. In Deutschland ist er kein Regelelement."}
-J-M-01:    {label_plain: "Was ist eine Kreuzung?", explain_plain: "Treffpunkte von drei oder mehr Straßenstücken oder von Radweg und Straße; nahe Punkte gelten als eine Kreuzung.",
+J-M-01:    {label_plain: "Was ist eine Kreuzung?", explain_plain: "Treffpunkte von drei oder mehr Straßen oder von Radweg und Straße. Teilt sich eine Straße nur in zwei Fahrbahnen, ist das keine Kreuzung.",
             why: "Damit man Kreuzungen zählen und bewerten kann, braucht es eine klare Definition."}
 J-M-02:    {label_plain: "Straßen an der Kreuzung", explain_plain: "Welche Straßen auf die Kreuzung treffen und wie viele Autos zufließen.",
             why: "Die Art der Kreuzung hängt davon ab, welche Straßen sich treffen. Die Arme zeigen das."}
