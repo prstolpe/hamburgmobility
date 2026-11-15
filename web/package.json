@@ -2,6 +2,7 @@
   "name": "sfp-web",
   "private": true,
   "version": "0.1.0",
+  "license": "EUPL-1.2",
   "description": "Straßenfunktionsplan Hamburg – nicht amtlicher Entwurf (statische Karte)",
   "type": "module",
   "scripts": {

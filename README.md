@@ -64,6 +64,11 @@ Anleitung; die Ausführungsreihenfolge regelt das `Makefile` über Abhängigkeit
 Wenn etwas nicht stimmt: nicht still nachjustieren lassen. Regel in `config/rules.yaml` mit
 Begründung und neuer Version ändern oder eine Korrektur in `overrides/overrides.csv` eintragen.
 
+## Lizenz
+
+Code und Regelwerke: EUPL-1.2 (`LICENSE`). Datensätze: ODbL 1.0 (abgeleitet aus OpenStreetMap). Texte der Webseite und
+Dokumentation: CC BY 4.0. Einzelheiten, Fremddaten und Schriften: `docs/licenses.md`.
+
 ## Status
 
 Diskussionsentwurf zivilgesellschaftlicher Akteure. Keine Planung und keine Anordnung der

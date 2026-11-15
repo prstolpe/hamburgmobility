@@ -1,11 +1,19 @@
 # Lizenzen und Quellenvermerke (Entwurf, vor Veröffentlichung juristisch prüfen)
 
 ## Eigene Inhalte
-- Abschnittsdatensatz (abgeleitet u. a. aus OSM): ODbL 1.0 (Vorschlag, wegen Share-Alike der OSM-Ableitung)
-- Radnetz-Entwurf, Radanlagen, Soll-Querschnitte und Knotenpunkte (cycle_segments.*, junctions.*, cycle_network.parquet,
-  tiles/cycling.pmtiles, tiles/junctions.pmtiles): ODbL 1.0 (Vorschlag, OSM-Ableitung)
-- Code: MIT oder EUPL (vom Team festzulegen)
-- Texte und Methodenseite: CC BY 4.0 (Vorschlag)
+Rechteinhaber: Raphael Stolpe (hamburgmobility.de). Festgelegt am 2026-11-15.
+
+| Was | Lizenz | Warum |
+| --- | --- | --- |
+| Code und Regelwerke: `pipeline/`, `web/` (ohne Schriften), `analysis/`, `prototypes/`, `tests/`, `config/` (ohne `plain_language.yaml`), `Makefile` | EUPL-1.2 (Datei `LICENSE`) | Freie Lizenz der EU mit amtlicher deutscher Fassung. Änderungen müssen offen bleiben, auch wenn jemand den Code nur als Webdienst betreibt. Verträglich mit GPL, LGPL, MPL und anderen. |
+| Datensätze: Abschnitte, Radnetz-Entwurf, Radanlagen, Soll-Querschnitte, Knotenpunkte (Downloads, `tiles/*.pmtiles`, Steckbriefe) und `overrides/` | ODbL 1.0 | Abgeleitet aus OpenStreetMap; die ODbL verlangt für Ableitungen dieselbe Lizenz. |
+| Texte: Webseite (`config/plain_language.yaml`), Methodenseite, `docs/`, `reports/`, `prompts/` | CC BY 4.0 | Freie Nutzung mit Namensnennung. |
+
+Namensnennung für Texte und Daten: „Hamburger Straßenfunktionsplan – nicht amtlicher Entwurf, Raphael Stolpe,
+hamburgmobility.de“. Bei den Daten zusätzlich „© OpenStreetMap-Beitragende“ und die Vermerke der Fremddaten unten.
+
+Lizenztexte: EUPL-1.2 in `LICENSE` (alle Sprachfassungen: https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12),
+ODbL 1.0: https://opendatacommons.org/licenses/odbl/1-0/, CC BY 4.0: https://creativecommons.org/licenses/by/4.0/deed.de.
 
 ## Fremddaten
 | Quelle | Lizenz | Quellenvermerk |
