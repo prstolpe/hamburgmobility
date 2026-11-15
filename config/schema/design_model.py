@@ -157,6 +157,9 @@ def _check_junction_method(j: Junctions, types: set, row_ids: set) -> None:
     alias = j.method_rule("J-M-04")["category_alias"]
     if not (set(alias) | set(alias.values())) <= EXPECTED_CATEGORIES:
         raise ValueError("J-M-04.category_alias: unknown categories")
+    rank = j.method_rule("J-M-04")["category_rank"]
+    if len(rank) != len(set(rank)) or set(rank) != EXPECTED_CATEGORIES:
+        raise ValueError("J-M-04.category_rank must list every category exactly once")
     if not set(j.method_rule("J-M-02")["zero_dtv_categories"]) <= EXPECTED_CATEGORIES:
         raise ValueError("J-M-02.zero_dtv_categories: unknown categories")
     if "value" not in (j.method_rule("J-M-06").get("signal_radius_m") or {}):

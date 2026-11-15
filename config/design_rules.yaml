@@ -318,7 +318,7 @@ junctions:
       - {id: J-08, label_plain: "Radweg quert Hauptstraße 30", explain_plain: "Radüberweg mit Vorrang, rot und erhöht.", why: "Die Tabelle gibt dem eigenständigen Radweg an dieser Querung Vorrang.", legs: 'cycle_path+GOW30', then: cycle_crossing_priority, note: 'Radweg mit Vorrang, aufgepflastert, rot', status: draft}
       - {id: J-09, label_plain: "Wichtiger Radweg quert Hauptstraße 50", explain_plain: "Brücke oder Tunnel ab 30 000 Autos am Tag, sonst Ampel für Räder.", why: "Die Dutch Cycling Embassy nennt Tunnel oder Brücke bei hoher Belastung. Die Grenze hat das Projekt gesetzt.", legs: 'cycle_path(RSV|HAUPT)+GOW50', if: 'entering_dtv_sum > grade_sep_min_dtv', then: grade_separated_cycle, otherwise: cycle_crossing_signal, note: 'Tunnel/Brücke bei hoher Belastung (DCE)', status: draft}
       - {id: J-12, label_plain: "Radroute quert Wohnstraße", explain_plain: "Radüberweg mit Vorrang für den eigenständigen Radweg.", why: "Die Tabelle gibt dem eigenständigen Radweg Vorrang. Die Rechtslage ist noch zu prüfen.", history: ["Entscheidung prstolpe 2026-11-07, open_questions 133: Radwegfurt mit Vorrang wie J-08"], legs: 'cycle_path(RSV|HAUPT|BASIS)+ETW30', then: cycle_crossing_priority, note: "eigenständiger Radweg des Radnetzes quert Erschließungsstraße: Radwegfurt mit Vorrang wie J-08; Rechtslage (Vorrang selbständiger Radweg, StVO) prüfen", source: NL_MUNI_CASTRICUM_2020, status: draft}
-      - {id: J-13, label_plain: "Wohnstraße trifft Fußgängerzone", explain_plain: "Durchgehender Gehweg.", why: "Die Wohnstraße bekommt eine Gehwegüberfahrt zur Fußgängerzone. Das Projektteam hat das entschieden.", history: ["Entscheidung prstolpe 2026-11-07, open_questions 135"], legs: 'ETW30+ETW_ERF', then: continuous_footway_exit, note: "Erschließungsstraße an Fußgängerzone bzw. verkehrsberuhigtem Bereich: Gehwegüberfahrt wie N6 (rules.yaml); prüft die Kategorie vor category_alias", status: draft}
+      - {id: J-13, label_plain: "Wohnstraße trifft Fußgängerzone", explain_plain: "Durchgehender Gehweg.", why: "Die Wohnstraße bekommt eine Gehwegüberfahrt zur Fußgängerzone. Das Projektteam hat das entschieden.", history: ["Entscheidung prstolpe 2026-11-07, open_questions 135"], legs: 'ETW30+ETW_ERF', then: continuous_footway_exit, note: "Erschließungsstraße an Fußgängerzone bzw. verkehrsberuhigtem Bereich: Gehwegüberfahrt wie in J-M-04 (früher N6); prüft die Kategorie vor category_alias", status: draft}
       - {id: J-10, label_plain: "Wichtiger Radweg quert Schnellstraße", explain_plain: "Brücke oder Tunnel für eigenständige Radwege der beiden obersten Stufen.", why: "Die Regel gilt nur für eigenständige Hauptrouten.", history: ["Review 2026-11 F08; vorher any+SW"], legs: 'cycle_path(RSV|HAUPT)+SW', then: grade_separated_cycle, note: "planfreie Radquerung nur für eigenständige Hauptrouten", status: draft}
       - {id: J-10b, label_plain: "Autobahnrampe an Hauptstraße", explain_plain: "Wie bei zwei Hauptstraßen: Kreisverkehr oder Ampel.", why: "Rampenknoten liegen auf Straßenhöhe. Sie werden wie zwei Hauptstraßen behandelt.", history: ["Review 2026-11 F08"], legs: 'SW+GOW50|GOW30', same_as: J-01, source_type: assumption, note: "Rampenknoten (*_link) plangleich; Radquerung nach JC-02/JC-03", status: draft}
       - {id: J-10c, label_plain: "Autobahnrampe an Wohnstraße", explain_plain: "Geschützte Ampel.", why: "Eine Rampe an einer Wohnstraße bekommt eine geschützte Ampel. Das hat das Projekt gesetzt.", history: ["Review 2026-11 F08"], legs: 'SW+ETW30|ETW_ERF', then: signal_protected, source_type: assumption, note: "Rampe an Erschließungsstraße, Flag N5 sw_to_etw", status: draft}
@@ -400,12 +400,15 @@ junctions:
       label_plain: "Welches Straßenpaar zählt"
       explain_plain: "Die wichtigste durchgehende Straße und die wichtigste querende Straße bestimmen die Art der Kreuzung."
       why: "Eine Kreuzung hat viele Arme. Die wichtigste Verbindung entscheidet über die Art."
-      rule: 'Kategoriepaar wie N6 (rules.yaml): höchste Straßenkategorie (bis zu zwei ihrer Arme = durchgehender Zug) und höchste der übrigen Arme; Rang nach N6.category_rank. Bleibt neben dem Zug keine Straße, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Zeilen mit ETW_ERF (J-13) prüfen das Paar vor category_alias, alle übrigen danach. Kategorien ohne eigene Zeile der Tabelle werden über category_alias abgebildet (Flag category_alias).'
+      rule: 'Kategoriepaar: höchste Straßenkategorie (bis zu zwei ihrer Arme = durchgehender Zug) und höchste der übrigen Arme; Rang nach category_rank (höchste Kategorie zuerst). Bleibt neben dem Zug keine Straße, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Zeilen mit ETW_ERF (J-13) prüfen das Paar vor category_alias, alle übrigen danach. Kategorien ohne eigene Zeile der Tabelle werden über category_alias abgebildet (Flag category_alias).'
       source: [SWOV_FS_2023]
       source_type: assumption
       status: draft
-      note: 'prompts/20 nennt „die beiden ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50. Die N6-Lesart (Zug zählt einmal) ist als Annahme gewählt, docs/open_questions.md.'
+      note: 'prompts/20 nennt „die beiden ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50. Die frühere N6-Lesart (Zug zählt einmal) ist als Annahme gewählt, docs/open_questions.md.'
+      category_rank: [SW, GOW80, GOW50, GOW30, ETW60, ETW30, ETW_ERF]
       category_alias: {ETW_ERF: ETW30}
+      aliases: [N6]
+      history: ["Redesign 2026-11 K6: category_rank aus rules.yaml N6 übernommen, N6 gestrichen (seit F09 nur noch ein Verweis); alte ID N6 bleibt als Alias"]
     - id: J-M-05
       label_plain: "Reihenfolge der Tabelle"
       explain_plain: "Die erste passende Zeile der Kreuzungstabelle entscheidet."
@@ -426,7 +429,7 @@ junctions:
       explain_plain: "Ob es heute eine Ampel oder einen Kreisverkehr gibt, aus OpenStreetMap."
       why: "Ohne die Kreuzung heute lässt sich kein Unterschied zum Ziel zeigen."
       rule: 'junction_type_ist aus OSM: junction=roundabout/circular an einem Arm oder inneren Abschnitt -> roundabout; highway=traffic_signals im Umkreis signal_radius_m eines Knotens -> signal (jede Ampel zählt nur für den nächstgelegenen Knotenpunkt, signal_assignment) (mit traffic_calming=table -> signal_plateau); nur table -> plateau; sonst none_mapped. Handlungsbedarf, wenn Ist nicht in ist_check[Soll].ok und nicht in not_checkable liegt.'
-      signal_radius_m: {value: 30, unit: m, source_type: assumption, check: 'Ampeln sind oft an der Haltlinie erfasst', note: 'aus rules.yaml N6 übernommen (Review 2026-11 F09)'}
+      signal_radius_m: {value: 30, unit: m, source_type: assumption, check: 'Ampeln sind oft an der Haltlinie erfasst', note: 'aus rules.yaml N6 übernommen (Review 2026-11 F09; N6 selbst entfällt, K6)'}
       signal_assignment: nearest_junction
       signal_assignment_note: 'Entscheidung prstolpe 2026-11-07 (open_questions 137): sonst erhalten Nebenknoten neben einer LSA-Kreuzung deren Ampel (1 169 Gehwegüberfahrten mit Ist LSA). any_within = alte Lesart'
       source_type: assumption

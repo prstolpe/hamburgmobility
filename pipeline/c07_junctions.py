@@ -7,7 +7,7 @@ cycle path meets a street; nodes joined by a short street segment or on the same
 Legs with category, cycle category, Soll facility and DTV (J-M-02), space from the ALKIS traffic area (J-M-03),
 decision table J-01..J-16 (J-M-04, J-M-05; Soll lanes per arm from c06 for J-14/J-15), cyclist treatment
 JC-01..JC-06, Ist type from OSM (J-M-06), priority (J-M-07) and overrides/junction_overrides.csv (approved only).
-Also writes the N6 part of the coherence check (rules.yaml N6 since 0.19.0, Review 2026-11 F09): junctions without a
+Also writes the junction part of the coherence check (section "Übergänge (N5)", formerly rule N6, K6): junctions without a
 Soll type and N5 transitions at junctions, from data/interim/coherence_nodes.parquet (N5 of stage s06).
 Writes data/interim/junctions.parquet (points), reports/junctions.md and reports/junctions_review.csv.
 """
@@ -373,13 +373,13 @@ def n5_by_junction(n5: pd.DataFrame, node_to: dict) -> pd.DataFrame:
 
 
 def n6_section(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> list[str]:
-    """N6 (rules.yaml since 0.19.0, F09): junctions without a Soll type and N5 transitions at junctions."""
+    """Section "Übergänge (N5)" (formerly N6, K6): junctions without a Soll type and N5 transitions at junctions."""
     missing = out[out["junction_type_final"].isna()]
     na = out[out["junction_type_final"] == NOT_APPLICABLE]
-    lines = ["", "## N6 Netzkohärenz: Knotenpunkte ohne Soll-Typ und Übergänge (N5)", "",
+    lines = ["", "## Übergänge (N5)", "",
              f"Seit rules.yaml {ctx['rules_version']} (Review 2026-11 F09) gibt es nur noch einen Soll-Knotentyp: den dieser "
-             "Stufe (design_rules.yaml junctions). N6 meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 "
-             "(Torsituation, aus der Stufe s06); der frühere N6-Abgleich mit eigener Tabelle und Ist-Prüfung entfällt.", "",
+             "Stufe (design_rules.yaml junctions). Dieser Abschnitt meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 "
+             "(Torsituation, aus der Stufe s06); die frühere Regel N6 mit eigener Tabelle und Ist-Prüfung entfällt.", "",
              f"- Ohne Soll-Typ (`no_rule`): {_fmt(len(missing))}"
              + (" – Paare: " + ", ".join(f"{k} {v}" for k, v in missing["pair"].fillna("–").value_counts().items()) if len(missing) else "")
              + ".",
@@ -433,7 +433,7 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
         "Kfz-Arm; ETW-Arme ohne DTV zählen 0, fehlt DTV an einem GOW/SW-Arm, ist die Summe eine Untergrenze.",
         "3. **Platz (J-M-03):** Radius des größten einbeschriebenen Kreises in der ALKIS-Verkehrsfläche im Umkreis "
         f"{ctx['search_radius']:g} m.",
-        "4. **Kategoriepaar (J-M-04):** Rang nach N6.category_rank – durchgehender Zug (höchste Kategorie, bis zu zwei Arme) und höchste übrige "
+        "4. **Kategoriepaar (J-M-04):** Rang nach category_rank – durchgehender Zug (höchste Kategorie, bis zu zwei Arme) und höchste übrige "
         "Straße; bleibt keine, aber ein eigenständiger Radweg, ist das Paar (Zug, cycle_path). Der Prompt nennt „die beiden "
         "ranghöchsten Arme“; wörtlich wäre jede Einmündung an einer GOW50 ein Paar GOW50+GOW50 (offene Frage).",
         "5. **Entscheidung (J-M-05):** Zeilen in der Reihenfolge " + ", ".join(ctx["order"]) + "; erste passende gilt. "
@@ -518,7 +518,7 @@ def write_report(out: gpd.GeoDataFrame, n5: pd.DataFrame, ctx: dict) -> None:
               "- DTV nur aus der HVS-Zählung 2019; an ETW-Armen fast nie vorhanden (zählt 0).",
               "- Platz aus der ALKIS-Verkehrsfläche ohne Gebäude, Bäume oder Leitungen; Kreisverkehr-Platzbedarf "
               "(roundabout_min_radius) ist eine Annahme.",
-              "- Ist-Typ: Gehwegüberfahrten, Vorfahrtregelung und Furtgestaltung sind in OSM kaum erfasst (N6, offene Frage).",
+              "- Ist-Typ: Gehwegüberfahrten, Vorfahrtregelung und Furtgestaltung sind in OSM kaum erfasst (offene Frage).",
               "- Radunfälle werden dem nächsten Knotenpunkt im Clusterradius zugeordnet und nur als Anzahl gespeichert.",
               "",
               "Quellen: OpenStreetMap-Mitwirkende (ODbL); Freie und Hansestadt Hamburg, ALKIS und Verkehrsmengen "

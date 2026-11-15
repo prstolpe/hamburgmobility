@@ -47,6 +47,15 @@ def test_cycle_path_is_second_road_only_without_other_street():
     assert pair == ("GOW30", "ETW30") and "cycle_path_ignored" in flags
 
 
+def test_rank_comes_from_j_m_04_category_rank():
+    """K6: the rank of the category pair is J-M-04.category_rank (formerly rules.yaml N6)."""
+    order = DESIGN.junctions.method_rule("J-M-04")["category_rank"]
+    assert P.rank == {c: i for i, c in enumerate(order)}
+    assert order[0] == "SW" and sorted(order) == sorted(P.rank)
+    pair, _ = jn.category_pair([leg("GOW30"), leg("GOW50"), leg("SW")], P)
+    assert pair[0] == "SW"
+
+
 def test_alias_maps_etw_erf():
     pair, flags = jn.category_pair([leg("ETW30"), leg("ETW30"), leg("ETW_ERF")], P)
     assert pair == ("ETW30", "ETW30") and "category_alias" in flags

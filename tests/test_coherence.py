@@ -1,4 +1,4 @@
-"""Unit tests for pipeline/lib/coherence.py (rules N1–N7 on small synthetic networks).
+"""Unit tests for pipeline/lib/coherence.py (rules N1–N5 on small synthetic networks).
 
 Thresholds come from config/rules.yaml; the geometries are built relative to them.
 """
@@ -99,6 +99,19 @@ def test_n2_short_island_flagged_with_smoothing(rules):
     flags = coh.n2_islands(graph(_line_with_middle(min_run * 0.75), rules), rules)
     assert flag_names(flags, "m") == {"N2_island", "N7_smooth:GOW50"}
     assert {"a", "b", "s1", "s2"}.isdisjoint(flags)
+
+
+def test_n2_carries_the_smoothing_proposal_formerly_n7(rules):
+    """K1: the proposal (that other category) is an N2 entry with alias N7; flag string and values are unchanged."""
+    min_run = rules.coherence_rule("N2").param("min_run_m")
+    flags = coh.n2_islands(graph(_line_with_middle(min_run * 0.75), rules), rules)
+    assert {f["id"] for f in flags["m"]} == {"N2"}
+    smooth = [f for f in flags["m"] if f["flag"].startswith("N7_smooth:")]
+    assert len(smooth) == 1
+    assert smooth[0]["aliases"] == ["N7"]
+    assert smooth[0]["inputs"] == {"proposed": "GOW50", "current": "ETW30"}
+    assert "aliases" not in [f for f in flags["m"] if f["flag"] == "N2_island"][0]
+    assert rules.coherence_rule("N2").model_extra["proposal"]
 
 
 def test_n2_long_run_not_flagged(rules):
@@ -276,16 +289,15 @@ def test_n5_gate_transitions_listed_not_flagged(rules):
     assert ("GOW50", "GOW30") in gates and ("GOW50", "ETW30") in gates and ("GOW30", "ETW30") in gates
 
 
-# --- N6 ---------------------------------------------------------------------------------------
-# Since rules.yaml 0.19.0 (Review 2026-11 F09) N6 reads the Soll junction type of c07; tests in tests/test_junctions.py
-# and tests/test_junctions_data.py (V-INV-02).
+# --- K6: N6 is gone ----------------------------------------------------------------------------
+# The Soll junction type is computed in c07 (tests/test_junctions.py, tests/test_junctions_data.py).
 
 
-def test_n6_has_no_own_junction_table(rules):
-    n6 = rules.coherence_rule("N6")
-    assert n6.source_of_truth == "design_rules.junctions.decision_table"
+def test_n6_and_n7_are_retired_ids(rules):
+    ids = {r.id for r in rules.coherence}
+    assert {"N6", "N7"}.isdisjoint(ids)
     assert not hasattr(coh, "n6_node_types")
-    assert {"node_types", "ist_check", "thresholds"}.isdisjoint(set(n6.model_extra or {}) | ({"thresholds"} if n6.thresholds else set()))
+    assert rules.coherence_rule("N2").aliases == ["N7"]
 
 
 # --- combined ---------------------------------------------------------------------------------

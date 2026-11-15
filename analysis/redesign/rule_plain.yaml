@@ -83,18 +83,14 @@ S-XS-07:   {label_plain: "Breite vom Nachbarstück", explain_plain: "Fehlt die B
             why: "Kurze Knotenstücke haben oft keinen Messwert. Das Nachbarstück gleichen Namens füllt die Lücke."}
 N1:        {label_plain: "Hauptstraßen führen irgendwo hin", explain_plain: "Hinweis, wenn eine Hauptstraße im Nichts endet, nicht an einer Hauptstraße oder Stadtgrenze.",
             why: "Eine Hauptstraße soll Stadtteile verbinden. Endet sie im Nichts, stimmt die Einstufung wahrscheinlich nicht."}
-N2:        {label_plain: "Kurze Inseln melden", explain_plain: "Hinweis, wenn ein kurzes Stück eine andere Aufgabe hat als die Straße davor und dahinter.",
-            why: "Eine kurze Insel in einem gleichen Straßenzug fällt auf. Der Hinweis lenkt den Blick darauf."}
+N2:        {label_plain: "Kurze Inseln melden", explain_plain: "Hinweis auf ein kurzes Stück mit anderer Aufgabe als davor und dahinter. Vorschlag: Aufgabe der Nachbarn, erst nach Freigabe.",
+            why: "Eine kurze Insel in einem gleichen Straßenzug fällt auf. Der Hinweis lenkt den Blick darauf und schlägt die Aufgabe der Nachbarn vor."}
 N3:        {label_plain: "Zu kleine Wohngebiete", explain_plain: "Hinweis, wenn Hauptstraßen ein sehr kleines Wohngebiet umschließen.",
             why: "Der Hinweis zeigt Wohngebiete unter 25 Hektar. Dort lohnt sich ein Blick auf die Hauptstraßen."}
 N4:        {label_plain: "Schleichverkehr möglich", explain_plain: "Hinweis, wenn der kürzeste Weg zwischen Hauptstraßen lange durch Wohnstraßen führt.",
             why: "Der Hinweis zeigt Wege durch Wohnstraßen, die länger als 300 Meter sind. Dort ist Schleichverkehr möglich."}
 N5:        {label_plain: "Übergang braucht einen Eingang", explain_plain: "Hinweis bei Übergängen von Hauptstraße zu Tempo-30-Straße oder Wohnstraße. Von Tempo 70 oder mehr direkt auf 30 geht nicht.",
             why: "Das niederländische Regelwerk (CROW) verlangt an solchen Übergängen einen deutlichen Eingang."}
-N6:        {label_plain: "Kreuzungsart aus der Kreuzungstabelle", explain_plain: "Verweis: Die Art der Kreuzung kommt aus der Kreuzungstabelle.",
-            why: "Die Kreuzungsart steht schon in einer eigenen Tabelle. Der Verweis verhindert zwei verschiedene Ergebnisse."}
-N7:        {label_plain: "Vorschlag zum Angleichen", explain_plain: "Vorschlag, eine kurze Insel an ihre gleichen Nachbarn anzugleichen; gilt erst nach fachlicher Freigabe.",
-            why: "Die Insel soll die Kategorie ihrer gleichen Nachbarn bekommen. Das gilt nur nach einer Freigabe."}
 D-SPD-01:  {label_plain: "Tempo zu hoch?", explain_plain: "Abweichung, wenn heute schneller gefahren werden darf als im Ziel.",
             why: "Das Soll-Tempo gehört zur Kategorie. Der Vergleich zeigt, wo heute schneller erlaubt ist."}
 D-DES-01:  {label_plain: "Gestaltung passt nicht?", explain_plain: "Abweichung, wenn die Gestaltung nicht zur Aufgabe passt, zum Beispiel kein Radweg bei Tempo 50.",
