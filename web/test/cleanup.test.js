@@ -1,16 +1,15 @@
-// Prompt 25 (cleanup 2026-11): legend variants of "Abweichung", labels above the data layers.
-import { afterEach, describe, expect, it } from "vitest";
-import { beforeIdFor, firstSymbolId, groups, legendHtml, setDiscLegend, sfpLayers, tuneLabels } from "../src/layers.js";
+// Prompt 25 (cleanup 2026-11): legend of "Abweichung" (variant a), labels above the data layers.
+import { describe, expect, it } from "vitest";
+import { beforeIdFor, firstSymbolId, groups, legendHtml, sfpLayers, tuneLabels } from "../src/layers.js";
 import { DEFAULTS, withView } from "../src/state.js";
 
 const META = { categories: {}, discrepancy_types: { D1: "a", D2: "b", D3: "c" }, glossary: { terms: {} } };
 
-describe("legend Abweichung", () => {
-  afterEach(() => setDiscLegend("a"));
-
-  it("variant a: one statement per type, strength as width, link to the explanation", () => {
+describe("legend Abweichung (variant a)", () => {
+  it("one statement per type, strength as width, link to the explanation", () => {
     const html = legendHtml("disc", META);
     expect(html).toContain("Heute zu schnell");
+    expect(html).toContain("passt bereits");
     expect(html).toContain("breiter = größere Abweichung");
     expect(html).toContain('href="#methode/abweichung"');
     expect(html).toContain("Was heißt das?");
@@ -19,21 +18,11 @@ describe("legend Abweichung", () => {
     expect(new Set(dashes).size).toBe(3);
   });
 
-  it("variant b: a question and a scale from passt to große Abweichung", () => {
-    setDiscLegend("b");
-    const html = legendHtml("disc", META);
-    expect(html).toContain("Wie weit ist die Straße heute vom Ziel entfernt?");
-    const labels = groups("disc", META).map((g) => g.label);
-    expect(labels.slice(0, 4)).toEqual(["große Abweichung", "mittlere Abweichung", "kleine Abweichung", "passt"]);
-    // strength differs by width (and the smallest class also by dash)
-    const widths = groups("disc", META).slice(0, 3).map((g) => g.width);
-    expect(widths[0]).toBeGreaterThan(widths[1]);
-    expect(widths[1]).toBeGreaterThan(widths[2]);
-  });
-
-  it("ignores unknown variants", () => {
-    setDiscLegend("x");
-    expect(legendHtml("disc", META)).toContain("Heute zu schnell");
+  it("strength: three widths, steps at 1.5 and 2.5", () => {
+    const w = JSON.stringify(groups("disc", META)[0].width);
+    expect(w).toContain('"step"');
+    expect(w).toContain(",1.5,");
+    expect(w).toContain(",2.5,");
   });
 
   it("only the disc legend has the explanation link", () => {

@@ -55,9 +55,6 @@ header.site { display: grid; grid-template-columns: repeat(var(--cols), 1fr); co
 /* logo: letter height = title line height (28 px), left on column 1, one space unit (16 px) to the title */
 .site-title a.home { display: inline-flex; align-items: center; gap: var(--s3); }
 .site-title .logo { display: block; height: 28px; width: auto; flex: none; }
-.site-title .title-text { display: flex; flex-direction: column; }
-.site-title .org { font-size: .875rem; line-height: 20px; font-weight: 400; color: var(--muted); }
-header.site[data-variant="B"] .org { display: none; }
 .site-title .short { display: none; }
 nav.main { grid-column: span 4; display: flex; flex-wrap: wrap; gap: 0 var(--s3); }
 nav.main a { padding: var(--s1) 0; min-height: 44px; display: inline-flex; align-items: center; text-decoration: none;
@@ -163,7 +160,6 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .legend { list-style: none; margin: var(--s2) 0; padding: 0; }
 .legend li { display: flex; align-items: center; gap: var(--s2); padding: 2px 0; }
 .legend svg { flex: none; background: #d9d9d9; }
-.legend-q { margin: var(--s2) 0 0; }
 .legend-more { margin: 0 0 var(--s2); }
 
 /* profile: right column on desktop, sheet from below on phones */

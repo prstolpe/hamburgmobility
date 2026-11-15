@@ -1,19 +1,17 @@
 # Bericht – Aufräumen 2026-11, Karten verständlicher, Logo HMR
 
 Auftrag: `prompts/25_cleanup_logo.md`. Branch `cleanup/2026-11` (von `redesign/2026-11`). Stand 15.11.2026.
-**Noch nicht gemergt, nicht veröffentlicht.** Zur Entscheidung stehen die Varianten der Legende (5) und des Kopfes (7/8).
+**Noch nicht gemergt, nicht veröffentlicht.**
+
+**Entscheidung (15.11.2026):** Legende **Variante a**, Kopf **Variante B**, **Rasterlogo** (kein SVG-Nachbau). Die nicht
+gewählten Varianten, die Vorschau-Schalter `?kopf=`/`?legende=` und die SVG-Datei sind entfernt; die Abschnitte unten
+dokumentieren den Vergleich.
 
 Vorschau lokal: `npm --prefix web run build && npm --prefix web run preview`, dann http://localhost:4173/.
-Varianten in der Vorschau umschalten (nur vorläufig, fliegt nach der Wahl raus):
-
-| Variante | Adresse |
-| --- | --- |
-| Kopf B + Legende a (Standard) | http://localhost:4173/#karte?theme=abweichung |
-| Kopf A + Legende b | http://localhost:4173/?kopf=A&legende=b#karte?theme=abweichung |
 
 Liste aller Fundstellen: [fundstellen.md](fundstellen.md).
 
-## Zur Entscheidung
+## Varianten (entschieden: a und B)
 
 ### Legende „Abweichung“ (5)
 
@@ -68,7 +66,7 @@ Zeile im Kopf ist mehr Text ohne neue Information, und der Kopf bleibt in B eine
 Karte). A passt, wenn der Name „Hamburg Mobility Revolution“ ausgeschrieben bekannt werden soll.
 
 **Option SVG-Logo** (nicht eingebaut): „HMR“ aus der Hausschrift Inter (Gewicht 800) als Vektor,
-`web/src/brand/hmr-logo-inter.svg`, 3 KB, gestochen scharf in jeder Größe. Es ist aber **nicht dasselbe Zeichen**:
+3 KB, gestochen scharf in jeder Größe (nach der Entscheidung wieder entfernt). Es ist aber **nicht dasselbe Zeichen**:
 Die Vorlage ist breiter und kräftiger. Empfehlung: beim Raster-Logo bleiben, solange die Vorlage das Markenzeichen ist;
 liegt die Vorlage als Vektor (SVG/PDF) vor, diese einsetzen.
 
@@ -129,7 +127,7 @@ Alle Karten, Desktop und Mobil, Zoom 11/13/15 (vorher, nachher, Varianten): loka
   Schutzraum 25 % der Buchstabenhöhe.
 - Dateien in `web/src/brand/`: Kopf `hmr-header.png` / `@2x` (Buchstabenhöhe 28 px = Zeilenhöhe des Titels), Logo
   mit Schutzraum `hmr-logo.png` / `@2x`, Favicons 16/32, Apple Touch Icon 180, Open-Graph-Bild 1200 × 630
-  (`dist/og-image.png`, fester Pfad), SVG-Vorschlag.
+  (`dist/og-image.png`, fester Pfad).
 - Platzierung: links an Spalte 1, Abstand 16 px (`--s3`) zum Titel, kein Schatten, kein Rahmen. Logo und Titel sind
   *ein* Link auf die Karte. Mobil heißt der Titel „Straßenfunktionsplan – Entwurf“.
 - Kopfraster: Titel 5 Spalten, Navigation 4, Suche 3 (bisher 3/6/3), damit Logo und Titel in eine Zeile passen.
@@ -190,6 +188,6 @@ Die Agenten sind in `.claude/agents/` angelegt (lokal, `.claude/` ist über `.gi
 Sitzung konnte sie noch nicht als eigene Typen laden; sie liefen deshalb als Unteragenten mit dem jeweiligen Modell.
 
 ## Nächste Schritte (nach OK)
-1. Varianten wählen → Vorschau-Schalter `?kopf=` / `?legende=` und die nicht gewählte Variante entfernen.
+1. ~~Varianten wählen, nicht gewählte entfernen~~ (erledigt: a, B, Rasterlogo).
 2. Pull Request, Merge (Reihenfolge mit `redesign/2026-11` klären: dieser Branch baut darauf auf), Deployment.
 3. Kurzer Check der Live-Seite (Screenshots).

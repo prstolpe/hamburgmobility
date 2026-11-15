@@ -1,7 +1,7 @@
 import "./style.css";
 import { dataHtml } from "./datapage.js";
 import { bindDistrictPage, districtHtml, districtListHtml } from "./districts.js";
-import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO, setDiscLegend } from "./layers.js";
+import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO } from "./layers.js";
 import { chapterHtml, referenceHtml, referenceListHtml, resolveRule, summaryHtml } from "./method.js";
 import { imprintHtml } from "./pages.js";
 import { junctionHtml, segmentHtml } from "./profile.js";
@@ -305,10 +305,6 @@ async function init() {
   const junctions = meta.overview ? await json("search_junctions.json").catch(() => []) : [];
   for (const s of streets) for (const id of s.ids) idToStreet.set(id, s);
   $("#foot-version").textContent = `Version ${meta.version} · Datenstand ${new Date(meta.data_date).toLocaleDateString("de-DE")}`;
-  // preview only (prompt 25): ?kopf=A|B and ?legende=a|b show the variants; removed once a variant is chosen
-  const preview = new URLSearchParams(location.search);
-  if (/^[AB]$/.test(preview.get("kopf") ?? "")) $("header.site").dataset.variant = preview.get("kopf");
-  setDiscLegend(preview.get("legende"));
   bindControls();
   const entries = [...streets.map((s) => ({ ...s, kind: "seg" })), ...junctions.map((j) => ({ ...j, kind: "jct" }))];
   setupSearch($("#search"), $("#search-list"), entries, (s) => {

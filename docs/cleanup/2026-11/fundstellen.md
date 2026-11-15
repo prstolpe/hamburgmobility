@@ -80,11 +80,11 @@ der Fußzeile, `meta.disclaimer` in der Methoden-Zusammenfassung (`web/src/metho
 
 | Fundstelle | Art | Stand |
 | --- | --- | --- |
-| `web/src/layers.js:98-107` (Gruppen `disc`) | Code | `discGroups()` mit Varianten a/b, Stärke in drei Breiten |
-| `web/src/layers.js:271-292` (`legendHtml`) | Code | Breiten-Muster, Frage (b), Link „Was heißt das?“ |
+| `web/src/layers.js:98-107` (Gruppen `disc`) | Code | `discGroups()` (Variante a gewählt), Stärke in drei Breiten |
+| `web/src/layers.js:271-292` (`legendHtml`) | Code | Breiten-Muster, Link „Was heißt das?“ |
 | `web/src/palette.js:45-49` (`DISC_TYPE_STYLE`) | Stil | unverändert |
 | `config/glossary.yaml:25-27` (D1–D3) | Glossar | unverändert (Filter „Art der Abweichung“ nutzt es weiter) |
-| `docs/redesign/04_language.md:138-146` (geplante Formulierung) | Leitlinie | Variante b setzt sie um |
+| `docs/redesign/04_language.md:138-146` (geplante Formulierung „große/kleine Abweichung“) | Leitlinie | Stärke steht als Zeile „breiter = größere Abweichung“ in der Legende |
 | `pipeline/lib/discrepancy.py`, `config/rules.yaml:926-1021` | Regeln | unverändert (nur Darstellung) |
 
 ## 6. Ebenen und Beschriftungen
@@ -98,7 +98,7 @@ der Fußzeile, `meta.disclaimer` in der Methoden-Zusammenfassung (`web/src/metho
 
 | Fundstelle | Art | Stand |
 | --- | --- | --- |
-| `web/index.html:6, 8, 13-14` (Meta, `<title>`, Kopf) | Markup | Logo, Varianten A/B, Favicons, Open Graph |
+| `web/index.html:6, 8, 13-14` (Meta, `<title>`, Kopf) | Markup | Logo (Variante B gewählt), Favicons, Open Graph |
 | `web/src/main.js:272` (`document.title`) | Code | „· Hamburg Mobility Revolution“ angehängt |
 | `web/src/style.css:53-58, 69-74` (Kopfraster) | CSS | Titel 5 Spalten, Navigation 4, Suche 3; mobil kurzer Titel |
 | `web/vite.config.js` | Build | `og-image.png` mit festem Pfad |

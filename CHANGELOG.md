@@ -775,6 +775,7 @@ Keine Regeländerung. Webseite:
 - Kartenansichten per `enabled: false` (web/src/state.js) vorläufig ausgeblendet, nicht gelöscht: Radnetz „Radweg“ und
   „Lücken“; „Platz in der Straße“ zeigt nur noch „Fahrstreifen“ (ausgeblendet: „Passt das Ziel?“, Breite, Regelprofil).
   Geteilte Links auf ausgeblendete Ansichten öffnen die Standardansicht der Karte; deren Daten werden nicht geladen.
-- Legende „Abweichung“ in einfacher Sprache, zwei Varianten zur Auswahl; Stärke in drei Breiten (nur Darstellung).
+- Legende „Abweichung“ in einfacher Sprache: eine Aussage je Art (Strichart), Stärke in drei Breiten (nur Darstellung).
 - Stadtteilnamen über den Datenlinien (Datenebenen unter der ersten Beschriftungsebene, weißer Halo).
-- Logo „HMR“ (Hamburg Mobility Revolution) im Kopf, Favicons und Open-Graph-Bild.
+- Logo „HMR“ (Hamburg Mobility Revolution, Rasterlogo) im Kopf, Favicons und Open-Graph-Bild; der Name steht im
+  Alternativtext, in der Fußzeile, im Seitentitel und in den Metadaten.

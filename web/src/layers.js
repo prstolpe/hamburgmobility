@@ -77,20 +77,11 @@ function cyclingGroups(layer, meta) {
   }
 }
 
-/** Thematic groups of the active layer: [{key, label, filter, color, width, dash, src?, srcLayer?, kind?, reference?}] */
-// Legend of "Abweichung" (prompt 25, item 5): two variants for review, "a" = one statement per type (dash) plus the
-// strength as width, "b" = one scale from "passt" to "große Abweichung" (width and dash), type only in filter and
-// profile. Display only: the strength classes group disc_max (0.5 steps) into three widths, rules and data unchanged.
-let discLegend = "a";
-export const setDiscLegend = (v) => { if (v === "a" || v === "b") discLegend = v; };
-const DISC_STRENGTH = [ // strongest first (legend order); lo = lowest disc_max of the class
-  { key: "large", label: "große Abweichung", lo: 2.5, width: 7, dash: null },
-  { key: "medium", label: "mittlere Abweichung", lo: 1.5, width: 4.5, dash: null },
-  { key: "small", label: "kleine Abweichung", lo: 0, width: 2.5, dash: [2, 1] },
-];
+// Legend of "Abweichung" (prompt 25, item 5, variant a chosen): one statement per type (dash), the strength as width.
+// Display only: the strength classes group disc_max (0.5 steps) into three widths, rules and data unchanged.
+const DISC_WIDTH = { small: 2.5, medium: 4.5, large: 7 }; // below 1.5, 1.5 to below 2.5, from 2.5
 const dm = ["coalesce", ["get", "dm"], 0];
-const [LARGE, MEDIUM, SMALL] = DISC_STRENGTH;
-const discWidth = zoomWidthExpr(["step", dm, SMALL.width, MEDIUM.lo, MEDIUM.width, LARGE.lo, LARGE.width]);
+const discWidth = zoomWidthExpr(["step", dm, DISC_WIDTH.small, 1.5, DISC_WIDTH.medium, 2.5, DISC_WIDTH.large]);
 const DISC_TEXT = {
   D1: "Heute zu schnell oder gebaut wie eine Hauptstraße",
   D2: "Hauptstraße, aber es fehlt Gestaltung, z. B. ein Radweg",
@@ -98,24 +89,17 @@ const DISC_TEXT = {
 };
 
 function discGroups(meta) {
-  const rest = [
-    { key: "none", label: discLegend === "a" ? "passt bereits" : "passt", color: NONE, width: 1.2, dash: null,
-      filter: ["all", ["!", known("dt")], known("dm")] },
-    { key: "unchecked", label: "nicht prüfbar (Angaben fehlen)", color: UNKNOWN, width: 1.2, dash: [1, 1.5], filter: ["!", known("dm")] },
-  ];
-  if (discLegend === "b") {
-    return [...DISC_STRENGTH.map((c, i) => ({ key: `dm-${c.key}`, label: c.label, color: NEED, width: c.width, dash: c.dash,
-      filter: ["all", known("dt"), known("dm"), [">=", dm, c.lo], ...(i ? [["<", dm, DISC_STRENGTH[i - 1].lo]] : [])] })), ...rest];
-  }
   return [
     ...Object.entries(DISC_TYPE_STYLE).map(([t, s]) => ({
       key: t, label: DISC_TEXT[t] ?? meta.glossary?.terms?.[t]?.plain ?? meta.discrepancy_types[t], filter: ["==", ["get", "dt"], t],
       color: s.color, dash: s.dash, width: discWidth, legendWidth: 4,
     })),
-    ...rest,
+    { key: "none", label: "passt bereits", color: NONE, width: 1.2, dash: null, filter: ["all", ["!", known("dt")], known("dm")] },
+    { key: "unchecked", label: "nicht prüfbar (Angaben fehlen)", color: UNKNOWN, width: 1.2, dash: [1, 1.5], filter: ["!", known("dm")] },
   ];
 }
 
+/** Thematic groups of the active layer: [{key, label, filter, color, width, dash, src?, srcLayer?, kind?, reference?}] */
 export function groups(layer, meta) {
   if (CYCLING_LAYERS.includes(layer)) return cyclingGroups(layer, meta);
   switch (layer) {
@@ -335,9 +319,9 @@ export function legendHtml(layer, meta) {
     if (g.kind === "symbol") return `<li>${shapeSvg(g.shape, g.color, 18)}<span>${esc(g.label)}</span></li>`;
     return `<li>${lineSample(g, disc ? 9 : 6)}<span>${esc(g.label)}</span></li>`;
   });
-  if (disc && discLegend === "a") {
+  if (disc) {
     // strength as width: one line with a thin and a wide sample
-    items.push(`<li class="legend-scale">${lineSample({ color: NEED, width: SMALL.width })}${lineSample({ color: NEED, width: LARGE.width }, 9)}<span>breiter = größere Abweichung</span></li>`);
+    items.push(`<li class="legend-scale">${lineSample({ color: NEED, width: DISC_WIDTH.small })}${lineSample({ color: NEED, width: DISC_WIDTH.large }, 9)}<span>breiter = größere Abweichung</span></li>`);
   }
   if (layer === "cgap" && meta.overview?.mesh_gaps) {
     items.unshift(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${NEED}" fill-opacity="0.2" stroke="${NEED}" stroke-dasharray="4 2"/></svg><span>Netz zu weitmaschig (Fläche)</span></li>`);
@@ -351,7 +335,6 @@ export function legendHtml(layer, meta) {
     if (layer === "jct") notes.push('<p class="muted">Orange und größer: heutiger Knoten passt nicht zum Soll (Umbau nötig).</p>');
     if (layer === "coff") notes.push(`<p class="muted">${esc(meta.cycling.official_attribution ?? "")}</p>`);
   }
-  const head = disc && discLegend === "b" ? '<p class="legend-q"><strong>Wie weit ist die Straße heute vom Ziel entfernt?</strong></p>' : "";
   const more = disc ? '<p class="legend-more"><a href="#methode/abweichung">Was heißt das?</a></p>' : "";
-  return `${notes.join("")}${head}<ul class="legend">${items.join("")}</ul>${more}`;
+  return `${notes.join("")}<ul class="legend">${items.join("")}</ul>${more}`;
 }
