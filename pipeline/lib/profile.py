@@ -1,7 +1,7 @@
 """Soll cross section per street segment (prompts/19): lanes, placement, space allocation, degrade cascade.
 
 Rules: design_rules.yaml lanes L-01..L-06, placement PL-01..PL-07, cross_section_allocation and
-profile_assignment PRF-01..PRF-07; cycle widths from cycling_rules.yaml (prompt 18). Every value comes in through
+profile_assignment PRF-01..PRF-06; cycle widths from cycling_rules.yaml (prompt 18). Every value comes in through
 ProfileParams; the functions here are pure and work on one segment.
 """
 
@@ -477,7 +477,7 @@ def _cycle_side(facility, p: ProfileParams):
 
 
 def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before: str | None = None) -> ProfileResult:
-    """Soll profile, fit and degrade cascade of one segment (PRF-03..PRF-07)."""
+    """Soll profile, fit and degrade cascade of one segment (PRF-03..PRF-06)."""
     lanes = lanes_soll(seg.cat, seg.dtv, seg.bus_peak_dir, seg.lanes_ist, p, seg.lanes_override)
     flags = list(lanes.flags)
     trace = list(lanes.trace)
@@ -495,7 +495,7 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
         trace.append({"id": cell["rule"], "result": cell.get("cycle_side"), "values": {"facility": seg.facility}})
     if seg.facility == "separated_twoway":
         flags.append("pl02_unchecked")
-        trace.append({"id": "PRF-07", "result": "pl02_unchecked", "values": {}})
+        trace.append({"id": "PL-02", "result": "pl02_unchecked", "values": {}})
     elements = _build(st, seg, p, flags)
     total = _total(elements)
     trace.append({"id": "PRF-03", "result": len(elements), "values": {

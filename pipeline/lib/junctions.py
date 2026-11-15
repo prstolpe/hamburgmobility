@@ -4,11 +4,11 @@ Pure functions; pipeline/c07_junctions.py builds the junctions from the network 
 
 - `category_pair`: through road + highest other road (J-M-04, as N6 in rules.yaml); a standalone cycle path counts
   as the second road if no other road meets the through road.
-- `decide`: decision table J-01..J-16 in the order J-M-05, conditions evaluated with pipeline/lib/expr.py (Kleene
+- `decide`: decision table J-01..J-16 (J-02 and J-11 retired, package 5) in the order J-M-05, conditions evaluated with pipeline/lib/expr.py (Kleene
   logic for missing values), fallback J-M-05.fallback_if (condition_by_type for turbo roundabouts, F24). A side of
   `legs` may list alternatives (`SW+GOW50|GOW30`); rows with `cycle_crossing` (J-14) match only if a route of these
   cycle categories crosses the through road (`route_crosses`, F03).
-- `treatments`: JC-01..JC-06 from their applies_to clauses; `treatment_flags`: flags of treatments (JC-06
+- `treatments`: JC-01..JC-04, JC-06 (JC-05 is a component of JC-02) from their applies_to clauses; `treatment_flags`: flags of treatments (JC-06
   turbo_grade_sep_check, F02).
 - `ist_result`: Ist vs Soll via J-M-06.ist_check.
 """
@@ -45,6 +45,7 @@ class Row:
     spec: dict                # if/then/else_if/else_then/otherwise/fallback (after same_as)
     same_as: str | None
     cycle_crossing: frozenset = frozenset()   # J-14: a route of these cycle categories must cross the through road
+    aliases: tuple = ()       # former row ids this row took over (redesign package 5, e.g. J-01: J-02)
 
 
 @dataclass
@@ -75,7 +76,8 @@ class JunctionParams:
             spec = {"if": src.if_, "else_if": src.else_if, **{k: (src.model_extra or {}).get(k) for k in TYPE_KEYS}}
             spec = {k: (_compile(v, thresholds) if k in ("if", "else_if") and v else v) for k, v in spec.items()}
             rows[rid] = Row(rid, *_parse_legs(r.legs), spec=spec, same_as=r.same_as,
-                            cycle_crossing=frozenset((r.model_extra or {}).get("cycle_crossing") or ()))
+                            cycle_crossing=frozenset((r.model_extra or {}).get("cycle_crossing") or ()),
+                            aliases=tuple((r.model_extra or {}).get("aliases") or ()))
         m05 = j.method_rule("J-M-05")
         n6 = rules.coherence_rule("N6")
         near = None
@@ -297,7 +299,11 @@ def decide(props: dict, p: JunctionParams) -> dict:
             trace.append({"id": rid, "passed": True, "result": f"same_as {row.same_as}", "values": {}})
         jtype, step_conf, step = _apply_row(row, values, p, flags)
         conf = min(conf, step_conf)
-        trace.append({"id": row.same_as or rid, "passed": True, "result": jtype, "values": step})
+        decider = p.rows[row.same_as] if row.same_as else row
+        entry = {"id": decider.id, "passed": True, "result": jtype, "values": step}
+        if decider.aliases:
+            entry["aliases"] = list(decider.aliases)   # former ids of merged rules (redesign package 5)
+        trace.append(entry)
         out.update(junction_type_soll=jtype, rule_id=rid)
         dtv = values["entering_dtv_sum"]
         if (jtype == "roundabout_single_lane_cycle_priority" and dtv is not None and not expr.is_missing(dtv)
@@ -395,10 +401,9 @@ TREATMENT_DE = {
     "JC-01": "Kreisverkehr mit umlaufendem Radweg, Radverkehr bevorrechtigt (CROW innerorts). Zielkonflikt: SWOV-Analysen "
              "sehen die Wartepflicht für Radfahrende als sicherer; nach deutschem Recht hat der Radverkehr am Kreisverkehr "
              "nur bei fahrbahnnaher Führung Vorrang (StVO/VwV prüfen). Die Vorrangfrage ist vor der Planung zu entscheiden.",
-    "JC-02": "Geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor dem Kfz-Verkehr, indirektes Linksabbiegen.",
+    "JC-02": "Geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor dem Kfz-Verkehr, indirektes Linksabbiegen; freies Rechtsabbiegen für den Radverkehr, wo sicher.",
     "JC-03": "Radfurt in Breite des Radwegs, rot eingefärbt, aufgepflastert, wo der Radverkehr Vorrang hat.",
     "JC-04": "Mittelinsel für die Querung der Hauptstraße durch die Radroute (≥ 4,00 m RSV, ≥ 3,00 m HAUPT, ≥ 2,50 m BASIS).",
-    "JC-05": "Freies Rechtsabbiegen für den Radverkehr an der LSA, wo sicher.",
     "JC-06": "Turbokreisverkehr: umlaufender Radweg abgesetzt, Radverkehr wartepflichtig (an zweistreifigen Ein- und "
              "Ausfahrten verdeckt ein Fahrzeug das andere). Im RSV- und HAUPT-Netz planfreie Querung prüfen.",
 }

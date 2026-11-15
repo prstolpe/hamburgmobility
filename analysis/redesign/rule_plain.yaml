@@ -335,12 +335,8 @@ PRF-05:    {label_plain: "Passt alles hinein?", explain_plain: "Alle Teile mit R
             why: "So lässt sich prüfen, ob das Ziel auf der vorhandenen Straße überhaupt möglich ist."}
 PRF-06:    {label_plain: "Abstriche, wenn es nicht passt", explain_plain: "Passt es nicht, entfallen Schritt für Schritt Parken, Bäume oder ein Fahrstreifen.",
             why: "Wenn der Platz fehlt, muss etwas weichen. Die Reihenfolge ist vorher festgelegt und nachvollziehbar."}
-PRF-07:    {label_plain: "Nicht prüfbar", explain_plain: "Haltestellen und einseitige Radwege lassen sich mit den Daten nicht prüfen.",
-            why: "Es gibt keine Daten für diese Fälle. Darum sagt der Entwurf offen, dass er nichts prüfen kann."}
-J-01:      {label_plain: "Zwei Hauptstraßen mit Tempo 50", explain_plain: "Kreisverkehr, wenn Verkehr und Platz es erlauben, sonst Turbokreisel oder geschützte Ampel.",
-            why: "Die Tabelle beruht auf niederländischen Quellen. Die Grenzen für den Verkehr hat das Projekt gesetzt."}
-J-02:      {label_plain: "Hauptstraße 50 trifft Hauptstraße 30", explain_plain: "Wie bei zwei Hauptstraßen mit Tempo 50.",
-            why: "Die Tabelle behandelt dieses Paar wie zwei Hauptstraßen mit Tempo 50."}
+J-01:      {label_plain: "Zwei Hauptstraßen, mindestens eine mit Tempo 50", explain_plain: "Kreisverkehr, wenn Verkehr und Platz es erlauben, sonst Turbokreisel oder geschützte Ampel.",
+            why: "Die Tabelle beruht auf niederländischen Quellen. Die Grenzen für den Verkehr hat das Projekt gesetzt. Trifft Tempo 50 auf Tempo 30, gilt dasselbe wie bei zwei Hauptstraßen mit Tempo 50."}
 J-03:      {label_plain: "Zwei Hauptstraßen mit Tempo 30", explain_plain: "Kreisverkehr bei wenig Verkehr, sonst Turbokreisel oder Ampel; fehlt Platz, eingefärbte Vorfahrt.",
             why: "Das niederländische Regelwerk (CROW) bevorzugt den Kreisverkehr. Sonst folgt Vorfahrt mit eingefärbter Fläche."}
 J-04:      {label_plain: "Hauptstraße 50 trifft Wohnstraße", explain_plain: "Durchgehender Gehweg über die Einmündung.",
@@ -373,18 +369,14 @@ J-15:      {label_plain: "Nebenweg quert Hauptstraße 50", explain_plain: "Ampel
             why: "Die Grenzen hat das Projekt gesetzt. Die Mittelinsel lässt Räder in zwei Schritten queren."}
 J-16:      {label_plain: "Nebenweg trifft Wohnstraße", explain_plain: "Rechts vor links.",
             why: "Das Projekt hat das gesetzt. Die Rechtslage für selbständige Radwege ist noch zu prüfen."}
-J-11:      {label_plain: "Kreuzung mit Straßenbahn", explain_plain: "Ampel, wenn eine Straßenbahn kreuzt; in Hamburg gibt es keinen Fall.",
-            why: "Wo eine Straßenbahn kreuzt, gilt die geschützte Ampelkreuzung. In Hamburg kommt das nicht vor."}
 JC-01:     {label_plain: "Kreisverkehr: Rad hat Vorrang", explain_plain: "Im Kreisverkehr hat der umlaufende Radweg Vorrang.",
             why: "Das niederländische Regelwerk (CROW) empfiehlt das innerorts. SWOV hält Wartepflicht für sicherer."}
-JC-02:     {label_plain: "Geschützte Ampelkreuzung", explain_plain: "Eckinseln, abgesetzter Radüberweg, Wartefläche vor den Autos, Linksabbiegen in zwei Schritten.",
-            why: "Die Gestaltung stützt sich auf die Dutch Cycling Embassy und SWOV."}
+JC-02:     {label_plain: "Geschützte Ampelkreuzung", explain_plain: "Eckinseln, abgesetzter Radüberweg, Wartefläche vor den Autos, Linksabbiegen in zwei Schritten. Rechtsabbiegen für Räder ist frei, wo es sicher ist.",
+            why: "Die Gestaltung stützt sich auf die Dutch Cycling Embassy und SWOV. Das freie Rechtsabbiegen hat das Projekt gesetzt; es wird noch geprüft."}
 JC-03:     {label_plain: "Radüberweg auf wichtigen Routen", explain_plain: "So breit wie der Radweg, rot, erhöht wo Vorrang.",
             why: "Die Furt ist so breit wie der Radweg und rot. Das nennt eine niederländische Gemeinde."}
 JC-04:     {label_plain: "Mittelinsel zum Queren", explain_plain: "Insel in der Hauptstraße, 2,50 bis 4,00 m breit je nach Route.",
             why: "Die Breiten stammen von einer niederländischen Gemeinde. Für die Radvorrangroute nimmt das Projekt Platz für ein Lastenrad mit Anhänger an."}
-JC-05:     {label_plain: "Freies Rechtsabbiegen für Räder", explain_plain: "An Ampeln dürfen Räder rechts abbiegen, wo es sicher ist.",
-            why: "Das Projekt hat diese Regel gesetzt; sie wird noch geprüft."}
 JC-06:     {label_plain: "Turbokreisel: Rad wartet", explain_plain: "Am Turbokreisel wartet das Rad; auf wichtigen Routen Brücke oder Tunnel prüfen.",
             why: "In den Niederlanden warten Räder am Turbokreisel oder queren planfrei. In Deutschland ist er kein Regelelement."}
 J-M-01:    {label_plain: "Was ist eine Kreuzung?", explain_plain: "Treffpunkte von drei oder mehr Straßenstücken oder von Radweg und Straße; nahe Punkte gelten als eine Kreuzung.",
