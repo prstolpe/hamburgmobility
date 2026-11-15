@@ -1,4 +1,4 @@
-# Lizenzen und Quellenvermerke (Entwurf, vor Veröffentlichung juristisch prüfen)
+# Lizenzen und Quellenvermerke
 
 ## Eigene Inhalte
 Rechteinhaber: Raphael Stolpe (hamburgmobility.de). Festgelegt am 2026-11-15.
