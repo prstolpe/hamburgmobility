@@ -33,14 +33,15 @@ def test_varied_parameters():
     assert params["thresholds.conn_gow"].base == pytest.approx(0.87)
     assert params["thresholds.access_radius"].effect == "category"
     assert params["thresholds.frontage"].effect == "category"
-    assert params["required_width.GOW50"].effect == "category"
+    assert params["required_width.GOW50_min"].effect == "category"  # trigger width since 0.24.0
     assert params["thresholds.near_threshold"].effect == "confidence"
     assert {k for k, p in params.items() if p.group == "conn_weight"} == {
         f"conn_score.{f}" for f in RULES.scores["conn_score"].weights}
     assert {k for k, p in params.items() if p.group == "risk_weight"} == {
         f"risk_weights.{k}" for k in RULES.priority.risk_weights}
     # only assumptions are varied; required_width entries not read by the cascade are not
-    assert params["required_width.GOW50_bus"].effect == "category"  # read by C-G30-02 since 0.18.0 (F06)
+    assert params["required_width.GOW50_bus_min"].effect == "category"  # read by C-G30-02 since 0.24.0
+    assert "required_width.GOW50" not in params  # standard profile: feasibility only, not read by the cascade
     assert "required_width.ETW30" not in params
 
 

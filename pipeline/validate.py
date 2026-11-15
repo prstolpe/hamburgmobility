@@ -25,12 +25,12 @@ from pipeline.lib import invariants as inv
 from pipeline.lib import sensitivity as sens
 from pipeline.lib import validation as val
 from pipeline.lib.crs import WORK_CRS
-from pipeline.lib.harmonise import harmonise
+from pipeline.lib.harmonise import harmonise_all
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT
 from pipeline.lib.rules import load_rules
 from pipeline.s04_features import _fmt, _now, _pct
-from pipeline.s05b_harmonise import approved_override_ids, street_strokes
+from pipeline.s05b_harmonise import locked_ids, street_pairs, street_strokes
 
 IN_PATH = REPO_ROOT / "data" / "interim" / "discrepancy.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "validation.parquet"
@@ -73,13 +73,14 @@ def _name(v) -> str:
 
 
 def harmonise_step(area_g: gpd.GeoDataFrame, rules):
-    """Post step for the sensitivity runs: H-STR-01 on the strokes of the work area (computed once)."""
+    """Post step for the sensitivity runs: H-STR-01 and H-PAIR-01 (strokes and pairs computed once)."""
     strokes = street_strokes(area_g, rules, cat_col="cat_cascade")
+    pairs = street_pairs(area_g, rules)
     ids, lengths = area_g["segment_id"].tolist(), dict(zip(area_g["segment_id"], area_g["length_m"]))
-    locked = approved_override_ids()
+    locked = locked_ids(area_g, rules)  # C-G50-02 from the base run; variants keep this set
 
     def post(cats: pd.Series, r) -> pd.Series:
-        new, _ = harmonise(strokes, dict(zip(ids, cats)), lengths, r, locked=locked)
+        new, _ = harmonise_all(strokes, pairs, dict(zip(ids, cats)), lengths, r, locked=locked)
         return pd.Series([new[i] for i in ids], index=cats.index, dtype="object")
     return post
 
@@ -272,7 +273,7 @@ def section_sensitivity(area: pd.DataFrame, rules, res: dict, districts: list[st
     total_km = length.sum() / 1000
     unc = summ["uncertain"]
     lines = ["## 3. Sensitivitätsanalyse", "",
-             f"Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01 je Lauf); fachliche "
+             f"Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01/H-PAIR-01 je Lauf); fachliche "
              f"Korrekturen bleiben außen vor. "
              f"Basis: rules.yaml {rules.meta.version}, {_fmt(len(area))} Abschnitte, {_km(total_km)} km.", "",
              f"### 3.1 Einzelvariation (V-SENS-01): jede Annahme ±{res['delta1'] * 100:.0f} %", "",

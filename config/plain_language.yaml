@@ -5,8 +5,10 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.12.0
+  version: 0.13.0
   date: 2026-11-15
+# 0.13.0: Texte für C-G50-02, C-G30-02 mit Mindestbreite (GOW50_min) und Hinweis gow50_cycle_track_min; und den Grund „zu viel Verkehr“ bei C-G30-01 (DTV-Obergrenze, rules.yaml 0.24.0).
+# 0.12.1: Klartext für H-PAIR-01 (Richtungsfahrbahnen, rules.yaml 0.23.0).
 # 0.12.0: Aufräumen 2026-11 (prompts/25): Abschnitt method.news („Was ist neu“) entfernt, die Seite entfällt;
 #   Texte zu ausgeblendeten Kartenansichten angepasst.
 # 0.11.1: Verweis auf die Netzprüfungen N1–N5 (N6, N7 zusammengelegt bzw. gestrichen, Redesign 2026-11 Paket 5).
@@ -30,6 +32,9 @@ rules:
   H-STR-01:
     passed:
       - {text: "an die Straße davor und dahinter angeglichen: kurzes Stück ({run_m|.0f} m) zwischen {neighbours}; vorher {from_cat}, jetzt {to_cat}"}
+  H-PAIR-01:
+    passed:
+      - {text: "an die Gegenfahrbahn angeglichen ({partner_name}, {dist_m|.0f} m entfernt): beide Fahrbahnen bekommen dasselbe Tempo; vorher {from_cat}, jetzt {to_cat}"}
   C-SW-01:
     passed:
       - {text: "Autobahn oder Kraftfahrstraße, nur für Autos"}
@@ -52,14 +57,18 @@ rules:
       - {when: "school_or_kita_access_m <= thresholds.access_radius", text: "eine Schule oder Kita liegt direkt an der Straße: Grundstück {school_or_kita_access_m|.0f} m entfernt (bis {thresholds.access_radius|.0f} m)"}
       - {when: "shop_frontage_share >= thresholds.frontage", text: "viele Läden und Lokale: in {shop_frontage_share|%} der Gebäude (ab {thresholds.frontage|%})"}
     failed:
-      - {text: "keine Schule oder Kita direkt an der Straße und wenige Läden"}
+      - {when: "in_hvs and dtv_official > thresholds.gow30_max_dtv", text: "zu viel Verkehr für eine Hauptstraße mit Tempo 30: {dtv_official|.0f} Kfz/Tag (bis {thresholds.gow30_max_dtv|.0f})"}
+      - {when: "not (school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage)", text: "keine Schule oder Kita direkt an der Straße und wenige Läden"}
   C-G30-02:
     passed:
-      - {when: "not bus_route", text: "für einen eigenen Radweg fehlt der Platz: Straße {width_p10_m|.1f} m breit, nötig {required_width.GOW50|.1f} m"}
-      - {when: "bus_route", text: "für einen eigenen Radweg neben der Busspur fehlt der Platz: Straße {width_p10_m|.1f} m breit, nötig {required_width.GOW50_bus|.1f} m"}
+      - {when: "not bus_route", text: "auch für einen schmalen eigenen Radweg fehlt der Platz: Straße {width_p10_m|.1f} m breit, nötig {required_width.GOW50_min|.1f} m"}
+      - {when: "bus_route", text: "auch für einen schmalen eigenen Radweg neben der Busspur fehlt der Platz: Straße {width_p10_m|.1f} m breit, nötig {required_width.GOW50_bus_min|.1f} m"}
     failed:
-      - {when: "not bus_route and width_p10_m >= required_width.GOW50", text: "genug Platz für einen eigenen Radweg: Straße {width_p10_m|.1f} m breit (nötig {required_width.GOW50|.1f} m)"}
-      - {when: "bus_route and width_p10_m >= required_width.GOW50_bus", text: "genug Platz für einen eigenen Radweg neben der Busspur: Straße {width_p10_m|.1f} m breit (nötig {required_width.GOW50_bus|.1f} m)"}
+      - {when: "not bus_route and width_p10_m >= required_width.GOW50_min", text: "genug Platz für einen eigenen Radweg: Straße {width_p10_m|.1f} m breit (nötig {required_width.GOW50_min|.1f} m)"}
+      - {when: "bus_route and width_p10_m >= required_width.GOW50_bus_min", text: "genug Platz für einen eigenen Radweg neben der Busspur: Straße {width_p10_m|.1f} m breit (nötig {required_width.GOW50_bus_min|.1f} m)"}
+  C-G50-02:
+    passed:
+      - {text: "Schule, Kita oder Läden an der Straße, aber {dtv_official|.0f} Kfz/Tag – mehr als eine Hauptstraße mit Tempo 30 trägt (bis {thresholds.gow30_max_dtv|.0f}); darum Tempo 50 mit eigenem Radweg. Einen Tempo-30-Abschnitt vor Ort prüfen"}
   C-G50-01:
     passed:
       - {text: "kein Grund für Tempo 30 auf dieser Hauptstraße"}
@@ -106,6 +115,8 @@ sensitivity:
     thresholds.frontage: "Anteil Gebäude mit Publikumsverkehr"
     required_width.GOW50: "nötige Breite für eine Hauptstraße mit Tempo 50"
     required_width.GOW50_bus: "nötige Breite für eine Hauptstraße mit Tempo 50 und Bus"
+    required_width.GOW50_min: "nötige Breite für eine Hauptstraße mit Tempo 50 mit schmalem Radweg"
+    required_width.GOW50_bus_min: "nötige Breite für eine Hauptstraße mit Tempo 50, Bus und schmalem Radweg"
     conn_score.betweenness_norm: "Gewicht der Netzbedeutung"
     conn_score.bus_trips_weekday_norm: "Gewicht der Busfahrten"
     conn_score.dtv_norm: "Gewicht der Verkehrsmenge"
@@ -117,6 +128,7 @@ feasibility:
 
 # Hinweise im Steckbrief (Abschnitt Soll-Kategorie), Schlüssel = Flag
 hints:
+  gow50_cycle_track_min: "Die Straße ist schmaler als das Regelprofil einer Hauptstraße mit Tempo 50. Der eigene Radweg hat hier nur Mindestbreite (1,60 m statt 2,00 m)."
   gow50_anbaufrei: "Kaum Häuser und Einmündungen an dieser Hauptstraße. Sie bleibt eine Hauptstraße mit Tempo 50. Ein heutiges Tempo über 50 sollten Fachleute prüfen; es zählt nicht als Abweichung."
 
 speed_source:
@@ -182,6 +194,7 @@ columns:
   bus_route: "Busroute: mindestens ein Bus je Spitzenstunde und Richtung (HVV-Fahrplan, C-G30-02)"
   anbaufrei: "anbaufrei: Abschnitt größtenteils ohne Gebäude und Einmündungen im 30-m-Umkreis (S-FEAT-12)"
   gow50_anbaufrei: "anbaufreie Stadtmagistrale (Hinweis, keine eigene Kategorie)"
+  gow50_cycle_track_min: "Hauptstraße mit Tempo 50 schmaler als das Regelprofil: Radweg nur in Mindestbreite (Hinweis)"
   population_100m: "Einwohner im 100-m-Umkreis (Zensus 2022)"
   shop_frontage_share: "Anteil der Gebäude im 20-m-Umkreis mit Publikumsverkehr"
   width_median_m: "Straßenraumbreite (Median) in Metern"

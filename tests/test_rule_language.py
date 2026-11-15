@@ -65,7 +65,7 @@ def plain_ok(text: str) -> list[str]:
 
 
 def test_rule_count():
-    assert len(RULES) == 188
+    assert len(RULES) == 190  # 0.23.0: H-PAIR-01; 0.24.0: C-G50-02
 
 
 @pytest.mark.parametrize("file,rule", RULES, ids=[r["id"] for _, r in RULES])
@@ -89,7 +89,7 @@ def test_categories_have_plain_fields_matching_the_glossary():
 
 def test_every_threshold_has_a_plain_label():
     th = thresholds()
-    assert len(th) == 58
+    assert len(th) == 62  # 0.23.0: three H-PAIR-01 thresholds; 0.24.0: gow30_max_dtv
     for path, t in th:
         assert t.get("label_plain") and not plain_ok(t["label_plain"]), path
 

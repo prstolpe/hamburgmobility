@@ -63,6 +63,7 @@ def test_referenced_features():
         "bus_route",
         "conn_score",
         "crossing_demand",
+        "dtv_official",
         "highway",
         "in_hvs",
         "ist_verkehrsberuhigt",
@@ -309,7 +310,7 @@ def test_required_width_value_equals_formula():
     from pipeline.lib.rules import load_cycling_rules, load_design_rules, required_width_formula_mismatches
 
     rules = load_rules()
-    assert {k for k, e in rules.required_width.items() if e.formula} >= {"GOW50", "GOW50_bus", "ETW30"}
+    assert {k for k, e in rules.required_width.items() if e.formula} >= {"GOW50", "GOW50_bus", "GOW50_min", "GOW50_bus_min", "ETW30"}
     assert required_width_formula_mismatches(rules, load_cycling_rules(), load_design_rules()) == []
 
 

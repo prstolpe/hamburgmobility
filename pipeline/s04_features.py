@@ -60,7 +60,7 @@ WAY_WEIGHT_BUFFER_M = 1.0  # length of a way inside this buffer of the segment =
 MOTORWAY_CLASSES = {"motorway", "motorway_link"}
 
 DESIGN_COLUMNS = ["cycle_track_tag", "cycle_lane_present", "lanes", "centre_line", "surface",
-                  "parking", "parking_on_carriageway", "parking_along_carriageway", "angle_parking"]
+                  "parking", "parking_on_carriageway", "parking_along_carriageway", "angle_parking", "oneway"]
 
 # Feature -> (data source, rule, where rules.yaml uses it). Every output column is listed here.
 FEATURE_DOC = {
@@ -70,7 +70,7 @@ FEATURE_DOC = {
     "bus_trips_weekday": ("GTFS HVV", "S-FEAT-08", "Rohwert für bus_trips_weekday_norm"),
     "bus_trips_weekday_norm": ("GTFS HVV", "S-FEAT-01/08", "scores.conn_score"),
     "bus_peak_h_dir": ("GTFS HVV", "S-FEAT-08 (PRF-02)", "Rohwert für bus_route"),
-    "bus_route": ("GTFS HVV", "S-FEAT-08", "C-G30-02 (required_width.GOW50_bus)"),
+    "bus_route": ("GTFS HVV", "S-FEAT-08", "C-G30-02 (required_width.GOW50_bus_min)"),
     "dtv_official": ("DTV-Linien HVS 2019", "S-CONF-01", "discrepancy.use, Rohwert für dtv_norm"),
     "dtv_norm": ("DTV-Linien HVS 2019", "S-FEAT-01", "scores.conn_score"),
     "conn_score": ("abgeleitet", "scores.conn_score", "C-RUR-01, C-GOW-01"),
@@ -103,6 +103,7 @@ FEATURE_DOC = {
     "crossings_count": ("OSM-Knoten", "S-FEAT-10", "requirements.GOW50.crossings"),
     "traffic_calming_count": ("OSM-Knoten", "S-FEAT-10", "requirements.ETW30.speed_reducer_spacing_m"),
     "surface": ("OSM-Tags", "S-FEAT-10", "Erkennbarkeit (guide.md 1.2)"),
+    "oneway": ("OSM-Tags", "S-FEAT-10", "H-PAIR-01 (Richtungsfahrbahnen)"),
     "access_motor_only": ("OSM-Tags", "S-FEAT-10", "C-SW-01"),
     "pedestrian_zone": ("OSM-Tags", "S-FEAT-10", "C-ERF-01"),
     "anbaufrei_share": ("ALKIS-Gebäude + OSM-Netz", "S-FEAT-12", "Rohwert für anbaufrei"),
@@ -359,7 +360,7 @@ def _typed(out: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         out[c] = pd.array([None if _none(v) is None else int(v) for v in out[c]], dtype="Int64")
     for c in ("speed_sources_conflict", "in_cycle_network", "cycle_track_tag", "cycle_lane_present",
               "centre_line", "parking_on_carriageway", "parking_along_carriageway", "angle_parking",
-              "access_motor_only", "pedestrian_zone", "bus_route", "anbaufrei"):
+              "access_motor_only", "pedestrian_zone", "bus_route", "anbaufrei", "oneway"):
         if c not in out:
             out[c] = None
         out[c] = pd.array([None if _none(v) is None else bool(v) for v in out[c]], dtype="boolean")
@@ -539,7 +540,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
     lines += ["### Kategoriale Merkmale", "", "| Merkmal | Werte (Anteil der Abschnitte) |", "| --- | --- |"]
     for col in ["in_hvs", "in_cycle_network", "cycle_track_tag", "cycle_lane_present", "centre_line",
                 "parking_on_carriageway", "parking_along_carriageway", "angle_parking", "surface",
-                "access_motor_only", "pedestrian_zone", "speed_sources_conflict"]:
+                "access_motor_only", "pedestrian_zone", "speed_sources_conflict", "oneway"]:
         vc = area[col].astype("object").where(area[col].notna(), "null").value_counts(normalize=True).head(8)
         lines.append(f"| `{col}` | {', '.join(f'{k}: {_pct(v)}' for k, v in vc.items())} |")
     lines += ["", "### conn_score nach highway-Klasse (Median)", "", "| highway | Abschnitte | conn_score | place_score |",

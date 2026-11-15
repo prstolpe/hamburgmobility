@@ -60,7 +60,7 @@ features: dirs ## Compute features per segment
 crosssection: dirs ## Cross sections and feasibility
 	$(call run_step,crosssection,s07_crosssection)
 
-classify: dirs ## Rule-based target category, then harmonisation along streets (H-STR-01)
+classify: dirs ## Rule-based target category, then harmonisation along streets and carriageways (H-STR-01, H-PAIR-01)
 	$(call run_step,classify,s05_classify)
 	$(call run_step,classify,s05b_harmonise)
 

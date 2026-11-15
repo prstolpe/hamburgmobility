@@ -203,7 +203,7 @@ def write_report(out: gpd.GeoDataFrame, ctx: dict, checks: list[dict]) -> None:
 
     lines += ["", "## Methode", "",
               "- Kaskade `classification` aus rules.yaml, Reihenfolge = Priorität: C-SW-01 → C-RUR-01 → C-ERF-01 → C-GOW-01 "
-              "(dann C-G30-01, C-G30-02, sonst C-G50-01) → C-ETW-01. Die Bedingungen werden von `pipeline/lib/expr.py` gelesen; "
+              "(dann C-G30-01, C-G30-02, C-G50-02, sonst C-G50-01) → C-ETW-01. Die Bedingungen werden von `pipeline/lib/expr.py` gelesen; "
               "Schwellen nur aus rules.yaml. Inaktive Regeln (status inactive: " + (", ".join(
                   r.id for r in rules.classification if r.status == "inactive") or "keine") + ") werden nicht geprüft, "
               "senken confidence nicht und stehen in `rule_trace` nur mit status inactive.",

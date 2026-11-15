@@ -26,7 +26,7 @@ def ref():
 
 def test_every_rule_once_in_order(ref):
     ids = [r["id"] for r in ref["rules"]]
-    assert len(ids) == len(set(ids)) == 188
+    assert len(ids) == len(set(ids)) == 190
     assert ids[:3] == ["C-SW-01", "C-RUR-01", "C-ERF-01"]
 
 
@@ -101,7 +101,7 @@ def test_technical_fields_leave_out_meta_and_nested_rules(ref):
 def test_versions_and_counts(ref):
     assert ref["versions"]["rules.yaml"] == str(DOCS["rules.yaml"]["meta"]["version"])
     c = er.counts(ref)
-    assert c["n_rules"] == 188
+    assert c["n_rules"] == 190
     assert c["n_rules_assumption"] == sum(r["source_type"] == "assumption" for r in ref["rules"])
     assert c["n_thresholds"] == sum(len(r["thresholds"]) for r in ref["rules"])
     assert 0 < c["n_thresholds_assumption"] <= c["n_thresholds"]
@@ -114,11 +114,12 @@ def test_json_serialisable(ref):
 # --- how often a rule decided in the current run ---------------------------------------------------------------------
 
 def test_decides_classification_and_harmonisation():
-    final = pd.DataFrame({"rule_path": ["C-SW-01", "C-GOW-01 → C-G30-02 → H-STR-01", "C-GOW-01 → C-G50-01", None],
+    final = pd.DataFrame({"rule_path": ["C-SW-01", "C-GOW-01 → C-G30-02 → H-STR-01", "C-GOW-01 → C-G50-01 → H-PAIR-01", None],
                           "length_m": [1000.0, 500.0, 250.0, 100.0]})
     d = er.decides(final=final)
     assert d["C-SW-01"] == {"n": 1, "km": 1.0, "unit": "Abschnitte"}
     assert d["C-G30-02"]["km"] == 0.5 and d["H-STR-01"]["n"] == 1 and d["C-G50-01"]["km"] == 0.25
+    assert d["H-PAIR-01"] == {"n": 1, "km": 0.25, "unit": "Abschnitte"}
     assert "C-GOW-01" not in d  # only the last cascade step decides
 
 
@@ -157,5 +158,5 @@ def test_method_vars():
     v = er.method_vars(ref, meta)
     assert set(v) == set(er.VAR_NAMES)
     assert v["mc_runs"] == 500 and v["mc_delta_pct"] == 20 and v["mc_min_change_pct"] == 30
-    assert v["n_junctions_action"] == 4 and v["cyc_sens_delta_pct"] == 20 and v["n_rules"] == 188
+    assert v["n_junctions_action"] == 4 and v["cyc_sens_delta_pct"] == 20 and v["n_rules"] == 190
     assert er.method_vars(ref, {"area_label": "Hamburg", "sensitivity": None, "cycling": None})["mc_runs"] is None

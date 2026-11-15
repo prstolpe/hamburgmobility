@@ -7,7 +7,7 @@
 #   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
 #   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.22.0
+  version: 0.24.0
   date: 2026-11-15
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -103,25 +103,28 @@ classification:
 
   - id: C-G30-01
     label_plain: "Tempo 30 wegen Schule oder Läden"
-    explain_plain: "Eine Hauptstraße bekommt Tempo 30, wenn eine Schule oder Kita direkt an ihr liegt oder viele Läden an ihr sind."
+    explain_plain: "Tempo 30, wenn eine Schule oder Kita direkt an der Hauptstraße liegt oder viele Läden dort sind. Bei sehr viel Verkehr gilt das nicht."
     why: "Schulen, Kitas und viele Läden bedeuten viel Leben am Rand. Das niederländische Regelwerk (CROW) nennt das Umfeld als Auslöser für Tempo 30."
     description: "GOW30-Auslöser a: Umfeld spricht für 30 (Schule/Kita am Abschnitt, Leben, Querbarkeit)"
     applies_to: GOW
-    if: "school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high"
+    if: "(school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high) and (not in_hvs or dtv_official <= thresholds.gow30_max_dtv)"
     then: GOW30
     thresholds:
+      gow30_max_dtv: {label_plain: "größte Verkehrsmenge einer Hauptverkehrsstraße mit Tempo 30 wegen Schule oder Läden", value: 10000, unit: "Kfz/24h",
+                      source: CROW_GOW30_2023, source_type: swov_crow, check: "gleich requirements.GOW30.profiles.wide.max_dtv (Schema prüft)"}
       access_radius: {label_plain: "größter Abstand zum Grundstück einer Schule oder Kita", value: 50, unit: m, source_type: assumption,
                       check: "Abstand Grundstück der Einrichtung (allgemeinbildende Schule, Kita) zum Abschnitt; StVO § 45 (9) S. 4 Nr. 6 'unmittelbarer Bereich' (Wortlaut am Original prüfen); 50 m ist eigene Setzung (F07, Q2 b)"}
       frontage:         {label_plain: "Anteil Gebäude mit Läden ab dem Tempo 30 gilt", value: 0.4, unit: "Anteil Erdgeschoss mit Publikumsnutzung", source_type: assumption}
     note: >-
-      Umfeld vor heutiger Verkehrsmenge: keine DTV-Obergrenze. GOW30 über dem CROW-Profil zeigt der Soll-Querschnitt
-      mit Flag gow30_dtv_above_profile (setzt weniger Kfz-Verkehr voraus). Es löst nur eine Schule oder Kita mit
+      Obergrenze gow30_max_dtv nur auf Hauptverkehrsstraßen (in_hvs, DTV-Zählung 2019); darüber C-G50-02. Fehlt auf
+      einer Hauptverkehrsstraße der DTV, ist die Bedingung unbekannt und der Auslöser greift nicht (C-MISS-01). Es löst nur eine Schule oder Kita mit
       Grundstück höchstens access_radius vom Abschnitt aus; die 150 m (sensitive_radius) gelten nur für die Priorität
       (P-RISK-01 school_kita_radius_m). Näherung: Schulen und Kitas kommen aus OSM (Fläche oder Punkt); gemessen wird
       der Abstand zur Fläche, bei Punkten zum Punkt (S-FEAT-06, docs/open_questions.md). Der Teil crossing_demand ist
       stillgelegt (C-MISS-01, status inactive).
     history:
-      - "0.14.0: DTV-Obergrenze eingeführt; zurückgenommen (Entscheidung prstolpe 2026-11-07)"
+      - "0.14.0: DTV-Obergrenze eingeführt; 0.15.0 zurückgenommen (Entscheidung prstolpe 2026-11-07)"
+      - "seit 0.24.0: DTV-Obergrenze wieder eingeführt (Entscheidung prstolpe 2026-11-15)"
       - "seit 0.18.0 (F07, Entscheidung Q2 b 2026-11-08): nur Schule oder Kita mit Grundstück höchstens access_radius vom Abschnitt; vorher jede im Umkreis sensitive_radius 150 m"
       - "seit 0.18.0 (F07, Entscheidung Q2 b 2026-11-08): die 150 m gelten nur noch für die Priorität"
       - "crossing_demand stillgelegt (F25)"
@@ -131,22 +134,44 @@ classification:
 
   - id: C-G30-02
     label_plain: "Tempo 30, wenn Platz für den Radweg fehlt"
-    explain_plain: "Ist die Straße zu schmal für Tempo 50 mit Radweg, wird es Tempo 30."
+    explain_plain: "Ist die Straße zu schmal für Tempo 50 mit Radweg, wird es Tempo 30. Ein Radweg in Mindestbreite reicht."
     why: "Bei Tempo 50 braucht das Rad einen getrennten Radweg. Passt er nicht in die Straße, ist Tempo 50 nicht sicher zu gestalten."
     description: "GOW30-Auslöser b: 50 nicht sicher gestaltbar (kein ausreichender getrennter Radweg möglich)"
     applies_to: GOW
-    if: "(not bus_route and width_p10_m < required_width.GOW50) or (bus_route and width_p10_m < required_width.GOW50_bus)"
+    if: "(not bus_route and width_p10_m < required_width.GOW50_min) or (bus_route and width_p10_m < required_width.GOW50_bus_min)"
     then: GOW30
     note: >-
       Nur über den Raum. Ein vorhandener Radweg zählt nicht (CROW-Auslöser b fragt, ob ein ausreichender Radweg
       realisierbar ist). bus_route = Busse je Spitzenstunde und Richtung nach PRF-02 >= S-FEAT-08
       bus_route_min_peak_h_dir (s04). Flag existing_track_below_floor (c05), wenn die Ist-Breite des Radwegs bekannt
-      ist und unter der Untergrenze C-FAC-04 floor liegt.
+      ist und unter der Untergrenze C-FAC-04 floor liegt. Seit 0.24.0 Auslösebreite required_width.GOW50_min bzw.
+      GOW50_bus_min (Radweg je Seite in Mindestbreite C.widths_m.de.separated_oneway.min 1,60 m statt 2,00 m). GOW50
+      unter dem Regelprofil (width_p10_m < GOW50 bzw. GOW50_bus) trägt das Flag gow50_cycle_track_min (Stufe 8):
+      Radweg nur in Mindestbreite.
     history:
+      - "seit 0.24.0: Auslösebreite mit Radweg in Mindestbreite (16,20 / 16,70 m statt 17,00 / 17,50 m), Flag gow50_cycle_track_min (Entscheidung prstolpe 2026-11-15)"
       - "seit 0.18.0 (F06): nur über den Raum"
     source: [SWOV_FS_2023, CROW_GOW30_2023]
     source_type: swov_crow
     status: draft
+
+  - id: C-G50-02
+    label_plain: "Tempo 50 bei sehr viel Verkehr"
+    explain_plain: "Schule oder Läden sprechen für Tempo 30, aber es fährt zu viel Verkehr dafür. Dann bleibt Tempo 50 mit eigenem Radweg."
+    why: "Das niederländische Regelwerk (CROW) sieht Hauptstraßen mit Tempo 30 nur bis zu einer bestimmten Verkehrsmenge vor. Darüber ist ein getrennter Radweg sicherer."
+    description: "Umfeld spräche für 30, aber die Hauptverkehrsstraße trägt mehr Verkehr als das CROW-GOW30-Profil: GOW50, Tempo-30-Abschnitt vor Ort prüfen"
+    applies_to: GOW
+    if: "(school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high) and in_hvs and dtv_official > thresholds.gow30_max_dtv and not ((not bus_route and width_p10_m < required_width.GOW50_min) or (bus_route and width_p10_m < required_width.GOW50_bus_min))"
+    then: GOW50
+    source: CROW_GOW30_2023
+    source_type: swov_crow
+    status: draft
+    note: >-
+      Steht nach C-G30-02: Fehlt der Platz für einen baulichen Radweg, bleibt GOW30 (Flag gow30_dtv_above_profile im
+      Soll-Querschnitt). Die Bedingung schließt den Fall von C-G30-02 ausdrücklich aus, damit rule_trace und Begründung
+      nicht beide Regeln als zutreffend zeigen (die Kaskade wertet alle Auslöser einer Gruppe aus). Schwellen wie C-G30-01.
+    history:
+      - "0.14.0 eingeführt, 0.15.0 entfernt, seit 0.24.0 wieder (Entscheidung prstolpe 2026-11-15)"
 
   - id: C-G50-01
     label_plain: "Sonst Hauptstraße mit Tempo 50"
@@ -295,6 +320,12 @@ required_width:
           formula: "2*D.cross_section_allocation.elements_min_m.sidewalk.min + 2*C.widths_m.de.separated_oneway.standard + 2*D.cross_section_allocation.elements_min_m.buffer_cycle_carriageway + D.lanes.lane_width_m.GOW50_2x1_carriageway.value"}
   GOW50_bus: {value: 17.50, source_type: assumption,
               formula: "2*D.cross_section_allocation.elements_min_m.sidewalk.min + 2*C.widths_m.de.separated_oneway.standard + 2*D.cross_section_allocation.elements_min_m.buffer_cycle_carriageway + D.lanes.lane_width_m.GOW50_bus_carriageway.value"}
+  # Auslösebreite für C-G30-02 seit 0.24.0: Radweg je Seite in Mindestbreite statt Regelbreite (Entscheidung prstolpe
+  # 2026-11-15). GOW50/GOW50_bus bleiben das Regelprofil für Machbarkeit und Querschnitt.
+  GOW50_min: {value: 16.20, source_type: assumption,
+              formula: "2*D.cross_section_allocation.elements_min_m.sidewalk.min + 2*C.widths_m.de.separated_oneway.min + 2*D.cross_section_allocation.elements_min_m.buffer_cycle_carriageway + D.lanes.lane_width_m.GOW50_2x1_carriageway.value"}
+  GOW50_bus_min: {value: 16.70, source_type: assumption,
+                  formula: "2*D.cross_section_allocation.elements_min_m.sidewalk.min + 2*C.widths_m.de.separated_oneway.min + 2*D.cross_section_allocation.elements_min_m.buffer_cycle_carriageway + D.lanes.lane_width_m.GOW50_bus_carriageway.value"}
   GOW30_narrow: {range: [10.80, 13.40], source_type: assumption}
   GOW30_wide: {range: [13.40, 15.70], source_type: assumption}
   ETW30: {value: 9.75, source_type: assumption, formula: "2*D.cross_section_allocation.elements_min_m.sidewalk.min + D.lanes.lane_width_m.ETW30_mixed.value"}
@@ -663,7 +694,8 @@ features:
         cycle_track_tag: cycleway[:both|left|right] = track oder separate, oder bicycle = use_sidepath; nur Eingang
         für S-FEAT-13. cycle_lane_present: cycleway… = lane. centre_line: lane_markings. parking:
         parking:[both|left|right] bzw. parking:lane:… (altes Schema). crossings/traffic_calming: Knoten
-        highway=crossing bzw. traffic_calming=* höchstens node_snap_m vom Abschnitt. Fehlende Tags heißen 'unbekannt',
+        highway=crossing bzw. traffic_calming=* höchstens node_snap_m vom Abschnitt. oneway (seit 0.23.0, Eingang für
+        H-PAIR-01): yes/true/1/-1 = ja, no/false/0 = nein, sonst unbekannt. Fehlende Tags heißen 'unbekannt',
         nicht 'nein'.
       history:
         - "bis 0.19.0: separated_cycle_track_present (statt cycle_track_tag); seit 0.20.0 nur Eingang für S-FEAT-13 (Review 2026-11 F26)"
@@ -1065,34 +1097,72 @@ harmonisation:
   rules:
     - id: H-STR-01
       label_plain: "Kurze Stücke angleichen"
-      explain_plain: "Kurze Stücke bekommen die Aufgabe der Straße davor und dahinter; trifft 50 auf 30, gewinnt 30."
+      explain_plain: "Kurze Stücke bekommen die Aufgabe der Straße davor und dahinter. Kurze 50 zwischen 30 wird 30, kurze 30 zwischen 50 wird 50."
       why: "Ein Straßenzug soll auf langer Strecke dieselbe Kategorie haben. Das nennt SWOV Homogenität."
       description: >-
         Kurze Läufe (unter min_run_m aus N2) auf einem Straßenzug angleichen, wiederholt bis nichts mehr wechselt: (1)
         ETW30 zwischen zwei GOW-Läufen -> GOW (niedrigeres Soll-Tempo der Nachbarn); (2) GOW zwischen zwei
         ETW30-Läufen -> ETW30; (3) GOW50 zwischen zwei GOW30-Läufen oder am Zugende neben GOW30 -> GOW30; (4) GOW30
-        zwischen GOW50 (oder am Zugende neben GOW50) bleibt und wird in die angrenzenden GOW50-Abschnitte verlängert
-        (kürzerer Nachbar zuerst), bis min_run_m erreicht ist. Lückenschluss: ein GOW50-Lauf zwischen zwei
-        GOW30-Läufen wird GOW30, wenn er kürzer als gap_close_m ist (statt min_run_m).
+        zwischen zwei GOW50-Läufen oder am Zugende neben GOW50 -> GOW50. Lückenschluss: ein GOW50-Lauf zwischen zwei
+        GOW30-Läufen wird GOW30, wenn er kürzer als gap_close_m ist (statt min_run_m). Abschnitte, deren Kaskade eine
+        Regel aus locked_rules ergab (C-G50-02, DTV-Obergrenze), werden nicht verändert.
       min_run_from: N2
       thresholds:
         gap_close_m: {label_plain: "größte Lücke, die beim Angleichen geschlossen wird", value: 500, unit: m, source: STVO_2024, source_type: de_regelwerk,
                       check: "Lückenschluss zwischen Tempo-30-Strecken (StVO-Novelle 2024, Fassung prüfen)"}
       max_passes: 20
       locked_categories: [SW, ETW_ERF, GOW80, ETW60]
+      locked_rules: [C-G50-02]
       source: SWOV_FS_2023
       source_type: assumption
       status: draft
       note: >-
-        Homogenität des Straßenzugs (SWOV); bei 50 gegen 30 gewinnt das niedrigere Tempo. Straßenzug wie N2.
+        Homogenität des Straßenzugs (SWOV). Seit 0.24.0 gewinnt nicht mehr immer das niedrigere Tempo: kurze GOW30-Stücke
+        (unter min_run_m) zwischen GOW50 werden GOW50 (Schritt 4, Entscheidung prstolpe 2026-11-15). Straßenzug wie N2.
         Abschnitte mit approved override werden nicht verändert. max_passes ist nur eine technische Grenze. Das
         Ergebnis der Kaskade bleibt als cat_cascade erhalten. gap_close_m: Der Review nennt den Lückenschluss bei
         Regel (4); umgesetzt ist er beim Fall „GOW50 zwischen zwei GOW30“ (Schritt 3), weil nur dort eine Lücke
         zwischen zwei Tempo-30-Strecken geschlossen wird; Regel (4) verlängert kurze GOW30-Läufe und behält min_run_m.
         Am Zugende gilt weiter min_run_m.
       history:
+        - "seit 0.24.0: Schritt 4 kurze GOW30 zwischen GOW50 -> GOW50 (vorher verlängert); C-G50-02 gesperrt (Entscheidung prstolpe 2026-11-15)"
         - "seit 0.18.0 (F07, Q2 b): Lückenschluss mit gap_close_m"
         - "Entscheidung Projektteam 2026-11-04: Harmonisierung entlang des Straßenzugs"
+
+    - id: H-PAIR-01
+      label_plain: "Beide Richtungsfahrbahnen gleich"
+      explain_plain: "Hat eine Straße zwei getrennte Fahrbahnen, gilt auf beiden dasselbe Tempo; trifft 50 auf 30, gewinnt 30."
+      why: "Eine Straße mit Mittelstreifen ist eine Straße. Wechselt das Tempo nur auf einer Seite, ist das nicht erkennbar."
+      description: >-
+        Richtungsfahrbahnen paaren: zwei GOW-Abschnitte sind ein Paar, wenn beide oneway sind (S-FEAT-10), denselben
+        Namen tragen, keinen Knoten teilen, höchstens pair_max_angle_deg (ungerichtet) voneinander abweichen, die Mitte
+        des kürzeren höchstens pair_max_distance_m vom längeren entfernt liegt und mindestens pair_min_overlap_share des
+        kürzeren auf den längeren fällt (Lotfußpunkte der Endpunkte). Ist ein Partner GOW30 und der andere GOW50, wird
+        der GOW50-Abschnitt GOW30; über Ketten von Paaren wiederholt bis nichts mehr wechselt. Danach läuft H-STR-01 erneut;
+        beides wechselt sich ab, bis H-PAIR-01 nichts mehr ändert (höchstens max_passes Runden).
+      thresholds:
+        pair_max_distance_m:    {label_plain: "größter Abstand der beiden Fahrbahnen", value: 40, unit: m, source_type: assumption,
+                                 check: "Stichprobe breiter Mittelstreifen (z. B. Ring 2, Kieler Straße); Median der Paare ca. 13 m"}
+        pair_max_angle_deg:     {label_plain: "größter Richtungsunterschied der beiden Fahrbahnen", value: 20, unit: "Grad (ungerichtet, 0-90)",
+                                 source_type: assumption, check: "wie S-CONF-01 max_angle_deg"}
+        pair_min_overlap_share: {label_plain: "Mindestanteil, auf dem die Fahrbahnen nebeneinander liegen", value: 0.5, unit: Anteil,
+                                 source_type: assumption, check: "per Stichprobe kalibrieren"}
+      max_passes: 20
+      locked_categories: [SW, ETW_ERF, GOW80, ETW60]
+      locked_rules: [C-G50-02]
+      source: SWOV_FS_2023
+      source_type: assumption
+      status: draft
+      note: >-
+        Ist die GOW50-Seite gesperrt (approved override oder locked_rules, seit 0.24.0), wird stattdessen die freie
+        GOW30-Seite GOW50. Gleicher Grundsatz wie H-STR-01: Homogenität (SWOV), bei 50 gegen 30 gewinnt das niedrigere Tempo. Getrennt
+        gezeichnete Richtungsfahrbahnen sind in OSM eigene Wege und damit eigene Abschnitte; Straßenzüge (N2) laufen
+        nur entlang einer Fahrbahn, deshalb sieht H-STR-01 die Gegenfahrbahn nicht. Die Fahrtrichtung selbst wird nicht
+        geprüft: zwei gleichnamige Einbahn-Abschnitte nebeneinander gelten als Richtungsfahrbahnen. Abschnitte mit
+        approved override werden nicht verändert.
+      history:
+        - "seit 0.24.0: gesperrte GOW50-Seite hebt die Gegenfahrbahn auf GOW50"
+        - "seit 0.23.0: neu (Anfrage Projektteam 2026-11-15: parallele Richtungsfahrbahnen mit gleichem Tempo)"
 
 # ---------------------------------------------------------------
 # Validierung und Sensitivität (pipeline/validate.py, guide.md Teil 7, prompts/12_validation.md)

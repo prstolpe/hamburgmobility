@@ -30,7 +30,7 @@ def test_columns(out):
                 "centre_line", "parking", "crossings_count", "traffic_calming_count", "surface", "speed_ist_kmh",
                 "speed_sources_conflict", "access_motor_only", "pedestrian_zone", "in_cycle_network",
                 "feature_trace", "school_or_kita_access_m", "bus_peak_h_dir", "bus_route", "anbaufrei_share",
-                "anbaufrei"} | set(NORMS)
+                "anbaufrei", "oneway"} | set(NORMS)
     assert expected <= set(out.columns)
     # F21/F26: S-FEAT-11 and the Ist track (S-FEAT-13) are computed in stage c03b, not here
     assert not {"separated_cycle_track_present", "parallel_cycle_route_present"} & set(out.columns)

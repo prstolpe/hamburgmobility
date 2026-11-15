@@ -146,12 +146,24 @@ def test_existing_track_does_not_count():
 
 
 def test_bus_route_needs_gow50_bus_width():
-    """F06: with a bus route the GOW50 profile needs required_width.GOW50_bus (17.50 m) instead of GOW50 (17.00 m)."""
-    gow50, gow50_bus = RULES.required_width["GOW50"].value, RULES.required_width["GOW50_bus"].value
+    """F06: with a bus route the trigger needs required_width.GOW50_bus_min instead of GOW50_min (since 0.24.0 the
+    minimum cycle track width; before GOW50_bus / GOW50)."""
+    gow50, gow50_bus = RULES.required_width["GOW50_min"].value, RULES.required_width["GOW50_bus_min"].value
     assert gow50_bus > gow50
     width = (gow50 + gow50_bus) / 2
     assert classify_segment({**GOW, "width_p10_m": width, "bus_route": False}, RULES)["cat_proposed"] == "GOW50"
     assert classify_segment({**GOW, "width_p10_m": width, "bus_route": True}, RULES)["cat_proposed"] == "GOW30"
+
+
+def test_width_trigger_uses_minimum_cycle_track():
+    """rules.yaml 0.24.0 (decision prstolpe 2026-11-15): C-G30-02 asks whether a cycle track of minimum width fits
+    (required_width.GOW50_min, GOW50_bus_min); GOW50/GOW50_bus stay the standard profile for feasibility."""
+    w = RULES.required_width
+    assert w["GOW50_min"].value < w["GOW50"].value and w["GOW50_bus_min"].value < w["GOW50_bus"].value
+    between = (w["GOW50_min"].value + w["GOW50"].value) / 2
+    assert classify_segment({**GOW, "width_p10_m": between, "bus_route": False}, RULES)["cat_proposed"] == "GOW50"
+    below = w["GOW50_min"].value - 0.01
+    assert classify_segment({**GOW, "width_p10_m": below, "bus_route": False}, RULES)["cat_proposed"] == "GOW30"
 
 
 def test_missing_conn_score_in_rural_then_uses_else_branch_low():
@@ -227,10 +239,30 @@ def test_policy_ids_must_not_clash(raw):
         RuleSet.model_validate(data)
 
 
-def test_traffic_volume_does_not_block_gow30():
-    # rules.yaml 0.15.0: local circumstances outrank today's traffic (cap of 0.14.0 withdrawn, decision prstolpe 2026-11-07)
+def decided_by(result) -> str:
+    return [s["id"] for s in result["rule_trace"] if s.get("passed") and "part" not in s][-1]
+
+
+CAP = next(r for r in RULES.classification if r.id == "C-G30-01").thresholds["gow30_max_dtv"].value
+
+
+def test_traffic_volume_caps_gow30_on_hvs():
+    # rules.yaml 0.24.0: cap of 0.14.0 back (decision prstolpe 2026-11-15); above it C-G50-02
     near_school = {**GOW, "school_or_kita_access_m": 20.0}
-    for dtv in (8000.0, 40000.0, None):
-        r = classify_segment({**near_school, "dtv_official": dtv}, RULES)
-        assert r["cat_proposed"] == "GOW30"
-    assert "C-G50-02" not in {s.id for s in RULES.classification}
+    assert classify_segment({**near_school, "dtv_official": CAP}, RULES)["cat_proposed"] == "GOW30"
+    r = classify_segment({**near_school, "dtv_official": CAP + 1}, RULES)
+    assert r["cat_proposed"] == "GOW50" and decided_by(r) == "C-G50-02"
+    # only on HVS: off the HVS network there is no count and the trigger stays
+    assert classify_segment({**near_school, "in_hvs": False, "dtv_official": None}, RULES)["cat_proposed"] == "GOW30"
+
+
+def test_traffic_volume_cap_keeps_gow30_when_too_narrow():
+    """C-G50-02 comes after C-G30-02: without room for a cycle track it stays GOW30."""
+    r = classify_segment({**GOW, "school_or_kita_access_m": 20.0, "dtv_official": 40000.0, "width_p10_m": 12.0}, RULES)
+    assert r["cat_proposed"] == "GOW30" and decided_by(r) == "C-G30-02"
+
+
+def test_traffic_volume_missing_on_hvs_drops_the_trigger():
+    """C-MISS-01: on HVS without a count the cap is unknown, the environment trigger does not fire."""
+    r = classify_segment({**GOW, "school_or_kita_access_m": 20.0, "dtv_official": None}, RULES)
+    assert r["cat_proposed"] == "GOW50" and decided_by(r) == "C-G50-01"

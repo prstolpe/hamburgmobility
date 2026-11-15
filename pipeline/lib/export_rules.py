@@ -158,7 +158,7 @@ def decides(final: pd.DataFrame | None = None, junctions: pd.DataFrame | None = 
             facility: pd.DataFrame | None = None, network: pd.DataFrame | None = None) -> dict:
     """rule id -> {n, km, unit}: how often the rule made the decision in this run.
 
-    Category: last C-* step of rule_path, H-STR-01 when it is in rule_path. Junction type: decision_rule; cyclist
+    Category: last C-* step of rule_path, H-STR-01 and H-PAIR-01 when they are in rule_path. Junction type: decision_rule; cyclist
     treatment: each JC-* of cyclist_treatment. Cycle facility and cycle network category: last trace step whose result
     equals the final value.
     """
@@ -178,8 +178,9 @@ def decides(final: pd.DataFrame | None = None, junctions: pd.DataFrame | None = 
             cascade = [s for s in steps if s.startswith("C-")]
             if cascade:
                 add(cascade[-1], m / 1000, "Abschnitte")
-            if "H-STR-01" in steps:
-                add("H-STR-01", m / 1000, "Abschnitte")
+            for rid in ("H-STR-01", "H-PAIR-01"):
+                if rid in steps:
+                    add(rid, m / 1000, "Abschnitte")
     if junctions is not None:
         for rule, treat in zip(junctions["decision_rule"], junctions["cyclist_treatment"]):
             if isinstance(rule, str):

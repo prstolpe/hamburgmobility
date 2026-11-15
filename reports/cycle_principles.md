@@ -1,6 +1,6 @@
 # Fünf Prinzipien: Bewertung des Soll-Radnetzes (Stufe c04)
 
-Erzeugt 2026-11-15T01:57:40+00:00 mit pipeline/c04_principles.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Bewertungsregeln (C-PRI-01…16) und die Gewichte sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
+Erzeugt 2026-11-15T21:47:17+00:00 mit pipeline/c04_principles.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Bewertungsregeln (C-PRI-01…16) und die Gewichte sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
 
 **score_ist** bewertet den heutigen Zustand der Soll-Route, **score_soll** den Zustand nach regelkonformem Ausbau (Führung nach Trennungsmatrix, Sollbreite, geschlossene Decke, Beleuchtung). Die Differenz ist der Handlungsbedarf. Fehlende Daten senken die confidence, nicht den Score.
 
@@ -10,7 +10,7 @@ Erzeugt 2026-11-15T01:57:40+00:00 mit pipeline/c04_principles.py · cycling_rule
 - HAUPT: 1 810 km, Score Ist 0.67 → Soll 0.77
 - BASIS: 1 050 km, Score Ist 0.78 → Soll 0.83
 - Führung entspricht heute der Trennungsmatrix auf 49 % der Netzlänge mit bekannter Führung (RSV/HAUPT: 27 %).
-- 4936 Routen bewertet; mittlerer Handlungsbedarf (score_soll − score_ist) 0.06, confidence: high 1825, medium 3111, low 0.
+- 4933 Routen bewertet; mittlerer Handlungsbedarf (score_soll − score_ist) 0.06, confidence: high 1824, medium 3109, low 0.
 - Nicht bewertbar mangels Daten: P-SAF-02 (Knotentypen erst mit Prompt 20 (pipeline/c07_junctions.py)), P-COM-03 (kein Höhenmodell geladen (sources.yaml laserscan ohne Abruf)), P-ATT-02 (keine Lärmkarte (sources.yaml noise_maps ohne Endpunkt, Entscheidung 2026-11-06)).
 
 ## Datenlage je Prüfung
@@ -19,22 +19,22 @@ Anteil der Länge des Soll-Netzes (RSV, HAUPT, BASIS) mit Wert, unter den Kanten
 
 | Prüfung | Prinzip | Datengrundlage | anwendbar (km) | mit Wert |
 | --- | --- | --- | ---: | ---: |
-| P-COH-01 | Zusammenhang | c03 Maschen | 2 933 | 100 % |
-| P-COH-02 | Zusammenhang | Soll-Netz | 2 932 | 100 % |
-| P-COH-04 | Zusammenhang | Ist-Führung entlang der Route | 2 932 | 100 % |
-| P-DIR-01 | Direktheit | Radgraph (Länge) | 2 932 | 99 % |
-| P-DIR-02 | Direktheit | OSM-LSA, Vorfahrt C-GRAPH-05 | 2 932 | 100 % |
+| P-COH-01 | Zusammenhang | c03 Maschen | 2 932 | 100 % |
+| P-COH-02 | Zusammenhang | Soll-Netz | 2 931 | 100 % |
+| P-COH-04 | Zusammenhang | Ist-Führung entlang der Route | 2 931 | 100 % |
+| P-DIR-01 | Direktheit | Radgraph (Länge) | 2 931 | 99 % |
+| P-DIR-02 | Direktheit | OSM-LSA, Vorfahrt C-GRAPH-05 | 2 931 | 100 % |
 | P-DIR-03 | Direktheit | wie P-DIR-02 | 1 883 | 100 % |
-| P-SAF-01 | Sicherheit | Ist-Führung (C-PRI-02), Trennungsmatrix | 2 876 | 100 % |
-| P-SAF-02 | Sicherheit | – | 2 933 | 0 % |
-| P-SAF-03 | Sicherheit | OSM lit | 2 933 | 85 % |
-| P-SAF-04 | Sicherheit | Unfallatlas | 2 933 | 100 % |
-| P-COM-01 | Komfort | OSM width/cycleway:width | 1 302 | 11 % |
-| P-COM-02 | Komfort | OSM surface | 2 933 | 96 % |
-| P-COM-03 | Komfort | – | 2 933 | 0 % |
-| P-ATT-01 | Attraktivität | ALKIS, OSM-Bäume | 2 933 | 100 % |
-| P-ATT-02 | Attraktivität | – | 2 933 | 0 % |
-| P-ATT-03 | Attraktivität | DTV 2019 (HVS) | 2 933 | 100 % |
+| P-SAF-01 | Sicherheit | Ist-Führung (C-PRI-02), Trennungsmatrix | 2 875 | 100 % |
+| P-SAF-02 | Sicherheit | – | 2 932 | 0 % |
+| P-SAF-03 | Sicherheit | OSM lit | 2 932 | 85 % |
+| P-SAF-04 | Sicherheit | Unfallatlas | 2 932 | 100 % |
+| P-COM-01 | Komfort | OSM width/cycleway:width | 1 301 | 11 % |
+| P-COM-02 | Komfort | OSM surface | 2 932 | 96 % |
+| P-COM-03 | Komfort | – | 2 932 | 0 % |
+| P-ATT-01 | Attraktivität | ALKIS, OSM-Bäume | 2 932 | 100 % |
+| P-ATT-02 | Attraktivität | – | 2 932 | 0 % |
+| P-ATT-03 | Attraktivität | DTV 2019 (HVS) | 2 932 | 100 % |
 
 ## Netzkennzahlen je Kategorie
 
@@ -71,7 +71,7 @@ Längengewichtete Mittel über die Kanten der Kategorie (Kantenwerte für Direkt
 | Schnellbahnhalte | 375 | 99 % |
 | Hochschulen (OSM university) | 41 | 100 % |
 
-**P-COH-04 Kontinuität:** Wechsel der Ist-Führung je km (Median über Routen) 1.04, Soll (Führung und Kategorie) 0.00; Schwelle 1.0 je km (C-PRI-12).
+**P-COH-04 Kontinuität:** Wechsel der Ist-Führung je km (Median über Routen) 1.02, Soll (Führung und Kategorie) 0.00; Schwelle 1.0 je km (C-PRI-12).
 
 ## Direktheit (P-DIR)
 
@@ -79,17 +79,17 @@ Längengewichtete Mittel über die Kanten der Kategorie (Kantenwerte für Direkt
 
 | Kategorie | Band (km) | Paare | ohne Weg | Median | 90-%-Wert | Schwelle | Anteil ≤ Schwelle |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| RSV | 5–15 | 200 | 0 | 1.11 | 1.17 | 1.1 | 38 % |
-| HAUPT | 2–3 | 200 | 0 | 1.17 | 2.88 | 1.2 | 56 % |
-| BASIS | 1–2 | 200 | 0 | 1.07 | 3.69 | 1.3 | 73 % |
+| RSV | 5–15 | 200 | 0 | 1.11 | 1.17 | 1.1 | 40 % |
+| HAUPT | 2–3 | 200 | 0 | 1.15 | 2.67 | 1.2 | 59 % |
+| BASIS | 1–2 | 200 | 0 | 1.05 | 1.88 | 1.3 | 82 % |
 
 **Je Route** (Median über Routen der Kategorie; Halte nach C-PRI-05, Soll = Ist bis Prompt 20):
 
 | Kategorie | Routen | Umwegfaktor | Halte/km | Schwelle Halte | Zeitverlust s/km | Schwelle s/km |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | RSV | 22 | 1.08 | 1.7 | 0.5 | 24 | 30 |
-| HAUPT | 1995 | 1.10 | 1.1 | 1.0 | 11 | 30 |
-| BASIS | 2919 | 1.00 | 0.0 | 2.0 | 0 | – |
+| HAUPT | 1994 | 1.10 | 1.1 | 1.0 | 11 | 30 |
+| BASIS | 2917 | 1.00 | 0.0 | 2.0 | 0 | – |
 
 ## Sicherheit (P-SAF)
 
@@ -97,22 +97,22 @@ Längengewichtete Mittel über die Kanten der Kategorie (Kantenwerte für Direkt
 
 | Ist \ Soll | Radfahrstreifen | Fahrradstraße | Mischverkehr | eigener Weg | Radweg je Seite | unbekannt |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Radfahrstreifen | 4 | 29 | 15 | 0 | 33 | 0 |
+| Radfahrstreifen | 4 | 29 | 15 | 0 | 34 | 0 |
 | Fahrradstraße | 0 | 19 | 2 | 0 | 0 | 0 |
-| Mischverkehr | 8 | 943 | 583 | 10 | 41 | 39 |
+| Mischverkehr | 7 | 942 | 583 | 10 | 42 | 39 |
 | eigener Weg | 0 | 0 | 0 | 405 | 0 | 0 |
-| Radweg je Seite | 14 | 139 | 67 | 3 | 304 | 10 |
-| Zweirichtungsradweg | 5 | 75 | 40 | 9 | 126 | 2 |
+| Radweg je Seite | 12 | 139 | 67 | 3 | 305 | 10 |
+| Zweirichtungsradweg | 4 | 75 | 40 | 9 | 127 | 2 |
 | unbekannt | 0 | 0 | 0 | 0 | 0 | 5 |
 
-P-SAF-03 Beleuchtung: OSM lit auf 85 % der Netzlänge bekannt; davon beleuchtet 90 %. P-SAF-04 Unfälle mit Radbeteiligung 2021–2025: 7 711 Unfälle an Kanten des Soll-Netzes (je Kante höchstens 15 m entfernt; nur Summen gespeichert).
+P-SAF-03 Beleuchtung: OSM lit auf 85 % der Netzlänge bekannt; davon beleuchtet 90 %. P-SAF-04 Unfälle mit Radbeteiligung 2021–2025: 7 701 Unfälle an Kanten des Soll-Netzes (je Kante höchstens 15 m entfernt; nur Summen gespeichert).
 
 ## Komfort und Attraktivität (P-COM, P-ATT)
 
-- P-COM-01 Breite: anwendbar auf 1 302 km (ohne Mischverkehr), Breite in OSM auf 11 % davon; von diesen erreichen 21 % die Sollbreite.
+- P-COM-01 Breite: anwendbar auf 1 301 km (ohne Mischverkehr), Breite in OSM auf 11 % davon; von diesen erreichen 21 % die Sollbreite.
 - P-COM-02 Belag: bekannt auf 96 %; RSV/HAUPT mit geschlossener Decke 68 %.
 - P-ATT-01 Grünanteil im 20-m-Puffer: Median 13 % (Ziel 30 %, ALKIS-Grünflächen und OSM-Bäume).
-- P-ATT-03: 326 km des Soll-Netzes liegen an Straßen mit DTV > 15 000.
+- P-ATT-03: 325 km des Soll-Netzes liegen an Straßen mit DTV > 15 000.
 
 ## Top 30 Routen mit dem größten Handlungsbedarf
 
@@ -135,7 +135,7 @@ Rangfolge nach Handlungsbedarf-km = (score_soll − score_ist) × Länge in km (
 | 13 | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Bergedorf (224 Tsd. m²) (`rt_70ad2d7e75c25454`) | HAUPT | 12.5 | 0.70 | 0.81 | 0.11 | 1.39 | 0.57 → 0.76 | 0.64 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570220,5931700]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.529517/10.059362) · [OSM](https://www.openstreetmap.org/?mlat=53.529517&mlon=10.059362#map=18/53.529517/10.059362) |
 | 14 | Arbeitsplatzschwerpunkt Hamburg-Mitte (379 Tsd. m²) – Arbeitsplatzschwerpunkt Altona (226 Tsd. m²) (`rt_9fe1aad7bdd69990`) | HAUPT | 9.8 | 0.74 | 0.88 | 0.14 | 1.38 | 0.64 → 0.82 | 0.65 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560124,5935043]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.560821/9.907711) · [OSM](https://www.openstreetmap.org/?mlat=53.560821&mlon=9.907711#map=18/53.560821/9.907711) |
 | 15 | Umsteigeknoten Neugraben – Arbeitsplatzschwerpunkt Hamburg-Mitte (231 Tsd. m²) (`rt_1f65359785a52cea`) | HAUPT | 10.2 | 0.73 | 0.86 | 0.13 | 1.32 | 0.64 → 0.83 | 0.58 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559820,5926567]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.484673/9.901500) · [OSM](https://www.openstreetmap.org/?mlat=53.484673&mlon=9.901500#map=18/53.484673/9.901500) |
-| 16 | Arbeitsplatzschwerpunkt Hamburg-Mitte (278 Tsd. m²) – Arbeitsplatzschwerpunkt Bergedorf (224 Tsd. m²) (`rt_5be88c5238ed113e`) | HAUPT | 7.1 | 0.66 | 0.85 | 0.18 | 1.30 | 0.46 → 0.82 | 0.50 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572709,5930397]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.517468/10.096597) · [OSM](https://www.openstreetmap.org/?mlat=53.517468&mlon=10.096597#map=18/53.517468/10.096597) |
+| 16 | Arbeitsplatzschwerpunkt Hamburg-Mitte (278 Tsd. m²) – Arbeitsplatzschwerpunkt Bergedorf (224 Tsd. m²) (`rt_5be88c5238ed113e`) | HAUPT | 7.1 | 0.66 | 0.85 | 0.18 | 1.30 | 0.46 → 0.81 | 0.50 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572709,5930397]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.517468/10.096597) · [OSM](https://www.openstreetmap.org/?mlat=53.517468&mlon=10.096597#map=18/53.517468/10.096597) |
 | 17 | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Bergedorf (549 Tsd. m²) (`rt_552cb2d3f349cda2`) | HAUPT | 12.0 | 0.70 | 0.81 | 0.11 | 1.30 | 0.56 → 0.76 | 0.65 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569983,5931778]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.530253/10.055804) · [OSM](https://www.openstreetmap.org/?mlat=53.530253&mlon=10.055804#map=18/53.530253/10.055804) |
 | 18 | Umsteigeknoten Altona – Arbeitsplatzschwerpunkt Hamburg-Mitte (231 Tsd. m²) (`rt_36dbf1aa84db919b`) | HAUPT | 11.4 | 0.68 | 0.80 | 0.11 | 1.29 | 0.54 → 0.76 | 0.72 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[557871,5933500]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.547203/9.873411) · [OSM](https://www.openstreetmap.org/?mlat=53.547203&mlon=9.873411#map=18/53.547203/9.873411) |
 | 19 | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Mitte (379 Tsd. m²) (`rt_230c05c97c6320c7`) | HAUPT | 13.7 | 0.62 | 0.71 | 0.09 | 1.26 | 0.55 → 0.71 | 0.74 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559942,5934102]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.552378/9.904793) · [OSM](https://www.openstreetmap.org/?mlat=53.552378&mlon=9.904793#map=18/53.552378/9.904793) |
@@ -151,7 +151,7 @@ Rangfolge nach Handlungsbedarf-km = (score_soll − score_ist) × Länge in km (
 | 29 | Arbeitsplatzschwerpunkt Hamburg-Mitte (379 Tsd. m²) – Arbeitsplatzschwerpunkt Hamburg-Mitte (231 Tsd. m²) (`rt_9978d70cbf7eefbe`) | HAUPT | 6.9 | 0.73 | 0.89 | 0.16 | 1.10 | 0.56 → 0.83 | 0.67 → 1.00 | medium | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[558090,5932012]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.533804/9.876452) · [OSM](https://www.openstreetmap.org/?mlat=53.533804&mlon=9.876452#map=18/53.533804/9.876452) |
 | 30 | Innenstadt (Rathausmarkt) – Umsteigeknoten Ohlsdorf (`rt_7cd2078d0b102ae5`) | RSV | 10.2 | 0.56 | 0.67 | 0.11 | 1.10 | 0.61 → 0.72 | 0.52 → 1.00 | high | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568342,5937347]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.580514/10.032268) · [OSM](https://www.openstreetmap.org/?mlat=53.580514&mlon=10.032268#map=18/53.580514/10.032268) |
 
-Höchster Δ einer Route (ohne Längengewicht): 0.30; Routen mit Δ ≥ 0,2: 186.
+Höchster Δ einer Route (ohne Längengewicht): 0.30; Routen mit Δ ≥ 0,2: 174.
 
 ## Karten je Prinzip
 
@@ -192,8 +192,8 @@ Kleinste Überschneidung: 27/30.
 | --- | ---: | ---: | ---: | ---: |
 | Altona | 421 | 0.70 | 0.78 | 0.08 |
 | Bergedorf | 195 | 0.73 | 0.82 | 0.09 |
-| Eimsbüttel | 351 | 0.70 | 0.78 | 0.08 |
-| Hamburg-Mitte | 478 | 0.72 | 0.80 | 0.08 |
+| Eimsbüttel | 352 | 0.70 | 0.78 | 0.08 |
+| Hamburg-Mitte | 477 | 0.72 | 0.80 | 0.08 |
 | Hamburg-Nord | 411 | 0.70 | 0.78 | 0.08 |
 | Harburg | 267 | 0.69 | 0.79 | 0.10 |
 | Wandsbek | 810 | 0.71 | 0.80 | 0.08 |
@@ -208,30 +208,30 @@ Kleinste Überschneidung: 27/30.
 | `ce_8c9cd54ac5a268ba` | neben Schnackenburgallee | HAUPT | Zweirichtungsradweg → Radweg je Seite | – / 3.50 | paving_stones | ja | 0.55 / 0.75 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560841,5936365]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.572615/9.918788) · [OSM](https://www.openstreetmap.org/?mlat=53.572615&mlon=9.918788#map=18/53.572615/9.918788) |
 | `ce_2994d0707bd584a1` | Lohbrügger Weg | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.71 / 0.79 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[579928,5928564]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.499955/10.204987) · [OSM](https://www.openstreetmap.org/?mlat=53.499955&mlon=10.204987#map=18/53.499955/10.204987) |
 | `ce_417a3364826a402b` | Reinbeker Weg | HAUPT | Mischverkehr → Fahrradstraße | – / – | unhewn_cobblestone | ja | 0.63 / 0.83 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[580865,5927510]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.490340/10.218832) · [OSM](https://www.openstreetmap.org/?mlat=53.490340&mlon=10.218832#map=18/53.490340/10.218832) |
-| `ce_1a9f56ccf8a254b2` | – | HAUPT | eigener Weg → eigener Weg | – / 3.50 | paving_stones | ja | 0.80 / 0.95 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560744,5943116]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.633297/9.918648) · [OSM](https://www.openstreetmap.org/?mlat=53.633297&mlon=9.918648#map=18/53.633297/9.918648) |
-| `ce_b4c981d3d0970fc3` | Grandweg | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.67 / 0.74 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563831,5938282]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.589489/9.964336) · [OSM](https://www.openstreetmap.org/?mlat=53.589489&mlon=9.964336#map=18/53.589489/9.964336) |
-| `ce_c68e42adb9708098` | Volksparkstraße | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.70 / 0.76 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560808,5938325]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.590234/9.918683) · [OSM](https://www.openstreetmap.org/?mlat=53.590234&mlon=9.918683#map=18/53.590234/9.918683) |
-| `ce_c8294c7fc1117801` | Bellealliancestraße | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.66 / 0.76 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563509,5935852]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.567692/9.958970) · [OSM](https://www.openstreetmap.org/?mlat=53.567692&mlon=9.958970#map=18/53.567692/9.958970) |
+| `ce_1aa2495a45888ddb` | Duvenacker | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.72 / 0.80 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560402,5940820]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.612703/9.913036) · [OSM](https://www.openstreetmap.org/?mlat=53.612703&mlon=9.913036#map=18/53.612703/9.913036) |
+| `ce_b4a5851c96df7c1e` | neben Kollaustraße | HAUPT | Radweg je Seite → Radweg je Seite | – / 2.50 | paving_stones | ja | 0.58 / 0.74 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563631,5939867]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.603761/9.961639) · [OSM](https://www.openstreetmap.org/?mlat=53.603761&mlon=9.961639#map=18/53.603761/9.961639) |
+| `ce_c63eefbc67eaaeb9` | Duvenacker | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.67 / 0.74 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560438,5940873]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.613181/9.913580) · [OSM](https://www.openstreetmap.org/?mlat=53.613181&mlon=9.913580#map=18/53.613181/9.913580) |
+| `ce_c7b8f072ebcfb4e0` | neben Kollaustraße | HAUPT | Radweg je Seite → Radweg je Seite | – / 2.50 | paving_stones | ja | 0.47 / 0.62 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563674,5939692]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.602181/9.962256) · [OSM](https://www.openstreetmap.org/?mlat=53.602181&mlon=9.962256#map=18/53.602181/9.962256) |
 | `ce_0c9cd7f18ecc8454` | Karl-Arnold-Ring | BASIS | Mischverkehr → Mischverkehr | – / – | asphalt | ja | 0.85 / 0.85 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567821,5926895]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.486651/10.022141) · [OSM](https://www.openstreetmap.org/?mlat=53.486651&mlon=10.022141#map=18/53.486651/10.022141) |
-| `ce_22791e9d9e976a6c` | neben Reiherstieg-Hauptdeich | HAUPT | Zweirichtungsradweg → Radweg je Seite | – / 3.50 | asphalt | ja | 0.70 / 0.78 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564783,5929618]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.511507/9.976924) · [OSM](https://www.openstreetmap.org/?mlat=53.511507&mlon=9.976924#map=18/53.511507/9.976924) |
-| `ce_b21c95958aeb73ab` | Am Elisabethgehölz | BASIS | Mischverkehr → Mischverkehr | – / – | sett | ja | 0.81 / 0.96 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570342,5934836]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.557689/10.061912) · [OSM](https://www.openstreetmap.org/?mlat=53.557689&mlon=10.061912#map=18/53.557689/10.061912) |
-| `ce_e79c89c9ae27a479` | Hermann-Heberlein-Ring | BASIS | Mischverkehr → Mischverkehr | – / – | paving_stones | nein | 0.56 / 0.66 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572698,5934798]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.557028/10.097459) · [OSM](https://www.openstreetmap.org/?mlat=53.557028&mlon=10.097459#map=18/53.557028/10.097459) |
-| `ce_f991df4a8b8fbc7c` | – | BASIS | eigener Weg → eigener Weg | – / 3.00 | compacted | ja | 0.81 / 0.96 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564821,5933559]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.546918/9.978308) · [OSM](https://www.openstreetmap.org/?mlat=53.546918&mlon=9.978308#map=18/53.546918/9.978308) |
+| `ce_227ca2f3c8e7d46e` | Wunschring | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | – | 0.62 / 0.74 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573949,5935436]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.562580/10.116490) · [OSM](https://www.openstreetmap.org/?mlat=53.562580&mlon=10.116490#map=18/53.562580/10.116490) |
+| `ce_b29c3a6aef934259` | Grevenweg | HAUPT | Radweg je Seite → Radweg je Seite | – / 2.50 | asphalt | ja | 0.76 / 0.76 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568936,5934524]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555073/10.040608) · [OSM](https://www.openstreetmap.org/?mlat=53.555073&mlon=10.040608#map=18/53.555073/10.040608) |
+| `ce_e847b7f4a2b3d658` | – | HAUPT | eigener Weg → eigener Weg | 2.00 / 4.00 | asphalt | ja | 0.81 / 0.85 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565488,5934841]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.558358/9.988642) · [OSM](https://www.openstreetmap.org/?mlat=53.558358&mlon=9.988642#map=18/53.558358/9.988642) |
+| `ce_fa3b626a8e6d5e01` | Bei der Wollkämmerei | HAUPT | Radweg je Seite → Radweg je Seite | – / 2.50 | asphalt | ja | 0.61 / 0.61 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565473,5928471]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.501113/9.987078) · [OSM](https://www.openstreetmap.org/?mlat=53.501113&mlon=9.987078#map=18/53.501113/9.987078) |
 | `ce_0b207c7070a297f8` | neben Überseering | BASIS | Radweg je Seite → Mischverkehr | 1.00 / 2.00 | asphalt | ja | 0.83 / 0.89 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567359,5940008]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.604557/10.017992) · [OSM](https://www.openstreetmap.org/?mlat=53.604557&mlon=10.017992#map=18/53.604557/10.017992) |
 | `ce_26b7134ede10beb4` | Elsässer Straße | HAUPT | Mischverkehr → Fahrradstraße | – / – | sett | ja | 0.62 / 0.82 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570355,5937554]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.582117/10.062719) · [OSM](https://www.openstreetmap.org/?mlat=53.582117&mlon=10.062719#map=18/53.582117/10.062719) |
 | `ce_6008acfad41648db` | Warnckesweg | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.77 / 0.77 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564449,5940608]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.610322/9.974150) · [OSM](https://www.openstreetmap.org/?mlat=53.610322&mlon=9.974150#map=18/53.610322/9.974150) |
 | `ce_65ea164fb67a0de2` | – | BASIS | eigener Weg → eigener Weg | – / 3.00 | paving_stones | – | 0.57 / 0.59 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566269,5947509]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.672110/10.003128) · [OSM](https://www.openstreetmap.org/?mlat=53.672110&mlon=10.003128#map=18/53.672110/10.003128) |
-| `ce_d8e1a300f7fbb2e7` | Manilaweg | HAUPT | eigener Weg → eigener Weg | – / 3.50 | paving_stones | ja | 0.63 / 0.79 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567623,5939884]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.603414/10.021957) · [OSM](https://www.openstreetmap.org/?mlat=53.603414&mlon=10.021957#map=18/53.603414/10.021957) |
-| `ce_0ea69e04f296139e` | Rotbergfeld | BASIS | Mischverkehr → Mischverkehr | – / – | nan | – | 0.78 / 0.89 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566297,5921062]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.434425/9.997936) · [OSM](https://www.openstreetmap.org/?mlat=53.434425&mlon=9.997936#map=18/53.434425/9.997936) |
-| `ce_5da3632ccde19e26` | Unterelbestraße | BASIS | Mischverkehr → Mischverkehr | – / – | asphalt | – | 0.56 / 0.62 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564266,5924910]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.469260/9.968159) · [OSM](https://www.openstreetmap.org/?mlat=53.469260&mlon=9.968159#map=18/53.469260/9.968159) |
-| `ce_fd63a556632a7bf0` | Höpenstraße | BASIS | Mischverkehr → Mischverkehr | – / – | asphalt | ja | 0.91 / 0.91 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566304,5921681]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.439988/9.998181) · [OSM](https://www.openstreetmap.org/?mlat=53.439988&mlon=9.998181#map=18/53.439988/9.998181) |
-| `ce_41aea594c6f6366f` | Rauchstraße | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.77 / 0.82 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572644,5936501]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.572341/10.097043) · [OSM](https://www.openstreetmap.org/?mlat=53.572341&mlon=10.097043#map=18/53.572341/10.097043) |
+| `ce_d8e48d75d11d6009` | Gert-Marcus-Straße | HAUPT | Zweirichtungsradweg → Fahrradstraße | – / 3.50 | paving_stones | ja | 0.69 / 0.89 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564201,5939858]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.603608/9.970247) · [OSM](https://www.openstreetmap.org/?mlat=53.603608&mlon=9.970247#map=18/53.603608/9.970247) |
+| `ce_0e9d0c21509796cb` | Triftstraße | BASIS | Zweirichtungsradweg → Mischverkehr | – / 3.00 | asphalt | ja | 0.73 / 0.73 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563182,5923006]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.452274/9.951447) · [OSM](https://www.openstreetmap.org/?mlat=53.452274&mlon=9.951447#map=18/53.452274/9.951447) |
+| `ce_5d9f7429af412d54` | Eigenheimweg | BASIS | Mischverkehr → Mischverkehr | – / – | asphalt | ja | 0.86 / 0.86 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565473,5922545]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.447853/9.985850) · [OSM](https://www.openstreetmap.org/?mlat=53.447853&mlon=9.985850#map=18/53.447853/9.985850) |
+| `ce_fe316f198c34efab` | Cuxhavener Straße | BASIS | Radweg je Seite → Radweg je Seite | – / 2.00 | asphalt | ja | 0.68 / 0.68 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[553830,5924632]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.467929/9.810913) · [OSM](https://www.openstreetmap.org/?mlat=53.467929&mlon=9.810913#map=18/53.467929/9.810913) |
+| `ce_41cc34709744b9f7` | Kätnermoor | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.79 / 0.84 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572513,5942603]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.627192/10.096479) · [OSM](https://www.openstreetmap.org/?mlat=53.627192&mlon=10.096479#map=18/53.627192/10.096479) |
 | `ce_52691702aa28ff26` | Stühmtwiete | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.79 / 0.84 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573365,5943222]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.632634/10.109503) · [OSM](https://www.openstreetmap.org/?mlat=53.632634&mlon=10.109503#map=18/53.632634/10.109503) |
 | `ce_7ad8af14619749ea` | Edwin-Scharff-Ring | HAUPT | Zweirichtungsradweg → Fahrradstraße | – / 3.50 | paving_stones | ja | 0.61 / 0.83 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569255,5941012]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.613338/10.046866) · [OSM](https://www.openstreetmap.org/?mlat=53.613338&mlon=10.046866#map=18/53.613338/10.046866) |
 | `ce_8331a50b1d3bb7f0` | Rüßwisch | BASIS | Mischverkehr → Mischverkehr | – / – | paving_stones | ja | 0.82 / 0.82 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573937,5943436]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.634481/10.118206) · [OSM](https://www.openstreetmap.org/?mlat=53.634481&mlon=10.118206#map=18/53.634481/10.118206) |
 | `ce_ab34d6edeee9da0b` | Grunewaldstraße | HAUPT | Mischverkehr → Fahrradstraße | – / – | nan | – | 0.58 / 0.74 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[576264,5937629]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.581962/10.151966) · [OSM](https://www.openstreetmap.org/?mlat=53.581962&mlon=10.151966#map=18/53.581962/10.151966) |
-| `ce_ebbf210837df70f0` | Volksdorfer Damm | HAUPT | Mischverkehr → Radweg je Seite | – / – | asphalt | ja | 0.58 / 0.68 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[575504,5947324]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.669201/10.142846) · [OSM](https://www.openstreetmap.org/?mlat=53.669201&mlon=10.142846#map=18/53.669201/10.142846) |
-| `ce_fd95150c93f6d451` | Bramfelder Chaussee | HAUPT | Radweg je Seite → Radweg je Seite | – / 2.50 | asphalt | ja | 0.64 / 0.64 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[571239,5941370]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.616284/10.076931) · [OSM](https://www.openstreetmap.org/?mlat=53.616284&mlon=10.076931#map=18/53.616284/10.076931) |
+| `ce_ebc7d7c01ee893c1` | Blomeweg | BASIS | Mischverkehr → Mischverkehr | – / – | asphalt | – | 0.90 / 0.92 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[574782,5940402]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.607091/10.130249) · [OSM](https://www.openstreetmap.org/?mlat=53.607091&mlon=10.130249#map=18/53.607091/10.130249) |
+| `ce_fd9b82bf3da96747` | Jaspersdiek | HAUPT | Mischverkehr → Fahrradstraße | – / – | asphalt | ja | 0.70 / 0.75 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[571282,5946759]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.664712/10.078825) · [OSM](https://www.openstreetmap.org/?mlat=53.664712&mlon=10.078825#map=18/53.664712/10.078825) |
 
 ## Durchsicht mit Ortskundigen
 

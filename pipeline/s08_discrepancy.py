@@ -45,9 +45,10 @@ TOP_STREETS = 30
 SAMPLE_SIZE = 30
 SAMPLE_SEED = 42
 FIXED_INPUTS = ["speed_ist_kmh", "dtv_official", "separated_cycle_track_present", "lanes_official_in",
-                "lanes_official_gegen"]
+                "lanes_official_gegen", "width_p10_m", "bus_route"]
 DIMENSIONS = {"disc_speed": "Tempo", "disc_design": "Gestaltung", "disc_use": "Nutzung"}
 RESULT_COLUMNS = ["disc_speed", "disc_design", "disc_use", "disc_max", "disc_type", "disc_causes", "gow50_anbaufrei",
+                  "gow50_cycle_track_min",
                   "disc_speed_hint",
                   "disc_design_unknown", *acc.AGG_COLUMNS, "crash_weighted_per_km", "crash_years", "crash_norm",
                   "school_kita_near", "risk", "risk_weight_available", "priority", "disc_trace"]
@@ -403,6 +404,9 @@ def write_report(area: gpd.GeoDataFrame, pilot: gpd.GeoDataFrame, checks: list[d
         f"Abschnitte ({_km(area.loc[area['gow50_anbaufrei'].astype(bool), 'length_m'].sum())} km), davon "
         f"{_fmt(area['disc_speed_hint'].notna().sum())} mit Hinweis statt Tempo-Stärke (Ist ab "
         f"{d.speed.anbaufrei_hint.min_ist_kmh:g} km/h, D-SPD-01 anbaufrei_hint).",
+        f"- GOW50 mit Radweg nur in Mindestbreite (Flag gow50_cycle_track_min, C-G30-02 seit 0.24.0): "
+        f"{_fmt(area['gow50_cycle_track_min'].astype(bool).sum())} Abschnitte "
+        f"({_km(area.loc[area['gow50_cycle_track_min'].astype(bool), 'length_m'].sum())} km).",
         *_track_lines(area), "",
         "### Stärke je Dimension (Abschnitte im Arbeitsgebiet)", "",
         "Halbe Stufen nur in der Gestaltung (severity_if, F21).", "",

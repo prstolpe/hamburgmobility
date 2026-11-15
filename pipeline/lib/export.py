@@ -30,7 +30,7 @@ PUBLIC_COLUMNS = [
     "speed_ist_kmh", "speed_ist_source", "in_hvs", "dtv_official", "bus_trips_weekday", "in_cycle_network",
     "separated_cycle_track_present", "cycle_lane_present", "centre_line", "parking_along_carriageway",
     "conn_score", "place_score", "schools_or_kitas_within_m", "school_or_kita_access_m", "bus_route",
-    "population_100m", "shop_frontage_share", "anbaufrei", "gow50_anbaufrei",
+    "population_100m", "shop_frontage_share", "anbaufrei", "gow50_anbaufrei", "gow50_cycle_track_min",
     "width_median_m", "width_p10_m", "feasibility_GOW50", "feasibility_GOW30_narrow", "feasibility_ETW30",
     "flags",
     "disc_speed", "disc_design", "disc_use", "disc_max", "disc_type",

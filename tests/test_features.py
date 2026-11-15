@@ -269,6 +269,15 @@ def test_way_design_cycleways():
     assert "separated_cycle_track_present" not in untagged
 
 
+def test_way_design_oneway():
+    """H-PAIR-01 input: oneway from the OSM tag; untagged is unknown (None), not two-way."""
+    assert way_design({"oneway": "yes"})["oneway"] is True
+    assert way_design({"oneway": "-1"})["oneway"] is True
+    assert way_design({"oneway": "no"})["oneway"] is False
+    assert way_design({})["oneway"] is None
+    assert way_design({"oneway": "reversible"})["oneway"] is None
+
+
 def test_way_design_lanes_markings_surface_motorroad():
     d = way_design({"lanes": "4", "lane_markings": "no", "surface": "asphalt", "motorroad": "yes"})
     assert (d["lanes"], d["centre_line"], d["surface"], d["motorroad"]) == (4, False, "asphalt", True)

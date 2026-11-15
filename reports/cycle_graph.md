@@ -1,6 +1,6 @@
 # Radgraph (Stufe c01)
 
-Erzeugt 2026-11-15T01:51:20+00:00 mit pipeline/c01_cycle_graph.py · cycling_rules.yaml 0.12.0 · OSM-Auszug `data/raw/osm/hamburg_2026-10-28.osm.pbf` (SHA-256 700d2e2603a7…) · nicht amtlicher Entwurf
+Erzeugt 2026-11-15T21:40:22+00:00 mit pipeline/c01_cycle_graph.py · cycling_rules.yaml 0.12.0 · OSM-Auszug `data/raw/osm/hamburg_2026-10-28.osm.pbf` (SHA-256 700d2e2603a7…) · nicht amtlicher Entwurf
 
 ## Kennzahlen
 
