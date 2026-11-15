@@ -103,14 +103,14 @@ classification:
 
   - id: C-G30-01
     label_plain: "Tempo 30 wegen Schule oder Läden"
-    explain_plain: "Tempo 30, wenn eine Schule oder Kita direkt an der Hauptstraße liegt oder viele Läden dort sind. Bei sehr viel Verkehr gilt das nicht."
+    explain_plain: "Tempo 30, wenn eine Schule, eine Kita oder viele Läden direkt an der Hauptstraße liegen. Über 10 000 Autos am Tag gilt das nicht."
     why: "Schulen, Kitas und viele Läden bedeuten viel Leben am Rand. Das niederländische Regelwerk (CROW) nennt das Umfeld als Auslöser für Tempo 30."
     description: "GOW30-Auslöser a: Umfeld spricht für 30 (Schule/Kita am Abschnitt, Leben, Querbarkeit)"
     applies_to: GOW
     if: "(school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high) and (not in_hvs or dtv_official <= thresholds.gow30_max_dtv)"
     then: GOW30
     thresholds:
-      gow30_max_dtv: {label_plain: "größte Verkehrsmenge einer Hauptverkehrsstraße mit Tempo 30 wegen Schule oder Läden", value: 10000, unit: "Kfz/24h",
+      gow30_max_dtv: {label_plain: "höchstens so viele Autos am Tag für Tempo 30 wegen Schule oder Läden", value: 10000, unit: "Kfz/24h",
                       source: CROW_GOW30_2023, source_type: swov_crow, check: "gleich requirements.GOW30.profiles.wide.max_dtv (Schema prüft)"}
       access_radius: {label_plain: "größter Abstand zum Grundstück einer Schule oder Kita", value: 50, unit: m, source_type: assumption,
                       check: "Abstand Grundstück der Einrichtung (allgemeinbildende Schule, Kita) zum Abschnitt; StVO § 45 (9) S. 4 Nr. 6 'unmittelbarer Bereich' (Wortlaut am Original prüfen); 50 m ist eigene Setzung (F07, Q2 b)"}
@@ -134,7 +134,7 @@ classification:
 
   - id: C-G30-02
     label_plain: "Tempo 30, wenn Platz für den Radweg fehlt"
-    explain_plain: "Ist die Straße zu schmal für Tempo 50 mit Radweg, wird es Tempo 30. Ein Radweg in Mindestbreite reicht."
+    explain_plain: "Ist die Straße zu schmal für Tempo 50 mit eigenem Radweg, gilt Tempo 30. Ein schmaler Radweg mit 1,60 m reicht."
     why: "Bei Tempo 50 braucht das Rad einen getrennten Radweg. Passt er nicht in die Straße, ist Tempo 50 nicht sicher zu gestalten."
     description: "GOW30-Auslöser b: 50 nicht sicher gestaltbar (kein ausreichender getrennter Radweg möglich)"
     applies_to: GOW
@@ -158,7 +158,7 @@ classification:
   - id: C-G50-02
     label_plain: "Tempo 50 bei sehr viel Verkehr"
     explain_plain: "Schule oder Läden sprechen für Tempo 30, aber es fährt zu viel Verkehr dafür. Dann bleibt Tempo 50 mit eigenem Radweg."
-    why: "Das niederländische Regelwerk (CROW) sieht Hauptstraßen mit Tempo 30 nur bis zu einer bestimmten Verkehrsmenge vor. Darüber ist ein getrennter Radweg sicherer."
+    why: "Das niederländische Regelwerk (CROW) sieht Hauptstraßen mit Tempo 30 nur bis 10 000 Autos am Tag vor. Bei mehr Verkehr ist ein eigener Radweg sicherer."
     description: "Umfeld spräche für 30, aber die Hauptverkehrsstraße trägt mehr Verkehr als das CROW-GOW30-Profil: GOW50, Tempo-30-Abschnitt vor Ort prüfen"
     applies_to: GOW
     if: "(school_or_kita_access_m <= thresholds.access_radius or shop_frontage_share >= thresholds.frontage or crossing_demand == high) and in_hvs and dtv_official > thresholds.gow30_max_dtv and not ((not bus_route and width_p10_m < required_width.GOW50_min) or (bus_route and width_p10_m < required_width.GOW50_bus_min))"
@@ -1097,7 +1097,7 @@ harmonisation:
   rules:
     - id: H-STR-01
       label_plain: "Kurze Stücke angleichen"
-      explain_plain: "Kurze Stücke bekommen die Aufgabe der Straße davor und dahinter. Kurze 50 zwischen 30 wird 30, kurze 30 zwischen 50 wird 50."
+      explain_plain: "Ein kurzes Stück bekommt die Aufgabe und das Tempo der Straße davor und dahinter. Das gilt für 30 und für 50."
       why: "Ein Straßenzug soll auf langer Strecke dieselbe Kategorie haben. Das nennt SWOV Homogenität."
       description: >-
         Kurze Läufe (unter min_run_m aus N2) auf einem Straßenzug angleichen, wiederholt bis nichts mehr wechselt: (1)
@@ -1130,8 +1130,8 @@ harmonisation:
         - "Entscheidung Projektteam 2026-11-04: Harmonisierung entlang des Straßenzugs"
 
     - id: H-PAIR-01
-      label_plain: "Beide Richtungsfahrbahnen gleich"
-      explain_plain: "Hat eine Straße zwei getrennte Fahrbahnen, gilt auf beiden dasselbe Tempo; trifft 50 auf 30, gewinnt 30."
+      label_plain: "Beide Fahrbahnen gleich schnell"
+      explain_plain: "Zwei getrennte Fahrbahnen einer Straße bekommen dasselbe Tempo. Meist gewinnt 30. Steht eine Seite wegen viel Verkehr fest auf 50, gilt beidseitig 50."
       why: "Eine Straße mit Mittelstreifen ist eine Straße. Wechselt das Tempo nur auf einer Seite, ist das nicht erkennbar."
       description: >-
         Richtungsfahrbahnen paaren: zwei GOW-Abschnitte sind ein Paar, wenn beide oneway sind (S-FEAT-10), denselben
