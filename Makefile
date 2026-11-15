@@ -8,7 +8,7 @@
 # (S-FEAT-11) from ist-facility (c03b); both need the cycle graph and the Soll cycle network, so discrepancy runs after
 # the first cycling stages (rules.yaml 0.20.0, Review 2026-11 F21/F26). The classification does not need them.
 # validate runs before export because the website shows its robustness mark ("unsicher").
-# coherence checks N1–N5 (and N7); N6 (junctions without a Soll type, N5 transitions per junction) needs the Soll
+# coherence checks N1–N5 (N7 is part of N2); the junction part (formerly N6: junctions without a Soll type, N5 transitions per junction) needs the Soll
 # junction type and runs in the junctions stage (c07) of the cycling chain (rules.yaml 0.19.0, Review 2026-11 F09).
 #
 # For now all targets are independent and phony. Later prompts replace them with file-based
@@ -22,7 +22,7 @@ PIPELINE_TARGETS := fetch network conflate features crosssection classify cohere
 #   cycle-demand -> cycle-network -> ist-facility -> cycle-principles -> cycle-facility -> cross-section-soll
 #   -> junctions -> export-cycling
 # ist-facility (c03b) computes the Ist facility once per segment for c04, c05 and s08 (V-INV-08).
-# junctions (c07) reads the Soll lanes of cross-section-soll (J-14/J-15) and the N5 nodes of coherence and writes N6.
+# junctions (c07) reads the Soll lanes of cross-section-soll (J-14/J-15) and the N5 nodes of coherence and writes the section "Übergänge (N5)".
 CYCLING_TARGETS := cycle-demand cycle-network ist-facility cycle-principles cycle-facility cross-section-soll junctions export-cycling
 .PHONY: help install dirs test web web-test a11y basemap site-data override-template rerun $(PIPELINE_TARGETS) $(CYCLING_TARGETS)
 
@@ -64,7 +64,7 @@ classify: dirs ## Rule-based target category, then harmonisation along streets (
 	$(call run_step,classify,s05_classify)
 	$(call run_step,classify,s05b_harmonise)
 
-coherence: dirs ## Network coherence flags N1-N5/N7 and overrides (N6 runs in junctions)
+coherence: dirs ## Network coherence flags N1-N5 and overrides (junction part runs in junctions)
 	$(call run_step,coherence,s06_coherence)
 	$(call run_step,coherence,s06b_overrides)
 
@@ -116,7 +116,7 @@ cycle-facility: dirs ## Cycle facility type and width per segment (prompt 18)
 cross-section-soll: dirs ## Target cross section: lanes, placement, space allocation (prompt 19)
 	$(call run_step,cross-section-soll,c06_cross_section_soll)
 
-junctions: dirs ## Target junction type, cyclist treatment per node (prompt 20) and N6 coherence report
+junctions: dirs ## Target junction type, cyclist treatment per node (prompt 20) and junction coherence report
 	$(call run_step,junctions,c07_junctions)
 
 export-cycling: dirs ## Cycling validation (c08) and export incl. cycling layers (prompt 21) -> reports/validation_cycling.md
@@ -124,7 +124,7 @@ export-cycling: dirs ## Cycling validation (c08) and export incl. cycling layers
 	$(call run_step,export-cycling,s09_export)
 
 # rerun FROM=<stage>: CHAIN from FROM (street stages, the first cycling stages, ist-facility and discrepancy), then
-# validate alongside the rest of the cycling chain (they share no outputs; N6 is part of junctions), then
+# validate alongside the rest of the cycling chain (they share no outputs; the junction coherence part belongs to junctions), then
 # export-cycling. FROM may also name a stage of the cycling tail (validate is then skipped).
 # Workers per stage: SFP_WORKERS (default all cores, 1 = serial).
 CHAIN := network conflate features crosssection classify coherence cycle-demand cycle-network ist-facility discrepancy

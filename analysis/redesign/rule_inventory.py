@@ -4,7 +4,7 @@ a candidate action.
 
 Measures come from the traces in data/interim (current run). "Decides" is defined per domain:
 - classification cascade: last C-* step of final.rule_path; H-STR-01 when it is in rule_path
-- coherence: N1–N7 only set flags or proposals (N7 smoothing is applied only via overrides)
+- coherence: N1–N5 only set flags or proposals (the N2 smoothing proposal, formerly N7, is applied only via overrides)
 - junctions: junctions.decision_rule; JC-* from junctions.cyclist_treatment
 - cycle facility: last step in rule_trace_facility whose result equals cycle_facility_soll
 - cycle network: last C-NET step whose result equals cycle_cat_proposed

@@ -1,13 +1,13 @@
-"""Stage 6: network coherence N1–N5 and N7 on the graph of proposed categories (guide 1.5, 3.2 Stufe 6, prompts/09).
+"""Stage 6: network coherence N1–N5 on the graph of proposed categories (guide 1.5, 3.2 Stufe 6, prompts/09).
 
 Usage: uv run python -m pipeline.s06_coherence
 
 Reads data/interim/harmonised.parquet, config/rules.yaml (coherence) and the OSM extract (city boundary,
 traffic signals, traffic_calming=table, roundabouts). Writes data/interim/coherence.parquet (input columns plus
-flags and coherence_trace as JSON), data/interim/coherence_nodes.parquet (N5 per node, read by c07 for N6),
+flags and coherence_trace as JSON), data/interim/coherence_nodes.parquet (N5 per node, read by c07),
 data/interim/coherence_areas.parquet (N3), reports/coherence.md, reports/coherence_flags.geojson.
-Nothing is reclassified: cat_proposed is unchanged, smoothing proposals are N7 flags.
-N6 (rules.yaml since 0.19.0, Review 2026-11 F09) runs after the junction stage c07 and is reported there.
+Nothing is reclassified: cat_proposed is unchanged, smoothing proposals are N2 flags (flag N7_smooth:<cat>, formerly rule N7, K1).
+The junction part of the coherence check runs after the junction stage c07 and is reported there.
 The run stops with exit code 1 if a check fails; outputs are then not written.
 """
 
@@ -44,7 +44,6 @@ RULE_LABELS = {
     "N3": "Kleiner Aufenthaltsbereich",
     "N4": "Schleichverkehr über ETW",
     "N5": "Direkter Übergang ≥ 70 → 30",
-    "N7": "Glättungsvorschlag",
 }
 # Flags with their own label (otherwise the label of their rule)
 FLAG_LABELS = {"N4_gow_gap": "Lücke im GOW-Netz (Verbindung nur über ETW)"}
@@ -54,7 +53,7 @@ FLAG_LABELS = {"N4_gow_gap": "Lücke im GOW-Netz (Verbindung nur über ETW)"}
 
 
 def read_osm_inputs(pbf, work_area) -> dict:
-    """City boundary (admin_level 4). Signals, plateaus and roundabouts are read by c07 (N6 since 0.19.0, F09)."""
+    """City boundary (admin_level 4). Signals, plateaus and roundabouts are read by c07 (c07)."""
     from pyrosm import OSM
 
     with warnings.catch_warnings():
@@ -243,13 +242,13 @@ def write_report(res: dict, ctx: dict, checks: list[dict]) -> None:
 
     n2 = ft[ft["rule"] == "N2"]
     smooth = Counter(f["flag"].split(":")[1] + " ← " + f["inputs"]["current"]
-                     for t in area["coherence_trace"] for f in json.loads(t) if f["id"] == "N7")
-    lines += ["", "## N2 Kategorie-Inseln und N7 Glättungsvorschläge", "",
+                     for t in area["coherence_trace"] for f in json.loads(t) if f["flag"].startswith("N7_smooth:"))
+    lines += ["", "## N2 Kategorie-Inseln und Glättungsvorschläge", "",
               f"Straßenzug: an Knoten mit Grad 2 immer weiter, an Kreuzungen zum gegenseitig besten Abschnitt mit höchstens "
               f"{p['N2'].param('max_deflection_deg'):g}° Richtungsänderung. Insel = Lauf einer Kategorie unter "
               f"{p['N2'].param('min_run_m'):g} m zwischen zwei Läufen gleicher anderer Kategorie. "
               f"{_fmt(len(n2))} Abschnitte ({_km(n2['length_m'].sum())} km).", "",
-              "| Vorschlag (N7) neu ← bisher | Abschnitte |", "| --- | ---: |",
+              "| Vorschlag (N2) neu ← bisher | Abschnitte |", "| --- | ---: |",
               *[f"| {k} | {v} |" for k, v in smooth.most_common()]]
 
     areas = res["areas"]
@@ -307,11 +306,11 @@ def write_report(res: dict, ctx: dict, checks: list[dict]) -> None:
               f"(Flag auf der 30-Seite): {_fmt(int(nodes['direct_to_30'].sum()))} Knoten, "
               f"{_fmt((ft['rule'] == 'N5').sum())} Abschnitte."]
 
-    lines += ["", "## N6 Knotentypen", "",
+    lines += ["", "## Knotentypen", "",
               "Seit rules.yaml 0.19.0 (Review 2026-11 F09) gibt es nur einen Soll-Knotentyp: den der Stufe c07 "
-              "(design_rules.yaml junctions). Der N6-Teil der Prüfung läuft darum nach c07 und steht in reports/junctions.md "
-              "(Abschnitt „N6 Netzkohärenz“): Knotenpunkte ohne Soll-Typ und Übergänge nach N5 je Knotenpunkt. "
-              "Abschnitte tragen kein N6-Flag mehr."]
+              "(design_rules.yaml junctions). Der Knotenteil der Prüfung läuft darum nach c07 und steht in reports/junctions.md "
+              "(Abschnitt „Übergänge (N5)“): Knotenpunkte ohne Soll-Typ und Übergänge nach N5 je Knotenpunkt. "
+              "Abschnitte tragen kein Knotentyp-Flag."]
 
     sample, viewers = ctx["sample"], ctx["viewers"]
     lines += ["", f"## Stichprobe: {len(sample)} zufällige markierte Abschnitte in {pilot_name}, nach Bezirk geschichtet (Seed {SAMPLE_SEED})", "",

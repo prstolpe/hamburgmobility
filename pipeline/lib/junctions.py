@@ -2,7 +2,7 @@
 
 Pure functions; pipeline/c07_junctions.py builds the junctions from the network and calls them.
 
-- `category_pair`: through road + highest other road (J-M-04, as N6 in rules.yaml); a standalone cycle path counts
+- `category_pair`: through road + highest other road (J-M-04, formerly N6); a standalone cycle path counts
   as the second road if no other road meets the through road.
 - `decide`: decision table J-01..J-16 in the order J-M-05, conditions evaluated with pipeline/lib/expr.py (Kleene
   logic for missing values), fallback J-M-05.fallback_if (condition_by_type for turbo roundabouts, F24). A side of
@@ -52,7 +52,7 @@ class JunctionParams:
     rows: dict[str, Row]
     order: list[str]
     thresholds: dict[str, float]
-    rank: dict[str, int]              # road category -> rank (0 = highest), N6.category_rank
+    rank: dict[str, int]              # road category -> rank (0 = highest), J-M-04.category_rank
     alias: dict[str, str]
     on_unknown: str
     fallback_types: frozenset
@@ -77,14 +77,14 @@ class JunctionParams:
             rows[rid] = Row(rid, *_parse_legs(r.legs), spec=spec, same_as=r.same_as,
                             cycle_crossing=frozenset((r.model_extra or {}).get("cycle_crossing") or ()))
         m05 = j.method_rule("J-M-05")
-        n6 = rules.coherence_rule("N6")
+        m04 = j.method_rule("J-M-04")
         near = None
         for p in rules.classification_policy:
             if "near_threshold" in p.thresholds:
                 near = p.thresholds["near_threshold"].value
         return cls(
             rows=rows, order=list(m05["evaluation_order"]), thresholds=thresholds,
-            rank={c: i for i, c in enumerate(n6.category_rank)}, alias=dict(j.method_rule("J-M-04")["category_alias"]),
+            rank={c: i for i, c in enumerate(m04["category_rank"])}, alias=dict(m04["category_alias"]),
             on_unknown=m05["on_unknown"], fallback_types=frozenset(m05["fallback_if"]["types"]),
             fallback_cond=_compile(m05["fallback_if"]["condition"], thresholds),
             fallback_cond_by_type={t: _compile(c, thresholds)

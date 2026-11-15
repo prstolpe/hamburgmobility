@@ -185,7 +185,7 @@ columns:
   feasibility_GOW50: "Passt der Querschnitt einer Stadtmagistrale: fits, tight, does_not_fit"
   feasibility_GOW30_narrow: "Passt der schmale Querschnitt einer Stadtstraße 30"
   feasibility_ETW30: "Passt der Querschnitt einer Quartiersstraße"
-  flags: "Hinweise der Netzprüfung (N1–N7)"
+  flags: "Hinweise der Netzprüfung (N1–N5)"
   disc_speed: "Tempo-Diskrepanz 0–3 (leer = nicht prüfbar)"
   disc_design: "Gestaltungs-Diskrepanz 0–3"
   disc_use: "Nutzungs-Diskrepanz 0–3"
