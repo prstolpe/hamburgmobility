@@ -1,6 +1,6 @@
 # Fünf Prinzipien: Bewertung des Soll-Radnetzes (Stufe c04)
 
-Erzeugt 2026-11-15T01:57:40+00:00 mit pipeline/c04_principles.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Bewertungsregeln (C-PRI-01…16) und die Gewichte sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
+Erzeugt 2026-11-15T20:20:16+00:00 mit pipeline/c04_principles.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Bewertungsregeln (C-PRI-01…16) und die Gewichte sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
 
 **score_ist** bewertet den heutigen Zustand der Soll-Route, **score_soll** den Zustand nach regelkonformem Ausbau (Führung nach Trennungsmatrix, Sollbreite, geschlossene Decke, Beleuchtung). Die Differenz ist der Handlungsbedarf. Fehlende Daten senken die confidence, nicht den Score.
 
@@ -8,7 +8,7 @@ Erzeugt 2026-11-15T01:57:40+00:00 mit pipeline/c04_principles.py · cycling_rule
 
 - RSV: 73 km, Score Ist 0.57 → Soll 0.69
 - HAUPT: 1 810 km, Score Ist 0.67 → Soll 0.77
-- BASIS: 1 050 km, Score Ist 0.78 → Soll 0.83
+- BASIS: 1 051 km, Score Ist 0.78 → Soll 0.83
 - Führung entspricht heute der Trennungsmatrix auf 49 % der Netzlänge mit bekannter Führung (RSV/HAUPT: 27 %).
 - 4936 Routen bewertet; mittlerer Handlungsbedarf (score_soll − score_ist) 0.06, confidence: high 1825, medium 3111, low 0.
 - Nicht bewertbar mangels Daten: P-SAF-02 (Knotentypen erst mit Prompt 20 (pipeline/c07_junctions.py)), P-COM-03 (kein Höhenmodell geladen (sources.yaml laserscan ohne Abruf)), P-ATT-02 (keine Lärmkarte (sources.yaml noise_maps ohne Endpunkt, Entscheidung 2026-11-06)).
@@ -44,7 +44,7 @@ Längengewichtete Mittel über die Kanten der Kategorie (Kantenwerte für Direkt
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | RSV | 73 | 0.32 / 0.34 | 0.66 / 0.66 | 0.68 / 0.79 | 0.48 / 1.00 | 0.65 / 0.65 | 0.57 / 0.69 |
 | HAUPT | 1 810 | 0.68 / 0.71 | 0.66 / 0.66 | 0.64 / 0.82 | 0.70 / 1.00 | 0.70 / 0.70 | 0.67 / 0.77 |
-| BASIS | 1 050 | 0.78 / 0.79 | 0.81 / 0.81 | 0.75 / 0.82 | 0.87 / 1.00 | 0.71 / 0.71 | 0.78 / 0.83 |
+| BASIS | 1 051 | 0.78 / 0.79 | 0.81 / 0.81 | 0.75 / 0.82 | 0.87 / 1.00 | 0.71 / 0.71 | 0.78 / 0.83 |
 
 ## Zusammenhang (P-COH)
 
@@ -71,7 +71,7 @@ Längengewichtete Mittel über die Kanten der Kategorie (Kantenwerte für Direkt
 | Schnellbahnhalte | 375 | 99 % |
 | Hochschulen (OSM university) | 41 | 100 % |
 
-**P-COH-04 Kontinuität:** Wechsel der Ist-Führung je km (Median über Routen) 1.04, Soll (Führung und Kategorie) 0.00; Schwelle 1.0 je km (C-PRI-12).
+**P-COH-04 Kontinuität:** Wechsel der Ist-Führung je km (Median über Routen) 1.05, Soll (Führung und Kategorie) 0.00; Schwelle 1.0 je km (C-PRI-12).
 
 ## Direktheit (P-DIR)
 
@@ -97,12 +97,12 @@ Längengewichtete Mittel über die Kanten der Kategorie (Kantenwerte für Direkt
 
 | Ist \ Soll | Radfahrstreifen | Fahrradstraße | Mischverkehr | eigener Weg | Radweg je Seite | unbekannt |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Radfahrstreifen | 4 | 29 | 15 | 0 | 33 | 0 |
+| Radfahrstreifen | 5 | 29 | 15 | 0 | 33 | 0 |
 | Fahrradstraße | 0 | 19 | 2 | 0 | 0 | 0 |
 | Mischverkehr | 8 | 943 | 583 | 10 | 41 | 39 |
 | eigener Weg | 0 | 0 | 0 | 405 | 0 | 0 |
-| Radweg je Seite | 14 | 139 | 67 | 3 | 304 | 10 |
-| Zweirichtungsradweg | 5 | 75 | 40 | 9 | 126 | 2 |
+| Radweg je Seite | 15 | 139 | 67 | 3 | 303 | 10 |
+| Zweirichtungsradweg | 6 | 75 | 40 | 9 | 126 | 2 |
 | unbekannt | 0 | 0 | 0 | 0 | 0 | 5 |
 
 P-SAF-03 Beleuchtung: OSM lit auf 85 % der Netzlänge bekannt; davon beleuchtet 90 %. P-SAF-04 Unfälle mit Radbeteiligung 2021–2025: 7 711 Unfälle an Kanten des Soll-Netzes (je Kante höchstens 15 m entfernt; nur Summen gespeichert).

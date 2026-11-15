@@ -779,3 +779,23 @@ Keine Regeländerung. Webseite:
 - Stadtteilnamen über den Datenlinien (Datenebenen unter der ersten Beschriftungsebene, weißer Halo).
 - Logo „HMR“ (Hamburg Mobility Revolution, Rasterlogo) im Kopf, Favicons und Open-Graph-Bild; der Name steht im
   Alternativtext, in der Fußzeile, im Seitentitel und in den Metadaten.
+
+## rules.yaml 0.23.0, plain_language.yaml 0.12.1 – 2026-11-15 (Richtungsfahrbahnen)
+Anlass: Auf der Karte wechselte das Tempo oft nur auf einer Seite einer Straße mit Mittelstreifen. Getrennt gezeichnete
+Richtungsfahrbahnen sind in OSM eigene Wege und damit eigene Abschnitte; die Straßenzüge (N2) laufen nur entlang einer
+Fahrbahn, deshalb hat H-STR-01 die Gegenfahrbahn nie gesehen (Entscheidung Projektteam 2026-11-15: niedrigeres Tempo gewinnt).
+- Neu: H-PAIR-01 „Beide Richtungsfahrbahnen gleich“ (harmonisation, assumption, draft). Paar = zwei Einbahn-Abschnitte
+  gleichen Namens ohne gemeinsamen Knoten, Abstand ≤ `pair_max_distance_m` 40 m, Winkel ≤ `pair_max_angle_deg` 20°,
+  Überdeckung ≥ `pair_min_overlap_share` 0,5 (alle Setzungen, docs/open_questions.md). GOW50 mit GOW30-Partner → GOW30;
+  danach H-STR-01 erneut, im Wechsel bis H-PAIR-01 nichts mehr ändert. Trace-Eintrag H-PAIR-01 mit Partner, Abstand, Überdeckung.
+- S-FEAT-10: neues Merkmal `oneway` aus dem OSM-Tag (yes/true/1/-1 ja, no/false/0 nein, sonst unbekannt). Die amtliche
+  Fahrstreifenzahl taugt dafür nicht: zweibahnige Straßen (`bahnigkeit_official` = 2) gelten dort als nicht einbahnig.
+- Schema: `harmonisation.rules[].min_run_from` ist optional (nur H-STR-01).
+- Stufe 5b: Prüfung „Richtungsfahrbahnen gleich“; reports/harmonisation.md mit Kennzahlen der Paare und neuer Prüfliste
+  „GOW50-Inseln ab 500 m zwischen GOW30“ (63 Läufe, 59,1 km), Karte reports/harmonisation_gow50_islands.geojson.
+  validate rechnet H-PAIR-01 in den Sensitivitätsläufen mit.
+- Wirkung (cat_proposed nach Harmonisierung, Arbeitsgebiet): 2 183 Paare, davon 1 445 mit GOW auf beiden Seiten
+  (234,0 km, Median-Abstand 12,5 m). GOW50 → GOW30: 452 Abschnitte, 42,1 km (303 / 31,2 km durch H-PAIR-01, der Rest durch
+  H-STR-01 danach). GOW50 242,4 → 200,3 km, GOW30 513,2 → 555,3 km; andere Kategorien unverändert.
+- Hinweis zur Frage „woher kommt der hohe GOW30-Anteil“: Kaskade allein GOW50 342,5 / GOW30 408,5 km. Den größten
+  Sprung macht H-STR-01 mit dem Lückenschluss `gap_close_m` 500 m (seit 0.18.0, F07): 101 km GOW50 → GOW30.

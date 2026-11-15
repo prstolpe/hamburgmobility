@@ -1,16 +1,16 @@
 # Knotenpunkte: Soll-Knotentyp und Radverkehrsführung (Stufe c07)
 
-Erzeugt 2026-11-15T02:03:24+00:00 mit pipeline/c07_junctions.py · design_rules.yaml 0.10.0 · nicht amtlicher Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-04, JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.
+Erzeugt 2026-11-15T20:20:51+00:00 mit pipeline/c07_junctions.py · design_rules.yaml 0.10.0 · nicht amtlicher Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-04, JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.
 
 ## Kurzfassung
 
 - 14 312 Knotenpunkte aus 24 767 Netzknoten (Grad ≥ 3: 19 984, Kreuzungen eigenständiger Radwege: 712); 2 601 Knotenpunkte fassen mehrere Netzknoten zusammen (Radius 25 m, Kreisverkehre ganz). Größter Knotenpunkt: 26 Netzknoten, Ausdehnung bis 187 m.
 - Armfilter (J-M-01): von 16 244 Knotenpunkten vor dem Filter haben 1 932 weniger als 3 Arme und keinen eigenständigen Radweg (Scheinknoten, meist Teilung in zwei Fahrbahnen): 894 gehören zur nächsten Kreuzung derselben Straße (bis 60 m), 1 038 entfallen.
 - Soll-Typ vergeben: 14 312; ohne passende Zeile (`no_rule`): 0.
-- Handlungsbedarf (Ist passt nicht zum Soll): 1 983 Knotenpunkte; nicht prüfbar: 7 913; passt: 4 416.
+- Handlungsbedarf (Ist passt nicht zum Soll): 1 988 Knotenpunkte; nicht prüfbar: 7 943; passt: 4 381.
 - Overrides angewendet: 0 (overrides/junction_overrides.csv, nur approved).
 - Straßenbahn an keinem Arm: der GTFS-Feed enthält 0 Straßenbahnrouten; tram_present ist daher überall falsch.
-- confidence: high 11 479, medium 1 963, low 870.
+- confidence: high 11 501, medium 1 964, low 847.
 
 ## Vorgehen
 
@@ -25,41 +25,40 @@ Erzeugt 2026-11-15T02:03:24+00:00 mit pipeline/c07_junctions.py · design_rules.
 
 | Soll-Typ | Knotenpunkte | davon Handlungsbedarf | davon Radnetz (RSV/HAUPT/BASIS) | Regeln |
 | --- | ---: | ---: | ---: | --- |
-| Kreisverkehr einstreifig, Rad bevorrechtigt | 216 | 209 | 182 | J-01 128, J-03 64, J-10b 24 |
-| Turbokreisverkehr | 57 | 57 | 41 | J-01 19, J-03 22, J-10b 16 |
-| LSA, geschützte Kreuzung | 605 | 281 | 501 | J-01 383, J-03 144, J-10b 47, J-10c 31 |
+| Kreisverkehr einstreifig, Rad bevorrechtigt | 190 | 185 | 157 | J-01 92, J-03 74, J-10b 24 |
+| Turbokreisverkehr | 59 | 59 | 43 | J-01 19, J-03 24, J-10b 16 |
+| LSA, geschützte Kreuzung | 558 | 257 | 458 | J-01 296, J-03 184, J-10b 47, J-10c 31 |
 | Vorfahrt mit Plateau | 5 798 | 257 | 5 798 | J-07 5798 |
-| Vorfahrt, eingefärbte Fläche | 94 | 54 | 80 | J-03 94 |
-| Gehwegüberfahrt | 2 941 | 934 | 2 392 | J-04 543, J-05 2001, J-13 388, J-14 9 |
+| Vorfahrt, eingefärbte Fläche | 107 | 61 | 91 | J-03 107 |
+| Gehwegüberfahrt | 3 009 | 980 | 2 457 | J-04 455, J-05 2159, J-13 388, J-14 7 |
 | gleichrangig, rechts vor links | 4 031 | 168 | 2 017 | J-06 4020, J-16 11 |
-| Radwegfurt mit Vorrang | 363 | 7 | 363 | J-08 6, J-12 357 |
-| Radwegfurt mit LSA | 50 | 15 | 50 | J-14 50 |
-| planfrei (Brücke/Tunnel) | 1 | 1 | 1 | J-09 1 |
+| Radwegfurt mit Vorrang | 365 | 7 | 365 | J-08 8, J-12 357 |
+| Radwegfurt mit LSA | 39 | 14 | 39 | J-14 39 |
 | nicht anwendbar (Autobahnknoten) | 156 | 0 | 15 | J-10d 156 |
 
 ## Ist → Soll (Anzahl Knotenpunkte)
 
 Zeilen Ist aus OSM, Spalten Soll. Geschützte Kreuzung, eingefärbte Fläche, Gehwegüberfahrt und Furtgestaltung sind in OSM kaum erfasst; dort gilt „nicht prüfbar“ (J-M-06.ist_check).
 
-| Ist \ Soll | Kreisverkehr einstreifig, Rad bevorrechtigt | Turbokreisverkehr | LSA, geschützte Kreuzung | Vorfahrt mit Plateau | Vorfahrt, eingefärbte Fläche | Gehwegüberfahrt | gleichrangig, rechts vor links | Radwegfurt mit Vorrang | Radwegfurt mit LSA | planfrei (Brücke/Tunnel) | nicht anwendbar (Autobahnknoten) | gesamt |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Kreisverkehr | 7 | 0 | 1 | 37 | 0 | 15 | 11 | 0 | 1 | 0 | 0 | 72 |
-| LSA mit Plateau | 0 | 0 | 1 | 0 | 0 | 7 | 0 | 0 | 1 | 0 | 0 | 9 |
-| LSA | 153 | 40 | 323 | 220 | 54 | 912 | 157 | 7 | 34 | 0 | 15 | 1 915 |
-| Plateau | 0 | 0 | 1 | 31 | 0 | 19 | 16 | 0 | 0 | 0 | 0 | 67 |
-| nichts erfasst | 56 | 17 | 279 | 5 510 | 40 | 1 988 | 3 847 | 356 | 14 | 1 | 141 | 12 249 |
+| Ist \ Soll | Kreisverkehr einstreifig, Rad bevorrechtigt | Turbokreisverkehr | LSA, geschützte Kreuzung | Vorfahrt mit Plateau | Vorfahrt, eingefärbte Fläche | Gehwegüberfahrt | gleichrangig, rechts vor links | Radwegfurt mit Vorrang | Radwegfurt mit LSA | nicht anwendbar (Autobahnknoten) | gesamt |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Kreisverkehr | 5 | 0 | 1 | 37 | 0 | 17 | 11 | 0 | 1 | 0 | 72 |
+| LSA mit Plateau | 0 | 0 | 1 | 0 | 0 | 7 | 0 | 0 | 1 | 0 | 9 |
+| LSA | 133 | 42 | 300 | 220 | 61 | 956 | 157 | 7 | 24 | 15 | 1 915 |
+| Plateau | 0 | 0 | 1 | 31 | 0 | 19 | 16 | 0 | 0 | 0 | 67 |
+| nichts erfasst | 52 | 17 | 255 | 5 510 | 46 | 2 010 | 3 847 | 358 | 13 | 141 | 12 249 |
 
 ## Radverkehrsführung
 
 | Führung | Knotenpunkte | Beschreibung |
 | --- | ---: | --- |
-| JC-01 | 216 | Kreisverkehr mit umlaufendem Radweg, Radverkehr bevorrechtigt (CROW innerorts). Zielkonflikt: SWOV-Analysen sehen die Wartepflicht für Radfahrende als sicherer; nach deutschem Recht hat der Radverkehr am Kreisverkehr nur bei fahrbahnnaher Führung Vorrang (StVO/VwV prüfen). Die Vorrangfrage ist vor der Planung zu entscheiden. |
-| JC-02 | 605 | Geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor dem Kfz-Verkehr, indirektes Linksabbiegen; freies Rechtsabbiegen für den Radverkehr, wo sicher. |
-| JC-03 | 6 726 | Radfurt in Breite des Radwegs, rot eingefärbt, aufgepflastert, wo der Radverkehr Vorrang hat. |
-| JC-04 | 1 847 | Mittelinsel für die Querung der Hauptstraße durch die Radroute (≥ 4,00 m RSV, ≥ 3,00 m HAUPT, ≥ 2,50 m BASIS). |
-| JC-06 | 57 | Turbokreisverkehr: umlaufender Radweg abgesetzt, Radverkehr wartepflichtig (an zweistreifigen Ein- und Ausfahrten verdeckt ein Fahrzeug das andere). Im RSV- und HAUPT-Netz planfreie Querung prüfen. |
+| JC-01 | 190 | Kreisverkehr mit umlaufendem Radweg, Radverkehr bevorrechtigt (CROW innerorts). Zielkonflikt: SWOV-Analysen sehen die Wartepflicht für Radfahrende als sicherer; nach deutschem Recht hat der Radverkehr am Kreisverkehr nur bei fahrbahnnaher Führung Vorrang (StVO/VwV prüfen). Die Vorrangfrage ist vor der Planung zu entscheiden. |
+| JC-02 | 558 | Geschützte Kreuzung: Eckinseln, abgesetzte Furt 2–5 m, Aufstellfläche vor dem Kfz-Verkehr, indirektes Linksabbiegen; freies Rechtsabbiegen für den Radverkehr, wo sicher. |
+| JC-03 | 6 686 | Radfurt in Breite des Radwegs, rot eingefärbt, aufgepflastert, wo der Radverkehr Vorrang hat. |
+| JC-04 | 1 903 | Mittelinsel für die Querung der Hauptstraße durch die Radroute (≥ 4,00 m RSV, ≥ 3,00 m HAUPT, ≥ 2,50 m BASIS). |
+| JC-06 | 59 | Turbokreisverkehr: umlaufender Radweg abgesetzt, Radverkehr wartepflichtig (an zweistreifigen Ein- und Ausfahrten verdeckt ein Fahrzeug das andere). Im RSV- und HAUPT-Netz planfreie Querung prüfen. |
 
-**Zielkonflikt JC-01 (Vorrang am Kreisverkehr):** CROW empfiehlt innerorts den Vorrang für Radfahrende auf dem umlaufenden Radweg; SWOV-Auswertungen sehen die Wartepflicht als sicherer. Nach deutschem Recht hat der Radverkehr am Kreisverkehr nur bei fahrbahnnaher Führung Vorrang (StVO/VwV prüfen). Die Steckbrieftexte der 216 Kreisverkehre nennen diesen Konflikt (Spalte treatment_text); entschieden ist er nicht. JC-01 gilt seit design_rules.yaml 0.8.0 nur an einstreifigen Kreisverkehren; am Turbokreisverkehr ist der Radverkehr wartepflichtig (JC-06, Review 2026-11 F02).
+**Zielkonflikt JC-01 (Vorrang am Kreisverkehr):** CROW empfiehlt innerorts den Vorrang für Radfahrende auf dem umlaufenden Radweg; SWOV-Auswertungen sehen die Wartepflicht als sicherer. Nach deutschem Recht hat der Radverkehr am Kreisverkehr nur bei fahrbahnnaher Führung Vorrang (StVO/VwV prüfen). Die Steckbrieftexte der 190 Kreisverkehre nennen diesen Konflikt (Spalte treatment_text); entschieden ist er nicht. JC-01 gilt seit design_rules.yaml 0.8.0 nur an einstreifigen Kreisverkehren; am Turbokreisverkehr ist der Radverkehr wartepflichtig (JC-06, Review 2026-11 F02).
 
 ## Hinweise (conflict_flags)
 
@@ -68,13 +67,13 @@ Zeilen Ist aus OSM, Spalten Soll. Geschützte Kreuzung, eingefärbte Fläche, Ge
 | `dtv_partial` | DTV fehlt an einem GOW/SW-Arm; Zufluss ist eine Untergrenze | 659 |
 | `dtv_unknown` | DTV fehlt an allen GOW/SW-Armen | 605 |
 | `space_unknown` | keine ALKIS-Verkehrsfläche am Knoten; Platz unbekannt | 602 |
-| `condition_unknown` | Bedingung wegen fehlender Werte unbekannt; Typ nach J-M-05.on_unknown | 15 |
+| `condition_unknown` | Bedingung wegen fehlender Werte unbekannt; Typ nach J-M-05.on_unknown | 16 |
 | `category_alias` | Kategorie über category_alias abgebildet (ETW_ERF → ETW30) | 600 |
-| `cycle_path_ignored` | eigenständiger Radweg an einem Straßenknoten; Paar aus Straßen gebildet | 317 |
+| `cycle_path_ignored` | eigenständiger Radweg an einem Straßenknoten; Paar aus Straßen gebildet | 316 |
 | `no_rule` | keine Zeile der Entscheidungstabelle passt | 0 |
 | `no_cycle_crossing` | planfrei vorgeschlagen, aber keine Radroute quert den Stroomweg (Autobahnanschluss oder Route nur längs) | 0 |
 | `dtv_above_roundabout_max` | einstreifiger Kreisverkehr vorgeschlagen, Zufluss über roundabout_max_dtv | 0 |
-| `turbo_grade_sep_check` | Turbokreisverkehr im RSV/HAUPT-Netz: planfreie Radquerung prüfen (JC-06) | 34 |
+| `turbo_grade_sep_check` | Turbokreisverkehr im RSV/HAUPT-Netz: planfreie Radquerung prüfen (JC-06) | 36 |
 
 ## Top 30 Knotenpunkte nach Priorität
 
@@ -85,6 +84,7 @@ Nur Knotenpunkte mit Handlungsbedarf; sortiert nach Radunfällen (Unfallatlas 20
 | `628944060` | Frauenthal / Hagedornstraße / Harvestehuder Weg / Mittelweg | Eimsbüttel | GOW30+ETW30 | HAUPT | – | 26 | Kreisverkehr | Gehwegüberfahrt | JC-04 | 25 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565807,5937219]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.579693/9.993952) · [OSM](https://www.openstreetmap.org/?mlat=53.579693&mlon=9.993952#map=18/53.579693/9.993952) |
 | `8541215407` | Altonaer Straße / Max-Brauer-Allee / Schulterblatt | Eimsbüttel | GOW30+ETW30 | HAUPT | 15 000 | 30 | LSA | Gehwegüberfahrt | JC-04 | 20 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563590,5935414]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.563744/9.960112) · [OSM](https://www.openstreetmap.org/?mlat=53.563744&mlon=9.960112#map=18/53.563744/9.960112) |
 | `6680473100` | Harvestehuder Weg / Krugkoppel | Eimsbüttel | ETW30+ETW30 | RSV | 0 | 23 | Kreisverkehr | Vorfahrt mit Plateau | JC-03 | 18 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566034,5937090]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.578508/9.997356) · [OSM](https://www.openstreetmap.org/?mlat=53.578508&mlon=9.997356#map=18/53.578508/9.997356) |
+| `10588207471` | Altmannbrücke / Kurt-Schumacher-Allee / Brockesstraße / Kurt-Schumacher-Allee | Hamburg-Mitte | GOW30+ETW30 | HAUPT | 26 000 | 16 | LSA | Gehwegüberfahrt | JC-04 | 13 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566932,5934036]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.550940/10.010267) · [OSM](https://www.openstreetmap.org/?mlat=53.550940&mlon=10.010267#map=18/53.550940/10.010267) |
 | `16956679` | Beim Schlump / Bundesstraße | Eimsbüttel | GOW30+ETW30 | HAUPT | 16 500 | 21 | LSA | Gehwegüberfahrt | JC-04 | 13 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564507,5936035]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.569209/9.974078) · [OSM](https://www.openstreetmap.org/?mlat=53.569209&mlon=9.974078#map=18/53.569209/9.974078) |
 | `279711383` | Altonaer Straße / Amandastraße / Kleiner Schäferkamp / Schanzenstraße / Weidenallee | Eimsbüttel | GOW30+ETW30 | HAUPT | 15 500 | 34 | LSA | Gehwegüberfahrt | JC-04 | 12 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563964,5935611]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.565473/9.965792) · [OSM](https://www.openstreetmap.org/?mlat=53.565473&mlon=9.965792#map=18/53.565473/9.965792) |
 | `17704872` | Grindelberg / Grindelberg / Hoheluftchaussee / Isestraße | Eimsbüttel | GOW30+ETW30 | BASIS | 30 000 | 27 | LSA | Gehwegüberfahrt | JC-04 | 12 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564679,5937018]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.578022/9.976874) · [OSM](https://www.openstreetmap.org/?mlat=53.578022&mlon=9.976874#map=18/53.578022/9.976874) |
@@ -97,45 +97,43 @@ Nur Knotenpunkte mit Handlungsbedarf; sortiert nach Radunfällen (Unfallatlas 20
 | `20938501` | Barmbeker Straße / Semperstraße | Hamburg-Nord | GOW30+ETW30 | HAUPT | 37 000 | 18 | LSA | Gehwegüberfahrt | JC-04 | 10 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567360,5938003]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.586540/10.017585) · [OSM](https://www.openstreetmap.org/?mlat=53.586540&mlon=10.017585#map=18/53.586540/10.017585) |
 | `199166130` | Baumwall / Baumwall / Otto-Sill-Brücke / Niederbaumbrücke | Hamburg-Mitte | GOW30+GOW30 | HAUPT | 16 500 | 25 | LSA | Kreisverkehr einstreifig, Rad bevorrechtigt | JC-01 | 10 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565111,5933266]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.544249/9.982628) · [OSM](https://www.openstreetmap.org/?mlat=53.544249&mlon=9.982628#map=18/53.544249/9.982628) |
 | `738779326` | Eidelstedter Weg / Hagenbeckstraße / Methfesselstraße | Eimsbüttel | ETW30+ETW30 | HAUPT | 0 | 25 | Kreisverkehr | Vorfahrt mit Plateau | JC-03 | 10 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562737,5937472]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.582338/9.947640) · [OSM](https://www.openstreetmap.org/?mlat=53.582338&mlon=9.947640#map=18/53.582338/9.947640) |
-| `52183945` | Beim Trichter / Reeperbahn | Hamburg-Mitte | GOW50+ETW30 | ERSCHL | 28 000 | 31 | LSA | Gehwegüberfahrt | – | 10 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564081,5933884]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.549935/9.967208) · [OSM](https://www.openstreetmap.org/?mlat=53.549935&mlon=9.967208#map=18/53.549935/9.967208) |
+| `52183945` | Beim Trichter / Reeperbahn | Hamburg-Mitte | GOW30+ETW30 | ERSCHL | 28 000 | 31 | LSA | Gehwegüberfahrt | – | 10 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564081,5933884]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.549935/9.967208) · [OSM](https://www.openstreetmap.org/?mlat=53.549935&mlon=9.967208#map=18/53.549935/9.967208) |
 | `1490425214` | An der Alster / Lohmühlenstraße | Hamburg-Mitte | GOW30+ETW30 | RSV | 57 000 | 24 | LSA | Gehwegüberfahrt | – | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567125,5935175]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.561151/10.013416) · [OSM](https://www.openstreetmap.org/?mlat=53.561151&mlon=10.013416#map=18/53.561151/10.013416) |
 | `8731759163` | Große Bergstraße / Jessenstraße / Virchowstraße | Altona | ETW30+ETW30 | RSV | 0 | 24 | Kreisverkehr | Vorfahrt mit Plateau | JC-03 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562746,5934018]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.551295/9.947085) · [OSM](https://www.openstreetmap.org/?mlat=53.551295&mlon=9.947085#map=18/53.551295/9.947085) |
 | `21675653` | Alter Teichweg / Nordschleswiger Straße | Hamburg-Nord | GOW30+ETW30 | HAUPT | 40 500 | 22 | LSA | Gehwegüberfahrt | JC-04 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570476,5938047]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.586524/10.064646) · [OSM](https://www.openstreetmap.org/?mlat=53.586524&mlon=10.064646#map=18/53.586524/10.064646) |
 | `8938102274` | Beethovenstraße / Winterhuder Weg / Zimmerstraße | Hamburg-Nord | GOW30+ETW30 | HAUPT | 32 000 | 24 | LSA | Gehwegüberfahrt | JC-04 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567622,5936744]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.575190/10.021259) · [OSM](https://www.openstreetmap.org/?mlat=53.575190&mlon=10.021259#map=18/53.575190/10.021259) |
 | `343412182` | Augustenburger Straße / Kieler Straße | Altona | GOW50+GOW30 | HAUPT | 23 000 | 25 | LSA | Kreisverkehr einstreifig, Rad bevorrechtigt | JC-01 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562560,5935561]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.565188/9.944585) · [OSM](https://www.openstreetmap.org/?mlat=53.565188&mlon=9.944585#map=18/53.565188/9.944585) |
-| `1668518095` | Barnerstraße / Lessingtunnel / Scheel-Plessen-Straße | Altona | GOW50+ETW30 | HAUPT | 16 000 | 16 | LSA | Gehwegüberfahrt | JC-04 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561881,5934492]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555662/9.934134) · [OSM](https://www.openstreetmap.org/?mlat=53.555662&mlon=9.934134#map=18/53.555662/9.934134) |
 | `240341370` | Bei der Hammer Kirche / Carl-Petersen-Straße / Hammer Steindamm / Lohhof | Hamburg-Mitte | GOW30+ETW30 | HAUPT | – | 25 | Kreisverkehr | Gehwegüberfahrt | JC-04 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569766,5934778]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.557242/10.053205) · [OSM](https://www.openstreetmap.org/?mlat=53.557242&mlon=10.053205#map=18/53.557242/10.053205) |
 | `249361780` | Langenfelder Damm / Lappenbergsallee / Methfesselstraße / Parnass-Platz / Sartoriusstraße | Eimsbüttel | GOW30+ETW30 | HAUPT | – | 25 | LSA | Gehwegüberfahrt | JC-04 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562353,5936977]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.577940/9.941748) · [OSM](https://www.openstreetmap.org/?mlat=53.577940&mlon=9.941748#map=18/53.577940/9.941748) |
 | `1605248028` | Harderweg / Osdorfer Landstraße | Altona | GOW30+ETW30 | BASIS | 34 000 | 14 | LSA | Gehwegüberfahrt | JC-04 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[556583,5936249]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.572050/9.854472) · [OSM](https://www.openstreetmap.org/?mlat=53.572050&mlon=9.854472#map=18/53.572050/9.854472) |
 | `26126834` | Baurstraße / Osdorfer Weg / Theodorstraße | Altona | GOW30+ETW30 | RSV | 41 000 | 23 | LSA | Gehwegüberfahrt | JC-04 | 8 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559425,5935564]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.565577/9.897254) · [OSM](https://www.openstreetmap.org/?mlat=53.565577&mlon=9.897254#map=18/53.565577/9.897254) |
+| `8423619485` | Fabriciusstraße / Steilshooper Allee | Wandsbek | GOW30+ETW30 | HAUPT | 42 000 | 24 | LSA | Gehwegüberfahrt | JC-04 | 8 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570629,5940498]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.608537/10.067514) · [OSM](https://www.openstreetmap.org/?mlat=53.608537&mlon=10.067514#map=18/53.608537/10.067514) |
 | `8812271339` | Gärtnerstraße / Mansteinstraße / Quickbornstraße | Eimsbüttel | GOW30+GOW30 | HAUPT | 31 000 | 23 | LSA | Vorfahrt, eingefärbte Fläche | JC-03|JC-04 | 8 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563793,5937144]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.579267/9.963523) · [OSM](https://www.openstreetmap.org/?mlat=53.579267&mlon=9.963523#map=18/53.579267/9.963523) |
 | `6602215688` | Holstenplatz / Holstenstraße | Altona | GOW30+GOW30 | HAUPT | 30 500 | 18 | LSA | Vorfahrt, eingefärbte Fläche | JC-03|JC-04 | 8 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562774,5935078]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.560822/9.947729) · [OSM](https://www.openstreetmap.org/?mlat=53.560822&mlon=9.947729#map=18/53.560822/9.947729) |
 | `15584394` | Drosselstraße / Fuhlsbüttler Straße | Hamburg-Nord | GOW30+GOW30 | HAUPT | 25 000 | 24 | LSA | Kreisverkehr einstreifig, Rad bevorrechtigt | JC-01 | 8 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569234,5938250]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.588515/10.045940) · [OSM](https://www.openstreetmap.org/?mlat=53.588515&mlon=10.045940#map=18/53.588515/10.045940) |
-| `16958450` | Ehrenbergstraße / Max-Brauer-Allee / Platz der Republik | Altona | GOW30+GOW30 | HAUPT | 17 000 | 25 | LSA | Kreisverkehr einstreifig, Rad bevorrechtigt | JC-01 | 8 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562026,5933892]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.550256/9.936197) · [OSM](https://www.openstreetmap.org/?mlat=53.550256&mlon=9.936197#map=18/53.550256/9.936197) |
 
 ## Vorschläge planfreie Querung (grade_separated_cycle)
 
-1 Knotenpunkte; davon 1 mit querender Radroute RSV/HAUPT/BASIS (unten). Die übrigen 0 sind Knoten an Stroomwegen, die keine Radroute quert (Autobahnanschlüsse oder Route nur längs des Stroomwegs, Flag no_cycle_crossing); dort ist keine planfreie Radquerung nötig.
+0 Knotenpunkte; davon 0 mit querender Radroute RSV/HAUPT/BASIS (unten). Die übrigen 0 sind Knoten an Stroomwegen, die keine Radroute quert (Autobahnanschlüsse oder Route nur längs des Stroomwegs, Flag no_cycle_crossing); dort ist keine planfreie Radquerung nötig.
 
 | node_id | Straßen | Bezirk | Paar | Rad | Zufluss Kfz/24h | Platz r m | Ist | Soll | Führung | Radunfälle | Prüfen |
 | --- | --- | --- | --- | --- | ---: | ---: | --- | --- | --- | ---: | --- |
-| `876311979` | Bramfelder Chaussee | Wandsbek | GOW50+cycle_path | HAUPT | 35 000 | 13 | nichts erfasst | planfrei (Brücke/Tunnel) | – | 0 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570781,5939853]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.602718/10.069672) · [OSM](https://www.openstreetmap.org/?mlat=53.602718&mlon=10.069672#map=18/53.602718/10.069672) |
 
 ## Übergänge (N5)
 
-Seit rules.yaml 0.22.0 (Review 2026-11 F09) gibt es nur noch einen Soll-Knotentyp: den dieser Stufe (design_rules.yaml junctions). Dieser Abschnitt meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 (Torsituation, aus der Stufe s06); die frühere Regel N6 mit eigener Tabelle und Ist-Prüfung entfällt.
+Seit rules.yaml 0.23.0 (Review 2026-11 F09) gibt es nur noch einen Soll-Knotentyp: den dieser Stufe (design_rules.yaml junctions). Dieser Abschnitt meldet die Knotenpunkte ohne Soll-Typ und die Übergänge nach N5 (Torsituation, aus der Stufe s06); die frühere Regel N6 mit eigener Tabelle und Ist-Prüfung entfällt.
 
 - Ohne Soll-Typ (`no_rule`): 0.
 - Nicht anwendbar (`not_applicable`, Autobahnknoten J-10d): 156.
-- Knotenpunkte mit Übergang, der eine Torsituation braucht (N5): 3 327; mit direktem Übergang ≥ 70 km/h → 30 km/h: 30.
+- Knotenpunkte mit Übergang, der eine Torsituation braucht (N5): 3 305; mit direktem Übergang ≥ 70 km/h → 30 km/h: 31.
 
 | Übergang (N5) von → nach | Knotenpunkte | häufigste Soll-Typen |
 | --- | ---: | --- |
-| GOW30 → ETW30 | 2 554 | Gehwegüberfahrt 1 983; LSA, geschützte Kreuzung 355; Kreisverkehr einstreifig, Rad bevorrechtigt 134 |
-| GOW50 → ETW30 | 1 077 | Gehwegüberfahrt 581; LSA, geschützte Kreuzung 312; Kreisverkehr einstreifig, Rad bevorrechtigt 107 |
-| GOW50 → GOW30 | 545 | LSA, geschützte Kreuzung 351; Kreisverkehr einstreifig, Rad bevorrechtigt 93; Gehwegüberfahrt 75 |
-| GOW30 → ETW_ERF | 61 | Gehwegüberfahrt 53; LSA, geschützte Kreuzung 8 |
-| GOW50 → ETW_ERF | 20 | Gehwegüberfahrt 11; LSA, geschützte Kreuzung 9 |
+| GOW30 → ETW30 | 2 642 | Gehwegüberfahrt 2 127; LSA, geschützte Kreuzung 317; Kreisverkehr einstreifig, Rad bevorrechtigt 111 |
+| GOW50 → ETW30 | 858 | Gehwegüberfahrt 472; LSA, geschützte Kreuzung 248; Kreisverkehr einstreifig, Rad bevorrechtigt 70 |
+| GOW50 → GOW30 | 419 | LSA, geschützte Kreuzung 287; Kreisverkehr einstreifig, Rad bevorrechtigt 73; Gehwegüberfahrt 39 |
+| GOW30 → ETW_ERF | 62 | Gehwegüberfahrt 54; LSA, geschützte Kreuzung 8 |
+| GOW50 → ETW_ERF | 19 | Gehwegüberfahrt 10; LSA, geschützte Kreuzung 9 |
 
 ## 30 Zufallsstichproben
 

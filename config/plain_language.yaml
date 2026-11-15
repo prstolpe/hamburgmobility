@@ -5,8 +5,9 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.12.0
+  version: 0.12.1
   date: 2026-11-15
+# 0.12.1: Klartext für H-PAIR-01 (Richtungsfahrbahnen, rules.yaml 0.23.0).
 # 0.12.0: Aufräumen 2026-11 (prompts/25): Abschnitt method.news („Was ist neu“) entfernt, die Seite entfällt;
 #   Texte zu ausgeblendeten Kartenansichten angepasst.
 # 0.11.1: Verweis auf die Netzprüfungen N1–N5 (N6, N7 zusammengelegt bzw. gestrichen, Redesign 2026-11 Paket 5).
@@ -30,6 +31,9 @@ rules:
   H-STR-01:
     passed:
       - {text: "an die Straße davor und dahinter angeglichen: kurzes Stück ({run_m|.0f} m) zwischen {neighbours}; vorher {from_cat}, jetzt {to_cat}"}
+  H-PAIR-01:
+    passed:
+      - {text: "an die Gegenfahrbahn angeglichen ({partner_name}, {dist_m|.0f} m entfernt): beide Fahrbahnen bekommen dasselbe Tempo; vorher {from_cat}, jetzt {to_cat}"}
   C-SW-01:
     passed:
       - {text: "Autobahn oder Kraftfahrstraße, nur für Autos"}

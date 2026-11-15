@@ -10,13 +10,20 @@ A street (stroke, pipeline/lib/coherence.py: strokes) is split into runs of equa
      neighbouring GOW50 segments, shorter neighbour first, until it reaches min_run_m.
 Locked categories (SW, ETW_ERF, rural) and locked segments (approved overrides) are never changed.
 Works on segment ids only, so the sensitivity runs can reuse the strokes.
+
+H-PAIR-01 (rules.yaml 0.23.0): separately mapped carriageways of one street (carriageway_pairs) get the same speed,
+the lower one wins (pair_carriageways). Strokes run along one carriageway only, so H-STR-01 never sees the other one.
 """
+
+import numpy as np
+import shapely
 
 from config.schema.rules_model import RuleSet
 
 GOW = {"GOW50", "GOW30"}
 ETW = "ETW30"
 RULE_ID = "H-STR-01"
+PAIR_RULE_ID = "H-PAIR-01"
 
 
 def _runs(stroke: list[str], key) -> list[tuple[str, list[str]]]:
@@ -134,4 +141,89 @@ def harmonise(strokes: list[list[str]], cats: dict[str, str], lengths: dict[str,
         for p in range(1, rule.max_passes + 1):
             if not pass_once(stroke, p):
                 break
+    return cur, trace
+
+
+def _axis_deg(g) -> float:
+    """Undirected direction of the chord from first to last point, 0-180."""
+    (x0, y0), (x1, y1) = g.coords[0], g.coords[-1]
+    return float(np.degrees(np.arctan2(y1 - y0, x1 - x0)) % 180)
+
+
+def carriageway_pairs(seg, rules: RuleSet) -> list[dict]:
+    """H-PAIR-01: pairs of separately mapped carriageways.
+
+    seg: segment_id, name, oneway, node_u, node_v, geometry (EPSG:25832). A pair is two oneway segments of the same
+    name without a shared node, at most pair_max_angle_deg apart, with the midpoint of the shorter one at most
+    pair_max_distance_m from the longer one and at least pair_min_overlap_share of the shorter one projected onto it.
+    """
+    t = rules.harmonisation.rule(PAIR_RULE_ID).thresholds
+    max_dist, max_angle = t["pair_max_distance_m"].value, t["pair_max_angle_deg"].value
+    min_overlap = t["pair_min_overlap_share"].value
+    cand = seg[seg["oneway"].fillna(False).astype(bool) & seg["name"].notna()].reset_index(drop=True)
+    if len(cand) < 2:
+        return []
+    geoms = cand.geometry.to_numpy()
+    left, right = shapely.STRtree(geoms).query(geoms, predicate="dwithin", distance=max_dist)
+    keep = left < right
+    out = []
+    for i, j in zip(left[keep], right[keep]):
+        a, b = cand.iloc[i], cand.iloc[j]
+        if a["name"] != b["name"] or {a["node_u"], a["node_v"]} & {b["node_u"], b["node_v"]}:
+            continue
+        angle = abs(_axis_deg(geoms[i]) - _axis_deg(geoms[j]))
+        angle = min(angle, 180 - angle)
+        if angle > max_angle:
+            continue
+        short, long_ = (geoms[i], geoms[j]) if geoms[i].length <= geoms[j].length else (geoms[j], geoms[i])
+        if short.length == 0:
+            continue
+        ends = shapely.points([short.coords[0], short.coords[-1]])
+        overlap = abs(float(np.diff(long_.project(ends))[0])) / short.length
+        dist = long_.distance(short.interpolate(0.5, normalized=True))
+        if overlap < min_overlap or dist > max_dist:
+            continue
+        out.append({"a": a["segment_id"], "b": b["segment_id"], "dist_m": round(float(dist), 1),
+                    "angle_deg": round(angle, 1), "overlap_share": round(min(overlap, 1.0), 2)})
+    return out
+
+
+def pair_carriageways(pairs: list[dict], cats: dict[str, str], rules: RuleSet,
+                      locked: set[str] | None = None) -> tuple[dict[str, str], dict[str, list[dict]]]:
+    """H-PAIR-01: GOW50 with a GOW30 partner becomes GOW30, repeated over chains of pairs until nothing changes."""
+    rule = rules.harmonisation.rule(PAIR_RULE_ID)
+    locked_cats = set(rule.locked_categories)
+    locked = set(locked or ())
+    cur = dict(cats)
+    trace: dict[str, list[dict]] = {}
+    for p_no in range(1, rule.max_passes + 1):
+        changed = False
+        for p in pairs:
+            a, b = p["a"], p["b"]
+            if a not in cur or b not in cur or {cur[a], cur[b]} != GOW:
+                continue
+            sid, partner = (a, b) if cur[a] == "GOW50" else (b, a)
+            if sid in locked or cur[sid] in locked_cats:
+                continue
+            trace.setdefault(sid, []).append({"id": PAIR_RULE_ID, "from": cur[sid], "to": "GOW30", "partner": partner,
+                                              "dist_m": p["dist_m"], "overlap_share": p["overlap_share"], "pass": p_no})
+            cur[sid] = "GOW30"
+            changed = True
+        if not changed:
+            break
+    return cur, trace
+
+
+def harmonise_all(strokes: list[list[str]], pairs: list[dict], cats: dict[str, str], lengths: dict[str, float],
+                  rules: RuleSet, locked: set[str] | None = None) -> tuple[dict[str, str], dict[str, list[dict]]]:
+    """H-STR-01, then H-PAIR-01 and H-STR-01 in turns until H-PAIR-01 changes nothing; steps per segment in order."""
+    cur, trace = harmonise(strokes, cats, lengths, rules, locked=locked)
+    for _ in range(rules.harmonisation.rule(PAIR_RULE_ID).max_passes):
+        cur, paired = pair_carriageways(pairs, cur, rules, locked=locked)
+        if not paired:
+            break
+        cur, along = harmonise(strokes, cur, lengths, rules, locked=locked)
+        for t in (paired, along):
+            for sid, steps in t.items():
+                trace.setdefault(sid, []).extend(steps)
     return cur, trace

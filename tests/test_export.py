@@ -184,6 +184,15 @@ def test_harmonisation_reason_text():
     assert "86 m" in reasons[0]["text"] and "GOW30 und GOW30" in reasons[0]["text"]
 
 
+def test_pair_reason_text():
+    trace = [{"id": "H-PAIR-01", "passed": True, "inputs": {"from_cat": "GOW50", "to_cat": "GOW30", "partner": "seg_x",
+                                                            "partner_name": "Kieler Straße", "dist_m": 14.2,
+                                                            "overlap_share": 0.9, "pass": 1}}]
+    reasons = ex.rule_reasons(trace, RULES, TEXTS)
+    assert len(reasons) == 1 and reasons[0]["rule"] == "H-PAIR-01"
+    assert "Kieler Straße" in reasons[0]["text"] and "14 m" in reasons[0]["text"]
+
+
 def test_cat_cascade_is_public():
     assert "cat_cascade" in ex.PUBLIC_COLUMNS and "cat_cascade" in TEXTS["columns"]
 

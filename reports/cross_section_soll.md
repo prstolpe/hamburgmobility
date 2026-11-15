@@ -1,26 +1,26 @@
 # Soll-Querschnitt: Fahrstreifen, Lage der Radanlagen, Raumaufteilung (Stufe c06)
 
-Erzeugt 2026-11-15T01:57:56+00:00 mit pipeline/c06_cross_section_soll.py · design_rules.yaml 0.10.0 · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Regeln L-01…07, PL-01…06 und PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.
+Erzeugt 2026-11-15T20:20:30+00:00 mit pipeline/c06_cross_section_soll.py · design_rules.yaml 0.10.0 · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Regeln L-01…07, PL-01…06 und PRF-01…07 sind Annahmen bzw. Entwürfe (status draft) und vor Gebrauch fachlich zu prüfen.
 
 Verfügbare Breite = width_p10_m der Variante Verkehrsfläche (maßgeblich); die Variante Fassade zeigt das Potenzial inklusive Vorgärten. Das gewünschte Profil enthält Gehwege (Regelmaß), die Radanlage mit Sollbreite aus Prompt 18, ÖPNV, Fahrbahn, Trennstreifen, Bäume (GOW), Ladezone bei Geschäftsnutzung und Parken nur dort, wo OSM heute Parken zeigt (Entscheidung 2026-11-06) und die Kategorie es erlaubt (PRF-03 parking_by_category: GOW50 und ETW_ERF keins, GOW30 nur Parkstreifen, ETW30 wie Ist). Passt es nicht, gilt die Kaskade D1, D3, D2, Fallback, D4, D5, D6, D7 (PRF-06).
 
 ## Kurzfassung
 
 - 36 526 Abschnitte, 4 998 km; bewertet (Profilregeln und Breite vorhanden): 3 861 km. Ohne Breite: 337 km; ohne Profilregeln: 800 km.
-- passt: 2 072 km (54 % der bewerteten Länge).
-- passt nach Abbau: 779 km (20 % der bewerteten Länge).
+- passt: 2 083 km (54 % der bewerteten Länge).
+- passt nach Abbau: 768 km (20 % der bewerteten Länge).
 - passt nicht: 1 010 km (26 % der bewerteten Länge).
-- Vorschlag GOW50 → GOW30 (D5): 16 Abschnitte, 2.1 km – nicht übernommen, Entscheidung über overrides/overrides.csv.
-- GOW30 mit Kfz-Menge über der Kapazität eines Fahrstreifens je Richtung (L-07, capacity_reduction_needed): 3 272 Abschnitte, 342.9 km; nötige Reduktion im Median 12 091 Kfz/Tag.
-- GTFS: repräsentativer Werktag 2026-04-29 (Upload__hvv_Rohdaten_GTFS_Fpl_20260408.ZIP); Straßenbahnrouten im Feed: 0. Busfahrstreifen Soll: 19.2 km.
+- Vorschlag GOW50 → GOW30 (D5): 13 Abschnitte, 1.6 km – nicht übernommen, Entscheidung über overrides/overrides.csv.
+- GOW30 mit Kfz-Menge über der Kapazität eines Fahrstreifens je Richtung (L-07, capacity_reduction_needed): 3 631 Abschnitte, 378.7 km; nötige Reduktion im Median 12 091 Kfz/Tag.
+- GTFS: repräsentativer Werktag 2026-04-29 (Upload__hvv_Rohdaten_GTFS_Fpl_20260408.ZIP); Straßenbahnrouten im Feed: 0. Busfahrstreifen Soll: 12.0 km.
 
 ## km je fit_class und Straßenkategorie
 
 | Kategorie | passt | passt nach Abbau | passt nicht | nicht bewertet | gesamt |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | SW | 0.0 | 0.0 | 0.0 | 189.2 | 189.2 |
-| GOW50 | 128.5 | 106.1 | 0.0 | 7.9 | 242.4 |
-| GOW30 | 306.4 | 138.7 | 60.0 | 8.3 | 513.5 |
+| GOW50 | 100.2 | 92.8 | 0.0 | 7.3 | 200.3 |
+| GOW30 | 345.6 | 141.1 | 60.0 | 8.9 | 555.6 |
 | ETW30 | 1 537.9 | 534.4 | 944.7 | 307.3 | 3 324.3 |
 | ETW_ERF | 99.1 | 0.0 | 5.3 | 13.5 | 118.0 |
 
@@ -28,8 +28,8 @@ Verfügbare Breite = width_p10_m der Variante Verkehrsfläche (maßgeblich); die
 
 | Verkehrsfläche \ Fassade | passt | passt nach Abbau | passt nicht |
 | --- | ---: | ---: | ---: |
-| passt | 1 854.8 | 5.7 | 2.7 |
-| passt nach Abbau | 683.3 | 37.5 | 1.0 |
+| passt | 1 865.3 | 5.7 | 2.7 |
+| passt nach Abbau | 673.5 | 36.9 | 1.0 |
 | passt nicht | 790.3 | 15.8 | 20.9 |
 
 ## Abbaustufen
@@ -38,18 +38,18 @@ Häufigkeit je Stufe (ein Abschnitt kann mehrere Stufen haben). Eine Stufe zähl
 
 | Stufe | Maßnahme | Abschnitte | km | Anteil an bewerteter Länge |
 | --- | --- | ---: | ---: | ---: |
-| D1 | Parken entfernen | 2 119 | 308.7 | 8.0 % |
-| D3 | zweiten Kfz-Fahrstreifen streichen | 411 | 56.2 | 1.5 % |
-| D2 | neuer Baumstreifen → Baumscheiben im Trenn-/Seitenraum | 1 883 | 250.7 | 6.5 % |
+| D1 | Parken entfernen | 2 121 | 309.1 | 8.0 % |
+| D3 | zweiten Kfz-Fahrstreifen streichen | 300 | 46.4 | 1.2 % |
+| D2 | neuer Baumstreifen → Baumscheiben im Trenn-/Seitenraum | 1 858 | 248.2 | 6.4 % |
 | fallback | Fallback der Matrixzelle (Prompt 18) | 240 | 31.8 | 0.8 % |
-| D4 | Rad- und Gehweg auf Mindestbreite | 9 051 | 1 447.9 | 37.5 % |
-| D5 | Vorschlag GOW50 → GOW30 (C-G30-02) | 16 | 2.1 | 0.1 % |
+| D4 | Rad- und Gehweg auf Mindestbreite | 9 034 | 1 445.8 | 37.4 % |
+| D5 | Vorschlag GOW50 → GOW30 (C-G30-02) | 13 | 1.6 | 0.0 % |
 | D6 | Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen | 6 334 | 1 010.1 | 26.2 % |
 | D7 | Flag: Radroute auf Parallelstraße verlegen | 339 | 57.9 | 1.5 % |
 
 Letzte wirksame Stufe bei „passt nach Abbau“ (km):
 
-D1 159.7 · D3 46.0 · D2 116.4 · fallback 13.9 · D4 441.1 · D5 2.1
+D1 160.1 · D3 37.2 · D2 115.9 · fallback 13.9 · D4 439.5 · D5 1.6
 
 ## Fahrstreifen Ist → Soll (km)
 
@@ -58,22 +58,21 @@ Ist je Richtung aus amtlichen Fahrstreifen (sonst OSM lanes, PRF-01). Soll nach 
 | Ist \ Soll | 1 | 1 + Bus | 2 | shared | – |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | 1 | 288.5 | 0.0 | 0.0 | 2 930.6 | 84.7 |
-| 2 | 264.4 | 13.6 | 47.2 | 85.9 | 83.8 |
-| 3 | 87.3 | 3.6 | 16.9 | 15.2 | 14.1 |
-| 4 | 20.8 | 1.3 | 7.1 | 1.7 | 6.2 |
-| 5 | 2.3 | 0.1 | 0.4 | 0.5 | 0.4 |
+| 2 | 280.5 | 8.8 | 35.9 | 85.9 | 83.8 |
+| 3 | 94.7 | 2.0 | 11.1 | 15.2 | 14.1 |
+| 4 | 23.2 | 0.7 | 5.3 | 1.7 | 6.2 |
+| 5 | 2.6 | 0.0 | 0.4 | 0.5 | 0.4 |
 | 6 | 0.3 | 0.0 | 0.6 | 0.1 | 0.0 |
 | unbekannt | 0.8 | 0.5 | 0.0 | 408.1 | 0.0 |
 
-Weniger Kfz-Fahrstreifen je Richtung im Soll: 418.9 km (davon an GOW50 113.8 km). Zusätzlich D3 im Profil: 56.2 km.
+Weniger Kfz-Fahrstreifen je Richtung im Soll: 430.2 km (davon an GOW50 87.4 km). Zusätzlich D3 im Profil: 46.4 km.
 
 ## Fälle D5: Vorschlag GOW50 → GOW30 (C-G30-02)
 
-16 Abschnitte, 2.1 km. Längste 40, je Straße und Bezirk zusammengefasst:
+13 Abschnitte, 1.6 km. Längste 40, je Straße und Bezirk zusammengefasst:
 
 | Straße | Bezirk | Kfz | Rad | Abschnitte | km | verfügbar m (Median) | Bedarf m (Median) | Beispiel |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| Rodigallee | Wandsbek | GOW50 | HAUPT | 3 | 0.47 | 23.0 | 15.5 | `seg_55056fa247a4e707` |
 | Farnhornweg | Altona | GOW50 | HAUPT | 1 | 0.38 | 21.5 | 15.5 | `seg_19c6219f387e811c` |
 | Curslacker Neuer Deich | Bergedorf | GOW50 | ERSCHL | 6 | 0.37 | 19.0 | 15.5 | `seg_2bc2e079c0620265` |
 | Curslacker Neuer Deich | Bergedorf | GOW50 | HAUPT | 3 | 0.29 | 19.0 | 15.5 | `seg_24b1b4e09c38573e` |
@@ -181,27 +180,27 @@ Weniger Kfz-Fahrstreifen je Richtung im Soll: 418.9 km (davon an GOW50 113.8 km)
 | --- | --- | ---: | ---: |
 | `width_unknown` | keine verfügbare Breite (width_p10_m fehlt) | 3 435 | 336.9 |
 | `no_profile_rules` | keine Profilregeln (SW, GOW80, ETW60 oder ohne Kategorie, PRF-04) | 2 294 | 799.6 |
-| `dtv_unknown` | DTV fehlt an GOW50 – Fahrstreifen = Ist (PRF-01), confidence low | 371 | 29.5 |
-| `lanes_capped_l06` | Soll-Fahrstreifen auf Ist begrenzt (L-06, kein Override) | 256 | 35.8 |
+| `dtv_unknown` | DTV fehlt an GOW50 – Fahrstreifen = Ist (PRF-01), confidence low | 313 | 26.7 |
+| `lanes_capped_l06` | Soll-Fahrstreifen auf Ist begrenzt (L-06, kein Override) | 232 | 33.7 |
 | `pl02_unchecked` | Zweirichtungsradweg: Seitenbedingung PL-02 nicht prüfbar | 0 | 0.0 |
-| `trees_as_pits` | neuer Baumstreifen entfällt, Bäume als Baumscheiben im Trenn- oder Seitenraum (D2) | 1 883 | 250.7 |
-| `gow30_dtv_above_profile` | GOW30 mit DTV über dem breiten CROW-Profil (Soll-Führung Radweg, S-05) | 3 194 | 337.5 |
-| `capacity_reduction_needed` | GOW30: Kfz-Menge über der Kapazität eines Fahrstreifens je Richtung – Reduktion nötig (L-07) | 3 272 | 342.9 |
+| `trees_as_pits` | neuer Baumstreifen entfällt, Bäume als Baumscheiben im Trenn- oder Seitenraum (D2) | 1 858 | 248.2 |
+| `gow30_dtv_above_profile` | GOW30 mit DTV über dem breiten CROW-Profil (Soll-Führung Radweg, S-05) | 3 482 | 364.3 |
+| `capacity_reduction_needed` | GOW30: Kfz-Menge über der Kapazität eines Fahrstreifens je Richtung – Reduktion nötig (L-07) | 3 631 | 378.7 |
 | `D6` | Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen | 6 334 | 1 010.1 |
 | `D7` | Flag: Radroute auf Parallelstraße verlegen | 339 | 57.9 |
 
-confidence: high 3 626 km, medium 208 km, low 1 164 km
+confidence: high 3 629 km, medium 208 km, low 1 161 km
 
 ## fit_class je Bezirk (Anteil km)
 
 | Bezirk | Abschnitte | km | passt | passt nach Abbau | passt nicht | nicht bewertet |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Altona | 4 886 | 620.5 | 38 % | 22 % | 31 % | 9 % |
+| Altona | 4 886 | 620.5 | 39 % | 22 % | 31 % | 9 % |
 | Bergedorf | 1 957 | 209.3 | 58 % | 15 % | 21 % | 6 % |
 | Eimsbüttel | 4 004 | 470.4 | 52 % | 22 % | 19 % | 7 % |
-| Hamburg-Mitte | 6 839 | 881.3 | 49 % | 14 % | 19 % | 18 % |
+| Hamburg-Mitte | 6 839 | 881.3 | 50 % | 13 % | 19 % | 18 % |
 | Hamburg-Nord | 5 136 | 563.3 | 61 % | 15 % | 16 % | 8 % |
-| Harburg | 3 348 | 465.2 | 39 % | 18 % | 28 % | 16 % |
+| Harburg | 3 348 | 465.2 | 39 % | 17 % | 28 % | 16 % |
 | Wandsbek | 7 542 | 1 030.4 | 49 % | 21 % | 29 % | 2 % |
 | ohne Bezirk | 990 | 146.9 | 4 % | 1 % | 2 % | 93 % |
 | **gesamt** | 34 702 | 4 387.3 | 47 % | 18 % | 23 % | 12 % |
@@ -219,7 +218,7 @@ reports/profiles_sample/<segment_id>.svg: 30 Zufallsabschnitte (über Bezirke ve
 | Zufall | `seg_2ad11cad361a65f3` | Mary-Marcus-Kehre | Bergedorf | ETW_ERF | ERSCHL | Mischverkehr | 4.8 | 19.0 | passt | nan | [SVG](profiles_sample/seg_2ad11cad361a65f3.svg) | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[578148,5927017]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.486319/10.177777) · [OSM](https://www.openstreetmap.org/?mlat=53.486319&mlon=10.177777#map=18/53.486319/10.177777) | ☐ |
 | Zufall | `seg_4540c335d10b5685` | Ulmenhang | Bergedorf | ETW30 | ERSCHL | Mischverkehr | 9.8 | 6.5 | passt nicht | D4|D6 | [SVG](profiles_sample/seg_4540c335d10b5685.svg) | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[579706,5927700]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.492218/10.201413) · [OSM](https://www.openstreetmap.org/?mlat=53.492218&mlon=10.201413#map=18/53.492218/10.201413) | ☐ |
 | Zufall | `seg_1cc6f3ba9463d373` | Osterfeldstraße | Eimsbüttel | GOW30 | ERSCHL | Radweg je Seite | 23.8 | 29.1 | passt | nan | [SVG](profiles_sample/seg_1cc6f3ba9463d373.svg) | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563870,5939389]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.599438/9.965145) · [OSM](https://www.openstreetmap.org/?mlat=53.599438&mlon=9.965145#map=18/53.599438/9.965145) | ☐ |
-| Zufall | `seg_c06ccbe1087fa5e5` | Binsbarg | Eimsbüttel | GOW50 | none | Radweg je Seite | 18.5 | 19.5 | passt nach Abbau | D3|D2 | [SVG](profiles_sample/seg_c06ccbe1087fa5e5.svg) | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560760,5938408]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.590985/9.917974) · [OSM](https://www.openstreetmap.org/?mlat=53.590985&mlon=9.917974#map=18/53.590985/9.917974) | ☐ |
+| Zufall | `seg_c06ccbe1087fa5e5` | Binsbarg | Eimsbüttel | GOW30 | none | Radweg je Seite | 17.3 | 19.5 | passt nach Abbau | D2 | [SVG](profiles_sample/seg_c06ccbe1087fa5e5.svg) | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560760,5938408]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.590985/9.917974) · [OSM](https://www.openstreetmap.org/?mlat=53.590985&mlon=9.917974#map=18/53.590985/9.917974) | ☐ |
 | Zufall | `seg_cff436841e62ecf8` | Niendorfer Gehege | Eimsbüttel | ETW30 | HAUPT | Fahrradstraße | 10.8 | 27.4 | passt | nan | [SVG](profiles_sample/seg_cff436841e62ecf8.svg) | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562495,5941492]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.618504/9.944799) · [OSM](https://www.openstreetmap.org/?mlat=53.618504&mlon=9.944799#map=18/53.618504/9.944799) | ☐ |
 | Zufall | `seg_d0f9eb1279ea00a2` | Niendorfer Straße | Eimsbüttel | ETW30 | ERSCHL | Mischverkehr | 15.0 | 15.9 | passt | nan | [SVG](profiles_sample/seg_d0f9eb1279ea00a2.svg) | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563209,5940082]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.605744/9.955307) · [OSM](https://www.openstreetmap.org/?mlat=53.605744&mlon=9.955307#map=18/53.605744/9.955307) | ☐ |
 | Zufall | `seg_0c2c0b827e31be64` | Willy-Brandt-Straße | Hamburg-Mitte | ETW30 | ERSCHL | Mischverkehr | 13.2 | 41.8 | passt | nan | [SVG](profiles_sample/seg_0c2c0b827e31be64.svg) | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565352,5933641]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.547596/9.986331) · [OSM](https://www.openstreetmap.org/?mlat=53.547596&mlon=9.986331#map=18/53.547596/9.986331) | ☐ |

@@ -139,3 +139,104 @@ def test_stable_input_is_a_fixpoint():
     first, _ = run(cats)
     second, trace = run([(c, m) for c, (_, m) in zip(first, cats)])
     assert second == first and trace == {}
+
+
+# --- H-PAIR-01: separately mapped carriageways get the same speed --------------------------------
+
+import geopandas as gpd  # noqa: E402
+from shapely.geometry import LineString  # noqa: E402
+
+from pipeline.lib.harmonise import carriageway_pairs, pair_carriageways  # noqa: E402
+
+PAIR = RULES.harmonisation.rule("H-PAIR-01")
+MAX_DIST = PAIR.thresholds["pair_max_distance_m"].value
+
+
+def seg(rows: list[tuple]) -> gpd.GeoDataFrame:
+    """rows: (segment_id, name, oneway, node_u, node_v, LineString)."""
+    return gpd.GeoDataFrame([dict(zip(["segment_id", "name", "oneway", "node_u", "node_v"], r[:5])) for r in rows],
+                            geometry=[r[5] for r in rows], crs=25832)
+
+
+def dual(offset: float = 15.0, name_b: str = "Hauptstraße", oneway_b=True, nodes_b=(3, 4)):
+    return seg([("a", "Hauptstraße", True, 1, 2, LineString([(0, 0), (300, 0)])),
+                ("b", name_b, oneway_b, *nodes_b, LineString([(300, offset), (0, offset)]))])
+
+
+def test_pair_rule_found():
+    assert PAIR.source_type == "assumption" and PAIR.status == "draft"
+    assert {"pair_max_distance_m", "pair_max_angle_deg", "pair_min_overlap_share"} <= set(PAIR.thresholds)
+    assert set(PAIR.locked_categories) == set(RULES.harmonisation.rule("H-STR-01").locked_categories)
+
+
+def test_dual_carriageway_is_paired():
+    pairs = carriageway_pairs(dual(), RULES)
+    assert [(p["a"], p["b"]) for p in pairs] == [("a", "b")]
+    assert pairs[0]["dist_m"] == pytest.approx(15) and pairs[0]["overlap_share"] == pytest.approx(1)
+
+
+@pytest.mark.parametrize("kwargs", [
+    {"offset": MAX_DIST + 1},              # too far apart
+    {"name_b": "Nebenstraße"},             # different street
+    {"oneway_b": False},                   # two-way road next to a one-way road
+    {"oneway_b": None},                    # oneway unknown
+    {"nodes_b": (2, 4)},                   # consecutive segments of one carriageway share a node
+])
+def test_no_pair(kwargs):
+    assert carriageway_pairs(dual(**kwargs), RULES) == []
+
+
+def test_crossing_short_segment_is_no_pair():
+    """Close and overlapping, but at 45 degrees: a crossing or a ramp, not the other carriageway."""
+    s = seg([("a", "Hauptstraße", True, 1, 2, LineString([(0, 0), (300, 0)])),
+             ("b", "Hauptstraße", True, 3, 4, LineString([(130, -3), (165, 32)]))])
+    assert carriageway_pairs(s, RULES) == []
+
+
+def test_consecutive_segments_without_overlap_are_no_pair():
+    s = seg([("a", "Hauptstraße", True, 1, 2, LineString([(0, 0), (300, 0)])),
+             ("b", "Hauptstraße", True, 3, 4, LineString([(310, 10), (600, 10)]))])
+    assert carriageway_pairs(s, RULES) == []
+
+
+def test_pair_lower_speed_wins():
+    pairs = carriageway_pairs(dual(), RULES)
+    new, trace = pair_carriageways(pairs, {"a": "GOW50", "b": "GOW30"}, RULES)
+    assert new == {"a": "GOW30", "b": "GOW30"}
+    step = trace["a"][0]
+    assert step["id"] == "H-PAIR-01" and step["from"] == "GOW50" and step["to"] == "GOW30" and step["partner"] == "b"
+    assert "b" not in trace
+
+
+def test_pair_equal_or_not_gow_unchanged():
+    pairs = carriageway_pairs(dual(), RULES)
+    for cats in ({"a": "GOW50", "b": "GOW50"}, {"a": "GOW50", "b": "ETW30"}, {"a": "SW", "b": "GOW30"}):
+        new, trace = pair_carriageways(pairs, cats, RULES)
+        assert new == cats and trace == {}
+
+
+def test_pair_locked_segment_untouched():
+    pairs = carriageway_pairs(dual(), RULES)
+    new, trace = pair_carriageways(pairs, {"a": "GOW50", "b": "GOW30"}, RULES, locked={"a"})
+    assert new == {"a": "GOW50", "b": "GOW30"} and trace == {}
+
+
+def test_pair_chain_propagates():
+    """A long carriageway paired with two shorter ones on the other side: 30 spreads over the chain."""
+    s = seg([("a", "Allee", True, 1, 2, LineString([(0, 0), (200, 0)])),
+             ("b", "Allee", True, 3, 4, LineString([(400, 12), (0, 12)])),
+             ("c", "Allee", True, 5, 6, LineString([(200, 0), (400, 0)]))])
+    new, _ = pair_carriageways(carriageway_pairs(s, RULES), {"a": "GOW30", "b": "GOW50", "c": "GOW50"}, RULES)
+    assert new == {"a": "GOW30", "b": "GOW30", "c": "GOW30"}
+
+
+def test_harmonise_all_pairs_then_smooths_along_the_street():
+    """The paired 30 on carriageway b leaves a short 50 stub on b's street, which H-STR-01 then closes."""
+    from pipeline.lib.harmonise import harmonise_all
+    s = seg([("a", "Allee", True, 1, 2, LineString([(0, 0), (300, 0)])),
+             ("b", "Allee", True, 3, 4, LineString([(300, 15), (0, 15)]))])
+    cats = {"a": "GOW30", "b": "GOW50", "x": "GOW30", "y": "GOW50"}
+    lengths = {"a": 300, "b": 300, "x": 400, "y": 120}
+    new, trace = harmonise_all([["x", "b", "y"]], carriageway_pairs(s, RULES), cats, lengths, RULES)
+    assert new == {"a": "GOW30", "b": "GOW30", "x": "GOW30", "y": "GOW30"}
+    assert [t["id"] for t in trace["b"]] == ["H-PAIR-01"] and [t["id"] for t in trace["y"]] == ["H-STR-01"]

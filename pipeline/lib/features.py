@@ -350,6 +350,7 @@ def way_design(tags: dict) -> dict:
         "parking_along_carriageway": bool(known & _PARK_ALONG) if known else None,
         "angle_parking": bool(orientations - {"parallel"}) if known - {"no"} else (False if known else None),
         "motorroad": True if tags.get("motorroad") == "yes" else None,
+        "oneway": {"yes": True, "true": True, "1": True, "-1": True, "no": False, "false": False, "0": False}.get(tags.get("oneway")),
     }
 
 

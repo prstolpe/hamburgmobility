@@ -1,31 +1,31 @@
 # Kohärenzbericht – Stufe 6
 
-Erzeugt: 2026-11-15T01:50:44+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0.22.0. Nicht amtlicher Entwurf: Die Regeln markieren nur; nichts wird umklassifiziert. Entscheidungen über overrides/overrides.csv.
+Erzeugt: 2026-11-15T20:13:28+00:00 von `pipeline/s06_coherence.py`, rules.yaml 0.23.0. Nicht amtlicher Entwurf: Die Regeln markieren nur; nichts wird umklassifiziert. Entscheidungen über overrides/overrides.csv.
 
 ## Kennzahlen
 
 - Geprüft: 34 702 Abschnitte im Arbeitsgebiet (4387.3 km), 24 767 Knoten. Knoten = OSM-Knoten; getrennte Richtungsfahrbahnen sind nicht zusammengefasst (mehrere Knoten je Kreuzung).
-- Abschnitte mit mindestens einem Flag: 10 061.
+- Abschnitte mit mindestens einem Flag: 10 296.
 
 | Regel | Bedeutung | Abschnitte (Arbeitsgebiet) | km | Abschnitte Hamburg (7 Bezirke) | km Hamburg (7 Bezirke) |
 | --- | --- | ---: | ---: | ---: | ---: |
 | N1 | Durchgängigkeit (GOW-Zug endet ohne Anschluss) | 274 | 32.5 | 273 | 32.1 |
 | N2 | Kurze Kategorie-Insel | 74 | 4.7 | 73 | 4.6 |
 | N3 | Kleiner Aufenthaltsbereich | 2 013 | 130.3 | 2 013 | 130.3 |
-| N4 | Schleichverkehr über ETW | 9 026 | 1003.0 | 8 995 | 1000.0 |
-| N5 | Direkter Übergang ≥ 70 → 30 | 41 | 9.4 | 40 | 9.3 |
+| N4 | Schleichverkehr über ETW | 9 258 | 1032.5 | 9 226 | 1029.4 |
+| N5 | Direkter Übergang ≥ 70 → 30 | 44 | 9.5 | 43 | 9.4 |
 
 km mit Flag je Bezirk und Regel:
 
 | Bezirk | km geprüft | N1 | N2 | N3 | N4 | N5 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Altona | 620.5 | 2.8 | 0.3 | 6.7 | 149.3 | 0.1 |
-| Bergedorf | 209.3 | 4.2 | 0.1 | 3.6 | 34.7 | 0.1 |
-| Eimsbüttel | 470.4 | 1.9 | 0.3 | 9.6 | 134.8 | 0.0 |
-| Hamburg-Mitte | 881.3 | 8.7 | 1.2 | 62.7 | 163.6 | 6.6 |
-| Hamburg-Nord | 563.3 | 6.0 | 0.7 | 35.0 | 195.3 | 0.7 |
-| Harburg | 465.2 | 4.9 | 1.3 | 9.3 | 49.4 | 1.8 |
-| Wandsbek | 1030.4 | 3.8 | 0.7 | 3.3 | 272.8 | 0.0 |
+| Altona | 620.5 | 2.8 | 0.3 | 6.7 | 157.9 | 0.1 |
+| Bergedorf | 209.3 | 4.2 | 0.1 | 3.6 | 36.4 | 0.1 |
+| Eimsbüttel | 470.4 | 1.9 | 0.3 | 9.6 | 137.6 | 0.0 |
+| Hamburg-Mitte | 881.3 | 8.7 | 1.2 | 62.7 | 169.1 | 6.6 |
+| Hamburg-Nord | 563.3 | 6.0 | 0.7 | 35.0 | 201.1 | 0.7 |
+| Harburg | 465.2 | 4.9 | 1.3 | 9.3 | 49.4 | 1.9 |
+| Wandsbek | 1030.4 | 3.8 | 0.7 | 3.3 | 277.8 | 0.0 |
 | ohne Bezirk | 146.9 | 0.4 | 0.1 | 0.0 | 3.1 | 0.1 |
 
 Karte: `reports/coherence_flags.geojson` (EPSG:4326; Ebenen segment, node, area; Eigenschaft `rule`), z. B. in QGIS oder geojson.io öffnen.
@@ -54,20 +54,20 @@ Häufigste Straßen mit offenem GOW-Ende:
 | Name | Kategorie | Enden |
 | --- | --- | ---: |
 | Schiffbeker Weg | GOW30 | 5 |
+| Binnenfeldredder | GOW30 | 4 |
+| Hammer Straße | GOW30 | 4 |
+| Langenfelder Damm | GOW30 | 4 |
 | Zeppelinstraße | GOW50 | 4 |
 | Fuhlsbüttler Straße | GOW30 | 4 |
-| Langenfelder Damm | GOW30 | 4 |
-| Hammer Straße | GOW30 | 4 |
-| Adenauerallee | GOW30 | 3 |
-| – | GOW30 | 3 |
-| Frohmestraße | GOW30 | 3 |
-| Hannoversche Straße | GOW30 | 3 |
 | St. Benedictstraße | GOW50 | 3 |
-| Kurvenstraße | GOW30 | 2 |
-| Lange Reihe | GOW30 | 2 |
-| Lauensteinstraße | GOW50 | 2 |
-| Kandinskyallee | GOW30 | 2 |
+| Hannoversche Straße | GOW30 | 3 |
+| Adenauerallee | GOW30 | 3 |
+| Frohmestraße | GOW30 | 3 |
+| – | GOW30 | 3 |
+| Kandinskyallee | GOW50 | 2 |
 | Lohe | GOW30 | 2 |
+| Martinistraße | GOW30 | 2 |
+| Lauensteinstraße | GOW50 | 2 |
 
 ## N2 Kategorie-Inseln und Glättungsvorschläge
 
@@ -903,31 +903,31 @@ Flächen aus GOW/SW-Linien und Stadtgrenze innerhalb des Arbeitsgebiets: 3195. D
 
 OD-Knoten: alle 6 452 Knoten des GOW/SW-Netzes (SW, GOW80, GOW50, GOW30) im Arbeitsgebiet; OD-Paare (ungerichtet, verbunden): 20 798 026. Reisezeit mit Soll-Tempo je Kategorie, SW mit travel_speed_kmh; pedestrian gesperrt; ohne Einbahnstraßen (Abschnitte tragen keine Richtung). Wege nur innerhalb des Arbeitsgebiets.
 
-- OD-Paare, deren kürzester Weg mehr als 300 m ETW nutzt: 11 849 018 (57.0 %), obwohl ein Weg nur auf GOW/SW besteht.
-- Weitere 4 170 543 OD-Paare sind nur über ETW verbunden (Lücke im GOW/SW-Netz, siehe N1); sie werden gezählt, aber nicht als Schleichverkehr markiert.
+- OD-Paare, deren kürzester Weg mehr als 300 m ETW nutzt: 12 482 745 (60.0 %), obwohl ein Weg nur auf GOW/SW besteht.
+- Weitere 4 189 445 OD-Paare sind nur über ETW verbunden (Lücke im GOW/SW-Netz, siehe N1); sie werden gezählt, aber nicht als Schleichverkehr markiert.
 - Median Umwegfaktor (Zeit GOW/SW-Weg ÷ kürzester Weg) dieser Paare: 1.05.
-- Markierte ETW-Abschnitte: 9 026 (1003.0 km). Verteilung der OD-Paare je Abschnitt: 1–99: 3 534, 100–999: 3 931, 1 000–9 999: 5 003, ≥ 10 000: 3 559.
+- Markierte ETW-Abschnitte: 9 258 (1032.5 km). Verteilung der OD-Paare je Abschnitt: 1–99: 3 403, 100–999: 3 934, 1 000–9 999: 5 207, ≥ 10 000: 3 964.
 - GOW30 und ETW30 haben dasselbe Soll-Tempo; jeder kürzere Weg durch ETW gewinnt dann. Die Zahl ist deshalb ein Maß für die Durchlässigkeit der Quartiere, kein Verkehrsmodell.
 
 Meistgenutzte ETW-Abschnitte:
 
 | segment_id | Name | Kategorie | OD-Paare |
 | --- | --- | --- | ---: |
-| `seg_2116d910b53467bd` | – | ETW30 | 2 424 908 |
-| `seg_72276bd77cea53af` | – | ETW30 | 2 424 719 |
-| `seg_d9812f3706f5d387` | – | ETW30 | 1 689 642 |
-| `seg_af0f3358da643532` | Nartenstraße | ETW30 | 1 684 254 |
-| `seg_01aa49dba6b4c0b8` | Nartenstraße | ETW30 | 1 684 254 |
-| `seg_bd25c0d09df20c39` | – | ETW30 | 1 596 709 |
-| `seg_4a95ef4aaef04298` | – | ETW30 | 1 596 709 |
-| `seg_175c34fb518bda3a` | – | ETW30 | 1 596 709 |
-| `seg_306ddcf54cbb52a2` | Harburger Schloßstraße | ETW30 | 1 578 252 |
-| `seg_5c2b1468d6aeb81e` | Hannoversche Straße | ETW30 | 1 489 147 |
-| `seg_e9ec3c9e7a129798` | Glockengießerwall | ETW30 | 1 213 950 |
-| `seg_7b983c539731d940` | Langenfort | ETW30 | 1 188 250 |
-| `seg_3b00ab48ca6002a8` | Lauensteinstraße | ETW30 | 1 140 889 |
-| `seg_ccee6b421f935296` | Hamburger Straße | ETW30 | 1 112 557 |
-| `seg_79f13553f9ddf3dc` | Hamburger Straße | ETW30 | 1 112 557 |
+| `seg_2116d910b53467bd` | – | ETW30 | 2 392 940 |
+| `seg_72276bd77cea53af` | – | ETW30 | 2 392 732 |
+| `seg_d9812f3706f5d387` | – | ETW30 | 1 707 288 |
+| `seg_af0f3358da643532` | Nartenstraße | ETW30 | 1 701 919 |
+| `seg_01aa49dba6b4c0b8` | Nartenstraße | ETW30 | 1 701 919 |
+| `seg_306ddcf54cbb52a2` | Harburger Schloßstraße | ETW30 | 1 595 917 |
+| `seg_bd25c0d09df20c39` | – | ETW30 | 1 578 795 |
+| `seg_4a95ef4aaef04298` | – | ETW30 | 1 578 795 |
+| `seg_175c34fb518bda3a` | – | ETW30 | 1 578 795 |
+| `seg_5c2b1468d6aeb81e` | Hannoversche Straße | ETW30 | 1 471 482 |
+| `seg_3b00ab48ca6002a8` | Lauensteinstraße | ETW30 | 1 442 358 |
+| `seg_7b983c539731d940` | Langenfort | ETW30 | 1 336 259 |
+| `seg_8841c4fcc68c9aed` | Kirchenallee | ETW30 | 890 430 |
+| `seg_d8e4a3acc6f81ff1` | Langenfort | ETW30 | 872 277 |
+| `seg_f5dead73b1aef3f6` | Goldtschmidtstraße | ETW30 | 871 574 |
 
 ## N5 Übergänge
 
@@ -935,13 +935,13 @@ Meistgenutzte ETW-Abschnitte:
 
 | von → nach | Knoten |
 | --- | ---: |
-| GOW30 → ETW30 | 3 523 |
-| GOW50 → ETW30 | 1 508 |
-| GOW50 → GOW30 | 739 |
-| GOW30 → ETW_ERF | 62 |
-| GOW50 → ETW_ERF | 21 |
+| GOW30 → ETW30 | 3 783 |
+| GOW50 → ETW30 | 1 181 |
+| GOW50 → GOW30 | 581 |
+| GOW30 → ETW_ERF | 63 |
+| GOW50 → ETW_ERF | 20 |
 
-Direkter Übergang ≥ 70 km/h → 30-km/h-Kategorie (Flag auf der 30-Seite): 36 Knoten, 41 Abschnitte.
+Direkter Übergang ≥ 70 km/h → 30-km/h-Kategorie (Flag auf der 30-Seite): 38 Knoten, 44 Abschnitte.
 
 ## Knotentypen
 
@@ -953,36 +953,36 @@ Fachlich durchsehen: Ist das Flag berechtigt? **Durchsicht: offen.**
 
 | segment_id | Bezirk | Name | Kategorie | m | Flags | Orthophoto | Panoramax | OSM |
 | --- | --- | --- | --- | ---: | --- | --- | --- | --- |
-| `seg_0a3f3e1b44a7c6f0` | Altona | Parkstraße | ETW30 | 110 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[558342,5933788]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.549738/9.880572) | [Way](https://www.openstreetmap.org/way/1272223381) |
-| `seg_294f404aa1fe4b52` | Altona | Kirchenstraße | ETW30 | 11 | N3_small_area, N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563022,5933481]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.546441/9.951151) | [Way](https://www.openstreetmap.org/way/40196506) |
-| `seg_64959c6a1e260339` | Altona | Schillerstraße | ETW30 | 19 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562160,5933885]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.550174/9.938214) | [Way](https://www.openstreetmap.org/way/138128221) |
-| `seg_e6ec6bafbf189b87` | Altona | Am Krähenberg | ETW30 | 5 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[553258,5935628]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.566819/9.804171) | [Way](https://www.openstreetmap.org/way/32648223) |
-| `seg_523c26dff146d402` | Bergedorf | Ludwig-Rosenberg-Ring | ETW30 | 31 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[580159,5927965]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.494537/10.208306) | [Way](https://www.openstreetmap.org/way/687555617) |
-| `seg_5b252d8f3ed29bca` | Bergedorf | Stuhlrohrstraße | ETW30 | 37 | N3_small_area | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[579843,5927180]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.487528/10.203353) | [Way](https://www.openstreetmap.org/way/284599269) |
-| `seg_21a81ecb5f47d578` | Eimsbüttel | Mittelweg | ETW30 | 207 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565942,5935887]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.567701/9.995720) | [Way](https://www.openstreetmap.org/way/39096854) |
-| `seg_26b564e0dc43ce78` | Eimsbüttel | Heußweg | ETW30 | 68 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563019,5936815]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.576402/9.951775) | [Way](https://www.openstreetmap.org/way/27647215) |
-| `seg_366f9273028b843a` | Eimsbüttel | Jägerlauf | ETW30 | 429 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564061,5939566]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.600998/9.968069) | [Way](https://www.openstreetmap.org/way/143961981) |
-| `seg_d44f6cd3a5103062` | Eimsbüttel | Gazellenkamp | ETW30 | 51 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561562,5939097]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.597081/9.930215) | [Way](https://www.openstreetmap.org/way/700963141) |
-| `seg_0dbd6c309cb41501` | Hamburg-Mitte | Hasencleverstraße | ETW30 | 89 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572382,5934317]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.552746/10.092569) | [Way](https://www.openstreetmap.org/way/151541533) |
-| `seg_0e567aac0b956f5d` | Hamburg-Mitte | – | ETW_ERF | 28 | N3_small_area | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565743,5934020]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.550949/9.992314) | [Way](https://www.openstreetmap.org/way/656674633) |
-| `seg_2b799340e2be99d2` | Hamburg-Mitte | Washingtonallee | ETW30 | 119 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572153,5934071]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.550568/10.089069) | [Way](https://www.openstreetmap.org/way/1076304683) |
-| `seg_67e9363b79ac8641` | Hamburg-Mitte | Moorfleeter Straße | ETW30 | 259 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572255,5931041]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.523320/10.089904) | [Way](https://www.openstreetmap.org/way/884317050) |
-| `seg_6ffd2d8bc8cad98c` | Hamburg-Mitte | St. Petersburger Straße | ETW30 | 50 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564673,5935277]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.562376/9.976435) | [Way](https://www.openstreetmap.org/way/252843149) |
-| `seg_d4479b21ca330dee` | Hamburg-Mitte | Kirchenaußendeichsweg | ETW30 | 233 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[557531,5931203]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.526600/9.867868) | [Way](https://www.openstreetmap.org/way/69922858) |
-| `seg_0692ee821f8d512e` | Hamburg-Nord | Goldbekufer | ETW30 | 131 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567371,5938136]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.587739/10.017779) | [Way](https://www.openstreetmap.org/way/279890682) |
-| `seg_2fa6cb85ca793efe` | Hamburg-Nord | Lohkoppelstraße | ETW30 | 111 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568660,5937522]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.582045/10.037107) | [Way](https://www.openstreetmap.org/way/22801954) |
-| `seg_7dbfeaf662c84615` | Hamburg-Nord | Lämmersieth | ETW30 | 9 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570042,5938122]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.587256/10.058110) | [Way](https://www.openstreetmap.org/way/147850533) |
-| `seg_8cabcc4cb5047ba4` | Hamburg-Nord | Bachstraße | ETW30 | 8 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567526,5937423]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.581308/10.019955) | [Way](https://www.openstreetmap.org/way/764156664) |
-| `seg_97cd618bee877580` | Hamburg-Nord | Neubergerweg | ETW30 | 132 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566269,5947114]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.668565/10.003040) | [Way](https://www.openstreetmap.org/way/87564084) |
-| `seg_b6326d0cdf87f5f4` | Hamburg-Nord | Lauensteinstraße | ETW30 | 18 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568886,5939362]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.598553/10.040932) | [Way](https://www.openstreetmap.org/way/538353324) |
-| `seg_b648164e54787c28` | Harburg | – | ETW_ERF | 4 | N3_small_area | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565048,5923886]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.459963/9.979723) | [Way](https://www.openstreetmap.org/way/1210495355) |
-| `seg_ec99303ad029d94f` | Harburg | Hohe Straße | ETW30 | 14 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565118,5922975]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.451761/9.980595) | [Way](https://www.openstreetmap.org/way/601093065) |
-| `seg_03bee7aab16067bf` | Wandsbek | Am Pfeilshof / Grootmoor | ETW30 | 582 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573614,5943517]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.635249/10.113337) | [Way](https://www.openstreetmap.org/way/8328868) |
-| `seg_4f4083bb1095dd07` | Wandsbek | Hohnerkamp | ETW30 | 17 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572096,5941851]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.620492/10.090004) | [Way](https://www.openstreetmap.org/way/22885438) |
-| `seg_6e06c8777926f41f` | Wandsbek | Auenstraße | ETW30 | 235 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569285,5936304]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.571020/10.046271) | [Way](https://www.openstreetmap.org/way/32262261) |
-| `seg_8c51ee42131612bc` | Wandsbek | Herwardistraße | ETW30 | 334 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[575040,5940610]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.608924/10.134208) | [Way](https://www.openstreetmap.org/way/22966777) |
-| `seg_d0c6947e06722549` | Wandsbek | Pillauer Straße | GOW30 | 309 | N1_dead_end | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572027,5938971]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.594616/10.088293) | [Way](https://www.openstreetmap.org/way/40014372) |
-| `seg_dc3e7caa254eb197` | Wandsbek | Gustav-Seitz-Weg | ETW30 | 14 | N3_small_area, N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570263,5940508]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.608676/10.061997) | [Way](https://www.openstreetmap.org/way/605362888) |
+| `seg_0995ebb5819e8b8f` | Altona | Lisztstraße | ETW30 | 84 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560302,5934221]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.553413/9.910239) | [Way](https://www.openstreetmap.org/way/19392071) |
+| `seg_277ae0a3dacaf050` | Altona | Louise-Schroeder-Straße | ETW30 | 143 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562913,5933984]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.550970/9.949601) | [Way](https://www.openstreetmap.org/way/1183750715) |
+| `seg_5ff8ff772d9a889a` | Altona | Hasenhöhe | ETW30 | 65 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[554322,5935213]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.562975/9.820152) | [Way](https://www.openstreetmap.org/way/1391178806) |
+| `seg_db881f73fa844dc5` | Altona | Bahrenfelder Steindamm | ETW30 | 32 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561447,5934947]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.559802/9.927660) | [Way](https://www.openstreetmap.org/way/1046914584) |
+| `seg_497fceeccee9bd90` | Bergedorf | Ladenbeker Furtweg | ETW30 | 63 | N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[578922,5928949]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.503567/10.189921) | [Way](https://www.openstreetmap.org/way/158098440) |
+| `seg_52919eab487114a3` | Bergedorf | Margit-Zinke-Straße | ETW30 | 90 | N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[577335,5927120]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.487358/10.165548) | [Way](https://www.openstreetmap.org/way/25963505) |
+| `seg_20d360df812d1429` | Eimsbüttel | Märkerweg | ETW30 | 321 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563259,5944295]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.643599/9.956909) | [Way](https://www.openstreetmap.org/way/359743701) |
+| `seg_266081e0eabdb0f9` | Eimsbüttel | Eichenstraße | ETW30 | 15 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563540,5936699]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.575296/9.959622) | [Way](https://www.openstreetmap.org/way/22663107) |
+| `seg_357ca3950f5612e8` | Eimsbüttel | Veilchenweg | ETW30 | 98 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563584,5938213]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.588900/9.960586) | [Way](https://www.openstreetmap.org/way/1010261205) |
+| `seg_d2084e09f0fd54d8` | Eimsbüttel | Hollwören | ETW30 | 167 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562255,5941579]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.619314/9.941191) | [Way](https://www.openstreetmap.org/way/8385642) |
+| `seg_0d9e20ccaefe1a1d` | Hamburg-Mitte | Rhiemsweg | ETW30 | 600 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[571479,5934932]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.558392/10.079089) | [Way](https://www.openstreetmap.org/way/1447886595) |
+| `seg_0e3e230895de71db` | Hamburg-Mitte | Saling | GOW30 | 31 | N1_dead_end | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569401,5935279]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.561790/10.047796) | [Way](https://www.openstreetmap.org/way/160532392) |
+| `seg_2b0877852a96ef8c` | Hamburg-Mitte | Altenwerder Damm | ETW30 | 10 | N3_small_area | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561296,5930670]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.521383/9.924546) | [Way](https://www.openstreetmap.org/way/408010131) |
+| `seg_66b6daf439bed78e` | Hamburg-Mitte | Ferdinandstor | ETW30 | 21 | N3_small_area, N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566295,5934551]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.555651/10.000758) | [Way](https://www.openstreetmap.org/way/186713407) |
+| `seg_6d792535419cf1a9` | Hamburg-Mitte | Kornträgergang | ETW30 | 200 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565134,5934162]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.552305/9.983152) | [Way](https://www.openstreetmap.org/way/9785197) |
+| `seg_cf43582a8a0cc43a` | Hamburg-Mitte | Hohe Bleichen | ETW30 | 21 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565417,5934394]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.554348/9.987476) | [Way](https://www.openstreetmap.org/way/22814427) |
+| `seg_0b9130a735e7834f` | Hamburg-Nord | Manstadtsweg | ETW30 | 60 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568893,5940148]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.605623/10.041204) | [Way](https://www.openstreetmap.org/way/3452978) |
+| `seg_61fe170186c0c99a` | Hamburg-Nord | Hummelsbütteler Kirchenweg | ETW30 | 87 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567620,5943295]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.634065/10.022649) | [Way](https://www.openstreetmap.org/way/150596942) |
+| `seg_6c48153cbe847cec` | Hamburg-Nord | Feuerbergstraße | ETW30 | 123 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568348,5941059]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.613881/10.033173) | [Way](https://www.openstreetmap.org/way/4761805) |
+| `seg_d21b25f939eedb17` | Hamburg-Nord | Ratsmühlendamm | ETW30 | 106 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567043,5942529]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.627255/10.013770) | [Way](https://www.openstreetmap.org/way/1381489141) |
+| `seg_e2c538f221a8659f` | Hamburg-Nord | Imstedt | ETW30 | 4 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567863,5937226]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.579494/10.025009) | [Way](https://www.openstreetmap.org/way/24273394) |
+| `seg_fdb795f1103a441b` | Hamburg-Nord | Köppenstraße | ETW30 | 51 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564944,5940472]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.609031/9.981603) | [Way](https://www.openstreetmap.org/way/146586765) |
+| `seg_03515b585b7304ae` | Harburg | Walter-Dudek-Brücke | GOW50 | 7 | N1_dead_end | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565674,5923610]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.457398/9.989088) | [Way](https://www.openstreetmap.org/way/30530268) |
+| `seg_764b31f0c0d12b82` | Harburg | Sand | ETW30 | 12 | N3_small_area, N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565182,5924084]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.461719/9.981786) | [Way](https://www.openstreetmap.org/way/580230390) |
+| `seg_4d11084518fe3769` | Wandsbek | Pfefferstraße | ETW30 | 357 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[575532,5940384]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.606829/10.141582) | [Way](https://www.openstreetmap.org/way/15730904) |
+| `seg_4eb31cecf8fda826` | Wandsbek | Fabriciusstraße | ETW30 | 47 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570299,5939666]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.601103/10.062351) | [Way](https://www.openstreetmap.org/way/788156040) |
+| `seg_69f9d3b17d2fa44c` | Wandsbek | Wichelwisch | ETW30 | 154 | N4_shortcut, N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[574491,5938816]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.592886/10.125474) | [Way](https://www.openstreetmap.org/way/20334562) |
+| `seg_89a32cb5a6602608` | Wandsbek | Schulbergredder | ETW30 | 110 | N4_shortcut | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[571447,5946259]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.660192/10.081208) | [Way](https://www.openstreetmap.org/way/23547678) |
+| `seg_a72a373cde7f48b3` | Wandsbek | Claudiusstraße | ETW30 | 48 | N4_gow_gap | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570797,5935894]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.567135/10.069007) | [Way](https://www.openstreetmap.org/way/1024548182) |
+| `seg_cd0f941eaefdbb45` | Wandsbek | Am Grundwasserwerk | ETW_ERF | 49 | N2_island, N7_smooth:ETW30 | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573195,5937162]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.578202/10.105506) | [Way](https://www.openstreetmap.org/way/24622935) |
 
 ## Grenzen
 
@@ -993,7 +993,7 @@ Fachlich durchsehen: Ist das Flag berechtigt? **Durchsicht: offen.**
 
 ## Korrekturebene (Stufe 6b)
 
-Erzeugt: 2026-11-15T01:50:46+00:00 von `pipeline/s06b_overrides.py`, rules.yaml 0.22.0. Quelle: `overrides/overrides.csv`; übernommen wird nur review_status = approved. cat_proposed bleibt unverändert, cat_final steht daneben.
+Erzeugt: 2026-11-15T20:13:30+00:00 von `pipeline/s06b_overrides.py`, rules.yaml 0.23.0. Quelle: `overrides/overrides.csv`; übernommen wird nur review_status = approved. cat_proposed bleibt unverändert, cat_final steht daneben.
 
 | review_status | Einträge |
 | --- | ---: |

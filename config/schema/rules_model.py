@@ -545,7 +545,7 @@ class HarmonisationRule(_Strict):
     source_type: SourceType
     status: Status
     source: str | list[str] | None = None
-    min_run_from: str                   # coherence rule whose min_run_m is used (N2)
+    min_run_from: str | None = None     # coherence rule whose min_run_m is used (N2; H-STR-01 only)
     max_passes: int = Field(gt=0)       # technical limit of the repeated passes
     locked_categories: list[str] = []   # never changed
     thresholds: dict[str, Threshold] = {}
@@ -709,7 +709,9 @@ class RuleSet(_Strict):
         _check_provenance(self.priority.model_dump(include={"source", "source_type"}), "priority", source_ids)
 
         for r in self.harmonisation.rules:
-            if r.min_run_from not in {c.id for c in self.coherence}:
+            if r.id == "H-STR-01" and r.min_run_from is None:
+                raise ValueError("harmonisation.rules[H-STR-01].min_run_from missing")
+            if r.min_run_from is not None and r.min_run_from not in {c.id for c in self.coherence}:
                 raise ValueError(f"harmonisation.rules[{r.id}].min_run_from: unknown coherence rule {r.min_run_from}")
             unknown = sorted(set(r.locked_categories) - cats)
             if unknown:

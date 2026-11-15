@@ -1,6 +1,6 @@
 # Export – Stufe 9
 
-Erzeugt: 2026-11-15T02:00:15+00:00 von `pipeline/s09_export.py`, Version 0.22.0+2026-10-28. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-15T20:22:38+00:00 von `pipeline/s09_export.py`, Version 0.23.0+2026-10-28. Nicht amtlicher Entwurf.
 
 ## Prüfungen
 
@@ -19,15 +19,15 @@ Erzeugt: 2026-11-15T02:00:15+00:00 von `pipeline/s09_export.py`, Version 0.22.0+
 | Radnetz-Kacheln | ok | tiles/cycling.pmtiles, tiles/junctions.pmtiles |
 | Radnetz-Robustheit aus c08 übernommen | ok | 50838 Einträge |
 | Radnetz-Downloads ohne Rohspuren | ok | Spalten aus plain_language.yaml cycling.columns |
-| Robustheit aus make validate übernommen | ok | 33712/33712 Abschnitte, rules.yaml 0.22.0 |
+| Robustheit aus make validate übernommen | ok | 33712/33712 Abschnitte, rules.yaml 0.23.0 |
 
 ## Kennzahlen
 
 - Abschnitte: 33 712 in Hamburg (7 Bezirke) (4240.4 km)
 - Gesamtgröße data/out: 512 MB (Grenze GitHub Pages 1 GB)
 - Suchindex: 8 396 Straßennamen; Schulen/Kitas in den Kacheln: 1 545
-- Steckbriefe: 33 712 Dateien, zusammen 217.9 MB
-- Robustheit (make validate, 500 Läufe): 2 203 Abschnitte „unsicher“ (243.9 km)
+- Steckbriefe: 33 712 Dateien, zusammen 218.1 MB
+- Robustheit (make validate, 500 Läufe): 2 213 Abschnitte „unsicher“ (245.8 km)
 
 - Radnetz (Prompt 21): 33 712 Abschnitte mit Radnetz-Block, 14 312 Knoten-Steckbriefe; Kacheln tiles/cycling.pmtiles und tiles/junctions.pmtiles werden erst geladen, wenn eine Radnetz-Ebene gewählt ist
 
@@ -49,7 +49,6 @@ Erzeugt: 2026-11-15T02:00:15+00:00 von `pipeline/s09_export.py`, Version 0.22.0+
 | `data/out/basemap/sprites/light.png` | 0.02 MB |
 | `data/out/basemap/sprites/light@2x.json` | 0.00 MB |
 | `data/out/basemap/sprites/light@2x.png` | 0.03 MB |
-| `data/out/changelog.md` | 0.07 MB |
 | `data/out/cycle_mesh_gaps.geojson` | 0.64 MB |
 | `data/out/districts/altona.json` | 0.00 MB |
 | `data/out/districts/bergedorf.json` | 0.00 MB |
@@ -60,7 +59,7 @@ Erzeugt: 2026-11-15T02:00:15+00:00 von `pipeline/s09_export.py`, Version 0.22.0+
 | `data/out/districts/wandsbek.json` | 0.00 MB |
 | `data/out/districts.geojson` | 0.19 MB |
 | `data/out/downloads/cycle_network.parquet` | 9.38 MB |
-| `data/out/downloads/cycle_segments.geojson` | 38.40 MB |
+| `data/out/downloads/cycle_segments.geojson` | 38.39 MB |
 | `data/out/downloads/cycle_segments.parquet` | 6.03 MB |
 | `data/out/downloads/cycling_rules.yaml` | 0.08 MB |
 | `data/out/downloads/datenbeschreibung.md` | 0.01 MB |
@@ -69,8 +68,8 @@ Erzeugt: 2026-11-15T02:00:15+00:00 von `pipeline/s09_export.py`, Version 0.22.0+
 | `data/out/downloads/junctions.parquet` | 0.86 MB |
 | `data/out/downloads/overrides.csv` | 0.00 MB |
 | `data/out/downloads/rules.yaml` | 0.09 MB |
-| `data/out/downloads/segments.csv` | 15.47 MB |
-| `data/out/downloads/segments.geojson` | 58.35 MB |
+| `data/out/downloads/segments.csv` | 15.49 MB |
+| `data/out/downloads/segments.geojson` | 58.36 MB |
 | `data/out/downloads/segments.parquet` | 8.16 MB |
 | `data/out/junction_redirects.json` | 0.12 MB |
 | `data/out/licenses.md` | 0.00 MB |
@@ -83,7 +82,7 @@ Erzeugt: 2026-11-15T02:00:15+00:00 von `pipeline/s09_export.py`, Version 0.22.0+
 | `data/out/tiles/junctions.pmtiles` | 2.80 MB |
 | `data/out/tiles/segments.pmtiles` | 13.58 MB |
 | `data/out/basemap/fonts/ (768 Glyphen-Dateien)` | 11.08 MB |
-| `data/out/junctions/ (14312 Knoten-Steckbriefe)` | 23.03 MB |
+| `data/out/junctions/ (14312 Knoten-Steckbriefe)` | 23.01 MB |
 | `data/out/table/ (7 Dateien, je Bezirk)` | 5.68 MB |
 
 ## Stichprobe (30 zufällige Steckbriefe, Seed 42)

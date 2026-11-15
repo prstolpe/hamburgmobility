@@ -1,6 +1,6 @@
 # Merkmalsbericht – Stufe 4
 
-Erzeugt: 2026-11-15T01:42:38+00:00 von `pipeline/s04_features.py`, rules.yaml 0.22.0. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-15T20:03:46+00:00 von `pipeline/s04_features.py`, rules.yaml 0.23.0. Nicht amtlicher Entwurf.
 
 ## Kennzahlen
 
@@ -78,6 +78,7 @@ Erzeugt: 2026-11-15T01:42:38+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | `crossings_count` | OSM-Knoten | S-FEAT-10 | requirements.GOW50.crossings | 0.0 % | 0.0 % |
 | `traffic_calming_count` | OSM-Knoten | S-FEAT-10 | requirements.ETW30.speed_reducer_spacing_m | 0.0 % | 0.0 % |
 | `surface` | OSM-Tags | S-FEAT-10 | Erkennbarkeit (guide.md 1.2) | 4.0 % | 3.5 % |
+| `oneway` | OSM-Tags | S-FEAT-10 | H-PAIR-01 (Richtungsfahrbahnen) | 63.1 % | 62.5 % |
 | `access_motor_only` | OSM-Tags | S-FEAT-10 | C-SW-01 | 0.0 % | 0.0 % |
 | `pedestrian_zone` | OSM-Tags | S-FEAT-10 | C-ERF-01 | 0.0 % | 0.0 % |
 | `anbaufrei_share` | ALKIS-Gebäude + OSM-Netz | S-FEAT-12 | Rohwert für anbaufrei | 0.0 % | 0.0 % |
@@ -115,7 +116,7 @@ Erzeugt: 2026-11-15T01:42:38+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | OSM Radnetz Hamburg | fallback | `in_cycle_network` | 0.0 % |
 | Tempo amtlich/OSM | ok | `speed_ist_kmh`, `speed_ist_source`, `speed_sources_conflict` | 4.9 % |
 | Tempo amtlich/OSM/Standard | – | `travel_speed_kmh`, `travel_speed_source` | 3.4 % |
-| OSM-Tags | – | `cycle_track_tag`, `cycle_lane_present`, `lanes`, `centre_line`, `parking`, `parking_on_carriageway`, `parking_along_carriageway`, `angle_parking`, `surface`, `access_motor_only`, `pedestrian_zone` | 45.4 % |
+| OSM-Tags | – | `cycle_track_tag`, `cycle_lane_present`, `lanes`, `centre_line`, `parking`, `parking_on_carriageway`, `parking_along_carriageway`, `angle_parking`, `surface`, `oneway`, `access_motor_only`, `pedestrian_zone` | 46.9 % |
 | OSM-Knoten | – | `crossings_count`, `traffic_calming_count` | 0.0 % |
 | ALKIS-Gebäude + OSM-Netz | – | `anbaufrei_share`, `anbaufrei` | 0.0 % |
 | keine Quelle | – | `outside_builtup_area` | 100.0 % |
@@ -321,6 +322,7 @@ Erzeugt: 2026-11-15T01:42:38+00:00 von `pipeline/s04_features.py`, rules.yaml 0.
 | `access_motor_only` | False: 98.5 %, True: 1.5 % |
 | `pedestrian_zone` | False: 98.0 %, True: 2.0 % |
 | `speed_sources_conflict` | False: 96.7 %, True: 3.3 % |
+| `oneway` | null: 63.1 %, True: 30.3 %, False: 6.7 % |
 
 ### conn_score nach highway-Klasse (Median)
 

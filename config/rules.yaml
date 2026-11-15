@@ -7,7 +7,7 @@
 #   ein Wert auf der Grenze gehört zur oberen Klasse; fehlendes min = -unendlich, fehlendes max = +unendlich;
 #   das Schema prüft Lückenlosigkeit und Überlappungsfreiheit (F27).
 meta:
-  version: 0.22.0
+  version: 0.23.0
   date: 2026-11-15
   crs_work: EPSG:25832
   owner: "Allianz / Fachgruppe Methodik"
@@ -663,7 +663,8 @@ features:
         cycle_track_tag: cycleway[:both|left|right] = track oder separate, oder bicycle = use_sidepath; nur Eingang
         für S-FEAT-13. cycle_lane_present: cycleway… = lane. centre_line: lane_markings. parking:
         parking:[both|left|right] bzw. parking:lane:… (altes Schema). crossings/traffic_calming: Knoten
-        highway=crossing bzw. traffic_calming=* höchstens node_snap_m vom Abschnitt. Fehlende Tags heißen 'unbekannt',
+        highway=crossing bzw. traffic_calming=* höchstens node_snap_m vom Abschnitt. oneway (seit 0.23.0, Eingang für
+        H-PAIR-01): yes/true/1/-1 = ja, no/false/0 = nein, sonst unbekannt. Fehlende Tags heißen 'unbekannt',
         nicht 'nein'.
       history:
         - "bis 0.19.0: separated_cycle_track_present (statt cycle_track_tag); seit 0.20.0 nur Eingang für S-FEAT-13 (Review 2026-11 F26)"
@@ -1093,6 +1094,38 @@ harmonisation:
       history:
         - "seit 0.18.0 (F07, Q2 b): Lückenschluss mit gap_close_m"
         - "Entscheidung Projektteam 2026-11-04: Harmonisierung entlang des Straßenzugs"
+
+    - id: H-PAIR-01
+      label_plain: "Beide Richtungsfahrbahnen gleich"
+      explain_plain: "Hat eine Straße zwei getrennte Fahrbahnen, gilt auf beiden dasselbe Tempo; trifft 50 auf 30, gewinnt 30."
+      why: "Eine Straße mit Mittelstreifen ist eine Straße. Wechselt das Tempo nur auf einer Seite, ist das nicht erkennbar."
+      description: >-
+        Richtungsfahrbahnen paaren: zwei GOW-Abschnitte sind ein Paar, wenn beide oneway sind (S-FEAT-10), denselben
+        Namen tragen, keinen Knoten teilen, höchstens pair_max_angle_deg (ungerichtet) voneinander abweichen, die Mitte
+        des kürzeren höchstens pair_max_distance_m vom längeren entfernt liegt und mindestens pair_min_overlap_share des
+        kürzeren auf den längeren fällt (Lotfußpunkte der Endpunkte). Ist ein Partner GOW30 und der andere GOW50, wird
+        der GOW50-Abschnitt GOW30; über Ketten von Paaren wiederholt bis nichts mehr wechselt. Danach läuft H-STR-01 erneut;
+        beides wechselt sich ab, bis H-PAIR-01 nichts mehr ändert (höchstens max_passes Runden).
+      thresholds:
+        pair_max_distance_m:    {label_plain: "größter Abstand der beiden Fahrbahnen", value: 40, unit: m, source_type: assumption,
+                                 check: "Stichprobe breiter Mittelstreifen (z. B. Ring 2, Kieler Straße); Median der Paare ca. 13 m"}
+        pair_max_angle_deg:     {label_plain: "größter Richtungsunterschied der beiden Fahrbahnen", value: 20, unit: "Grad (ungerichtet, 0-90)",
+                                 source_type: assumption, check: "wie S-CONF-01 max_angle_deg"}
+        pair_min_overlap_share: {label_plain: "Mindestanteil, auf dem die Fahrbahnen nebeneinander liegen", value: 0.5, unit: Anteil,
+                                 source_type: assumption, check: "per Stichprobe kalibrieren"}
+      max_passes: 20
+      locked_categories: [SW, ETW_ERF, GOW80, ETW60]
+      source: SWOV_FS_2023
+      source_type: assumption
+      status: draft
+      note: >-
+        Gleicher Grundsatz wie H-STR-01: Homogenität (SWOV), bei 50 gegen 30 gewinnt das niedrigere Tempo. Getrennt
+        gezeichnete Richtungsfahrbahnen sind in OSM eigene Wege und damit eigene Abschnitte; Straßenzüge (N2) laufen
+        nur entlang einer Fahrbahn, deshalb sieht H-STR-01 die Gegenfahrbahn nicht. Die Fahrtrichtung selbst wird nicht
+        geprüft: zwei gleichnamige Einbahn-Abschnitte nebeneinander gelten als Richtungsfahrbahnen. Abschnitte mit
+        approved override werden nicht verändert.
+      history:
+        - "seit 0.23.0: neu (Anfrage Projektteam 2026-11-15: parallele Richtungsfahrbahnen mit gleichem Tempo)"
 
 # ---------------------------------------------------------------
 # Validierung und Sensitivität (pipeline/validate.py, guide.md Teil 7, prompts/12_validation.md)

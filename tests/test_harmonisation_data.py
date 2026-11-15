@@ -11,6 +11,8 @@ from pipeline.lib.rules import load_rules
 IN = REPO_ROOT / "data" / "interim" / "classified.parquet"
 OUT = REPO_ROOT / "data" / "interim" / "harmonised.parquet"
 
+HARMONISATION = {"H-STR-01", "H-PAIR-01"}
+
 pytestmark = pytest.mark.skipif(not (IN.exists() and OUT.exists()), reason="run `make classify` first")
 
 
@@ -29,7 +31,7 @@ def test_changed_segments_have_a_trace(out):
     changed = out[out["cat_cascade"].notna() & (out["cat_cascade"] != out["cat_proposed"])]
     assert len(changed) > 0
     for t, p in zip(changed["rule_trace"], changed["rule_path"]):
-        assert json.loads(t)[-1]["id"] == "H-STR-01" and p.endswith("H-STR-01")
+        assert json.loads(t)[-1]["id"] in HARMONISATION and p.split(" → ")[-1] in HARMONISATION
 
 
 def test_locked_categories_unchanged(out):
