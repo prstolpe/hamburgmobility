@@ -211,10 +211,8 @@ C-IMP-03:  {label_plain: "Routenwahl: Radweg an der Straße", explain_plain: "Ra
             why: "Ein Radweg am Fahrbahnrand bekommt einen etwas höheren Faktor als eine Fahrradstraße. Das hat das Projekt gesetzt."}
 C-IMP-04:  {label_plain: "Routenwahl: ruhige Wohnstraße", explain_plain: "Wohnstraßen bis Tempo 30 zählen fast so gut; Fußgängerzonen zählen als langsam.",
             why: "Auf Wohnstraßen bekommt das Rad fast den günstigsten Faktor. In Fußgängerzonen gilt Schritttempo."}
-C-IMP-05:  {label_plain: "Routenwahl: Hauptstraße 30 mit Radstreifen", explain_plain: "Hauptstraßen bis Tempo 30 mit Radstreifen zählen mittel.",
-            why: "Hauptstraßen mit Tempo 30 und Radstreifen bekommen einen mittleren Faktor. Das hat das Projekt gesetzt."}
-C-IMP-06:  {label_plain: "Routenwahl: Hauptstraße 30 ohne Radstreifen", explain_plain: "Hauptstraßen bis Tempo 30 ohne Radstreifen zählen vorläufig wie mit Radstreifen.",
-            why: "Für diesen Fall gibt es keinen eigenen Faktor. Vorläufig gilt derselbe Wert wie mit Radstreifen."}
+C-IMP-05:  {label_plain: "Routenwahl: Hauptstraße 30", explain_plain: "Hauptstraßen bis Tempo 30 zählen mittel, mit oder ohne Radstreifen.",
+            why: "Hauptstraßen mit Tempo 30 bekommen einen mittleren Faktor, mit und ohne Radstreifen. Einen eigenen Faktor ohne Radstreifen gibt es noch nicht. Das hat das Projekt gesetzt."}
 C-IMP-07:  {label_plain: "Routenwahl: übrige Straßen", explain_plain: "Alle Straßen über Tempo 30 zählen als unangenehm.",
             why: "Alle übrigen Straßen bekommen den Faktor 1,5. Der Wert wurde an Zählstellen angepasst."}
 C-IMP-08:  {label_plain: "Routenwahl: schlechter Belag", explain_plain: "Kopfsteinpflaster und unbefestigte Wege zählen zusätzlich als unangenehm.",
@@ -277,16 +275,14 @@ S-02:      {label_plain: "Kein Radstreifen in Wohnstraßen", explain_plain: "In 
             why: "Auf Wohnstraßen fahren Rad und Auto gemischt. Wichtige Routen werden Fahrradstraße (CROW)."}
 S-03:      {label_plain: "Radweg für beide Richtungen nur selten", explain_plain: "Radweg für beide Richtungen nur einseitig und bei wenigen Kreuzungen; wirkt nur außerorts.",
             why: "Die Bedingung hat das Projekt gesetzt; sie wird noch geprüft. Sie wirkt nur außerorts."}
-S-04:      {label_plain: "Auf der Fahrbahn nur bei wenig Autos", explain_plain: "Rad auf der Fahrbahn nur bis 700 Autos je Stunde.",
-            why: "Die Grenze von 700 Autos je Stunde stammt aus den Empfehlungen für Radverkehrsanlagen."}
+S-04:      {label_plain: "Auf der Fahrbahn nur bei wenig Autos", explain_plain: "Rad auf der Fahrbahn nur bis 700 Autos je Stunde. Die Autos je Stunde werden aus den Autos je Tag errechnet.",
+            why: "Die Grenze von 700 Autos je Stunde stammt aus den Empfehlungen für Radverkehrsanlagen. Sie gilt je Stunde, die Daten gelten je Tag; darum wird mit einem Anteil der Spitzenstunde umgerechnet. Den Anteil hat das Projekt gesetzt."}
 S-05:      {label_plain: "Viel Autoverkehr: eigener Radweg", explain_plain: "Hauptstraßen mit Tempo 30 und sehr viel Autoverkehr bekommen einen eigenen Radweg statt Streifen.",
             why: "Bei mehr als 10 000 Autos am Tag nennt CROW nur ein Profil mit Radweg."}
 C-FAC-01:  {label_plain: "Art des Radwegs im Ziel", explain_plain: "Die Art des Radwegs kommt aus der Tabelle: Aufgabe der Straße mal Stufe im Radnetz.",
             why: "Welche Radführung passt, hängt von der Straße und der Wichtigkeit der Route ab. Eine Tabelle macht das klar."}
 C-FAC-02:  {label_plain: "Wann Fahrradstraße?", explain_plain: "Fahrradstraße nur bei höchstens 2500 Autos am Tag. Zur Spitzenstunde müssen Räder mindestens so zahlreich sein wie Autos.",
             why: "Die Grenzen hat das Projekt gesetzt; sie werden noch geprüft. Sonst bleibt es Mischverkehr."}
-C-FAC-03:  {label_plain: "Wenige Autos? So wird gezählt", explain_plain: "Autos pro Stunde aus Autos pro Tag, um die Grenze für Rad auf der Fahrbahn zu prüfen.",
-            why: "Die Grenze gilt je Stunde, die Daten gelten je Tag. Damit beides vergleichbar ist, wird umgerechnet."}
 C-FAC-04:  {label_plain: "Breite des Radwegs", explain_plain: "Wie breit der Radweg im Ziel sein soll, je nach Art, Netzstufe und Radverkehr.",
             why: "Wichtige Routen und viel Radverkehr brauchen mehr Breite. Die Sollwerte hat das Projekt gesetzt."}
 C-FAC-05:  {label_plain: "Radweg heute", explain_plain: "Welche Art von Radweg es heute gibt, aus OpenStreetMap.",

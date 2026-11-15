@@ -11,7 +11,7 @@ Model
   nodes of counted roads (DTV 2019) on the outer edge of the network; their weight = counted DTV.
 - Distribution: gravity with exp(-beta * t) (t in minutes); beta from a grid, scale fitted on DTV 2019.
 - Assignment: incremental (4 x 25 %) with BPR on daily capacity = lanes x lane capacity (L-02) / peak share
-  (C-FAC-03). Shortest paths and loading via pipeline/lib/cycle_demand.assign_od.
+  (S-04, früher C-FAC-03). Shortest paths and loading via pipeline/lib/cycle_demand.assign_od.
 - Soll: speed per cat_final (rules.yaml categories.*.speed_kmh; SW keeps travel_speed_kmh), lanes per direction
   from cross_section_soll, ETW30/ETW_ERF resistance factor (1.0 / 1.5 / 3.0 as a stand-in for filters), evaporation
   0/10/20 % of all trips.
@@ -57,7 +57,7 @@ ASSUMPTIONS = {
     "ext_cluster_m": {"value": 150, "source_type": "assumption",
                       "note": "Einfahrpunkte näher als dies gelten als ein Querschnitt (Richtungsfahrbahnen)"},
     "peak_direction_share": {"value": 0.55, "source_type": "assumption",
-                             "note": "Lastrichtung; steht nur in der Notiz zu C-FAC-03/L-02 (0,10 x 0,55)"},
+                             "note": "Lastrichtung; steht nur in der Notiz zu S-04/L-02 (0,10 x 0,55)"},
 }
 
 
@@ -68,7 +68,7 @@ def rules():
     speed = {k: v.get("speed_kmh") for k, v in r["categories"].items()}
     l02 = next(x for x in d["lanes"]["rules"] if x["id"] == "L-02")
     lane_cap = float(l02["lane_capacity_veh_h"]["value"])
-    peak = next(x for x in _walk(c) if isinstance(x, dict) and x.get("id") == "C-FAC-03")
+    peak = next(x for x in _walk(c) if isinstance(x, dict) and x.get("id") == "S-04")
     peak_share = float(_find_value(peak, "peak_hour_share"))
     gow30_wide = float(r["requirements"]["GOW30"]["profiles"]["wide"]["max_dtv"])
     gow30_narrow = float(r["requirements"]["GOW30"]["profiles"]["narrow"]["max_dtv"])
