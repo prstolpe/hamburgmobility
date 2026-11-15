@@ -269,3 +269,8 @@ Fachlich:
 - [ ] Schwellen der Paarbildung sind Setzungen ohne Quelle: `pair_max_distance_m` 40 m, `pair_max_angle_deg` 20° (wie S-CONF-01), `pair_min_overlap_share` 0,5. Per Stichprobe in reports/harmonisation.md prüfen (breite Mittelstreifen, gleichnamige Parallelfahrbahnen) – Methodik
 - [ ] Die Fahrtrichtung wird nicht geprüft: zwei gleichnamige, nebeneinander liegende Einbahn-Abschnitte gelten als Richtungsfahrbahnen. Gleichgerichtete Nebenfahrbahnen mit demselben Namen würden mitgepaart. Richtung aus OSM (`oneway=-1`, Zeichenrichtung des Wegs) zusätzlich prüfen? – Methodik
 - [ ] GOW50-Inseln ab `gap_close_m` (500 m) zwischen GOW30 bleiben GOW50 (Prüfliste in reports/harmonisation.md, reports/harmonisation_gow50_islands.geojson). Per Regel behandeln (welche Quelle?) oder nur je Lauf über overrides/overrides.csv entscheiden? Der Lückenschluss bis 500 m folgt StVO § 45 Abs. 9; ein größerer Wert hätte keine Quelle – Verkehrsplaner*in
+
+## DTV-Obergrenze für Tempo 30 (rules.yaml 0.24.0)
+- [x] HVS ohne `dtv_official` (274 GOW-Abschnitte, 23 km): bleiben vorerst GOW50 (Entscheidung prstolpe 2026-11-15).
+- [x] C-G50-02-Abschnitte sind in H-STR-01 und H-PAIR-01 gesperrt (`locked_rules`, Entscheidung prstolpe 2026-11-15).
+- [ ] Kurze GOW30-Stücke zwischen GOW50 werden nur unter min_run_m (200 m) zu GOW50; 30 Läufe von 200–500 m (9,5 km) bleiben GOW30, meist aus C-G30-02 (zu schmal für einen Radweg). Grenze auf gap_close_m (500 m) anheben? Dann bekäme eine Engstelle ohne Platz für einen Radweg Tempo 50 – prstolpe

@@ -799,3 +799,31 @@ Fahrbahn, deshalb hat H-STR-01 die Gegenfahrbahn nie gesehen (Entscheidung Proje
   H-STR-01 danach). GOW50 242,4 → 200,3 km, GOW30 513,2 → 555,3 km; andere Kategorien unverändert.
 - Hinweis zur Frage „woher kommt der hohe GOW30-Anteil“: Kaskade allein GOW50 342,5 / GOW30 408,5 km. Den größten
   Sprung macht H-STR-01 mit dem Lückenschluss `gap_close_m` 500 m (seit 0.18.0, F07): 101 km GOW50 → GOW30.
+
+## rules.yaml 0.24.0, plain_language.yaml 0.13.0 – 2026-11-15 (DTV-Obergrenze für Tempo 30 wieder eingeführt)
+Entscheidung prstolpe 2026-11-15: die in 0.15.0 zurückgenommene Obergrenze aus 0.14.0 gilt wieder, auf dem Stand der
+Auslöser seit 0.18.0 (Schule/Kita ≤ access_radius 50 m, Breite nur über den Raum).
+- C-G30-01: Auslöser Schule/Kita/Publikumsnutzung auf Hauptverkehrsstraßen nur bis `gow30_max_dtv` 10 000 Kfz/24h
+  (CROW_GOW30_2023, gleich requirements.GOW30.profiles.wide.max_dtv; das Schema prüft die Gleichheit wieder).
+- Neu wie in 0.14.0: C-G50-02 nach C-G30-02: Umfeld spräche für 30, DTV darüber → GOW50 („Tempo-30-Abschnitt vor Ort
+  prüfen“). Fehlt der Platz für einen baulichen Radweg, bleibt GOW30 über C-G30-02; anders als 0.14.0 schließt C-G50-02
+  diesen Fall in der Bedingung aus, damit Trace und Begründung nicht zwei zutreffende Regeln zeigen.
+- Fehlt auf einer Hauptverkehrsstraße der DTV (280 Abschnitte), greift der Umfeld-Auslöser nicht (C-MISS-01) – wie 0.14.0.
+- Goldene Fälle: 28 erwartet GOW50 (C-G50-02), neu 33 (DTV genau an der Grenze → GOW30).
+- Harmonisierung (Entscheidung prstolpe 2026-11-15): Abschnitte aus C-G50-02 sind in H-STR-01 und H-PAIR-01 gesperrt
+  (neues Feld `locked_rules`, Schema prüft die IDs). H-STR-01 Schritt 4 neu: kurze GOW30-Läufe unter min_run_m (200 m,
+  N2) zwischen zwei GOW50-Läufen oder am Zugende neben GOW50 → GOW50 (bis 0.23.0: GOW30 behalten und auf 200 m
+  verlängert). H-PAIR-01: ist die GOW50-Seite gesperrt, wird die GOW30-Seite GOW50; erst Anheben entlang der Paarketten,
+  dann Absenken, jeder Abschnitt wechselt höchstens einmal; von H-PAIR-01 gesetzte Abschnitte ändert H-STR-01 danach
+  nicht mehr (vorher konnten beide Regeln gegeneinander pendeln).
+- HVS ohne DTV (274 GOW-Abschnitte, 23 km) bleiben GOW50 (Entscheidung prstolpe 2026-11-15).
+- Wirkung (Arbeitsgebiet, nach Harmonisierung): GOW50 200,3 → 585,8 km, GOW30 555,3 → 170,2 km (gegenüber 0.23.0).
+  Kaskade GOW50 596,1 / GOW30 154,9 km; C-G50-02 240,4 km. Verbleibende GOW30-Läufe zwischen GOW50: 67 (48,1 km), fast
+  alle ab 200 m und überwiegend aus C-G30-02 (zu schmal für einen Radweg).
+- C-G30-02 (Entscheidung prstolpe 2026-11-15): Auslösebreite mit Radweg je Seite in Mindestbreite
+  (C.widths_m.de.separated_oneway.min 1,60 m statt standard 2,00 m): neu required_width.GOW50_min 16,20 m und
+  GOW50_bus_min 16,70 m (per formula, V-INV-06). GOW50/GOW50_bus (17,00/17,50 m) bleiben das Regelprofil für Machbarkeit
+  und Querschnitt. Neues Flag gow50_cycle_track_min (Stufe 8, Download und Steckbrief-Hinweis): GOW50 mit
+  width_p10_m unter dem Regelprofil, Radweg nur in Mindestbreite. Wirkung: Kaskade GOW30 154,9 → 132,0 km, Karte GOW50
+  585,8 → 607,3 km, GOW30 170,2 → 148,6 km; Flag auf 164 Abschnitten (21,5 km).
+  Goldene Fälle 26/27/31/32 auf die neuen Grenzen, neu 34 (zwischen Mindest- und Regelbreite → GOW50).

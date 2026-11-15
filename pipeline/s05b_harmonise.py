@@ -35,12 +35,20 @@ ISLANDS_PATH = REPO_ROOT / "reports" / "harmonisation_gow50_islands.geojson"
 SAMPLE_SIZE = 30
 SAMPLE_SEED = 42
 STEP_TEXT = {1: "ETW30-Insel in GOW → GOW", 2: "GOW-Insel in ETW30 → ETW30", 3: "GOW50-Insel in GOW30 → GOW30",
-             4: "GOW30 auf Mindestlänge verlängert", "P": "Richtungsfahrbahn neben GOW30 → GOW30 (H-PAIR-01)"}
+             4: "GOW30-Insel in GOW50 → GOW50", "P": "Richtungsfahrbahn angeglichen (H-PAIR-01)"}
 
 
 def approved_override_ids() -> set[str]:
     ov = read_overrides()
     return set(ov.loc[ov["review_status"] == "approved", "segment_id"])
+
+
+def locked_ids(frame, rules) -> set[str]:
+    """Approved overrides plus sections whose cascade passed a rule in locked_rules of H-STR-01/H-PAIR-01 (C-G50-02)."""
+    rids = {r for h in rules.harmonisation.rules for r in h.locked_rules}
+    by_rule = {sid for sid, path in zip(frame["segment_id"], frame["rule_path"])
+               if isinstance(path, str) and rids & {s.strip() for s in path.split("→")}}
+    return approved_override_ids() | by_rule
 
 
 def street_strokes(area: gpd.GeoDataFrame, rules, cat_col: str = "cat_proposed") -> list[list[str]]:
@@ -97,10 +105,10 @@ def apply(inp: gpd.GeoDataFrame, rules, locked: set[str]) -> tuple[gpd.GeoDataFr
 
 
 def mixed_pairs(out: gpd.GeoDataFrame, pairs: list[dict], locked: set[str]) -> list[dict]:
-    """Pairs that still have GOW30 on one side and GOW50 on the other, without an approved override."""
+    """Pairs that still have GOW30 on one side and GOW50 on the other, unless both sides are locked."""
     cat = dict(zip(out["segment_id"], out["cat_proposed"]))
     return [p for p in pairs if {cat.get(p["a"]), cat.get(p["b"])} == {"GOW30", "GOW50"}
-            and not {p["a"], p["b"]} & locked]
+            and not {p["a"], p["b"]} <= locked]
 
 
 def gow50_islands(out: gpd.GeoDataFrame, strokes: list[list[str]], min_m: float) -> list[list[str]]:
@@ -167,13 +175,15 @@ def write_report(out: gpd.GeoDataFrame, res: dict, rules, districts: list[str], 
     min_run = rules.coherence_rule("N2").param("min_run_m")
     lines = ["# Harmonisierung je Straßenzug – Stufe 5b", "",
              f"Erzeugt: {_now()} von `pipeline/s05b_harmonise.py`, rules.yaml {rules.meta.version}. Nicht amtlicher Entwurf.", "",
-             f"Regel H-STR-01: kurze Läufe unter {min_run:g} m (N2) auf einem Straßenzug werden angeglichen; bei 50 gegen 30 "
-             "gewinnt das niedrigere Tempo. Lückenschluss: ein GOW50-Lauf zwischen zwei GOW30-Läufen wird GOW30, wenn er "
+             f"Regel H-STR-01: kurze Läufe unter {min_run:g} m (N2) auf einem Straßenzug werden angeglichen; kurze GOW30-Stücke "
+             "zwischen GOW50 werden GOW50 (seit 0.24.0). Abschnitte aus C-G50-02 (DTV-Obergrenze) und mit approved override "
+             "bleiben unverändert. Lückenschluss: ein GOW50-Lauf zwischen zwei GOW30-Läufen wird GOW30, wenn er "
              f"kürzer als gap_close_m = {rules.harmonisation.rule('H-STR-01').thresholds['gap_close_m'].value:g} m ist "
              "(F07, StVO-Novelle 2024, Fassung prüfen). Straßenzug wie N2 (Knoten mit Grad 2 laufen weiter, an Kreuzungen der "
              "gegenseitig beste Partner mit höchstens 30° Richtungsänderung).", "",
              "Regel H-PAIR-01 (seit 0.23.0): getrennt gezeichnete Richtungsfahrbahnen derselben Straße bekommen dasselbe "
-             "Tempo; ist eine Seite GOW30, wird die GOW50-Seite GOW30. Danach gleicht H-STR-01 erneut an.", "",
+             "Tempo; ist eine Seite GOW30, wird die GOW50-Seite GOW30, außer sie ist gesperrt (C-G50-02, override): dann wird "
+             "die GOW30-Seite GOW50. Danach gleicht H-STR-01 erneut an.", "",
              "## Prüfungen", "", "| Prüfung | Ergebnis | Detail |", "| --- | --- | --- |",
              *[f"| {c['name']} | {'ok' if c['ok'] else 'FEHLER'} | {c['detail']} |" for c in checks], "",
              "## Kennzahlen", "",
@@ -229,12 +239,15 @@ def pair_section(out: gpd.GeoDataFrame, res: dict, ch: gpd.GeoDataFrame) -> list
     in_pairs = {s for p in pairs for s in (p["a"], p["b"])}
     length = dict(zip(out["segment_id"], out["length_m"]))
     paired = [s for s, steps in res["trace"].items() if any(t["id"] == PAIR_RULE_ID for t in steps)]
-    paired_km = sum(length[s] for s in paired) / 1000
+    by_to = {to: [s for s in paired if next(t for t in res["trace"][s] if t["id"] == PAIR_RULE_ID)["to"] == to]
+             for to in ("GOW30", "GOW50")}
     lines = ["", "### Richtungsfahrbahnen (H-PAIR-01)", "",
              f"- Paare getrennter Richtungsfahrbahnen (GOW, beide oneway, gleicher Name): {_fmt(len(pairs))} mit "
              f"{_fmt(len(in_pairs))} Abschnitten ({_km(sum(length[s] for s in in_pairs))} km).",
-             f"- durch H-PAIR-01 GOW50 → GOW30: {_fmt(len(paired))} Abschnitte ({f'{paired_km:.1f}'.replace('.', ',')} km); "
-             "weitere Abschnitte kann H-STR-01 danach angleichen.",
+             *[f"- durch H-PAIR-01 {'GOW50' if to == 'GOW30' else 'GOW30'} → {to}: {_fmt(len(sids))} Abschnitte "
+               f"({_km(sum(length[s] for s in sids))} km)" + ("" if to == "GOW30" else " (Gegenfahrbahn gesperrt, C-G50-02 oder override)")
+               for to, sids in by_to.items()],
+             "- weitere Abschnitte kann H-STR-01 danach angleichen.",
              f"- Abstand der Paare (Median): {f'{pd.Series([p['dist_m'] for p in pairs]).median():.1f}'.replace('.', ',') if pairs else '–'} m.", ""]
     if paired:
         sub = out[out["segment_id"].isin(paired)]
@@ -280,7 +293,7 @@ def main() -> int:
         print("harmonise: data/interim/classified.parquet missing; run `make classify` first", file=sys.stderr)
         return 1
     inp = gpd.read_parquet(IN_PATH)
-    locked = approved_override_ids()
+    locked = locked_ids(inp, rules)
     out, res = apply(inp, rules, locked)
     checks = run_checks(inp, out, rules, res["pairs"], locked)
     area = out[out["conflated"].astype(bool) & out["cat_proposed"].notna()]

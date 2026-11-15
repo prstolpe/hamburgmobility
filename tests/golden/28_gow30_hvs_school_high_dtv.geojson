@@ -12,11 +12,11 @@
       "type": "Feature",
       "properties": {
         "case_id": "gow30_hvs_school_high_dtv",
-        "description": "HVS mit Radweg, Schule in 100 m, hohes DTV -> trotzdem GOW30 (Umfeld vor Verkehrsmenge, rules.yaml 0.15.0)",
-        "expected_category": "GOW30",
+        "description": "HVS mit Radweg, Schule am Abschnitt, DTV über der GOW30-Grenze -> GOW50 (C-G50-02, Tempo-30-Abschnitt vor Ort prüfen; rules.yaml 0.24.0)",
+        "expected_category": "GOW50",
         "expected_rules": [
           "C-GOW-01",
-          "C-G30-01"
+          "C-G50-02"
         ],
         "boundary": null,
         "highway": "primary",

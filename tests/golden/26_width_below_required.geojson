@@ -12,15 +12,15 @@
       "type": "Feature",
       "properties": {
         "case_id": "width_below_required",
-        "description": "G02 (F05): GOW-Kandidat ohne Bus, Straßenraum 16,99 m unter required_width.GOW50 17,00 m -> GOW30",
+        "description": "G02 (F05), seit 0.24.0: GOW-Kandidat ohne Bus, Straßenraum 16,19 m unter required_width.GOW50_min 16,20 m (Radweg in Mindestbreite) -> GOW30",
         "expected_category": "GOW30",
         "expected_rules": [
           "C-GOW-01",
           "C-G30-02"
         ],
         "boundary": {
-          "ref": "required_width.GOW50",
-          "value": 17.0,
+          "ref": "required_width.GOW50_min",
+          "value": 16.2,
           "side": "below"
         },
         "highway": "primary",
@@ -37,7 +37,7 @@
         "crossing_demand": "low",
         "separated_cycle_track_present": false,
         "bus_route": false,
-        "width_p10_m": 16.99
+        "width_p10_m": 16.19
       },
       "geometry": {
         "type": "LineString",

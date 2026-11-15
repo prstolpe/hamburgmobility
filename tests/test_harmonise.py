@@ -22,6 +22,8 @@ def test_rule_found():
     rule = RULES.harmonisation.rule("H-STR-01")
     assert rule.source_type == "assumption" and rule.min_run_from == "N2"
     assert {"SW", "ETW_ERF"} <= set(rule.locked_categories)
+    # rules.yaml 0.24.0: sections decided by the traffic-volume cap are not harmonised
+    assert "C-G50-02" in rule.locked_rules and "C-G50-02" in RULES.harmonisation.rule("H-PAIR-01").locked_rules
 
 
 # --- step 1/2: ETW30 <-> GOW ------------------------------------------------------------------
@@ -87,25 +89,23 @@ def test_gap_close_does_not_apply_at_street_end():
     assert cats == ["GOW30", "GOW50"]
 
 
-# --- step 4: GOW30 in GOW50 is kept and extended ----------------------------------------------
+# --- step 4: short GOW30 in GOW50 becomes GOW50 (rules.yaml 0.24.0) ----------------------------
 
 
-def test_short_gow30_in_gow50_is_extended_shorter_neighbour_first():
-    cats, trace = run([("GOW50", 500), ("GOW50", 60), ("GOW30", 80), ("GOW50", 70), ("GOW50", 500)])
-    # 80 + 60 (shorter neighbour) = 140 < 200 -> + 70 = 210
-    assert cats == ["GOW50", "GOW30", "GOW30", "GOW30", "GOW50"]
-    assert trace["s1"][0]["step"] == 4 and trace["s3"][0]["step"] == 4
+def test_short_gow30_in_gow50_becomes_gow50():
+    cats, trace = run([("GOW50", 500), ("GOW30", 80), ("GOW30", 70), ("GOW50", 500)])
+    assert cats == ["GOW50"] * 4
+    assert trace["s1"][0]["step"] == 4 and trace["s1"][0]["to"] == "GOW50"
 
 
-def test_gow30_at_end_next_to_gow50_is_extended():
-    cats, _ = run([("GOW30", 50), ("GOW50", 170), ("GOW50", 500)])
-    assert cats == ["GOW30", "GOW30", "GOW50"]
+def test_gow30_stub_at_end_next_to_gow50_becomes_gow50():
+    cats, _ = run([("GOW30", 50), ("GOW50", 500)])
+    assert cats == ["GOW50", "GOW50"]
 
 
-def test_extension_then_island_becomes_gow30():
-    # extending the 30 leaves a 50-island of 100 m between two 30 runs -> step 3 in the next pass
-    cats, _ = run([("GOW30", 400), ("GOW50", 100), ("GOW50", 150), ("GOW30", 100), ("GOW50", 600)])
-    assert cats[:4] == ["GOW30"] * 4
+def test_long_gow30_in_gow50_stays():
+    cats, trace = run([("GOW50", 500), ("GOW30", MIN_RUN), ("GOW50", 500)])
+    assert cats == ["GOW50", "GOW30", "GOW50"] and trace == {}
 
 
 # --- what is never changed ---------------------------------------------------------------------
@@ -122,9 +122,15 @@ def test_locked_segments_untouched():
     assert cats == ["GOW30", "GOW50", "GOW30"]
 
 
-def test_locked_segment_stops_extension():
-    cats, _ = run([("GOW50", 500), ("GOW50", 60), ("GOW30", 80), ("GOW50", 70)], locked={"s1", "s3"})
-    assert cats == ["GOW50", "GOW50", "GOW30", "GOW50"]
+def test_locked_gow30_island_stays():
+    cats, _ = run([("GOW50", 500), ("GOW30", 80), ("GOW50", 500)], locked={"s1"})
+    assert cats == ["GOW50", "GOW30", "GOW50"]
+
+
+def test_locked_gow50_gap_between_gow30_stays():
+    """rules.yaml 0.24.0: C-G50-02 sections are locked, gap closing must not turn them into GOW30."""
+    cats, _ = run([("GOW30", 400), ("GOW50", 250), ("GOW30", 400)], locked={"s1"})
+    assert cats == ["GOW30", "GOW50", "GOW30"]
 
 
 def test_segments_outside_strokes_keep_their_category():
@@ -215,9 +221,17 @@ def test_pair_equal_or_not_gow_unchanged():
         assert new == cats and trace == {}
 
 
-def test_pair_locked_segment_untouched():
+def test_pair_locked_gow50_raises_partner():
+    """A locked GOW50 (C-G50-02 or override) cannot go down: the free GOW30 partner becomes GOW50."""
     pairs = carriageway_pairs(dual(), RULES)
     new, trace = pair_carriageways(pairs, {"a": "GOW50", "b": "GOW30"}, RULES, locked={"a"})
+    assert new == {"a": "GOW50", "b": "GOW50"}
+    assert trace["b"][0]["to"] == "GOW50" and trace["b"][0]["partner"] == "a" and "a" not in trace
+
+
+def test_pair_both_locked_untouched():
+    pairs = carriageway_pairs(dual(), RULES)
+    new, trace = pair_carriageways(pairs, {"a": "GOW50", "b": "GOW30"}, RULES, locked={"a", "b"})
     assert new == {"a": "GOW50", "b": "GOW30"} and trace == {}
 
 
@@ -240,3 +254,24 @@ def test_harmonise_all_pairs_then_smooths_along_the_street():
     new, trace = harmonise_all([["x", "b", "y"]], carriageway_pairs(s, RULES), cats, lengths, RULES)
     assert new == {"a": "GOW30", "b": "GOW30", "x": "GOW30", "y": "GOW30"}
     assert [t["id"] for t in trace["b"]] == ["H-PAIR-01"] and [t["id"] for t in trace["y"]] == ["H-STR-01"]
+
+
+def test_harmonise_all_pairing_is_not_undone_by_street_smoothing():
+    """Locked GOW50 (C-G50-02) on a raises partner b; b's own street would close the 50 gap again (step 3).
+    The pairing result wins: b stays GOW50, the pair stays consistent and the loop terminates."""
+    from pipeline.lib.harmonise import harmonise_all
+    s = seg([("a", "Allee", True, 1, 2, LineString([(0, 0), (300, 0)])),
+             ("b", "Allee", True, 3, 4, LineString([(300, 15), (0, 15)]))])
+    cats = {"a": "GOW50", "b": "GOW30", "x": "GOW30", "y": "GOW30"}
+    lengths = {"a": 300, "b": 300, "x": 400, "y": 400}
+    new, _ = harmonise_all([["x", "b", "y"]], carriageway_pairs(s, RULES), cats, lengths, RULES, locked={"a"})
+    assert new["a"] == new["b"] == "GOW50"
+
+
+def test_pair_chain_locked_gow50_holds_and_raises_along_the_chain():
+    """b (GOW50) lies between locked a (GOW50) and c (GOW30): b is held at 50, c is raised, no pair stays mixed."""
+    s = seg([("a", "Wall", True, 1, 2, LineString([(0, 0), (200, 0)])),
+             ("b", "Wall", True, 3, 4, LineString([(400, 12), (0, 12)])),
+             ("c", "Wall", True, 5, 6, LineString([(200, 0), (400, 0)]))])
+    new, _ = pair_carriageways(carriageway_pairs(s, RULES), {"a": "GOW50", "b": "GOW50", "c": "GOW30"}, RULES, locked={"a"})
+    assert new == {"a": "GOW50", "b": "GOW50", "c": "GOW50"}

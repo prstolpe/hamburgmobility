@@ -38,6 +38,19 @@ def test_speed_boundaries_19_20_29_30():
     assert sev == [1, 2, 2, 3]
 
 
+def test_cycle_track_min_flag():
+    """rules.yaml 0.24.0: GOW50 narrower than the standard profile (but above the trigger width) -> cycle track only in
+    minimum width, flag gow50_cycle_track_min."""
+    w = RULES.required_width
+    between = (w["GOW50_min"].value + w["GOW50"].value) / 2
+    assert assess("GOW50", **GOW50_OK, width_p10_m=between, bus_route=False)["gow50_cycle_track_min"] is True
+    assert assess("GOW50", **GOW50_OK, width_p10_m=w["GOW50"].value, bus_route=False)["gow50_cycle_track_min"] is False
+    # with a bus route the standard is GOW50_bus
+    assert assess("GOW50", **GOW50_OK, width_p10_m=w["GOW50"].value, bus_route=True)["gow50_cycle_track_min"] is True
+    assert assess("GOW30", **GOW50_OK, width_p10_m=between, bus_route=False)["gow50_cycle_track_min"] is False
+    assert assess("GOW50", **GOW50_OK, width_p10_m=None, bus_route=False)["gow50_cycle_track_min"] is False
+
+
 @pytest.mark.parametrize("ist, soll", [(None, 30), (np.nan, 30), (pd.NA, 30), (80, None)])
 def test_speed_not_checked(ist, soll):
     step = disc.speed_severity(ist, soll, RULES)

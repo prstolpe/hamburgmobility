@@ -1,29 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="654" height="242" viewBox="0 0 654 242" font-family="sans-serif" font-size="10">
 <rect x="0" y="0" width="654" height="242" fill="#ffffff"/>
 <text x="16.0" y="18" font-size="13" font-weight="bold">Wilstorfer Straße – Harburg</text>
-<text x="16.0" y="34" fill="#444">seg_c6d3724c921c0b78 · GOW30 · Rad HAUPT · Radweg je Seite · passt</text>
-<rect x="54.1" y="52.0" width="66.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="3.00"><title>Gehweg 3,00 m</title></rect>
-<text transform="translate(87.1,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 3,00</text>
-<rect x="120.1" y="52.0" width="55.0" height="120.0" fill="#c0392b" stroke="#ffffff" stroke-width="1" data-element="cycle_track" data-width-m="2.50"><title>Radweg 2,50 m</title></rect>
-<text transform="translate(147.6,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Radweg 2,50</text>
-<rect x="175.1" y="52.0" width="16.5" height="120.0" fill="#9aa39a" stroke="#ffffff" stroke-width="1" data-element="buffer_cycle_carriageway" data-width-m="0.75"><title>Trennstreifen 0,75 m</title></rect>
-<text transform="translate(183.3,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Trennstreifen 0,75</text>
-<rect x="191.6" y="52.0" width="44.0" height="120.0" fill="#5b8c3a" stroke="#ffffff" stroke-width="1" data-element="tree_strip" data-width-m="2.00"><title>Baumstreifen 2,00 m</title></rect>
-<text transform="translate(213.6,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Baumstreifen 2,00</text>
-<rect x="235.6" y="52.0" width="127.6" height="120.0" fill="#555b61" stroke="#ffffff" stroke-width="1" data-element="carriageway" data-width-m="5.80"><title>Fahrbahn 5,80 m</title></rect>
-<text x="299.4" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Fahrbahn 5,80</text>
-<rect x="363.2" y="52.0" width="55.0" height="120.0" fill="#c9a227" stroke="#ffffff" stroke-width="1" data-element="loading_zone" data-width-m="2.50"><title>Ladezone 2,50 m</title></rect>
-<text transform="translate(390.7,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Ladezone 2,50</text>
-<rect x="418.2" y="52.0" width="44.0" height="120.0" fill="#5b8c3a" stroke="#ffffff" stroke-width="1" data-element="tree_strip" data-width-m="2.00"><title>Baumstreifen 2,00 m</title></rect>
-<text transform="translate(440.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Baumstreifen 2,00</text>
-<rect x="462.2" y="52.0" width="16.5" height="120.0" fill="#9aa39a" stroke="#ffffff" stroke-width="1" data-element="buffer_cycle_carriageway" data-width-m="0.75"><title>Trennstreifen 0,75 m</title></rect>
-<text transform="translate(470.4,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Trennstreifen 0,75</text>
-<rect x="478.7" y="52.0" width="55.0" height="120.0" fill="#c0392b" stroke="#ffffff" stroke-width="1" data-element="cycle_track" data-width-m="2.50"><title>Radweg 2,50 m</title></rect>
-<text transform="translate(506.2,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Radweg 2,50</text>
-<rect x="533.7" y="52.0" width="66.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="3.00"><title>Gehweg 3,00 m</title></rect>
-<text transform="translate(566.7,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 3,00</text>
-<text x="54.1" y="206.0" fill="#222">Soll-Bedarf 24,80 m</text>
-<line x1="54.1" y1="192.0" x2="599.7" y2="192.0" stroke="#222" stroke-width="2"/>
+<text x="16.0" y="34" fill="#444">seg_c6d3724c921c0b78 · GOW50 · Rad HAUPT · Radweg je Seite · passt nach Abbau · Abbau D2|D4</text>
+<rect x="44.2" y="52.0" width="55.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="2.50"><title>Gehweg 2,50 m</title></rect>
+<text transform="translate(71.7,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 2,50</text>
+<rect x="99.2" y="52.0" width="35.2" height="120.0" fill="#c0392b" stroke="#ffffff" stroke-width="1" data-element="cycle_track" data-width-m="1.60"><title>Radweg 1,60 m</title></rect>
+<text transform="translate(116.8,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Radweg 1,60</text>
+<rect x="134.4" y="52.0" width="16.5" height="120.0" fill="#9aa39a" stroke="#ffffff" stroke-width="1" data-element="buffer_cycle_carriageway" data-width-m="0.75"><title>Trennstreifen 0,75 m</title></rect>
+<text transform="translate(142.6,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Trennstreifen 0,75</text>
+<rect x="150.9" y="52.0" width="77.0" height="120.0" fill="#b03a8c" stroke="#ffffff" stroke-width="1" data-element="bus_lane" data-width-m="3.50"><title>Bus 3,50 m</title></rect>
+<text x="189.4" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Bus 3,50</text>
+<rect x="227.9" y="52.0" width="143.0" height="120.0" fill="#555b61" stroke="#ffffff" stroke-width="1" data-element="carriageway" data-width-m="6.50"><title>Fahrbahn 6,50 m</title></rect>
+<text x="299.4" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Fahrbahn 6,50</text>
+<rect x="370.9" y="52.0" width="77.0" height="120.0" fill="#b03a8c" stroke="#ffffff" stroke-width="1" data-element="bus_lane" data-width-m="3.50"><title>Bus 3,50 m</title></rect>
+<text x="409.4" y="112.0" text-anchor="middle" dominant-baseline="middle" fill="#ffffff">Bus 3,50</text>
+<rect x="447.9" y="52.0" width="55.0" height="120.0" fill="#c9a227" stroke="#ffffff" stroke-width="1" data-element="loading_zone" data-width-m="2.50"><title>Ladezone 2,50 m</title></rect>
+<text transform="translate(475.4,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Ladezone 2,50</text>
+<rect x="502.9" y="52.0" width="16.5" height="120.0" fill="#9aa39a" stroke="#ffffff" stroke-width="1" data-element="buffer_cycle_carriageway" data-width-m="0.75"><title>Trennstreifen 0,75 m</title></rect>
+<text transform="translate(511.1,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Trennstreifen 0,75</text>
+<rect x="519.4" y="52.0" width="35.2" height="120.0" fill="#c0392b" stroke="#ffffff" stroke-width="1" data-element="cycle_track" data-width-m="1.60"><title>Radweg 1,60 m</title></rect>
+<text transform="translate(537.0,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="9">Radweg 1,60</text>
+<rect x="554.6" y="52.0" width="55.0" height="120.0" fill="#d9d4c7" stroke="#ffffff" stroke-width="1" data-element="sidewalk" data-width-m="2.50"><title>Gehweg 2,50 m</title></rect>
+<text transform="translate(582.1,112.0) rotate(-90)" text-anchor="middle" dominant-baseline="middle" fill="#222" font-size="9">Gehweg 2,50</text>
+<text x="44.2" y="206.0" fill="#222">Soll-Bedarf 25,70 m</text>
+<line x1="44.2" y1="192.0" x2="609.6" y2="192.0" stroke="#222" stroke-width="2"/>
 <line x1="16.0" y1="218.0" x2="637.8" y2="218.0" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>
 <text x="16.0" y="232.0" fill="#1f6fb2">verfügbar (Verkehrsfläche p10) 28,26 m</text>
 </svg>

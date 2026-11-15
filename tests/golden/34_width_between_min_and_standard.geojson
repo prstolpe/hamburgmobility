@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "name": "width_between_min_and_standard",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::25832"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "case_id": "width_between_min_and_standard",
+        "description": "seit 0.24.0: ohne Bus, Straßenraum 16,60 m zwischen GOW50_min 16,20 m und GOW50 17,00 m -> GOW50 (Radweg in Mindestbreite, Flag gow50_cycle_track_min)",
+        "expected_category": "GOW50",
+        "expected_rules": [
+          "C-GOW-01",
+          "C-G50-01"
+        ],
+        "boundary": null,
+        "highway": "primary",
+        "access_motor_only": false,
+        "outside_builtup_area": false,
+        "conn_score": 0.8,
+        "in_hvs": true,
+        "dtv_official": 8000.0,
+        "ist_verkehrsberuhigt": false,
+        "pedestrian_zone": false,
+        "override_school_street": false,
+        "school_or_kita_access_m": 600.0,
+        "shop_frontage_share": 0.1,
+        "crossing_demand": "low",
+        "separated_cycle_track_present": false,
+        "bus_route": false,
+        "width_p10_m": 16.6
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            565600.0,
+            5938400.0
+          ],
+          [
+            565700.0,
+            5938400.0
+          ]
+        ]
+      }
+    }
+  ]
+}

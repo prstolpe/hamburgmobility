@@ -57,15 +57,15 @@ def test_reason_c_g30_02_names_widths():
     assert [r["rule"] for r in reasons] == ["C-GOW-01", "C-G30-01", "C-G30-02"]  # failed C-SW-01 has no text
     assert reasons[0]["text"] == ("steht auf der Liste der Hauptverkehrsstraßen; wichtig für Wege quer durch die Stadt: "
                                   "Verbindungswert 0,88 (ab 0,87)")
-    assert reasons[2]["text"] == ("für einen eigenen Radweg fehlt der Platz: Straße 14,2 m breit, "
-                                  "nötig 17,0 m")
+    assert reasons[2]["text"] == ("auch für einen schmalen eigenen Radweg fehlt der Platz: Straße 14,2 m breit, "
+                                  "nötig 16,2 m")
     assert reasons[2]["passed"] is True and reasons[1]["passed"] is False
 
 
 def test_reason_c_g30_02_bus_route_names_bus_width():
-    trace = [_step("C-G30-02", True, bus_route=True, width_p10_m=17.2)]
+    trace = [_step("C-G30-02", True, bus_route=True, width_p10_m=16.5)]
     assert ex.rule_reasons(trace, RULES, TEXTS)[0]["text"] == (
-        "für einen eigenen Radweg neben der Busspur fehlt der Platz: Straße 17,2 m breit, nötig 17,5 m")
+        "auch für einen schmalen eigenen Radweg neben der Busspur fehlt der Platz: Straße 16,5 m breit, nötig 16,7 m")
 
 
 def test_reason_only_true_fragments():
@@ -81,7 +81,7 @@ def test_reason_unknown_fragment_left_out():
     trace = [_step("C-G30-02", False, bus_route=None, width_p10_m=18.0),
              _step("C-G30-02", False, bus_route=False, width_p10_m=18.0)]
     reasons = ex.rule_reasons(trace, RULES, TEXTS)
-    assert reasons[0]["text"] == "genug Platz für einen eigenen Radweg: Straße 18,0 m breit (nötig 17,0 m)"
+    assert reasons[0]["text"] == "genug Platz für einen eigenen Radweg: Straße 18,0 m breit (nötig 16,2 m)"
 
 
 def test_every_cascade_rule_has_a_text():

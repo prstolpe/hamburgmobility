@@ -33,6 +33,15 @@ def hint_flag(category: Any, feature_value: Any, rules: RuleSet) -> bool:
     return bool(hint is not None and category in hint.categories and not _missing(feature_value) and bool(feature_value))
 
 
+def cycle_track_min_flag(category: Any, width_p10: Any, bus_route: Any, rules: RuleSet) -> bool:
+    """rules.yaml 0.24.0 (C-G30-02 note): GOW50 narrower than the standard profile required_width.GOW50 (GOW50_bus with
+    a bus route) – the cycle track fits only in minimum width."""
+    if category != "GOW50" or _missing(width_p10):
+        return False
+    bus = not _missing(bus_route) and bool(bus_route)
+    return bool(float(width_p10) < rules.required_width["GOW50_bus" if bus else "GOW50"].value)
+
+
 def speed_severity(ist_kmh: Any, soll_kmh: Any, rules: RuleSet, category: str | None = None,
                    hint_value: Any = None) -> dict:
     """Trace step: severity 0-3 from the excess of the Ist limit over the Soll speed; None if not checkable.
@@ -214,6 +223,7 @@ def assess_segment(values: dict, category: str, rules: RuleSet) -> dict:
              {"rule": rules.discrepancy.type_rule.id, "result": dtype, "inputs": {"directions": sorted(directions)}}]
     return {"disc_speed": s_speed["result"], "disc_design": s_design["result"], "disc_use": s_use["result"],
             "gow50_anbaufrei": hint_flag(category, hint_value, rules), "disc_speed_hint": s_speed.get("hint"),
+            "gow50_cycle_track_min": cycle_track_min_flag(category, values.get("width_p10_m"), values.get("bus_route"), rules),
             "disc_max": max(sevs) if sevs else None, "disc_type": dtype, "disc_causes": causes,
             "disc_design_unknown": s_design["unknown"], "disc_trace": trace}
 

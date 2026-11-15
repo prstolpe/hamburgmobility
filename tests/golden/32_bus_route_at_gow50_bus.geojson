@@ -12,15 +12,15 @@
       "type": "Feature",
       "properties": {
         "case_id": "bus_route_at_gow50_bus",
-        "description": "F06: Busroute, Straßenraum 17,50 m = required_width.GOW50_bus -> GOW50",
+        "description": "F06, seit 0.24.0: Busroute, Straßenraum 16,70 m = required_width.GOW50_bus_min -> GOW50",
         "expected_category": "GOW50",
         "expected_rules": [
           "C-GOW-01",
           "C-G50-01"
         ],
         "boundary": {
-          "ref": "required_width.GOW50_bus",
-          "value": 17.5,
+          "ref": "required_width.GOW50_bus_min",
+          "value": 16.7,
           "side": "at"
         },
         "highway": "primary",
@@ -37,7 +37,7 @@
         "crossing_demand": "low",
         "separated_cycle_track_present": false,
         "bus_route": true,
-        "width_p10_m": 17.5
+        "width_p10_m": 16.7
       },
       "geometry": {
         "type": "LineString",

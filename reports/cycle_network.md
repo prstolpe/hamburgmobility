@@ -1,17 +1,17 @@
 # Soll-Radnetz: Hierarchie und Lückenschluss (Stufe c03)
 
-Erzeugt 2026-11-15T20:17:04+00:00 mit pipeline/c03_cycle_network.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Entwurfsparameter (C-NET-01…13) sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
+Erzeugt 2026-11-15T21:43:20+00:00 mit pipeline/c03_cycle_network.py · cycling_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Alle Entwurfsparameter (C-NET-01…13) sind Annahmen (source_type assumption, status draft) und vor fachlicher Nutzung zu prüfen.
 
 ## Kurzfassung
 
-- RSV: 73 km (899 Kanten)
-- HAUPT: 1 810 km (18 057 Kanten)
-- BASIS: 1 051 km (10 021 Kanten)
-- ERSCHL: 3 497 km (36 996 Kanten)
+- RSV: 73 km (898 Kanten)
+- HAUPT: 1 810 km (18 058 Kanten)
+- BASIS: 1 050 km (10 008 Kanten)
+- ERSCHL: 3 498 km (37 009 Kanten)
 - Amtliches Radnetz (Bestand, 371 km): 58% liegt am Soll-Netz RSV/HAUPT, 74% am Soll-Netz bis BASIS (Puffer 20 m).
-- Soll RSV/HAUPT außerhalb des amtlichen Bestands: 1 641 km, davon 167 km im geplanten amtlichen Netz.
+- Soll RSV/HAUPT außerhalb des amtlichen Bestands: 1 641 km, davon 166 km im geplanten amtlichen Netz.
 - Maschen über der Höchstweite nach Verdichtung: HAUPT 33, BASIS 408 (Lückenliste unten; Maschen in ländlichen Stadtteilen nicht geprüft).
-- Parallelregel P-ATT-03: 3 von 422 geprüften Läufen an Straßen mit DTV > 15 000 auf eine Parallelroute verlegt.
+- Parallelregel P-ATT-03: 3 von 424 geprüften Läufen an Straßen mit DTV > 15 000 auf eine Parallelroute verlegt.
 - Overrides angewendet: 0.
 
 **Grenzen vorab:** Bezirks- und Stadtteilzentren fehlen als Korridorpunkte (kein Endpunkt für das Zentrenkonzept, Entscheidung 2026-11-06). Die Nachfrage aus Prompt 15 ist nur mäßig kalibriert (Spearman 0,53, mittlere relative Abweichung 154 %; Nebenstraßen parallel zu Hauptstraßen ohne erfassten Radweg werden überschätzt). Beides wirkt auf Korridore und RSV-Abschnitte; bitte die RSV-Liste und die Karten mit Ortskenntnis lesen.
@@ -44,10 +44,10 @@ Korridorpaare: 209, davon mit Weg: 209. Anbindung an den Radgraphen: Median 61 m
 
 | Kategorie | km | Kanten | davon Bestand amtlich km | Komponenten | größte Komponente (Längenanteil) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| RSV | 72.8 | 899 | 30.0 | 7 | 18% |
-| HAUPT | 1 810.2 | 18 057 | 188.5 | 1 | 100% |
-| BASIS | 1 050.5 | 10 021 | 74.2 | 1 | 100% |
-| ERSCHL | 3 496.9 | 36 996 | 252.6 | – | – |
+| RSV | 72.8 | 898 | 30.0 | 7 | 18% |
+| HAUPT | 1 810.1 | 18 058 | 188.2 | 1 | 100% |
+| BASIS | 1 049.7 | 10 008 | 74.2 | 1 | 100% |
+| ERSCHL | 3 497.9 | 37 009 | 252.9 | – | – |
 
 Komponenten (P-COH-02): je Ebene einschließlich der höheren Ebenen.
 
@@ -69,14 +69,14 @@ Anteile je Bezirk (Kantenlänge):
 
 | Ebene | Höchstweite m | Maschen geprüft | Median Seite m | 90-%-Quantil m | größte m | über Höchstweite | über mesh_m.max | in ländl. Stadtteilen nicht geprüft |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| HAUPT + höher | 600 | 3 490 | 161 | 538 | 5 158 | 33 | 167 | 7 |
-| BASIS + höher | 300 | 6 349 | 164 | 331 | 4 085 | 408 | 848 | 13 |
+| HAUPT + höher | 600 | 3 485 | 161 | 538 | 5 158 | 33 | 167 | 7 |
+| BASIS + höher | 300 | 6 341 | 165 | 331 | 4 085 | 408 | 848 | 13 |
 
 Verdichtungsrunden:
 
 | Ebene | Runde | Maschen zu groß | neue Routen |
 | --- | ---: | ---: | ---: |
-| HAUPT 1 | 1 | 74 | 71 |
+| HAUPT 1 | 1 | 73 | 70 |
 | HAUPT 1 | 2 | 87 | 84 |
 | HAUPT 1 | 3 | 82 | 79 |
 | HAUPT 1 | 4 | 75 | 72 |
@@ -156,20 +156,20 @@ Verdichtungsrunden:
 | HAUPT 2 | 38 | 33 | 7 |
 | HAUPT 2 | 39 | 33 | 7 |
 | HAUPT 2 | 40 | 33 | 6 |
-| BASIS | 1 | 872 | 801 |
+| BASIS | 1 | 873 | 802 |
 | BASIS | 2 | 771 | 646 |
 | BASIS | 3 | 637 | 441 |
 | BASIS | 4 | 536 | 270 |
 | BASIS | 5 | 476 | 172 |
 | BASIS | 6 | 440 | 97 |
-| BASIS | 7 | 419 | 58 |
-| BASIS | 8 | 413 | 42 |
+| BASIS | 7 | 418 | 57 |
+| BASIS | 8 | 412 | 41 |
 | BASIS | 9 | 409 | 27 |
 | BASIS | 10 | 405 | 19 |
 | BASIS | 11 | 405 | 16 |
 | BASIS | 12 | 404 | 11 |
 | BASIS | 13 | 404 | 9 |
-| BASIS | 14 | 404 | 8 |
+| BASIS | 14 | 404 | 7 |
 | BASIS | 15 | 405 | 8 |
 | BASIS | 16 | 405 | 6 |
 | BASIS | 17 | 405 | 6 |
@@ -226,9 +226,9 @@ Amtlich = WFS Radnetz Hamburg, Status Bestand; geplant = In Arbeit, Priorisierte
 | fehlt im Soll RSV/HAUPT | 155.7 |
 | geplant (amtlich) | 292.4 |
 | davon am Soll RSV/HAUPT | 158.1 |
-| Soll RSV/HAUPT gesamt | 1 883.0 |
-| Soll RSV/HAUPT zusätzlich (nicht am amtlichen Bestand) | 1 640.6 |
-| davon im geplanten amtlichen Netz | 166.6 |
+| Soll RSV/HAUPT gesamt | 1 882.8 |
+| Soll RSV/HAUPT zusätzlich (nicht am amtlichen Bestand) | 1 640.7 |
+| davon im geplanten amtlichen Netz | 166.3 |
 
 Längste amtliche Bestandsabschnitte ohne Soll RSV/HAUPT (Top 15):
 
@@ -279,21 +279,21 @@ RSV heißt seit cycling_rules.yaml 0.10.0 „Radvorrangroute / Radroute+“: Der
 
 | Lauf km | Median Rad/Werktag | Anteil ≥ Auslöser | FGSV-Kandidat | rsv_confidence |
 | ---: | ---: | ---: | --- | --- |
-| 11.5 | 5 078 | 91% | ja | high |
-| 9.9 | 3 225 | 97% | nein | low |
-| 7.8 | 3 241 | 98% | nein | low |
-| 7.5 | 6 789 | 98% | nein | high |
-| 7.1 | 4 830 | 97% | nein | high |
-| 6.9 | 2 775 | 96% | nein | low |
-| 6.8 | 4 476 | 94% | nein | high |
-| 6.3 | 4 670 | 91% | nein | high |
-| 6.3 | 3 639 | 86% | nein | low |
-| 6.1 | 4 641 | 89% | nein | high |
-| 6.0 | 3 467 | 99% | nein | low |
-| 5.5 | 4 323 | 95% | nein | high |
-| 5.4 | 3 467 | 100% | nein | low |
-| 5.4 | 2 997 | 86% | nein | low |
-| 5.4 | 4 154 | 93% | nein | high |
+| 11.5 | 5 074 | 91% | ja | high |
+| 9.9 | 3 223 | 97% | nein | low |
+| 7.8 | 3 238 | 98% | nein | low |
+| 7.5 | 6 784 | 98% | nein | high |
+| 7.0 | 4 827 | 97% | nein | high |
+| 6.9 | 2 773 | 96% | nein | low |
+| 6.8 | 4 473 | 94% | nein | high |
+| 6.3 | 4 666 | 91% | nein | high |
+| 6.3 | 3 636 | 86% | nein | low |
+| 6.1 | 4 637 | 89% | nein | high |
+| 6.0 | 3 465 | 99% | nein | low |
+| 5.5 | 4 319 | 95% | nein | high |
+| 5.4 | 3 465 | 100% | nein | low |
+| 5.4 | 2 995 | 86% | nein | low |
+| 5.4 | 4 025 | 93% | nein | high |
 
 ## RSV-Abschnitte (C-NET-06)
 
@@ -301,25 +301,25 @@ RSV heißt seit cycling_rules.yaml 0.10.0 „Radvorrangroute / Radroute+“: Der
 
 | route_id | Korridor | km | RSV km | Median Rad/Werktag | Prüfen |
 | --- | --- | ---: | ---: | ---: | --- |
-| `rt_77f46b744d5361bd` | Innenstadt (Rathausmarkt) – Umsteigeknoten Neugraben | 23.2 | 15.3 | 2 027 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566101,5925610]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.475323/9.995949) · [OSM](https://www.openstreetmap.org/?mlat=53.475323&mlon=9.995949#map=18/53.475323/9.995949) |
-| `rt_672ec9569a52b029` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Harburg (300 Tsd. m²) | 19.8 | 13.3 | 1 946 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565693,5927157]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.489274/9.990120) · [OSM](https://www.openstreetmap.org/?mlat=53.489274&mlon=9.990120#map=18/53.489274/9.990120) |
-| `rt_504449be00c9c013` | Innenstadt (Rathausmarkt) – Umsteigeknoten Bergedorf | 18.8 | 11.5 | 2 858 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573739,5933030]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.540989/10.112750) · [OSM](https://www.openstreetmap.org/?mlat=53.540989&mlon=10.112750#map=18/53.540989/10.112750) |
-| `rt_11e87fdac8f2436f` | Innenstadt (Rathausmarkt) – Hochschule HAW - Life Sciences - Campus Bergedorf | 18.1 | 11.5 | 3 116 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573432,5933190]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.542469/10.108153) · [OSM](https://www.openstreetmap.org/?mlat=53.542469&mlon=10.108153#map=18/53.542469/10.108153) |
-| `rt_ca080c31449b50a7` | Innenstadt (Rathausmarkt) – Hochschule HAW Hamburg Energie Campus | 20.8 | 11.5 | 2 617 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573771,5932181]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.533358/10.113027) · [OSM](https://www.openstreetmap.org/?mlat=53.533358&mlon=10.113027#map=18/53.533358/10.113027) |
-| `rt_8d9efee1608c141e` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Mitte (278 Tsd. m²) | 9.4 | 7.5 | 4 559 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569895,5934616]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555772/10.055102) · [OSM](https://www.openstreetmap.org/?mlat=53.555772&mlon=10.055102#map=18/53.555772/10.055102) |
-| `rt_c77ab66b6cad4425` | Innenstadt (Rathausmarkt) – Hochschule Helmut-Schmidt-Universität – Universität der Bundeswehr Hamburg | 10.1 | 7.1 | 2 393 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570217,5934547]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555106/10.059952) · [OSM](https://www.openstreetmap.org/?mlat=53.555106&mlon=10.059952#map=18/53.555106/10.059952) |
-| `rt_29fd24af7cd81ff5` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Mitte (263 Tsd. m²) | 9.7 | 6.9 | 2 775 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567796,5931225]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.525566/10.022694) · [OSM](https://www.openstreetmap.org/?mlat=53.525566&mlon=10.022694#map=18/53.525566/10.022694) |
-| `rt_ef467cada2376b84` | Innenstadt (Rathausmarkt) – Hochschule I. Institut für Theoretische Physik | 8.9 | 6.8 | 3 540 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561915,5934079]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.551945/9.934552) · [OSM](https://www.openstreetmap.org/?mlat=53.551945&mlon=9.934552#map=18/53.551945/9.934552) |
-| `rt_a86de573643b9d09` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Nord (307 Tsd. m²) | 12.6 | 6.3 | 3 012 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565343,5938998]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.595738/9.987327) · [OSM](https://www.openstreetmap.org/?mlat=53.595738&mlon=9.987327#map=18/53.595738/9.987327) |
-| `rt_2d15c04da5f307dd` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Nord (327 Tsd. m²) | 8.5 | 6.3 | 1 957 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565981,5937482]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.582034/9.996637) · [OSM](https://www.openstreetmap.org/?mlat=53.582034&mlon=9.996637#map=18/53.582034/9.996637) |
-| `rt_d79bacc62933f495` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Wandsbek (290 Tsd. m²) | 8.5 | 6.1 | 3 008 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568423,5936634]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.574098/10.033327) · [OSM](https://www.openstreetmap.org/?mlat=53.574098&mlon=10.033327#map=18/53.574098/10.033327) |
-| `rt_a3f51202ca48fa1c` | Arbeitsplatzschwerpunkt Harburg (300 Tsd. m²) – Arbeitsplatzschwerpunkt Harburg (241 Tsd. m²) | 6.8 | 6.0 | 3 075 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562608,5925087]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.471045/9.943226) · [OSM](https://www.openstreetmap.org/?mlat=53.471045&mlon=9.943226#map=18/53.471045/9.943226) |
-| `rt_c7596252079e2bf4` | Innenstadt (Rathausmarkt) – Hochschule Helmut-Schmidt-Universität - Campus Nord | 10.0 | 5.5 | 1 240 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569191,5936506]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.572845/10.044903) · [OSM](https://www.openstreetmap.org/?mlat=53.572845&mlon=10.044903#map=18/53.572845/10.044903) |
-| `rt_463b00cfca1d45be` | Umsteigeknoten Hamburg-Harburg – Arbeitsplatzschwerpunkt Harburg (300 Tsd. m²) | 7.4 | 5.4 | 1 637 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562896,5925065]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.470813/9.947549) · [OSM](https://www.openstreetmap.org/?mlat=53.470813&mlon=9.947549#map=18/53.470813/9.947549) |
+| `rt_77f46b744d5361bd` | Innenstadt (Rathausmarkt) – Umsteigeknoten Neugraben | 23.2 | 15.3 | 2 026 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566101,5925610]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.475323/9.995949) · [OSM](https://www.openstreetmap.org/?mlat=53.475323&mlon=9.995949#map=18/53.475323/9.995949) |
+| `rt_672ec9569a52b029` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Harburg (300 Tsd. m²) | 19.8 | 13.3 | 1 944 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565693,5927157]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.489274/9.990120) · [OSM](https://www.openstreetmap.org/?mlat=53.489274&mlon=9.990120#map=18/53.489274/9.990120) |
+| `rt_504449be00c9c013` | Innenstadt (Rathausmarkt) – Umsteigeknoten Bergedorf | 18.8 | 11.5 | 2 855 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573739,5933030]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.540989/10.112750) · [OSM](https://www.openstreetmap.org/?mlat=53.540989&mlon=10.112750#map=18/53.540989/10.112750) |
+| `rt_11e87fdac8f2436f` | Innenstadt (Rathausmarkt) – Hochschule HAW - Life Sciences - Campus Bergedorf | 18.1 | 11.5 | 3 113 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573432,5933190]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.542469/10.108153) · [OSM](https://www.openstreetmap.org/?mlat=53.542469&mlon=10.108153#map=18/53.542469/10.108153) |
+| `rt_ca080c31449b50a7` | Innenstadt (Rathausmarkt) – Hochschule HAW Hamburg Energie Campus | 20.8 | 11.5 | 2 615 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573771,5932181]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.533358/10.113027) · [OSM](https://www.openstreetmap.org/?mlat=53.533358&mlon=10.113027#map=18/53.533358/10.113027) |
+| `rt_8d9efee1608c141e` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Mitte (278 Tsd. m²) | 9.4 | 7.5 | 4 555 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569895,5934616]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555772/10.055102) · [OSM](https://www.openstreetmap.org/?mlat=53.555772&mlon=10.055102#map=18/53.555772/10.055102) |
+| `rt_c77ab66b6cad4425` | Innenstadt (Rathausmarkt) – Hochschule Helmut-Schmidt-Universität – Universität der Bundeswehr Hamburg | 10.1 | 7.0 | 2 391 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570217,5934547]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555106/10.059952) · [OSM](https://www.openstreetmap.org/?mlat=53.555106&mlon=10.059952#map=18/53.555106/10.059952) |
+| `rt_29fd24af7cd81ff5` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Mitte (263 Tsd. m²) | 9.7 | 6.9 | 2 773 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567796,5931225]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.525566/10.022694) · [OSM](https://www.openstreetmap.org/?mlat=53.525566&mlon=10.022694#map=18/53.525566/10.022694) |
+| `rt_ef467cada2376b84` | Innenstadt (Rathausmarkt) – Hochschule I. Institut für Theoretische Physik | 8.9 | 6.8 | 3 537 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561915,5934079]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.551945/9.934552) · [OSM](https://www.openstreetmap.org/?mlat=53.551945&mlon=9.934552#map=18/53.551945/9.934552) |
+| `rt_a86de573643b9d09` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Nord (307 Tsd. m²) | 12.6 | 6.3 | 2 950 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565343,5938998]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.595738/9.987327) · [OSM](https://www.openstreetmap.org/?mlat=53.595738&mlon=9.987327#map=18/53.595738/9.987327) |
+| `rt_2d15c04da5f307dd` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Hamburg-Nord (327 Tsd. m²) | 8.5 | 6.3 | 1 955 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565981,5937482]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.582034/9.996637) · [OSM](https://www.openstreetmap.org/?mlat=53.582034&mlon=9.996637#map=18/53.582034/9.996637) |
+| `rt_d79bacc62933f495` | Innenstadt (Rathausmarkt) – Arbeitsplatzschwerpunkt Wandsbek (290 Tsd. m²) | 8.5 | 6.1 | 3 005 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568423,5936634]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.574098/10.033327) · [OSM](https://www.openstreetmap.org/?mlat=53.574098&mlon=10.033327#map=18/53.574098/10.033327) |
+| `rt_a3f51202ca48fa1c` | Arbeitsplatzschwerpunkt Harburg (300 Tsd. m²) – Arbeitsplatzschwerpunkt Harburg (241 Tsd. m²) | 6.8 | 6.0 | 3 073 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562608,5925087]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.471045/9.943226) · [OSM](https://www.openstreetmap.org/?mlat=53.471045&mlon=9.943226#map=18/53.471045/9.943226) |
+| `rt_c7596252079e2bf4` | Innenstadt (Rathausmarkt) – Hochschule Helmut-Schmidt-Universität - Campus Nord | 10.0 | 5.5 | 1 239 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569191,5936506]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.572845/10.044903) · [OSM](https://www.openstreetmap.org/?mlat=53.572845&mlon=10.044903#map=18/53.572845/10.044903) |
+| `rt_463b00cfca1d45be` | Umsteigeknoten Hamburg-Harburg – Arbeitsplatzschwerpunkt Harburg (300 Tsd. m²) | 7.4 | 5.4 | 1 636 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562896,5925065]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.470813/9.947549) · [OSM](https://www.openstreetmap.org/?mlat=53.470813&mlon=9.947549#map=18/53.470813/9.947549) |
 
 ## Parallelregel P-ATT-03 (C-NET-10)
 
-320 verschiedene Läufe an Straßen mit DTV > 15 000 (auf 422 Routen geprüft): nur über die Hauptstraße 236, Umweg zu groß 81, verlegt 3.
+321 verschiedene Läufe an Straßen mit DTV > 15 000 (auf 424 Routen geprüft): nur über die Hauptstraße 238, Umweg zu groß 80, verlegt 3.
 
 | Routen | Straße (DTV > Schwelle) | Kategorie | Lauf m | Alternative | Alternative m | davon Hauptstraße m | Umwegfaktor | Schwelle | Ergebnis | Prüfen |
 | ---: | --- | --- | ---: | --- | ---: | ---: | ---: | ---: | --- | --- |
@@ -354,20 +354,20 @@ RSV heißt seit cycling_rules.yaml 0.10.0 „Radvorrangroute / Radroute+“: Der
 | 1 | neben Bargteheider Straße | HAUPT | 1 083 | Oldenfelder Straße, Schulpfad, Bargteheider Straße | 1 987 | 224 | 1.83 | 1.2 | nur über die Hauptstraße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[576222,5940721]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.609752/10.152094) · [OSM](https://www.openstreetmap.org/?mlat=53.609752&mlon=10.152094#map=18/53.609752/10.152094) |
 | 1 | Saarlandstraße, neben Saarlandstraße | HAUPT | 1 080 | Hellbrookstraße, Alter Güterbahnhof, Alte Wöhr | 1 837 | 29 | 1.70 | 1.2 | Umweg zu groß | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568287,5939026]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.595617/10.031809) · [OSM](https://www.openstreetmap.org/?mlat=53.595617&mlon=10.031809#map=18/53.595617/10.031809) |
 
-(290 weitere Läufe nicht gelistet; je Route in data/interim/cycle_routes.parquet, Spalte patt_runs.)
+(291 weitere Läufe nicht gelistet; je Route in data/interim/cycle_routes.parquet, Spalte patt_runs.)
 
 ## Kontinuität (C-NET-11, P-COH-04)
 
 - 5 Kanten angehoben (kurze Lücken zwischen gleichen höheren Kategorien).
-- Routen mit Kategoriewechseln entlang des Wegs: 133 von 4936; mit Bruch durch Override: 0.
+- Routen mit Kategoriewechseln entlang des Wegs: 133 von 4933; mit Bruch durch Override: 0.
 - Kategoriewechsel RSV↔HAUPT an Korridoren sind gewollt (RSV nur auf Läufen mit hoher Nachfrage); sie sind in data/interim/cycle_routes.parquet je Route gezählt (n_category_changes).
 
 | Routenart | Routen | km (Summe Routenlängen) |
 | --- | ---: | ---: |
 | Anbindung Schule/Nahversorgung | 207 | 227 |
 | Korridor | 209 | 1 007 |
-| Verdichtung BASIS | 2712 | 954 |
-| Verdichtung HAUPT | 1808 | 1 561 |
+| Verdichtung BASIS | 2710 | 953 |
+| Verdichtung HAUPT | 1807 | 1 561 |
 
 ## Lückenliste (Maschen über der Höchstweite)
 
@@ -383,7 +383,7 @@ RSV heißt seit cycling_rules.yaml 0.10.0 „Radvorrangroute / Radroute+“: Der
 | HAUPT | 2 439 | 996 | max_rounds erreicht | Harburg | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[556892,5922052]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.444423/9.856564) · [OSM](https://www.openstreetmap.org/?mlat=53.444423&mlon=9.856564#map=18/53.444423/9.856564) |
 | BASIS | 2 416 | 510 | keine Teilung möglich (weniger als zwei erreichbare Netzknoten am Außenrand) | Harburg | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[556893,5922073]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.444606/9.856586) · [OSM](https://www.openstreetmap.org/?mlat=53.444606&mlon=9.856586#map=18/53.444606/9.856586) |
 | BASIS | 2 413 | 2213 | keine Teilung möglich (weniger als zwei erreichbare Netzknoten am Außenrand) | Harburg | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561798,5928570]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.502450/9.931703) · [OSM](https://www.openstreetmap.org/?mlat=53.502450&mlon=9.931703#map=18/53.502450/9.931703) |
-| BASIS | 2 157 | 642 | max_rounds erreicht | Hamburg-Nord | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565332,5944429]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.644547/9.988292) · [OSM](https://www.openstreetmap.org/?mlat=53.644547&mlon=9.988292#map=18/53.644547/9.988292) |
+| BASIS | 2 159 | 629 | max_rounds erreicht | Hamburg-Nord | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565332,5944429]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.644547/9.988292) · [OSM](https://www.openstreetmap.org/?mlat=53.644547&mlon=9.988292#map=18/53.644547/9.988292) |
 | HAUPT | 2 038 | 1438 | keine Teilung möglich (weniger als zwei erreichbare Netzknoten am Außenrand) | Wandsbek | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572367,5947410]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.670417/10.095395) · [OSM](https://www.openstreetmap.org/?mlat=53.670417&mlon=10.095395#map=18/53.670417/10.095395) |
 | HAUPT | 2 025 | 874 | keine Teilung möglich (weniger als zwei erreichbare Netzknoten am Außenrand) | Hamburg-Mitte | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[576327,5935134]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.559533/10.152308) · [OSM](https://www.openstreetmap.org/?mlat=53.559533&mlon=10.152308#map=18/53.559533/10.152308) |
 | BASIS | 2 025 | 437 | keine Teilung möglich (weniger als zwei erreichbare Netzknoten am Außenrand) | Hamburg-Mitte | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[576327,5935134]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.559533/10.152308) · [OSM](https://www.openstreetmap.org/?mlat=53.559533&mlon=10.152308#map=18/53.559533/10.152308) |
@@ -410,29 +410,29 @@ RSV heißt seit cycling_rules.yaml 0.10.0 „Radvorrangroute / Radroute+“: Der
 
 | edge_id | Bezirk | Name | Art | Kategorie | Rad/Werktag | amtlich | Route | Prüfen |
 | --- | --- | --- | --- | --- | ---: | --- | --- | --- |
-| `ce_0e1d83d28915dc9e` | Altona | Bernstorffstraße | road | HAUPT | 3 142 | – | `rt_1b9c1ec15ceedf68` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563529,5934847]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.558658/9.959080) · [OSM](https://www.openstreetmap.org/?mlat=53.558658&mlon=9.959080#map=18/53.558658/9.959080) |
+| `ce_0e1d83d28915dc9e` | Altona | Bernstorffstraße | road | HAUPT | 3 140 | – | `rt_1b9c1ec15ceedf68` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563529,5934847]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.558658/9.959080) · [OSM](https://www.openstreetmap.org/?mlat=53.558658&mlon=9.959080#map=18/53.558658/9.959080) |
 | `ce_39bb6efb31c3109a` | Altona | neben Taşköprüstraße | path | ERSCHL | 0 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561683,5935344]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.563338/9.931312) · [OSM](https://www.openstreetmap.org/?mlat=53.563338&mlon=9.931312#map=18/53.563338/9.931312) |
 | `ce_7cf8178f45f27db2` | Altona | – | path | ERSCHL | 0 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[552041,5936299]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.572966/9.785906) · [OSM](https://www.openstreetmap.org/?mlat=53.572966&mlon=9.785906#map=18/53.572966/9.785906) |
 | `ce_8ab7b65cb27936b9` | Altona | Altonaer Poststraße | road | ERSCHL | 0 | Bestand | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562334,5933885]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.550152/9.940844) · [OSM](https://www.openstreetmap.org/?mlat=53.550152&mlon=9.940844#map=18/53.550152/9.940844) |
 | `ce_2bc960a2ce848093` | Bergedorf | Sichter | road | HAUPT | 26 | – | `rt_a8093ab0b250375c` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[580914,5927340]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.488798/10.219532) · [OSM](https://www.openstreetmap.org/?mlat=53.488798&mlon=10.219532#map=18/53.488798/10.219532) |
 | `ce_3b2bb8473d28d4d6` | Bergedorf | Bockhorster Höhe | road | ERSCHL | 0 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[577876,5930261]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.515511/10.174475) · [OSM](https://www.openstreetmap.org/?mlat=53.515511&mlon=10.174475#map=18/53.515511/10.174475) |
-| `ce_5b12a772e8bb4ac2` | Bergedorf | Wehrdeich | road | HAUPT | 2 035 | geplant | `rt_7023e4fd86f7ab52` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[578803,5927078]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.486770/10.187651) · [OSM](https://www.openstreetmap.org/?mlat=53.486770&mlon=10.187651#map=18/53.486770/10.187651) |
+| `ce_5b12a772e8bb4ac2` | Bergedorf | Wehrdeich | road | HAUPT | 2 034 | geplant | `rt_7023e4fd86f7ab52` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[578803,5927078]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.486770/10.187651) · [OSM](https://www.openstreetmap.org/?mlat=53.486770&mlon=10.187651#map=18/53.486770/10.187651) |
 | `ce_8b678c66ddf3f761` | Eimsbüttel | – | road | ERSCHL | 0 | geplant | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564116,5937889]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.585924/9.968558) · [OSM](https://www.openstreetmap.org/?mlat=53.585924&mlon=9.968558#map=18/53.585924/9.968558) |
 | `ce_abc6142660b07fb6` | Eimsbüttel | Volksparkstraße | road | ERSCHL | 0 | geplant | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561050,5938484]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.591636/9.922361) · [OSM](https://www.openstreetmap.org/?mlat=53.591636&mlon=9.922361#map=18/53.591636/9.922361) |
-| `ce_bd1adc80048064ef` | Eimsbüttel | Julius-Vosseler-Straße | road | ERSCHL | 1 141 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562651,5938731]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.593667/9.946592) · [OSM](https://www.openstreetmap.org/?mlat=53.593667&mlon=9.946592#map=18/53.593667/9.946592) |
+| `ce_bd1adc80048064ef` | Eimsbüttel | Julius-Vosseler-Straße | road | ERSCHL | 1 140 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562651,5938731]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.593667/9.946592) · [OSM](https://www.openstreetmap.org/?mlat=53.593667&mlon=9.946592#map=18/53.593667/9.946592) |
 | `ce_e671b4baed8076dd` | Eimsbüttel | – | path | BASIS | 202 | – | `rt_e01fdde6d39d84d3` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564795,5936453]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.572935/9.978509) · [OSM](https://www.openstreetmap.org/?mlat=53.572935&mlon=9.978509#map=18/53.572935/9.978509) |
 | `ce_0a22f1fc42a92259` | Hamburg-Mitte | – | path | ERSCHL | 687 | Bestand | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565888,5930486]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.519168/9.993759) · [OSM](https://www.openstreetmap.org/?mlat=53.519168&mlon=9.993759#map=18/53.519168/9.993759) |
 | `ce_0aae7f75e01d651d` | Hamburg-Mitte | Neßdeich | road | ERSCHL | 451 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[556540,5932205]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.535706/9.853106) · [OSM](https://www.openstreetmap.org/?mlat=53.535706&mlon=9.853106#map=18/53.535706/9.853106) |
-| `ce_1c7271fedfadf05d` | Hamburg-Mitte | Horner Rampe | road | ERSCHL | 883 | Bestand | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[571781,5933578]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.546187/10.083330) · [OSM](https://www.openstreetmap.org/?mlat=53.546187&mlon=10.083330#map=18/53.546187/10.083330) |
-| `ce_8ede197ff5496440` | Hamburg-Mitte | Bürgerweide | road | ERSCHL | 1 536 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568803,5935004]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.559400/10.038718) · [OSM](https://www.openstreetmap.org/?mlat=53.559400&mlon=10.038718#map=18/53.559400/10.038718) |
-| `ce_c6daeec0afd7fa3b` | Hamburg-Mitte | neben Klosterwall | path | ERSCHL | 3 186 | geplant | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566643,5933942]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.550136/10.005889) · [OSM](https://www.openstreetmap.org/?mlat=53.550136&mlon=10.005889#map=18/53.550136/10.005889) |
+| `ce_1c7271fedfadf05d` | Hamburg-Mitte | Horner Rampe | road | ERSCHL | 882 | Bestand | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[571781,5933578]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.546187/10.083330) · [OSM](https://www.openstreetmap.org/?mlat=53.546187&mlon=10.083330#map=18/53.546187/10.083330) |
+| `ce_8ede197ff5496440` | Hamburg-Mitte | Bürgerweide | road | ERSCHL | 1 535 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568803,5935004]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.559400/10.038718) · [OSM](https://www.openstreetmap.org/?mlat=53.559400&mlon=10.038718#map=18/53.559400/10.038718) |
+| `ce_c6daeec0afd7fa3b` | Hamburg-Mitte | neben Klosterwall | path | ERSCHL | 3 182 | geplant | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566643,5933942]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.550136/10.005889) · [OSM](https://www.openstreetmap.org/?mlat=53.550136&mlon=10.005889#map=18/53.550136/10.005889) |
 | `ce_244f9315d1c931d6` | Hamburg-Nord | – | ferry | ERSCHL | 145 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566555,5936542]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.573516/10.005108) · [OSM](https://www.openstreetmap.org/?mlat=53.573516&mlon=10.005108#map=18/53.573516/10.005108) |
 | `ce_570528d05d29c065` | Hamburg-Nord | Timmerloh | road | BASIS | 151 | – | `rt_032ed2fe60fbdf6a` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567487,5945934]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.657802/10.021217) · [OSM](https://www.openstreetmap.org/?mlat=53.657802&mlon=10.021217#map=18/53.657802/10.021217) |
 | `ce_5d7e9d35e5ed864c` | Hamburg-Nord | – | road | BASIS | 0 | – | `rt_a47056974ed90874` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567595,5940285]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.607016/10.021616) · [OSM](https://www.openstreetmap.org/?mlat=53.607016&mlon=10.021616#map=18/53.607016/10.021616) |
 | `ce_cac951672170e268` | Hamburg-Nord | Bendixensweg | road | BASIS | 26 | – | `rt_5556df93e9eb3c3f` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569031,5939317]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.598136/10.043116) · [OSM](https://www.openstreetmap.org/?mlat=53.598136&mlon=10.043116#map=18/53.598136/10.043116) |
 | `ce_0b5c7abf5fc36f0b` | Harburg | – | path | ERSCHL | 0 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[555777,5925142]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.472314/9.840326) · [OSM](https://www.openstreetmap.org/?mlat=53.472314&mlon=9.840326#map=18/53.472314/9.840326) |
-| `ce_d35fee753dfd8605` | Harburg | Cuxhavener Straße | road | ERSCHL | 110 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[558181,5925138]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.472012/9.876549) · [OSM](https://www.openstreetmap.org/?mlat=53.472012&mlon=9.876549#map=18/53.472012/9.876549) |
-| `ce_e236be26b3192f6e` | Harburg | neben Hohe Straße | path | HAUPT | 1 021 | – | `rt_343d9b84e6468c83` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564811,5922969]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.451747/9.975968) · [OSM](https://www.openstreetmap.org/?mlat=53.451747&mlon=9.975968#map=18/53.451747/9.975968) |
+| `ce_d35fee753dfd8605` | Harburg | Cuxhavener Straße | road | ERSCHL | 109 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[558181,5925138]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.472012/9.876549) · [OSM](https://www.openstreetmap.org/?mlat=53.472012&mlon=9.876549#map=18/53.472012/9.876549) |
+| `ce_e236be26b3192f6e` | Harburg | neben Hohe Straße | path | HAUPT | 1 020 | – | `rt_343d9b84e6468c83` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564811,5922969]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.451747/9.975968) · [OSM](https://www.openstreetmap.org/?mlat=53.451747&mlon=9.975968#map=18/53.451747/9.975968) |
 | `ce_3a77b3f377c7fff9` | Wandsbek | Sonnenweg | road | ERSCHL | 37 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[574383,5938419]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.589329/10.123753) · [OSM](https://www.openstreetmap.org/?mlat=53.589329&mlon=10.123753#map=18/53.589329/10.123753) |
 | `ce_7be121ee4e62a624` | Wandsbek | Baggesenstieg | road | BASIS | 18 | – | `rt_f8d22bba0e5b4a1d` | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572617,5945496]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.653182/10.098731) · [OSM](https://www.openstreetmap.org/?mlat=53.653182&mlon=10.098731#map=18/53.653182/10.098731) |
 | `ce_a06e8872ffc89448` | Wandsbek | Baben de Möhl | road | ERSCHL | 0 | – | – | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573273,5947692]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.672825/10.109172) · [OSM](https://www.openstreetmap.org/?mlat=53.672825&mlon=10.109172#map=18/53.672825/10.109172) |

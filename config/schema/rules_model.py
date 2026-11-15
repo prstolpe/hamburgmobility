@@ -548,6 +548,7 @@ class HarmonisationRule(_Strict):
     min_run_from: str | None = None     # coherence rule whose min_run_m is used (N2; H-STR-01 only)
     max_passes: int = Field(gt=0)       # technical limit of the repeated passes
     locked_categories: list[str] = []   # never changed
+    locked_rules: list[str] = []        # sections whose cascade passed one of these rules are never changed
     thresholds: dict[str, Threshold] = {}
     note: str | None = None
 
@@ -689,6 +690,11 @@ class RuleSet(_Strict):
                 raise ValueError(f"requirements: unknown category {cat!r}")
             self._check_requirement_group(reqs, f"requirements.{cat}", source_ids)
 
+        cap = {n: t for r in self.classification for n, t in r.thresholds.items()}.get("gow30_max_dtv")
+        wide = self.requirements.get("GOW30", {}).get("profiles", {}).get("wide", {}).get("max_dtv")
+        if cap is not None and wide is not None and float(cap.value) != float(wide):
+            raise ValueError("C-G30-01 gow30_max_dtv must equal requirements.GOW30.profiles.wide.max_dtv")
+
         for key, entry in self.required_width.items():
             path = f"required_width.{key}"
             is_component = key.endswith("_m")
@@ -716,6 +722,9 @@ class RuleSet(_Strict):
             unknown = sorted(set(r.locked_categories) - cats)
             if unknown:
                 raise ValueError(f"harmonisation.rules[{r.id}].locked_categories: unknown {unknown}")
+            unknown = sorted(set(r.locked_rules) - {c.id for c in self.classification})
+            if unknown:
+                raise ValueError(f"harmonisation.rules[{r.id}].locked_rules: unknown classification rule {unknown}")
         for p in self.classification_policy:
             known = {k for q in self.classification_policy for k in (*q.defaults, *q.fallback_inputs)}
             unknown = sorted(set(p.global_caveats) - known)

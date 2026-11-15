@@ -26,7 +26,7 @@ def ref():
 
 def test_every_rule_once_in_order(ref):
     ids = [r["id"] for r in ref["rules"]]
-    assert len(ids) == len(set(ids)) == 189
+    assert len(ids) == len(set(ids)) == 190
     assert ids[:3] == ["C-SW-01", "C-RUR-01", "C-ERF-01"]
 
 
@@ -101,7 +101,7 @@ def test_technical_fields_leave_out_meta_and_nested_rules(ref):
 def test_versions_and_counts(ref):
     assert ref["versions"]["rules.yaml"] == str(DOCS["rules.yaml"]["meta"]["version"])
     c = er.counts(ref)
-    assert c["n_rules"] == 189
+    assert c["n_rules"] == 190
     assert c["n_rules_assumption"] == sum(r["source_type"] == "assumption" for r in ref["rules"])
     assert c["n_thresholds"] == sum(len(r["thresholds"]) for r in ref["rules"])
     assert 0 < c["n_thresholds_assumption"] <= c["n_thresholds"]
@@ -158,5 +158,5 @@ def test_method_vars():
     v = er.method_vars(ref, meta)
     assert set(v) == set(er.VAR_NAMES)
     assert v["mc_runs"] == 500 and v["mc_delta_pct"] == 20 and v["mc_min_change_pct"] == 30
-    assert v["n_junctions_action"] == 4 and v["cyc_sens_delta_pct"] == 20 and v["n_rules"] == 189
+    assert v["n_junctions_action"] == 4 and v["cyc_sens_delta_pct"] == 20 and v["n_rules"] == 190
     assert er.method_vars(ref, {"area_label": "Hamburg", "sensitivity": None, "cycling": None})["mc_runs"] is None

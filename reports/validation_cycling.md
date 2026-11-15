@@ -1,12 +1,12 @@
 # Validierung Radnetz, Radanlagen, Querschnitte und Knoten (Prompt 21)
 
-Erzeugt 2026-11-15T20:21:45+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.12.0 · design_rules.yaml 0.10.0 · rules.yaml 0.23.0 · nicht amtlicher Entwurf.
+Erzeugt 2026-11-15T21:48:45+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.12.0 · design_rules.yaml 0.10.0 · rules.yaml 0.24.0 · nicht amtlicher Entwurf.
 
 ## Kurzfassung
 
 - Amtlicher Bestand 371 km: 58,1 % am Soll RSV/HAUPT, 73,6 % bis BASIS; Soll RSV/HAUPT 1 883 km.
 - Zählstellen: Spearman 0,57 an 87 Querschnitten; 93,3 % der 15 stärksten liegen am Soll RSV/HAUPT.
-- Sensitivität ±20%: 45 Annahmen, 90 Läufe; größte Wirkung 0,1 % der Länge mit anderer Führung, 0,3 % mit anderer Fahrstreifenzahl, 1,0 % der Knoten mit anderem Typ; „Querschnitt passt?“ reagiert stärker (bis 9,3 % der Länge, am stärksten `cross_section_allocation.elements_min_m.sidewalk.standard`).
+- Sensitivität ±20%: 45 Annahmen, 90 Läufe; größte Wirkung 0,1 % der Länge mit anderer Führung, 0,9 % mit anderer Fahrstreifenzahl, 1,0 % der Knoten mit anderem Typ; „Querschnitt passt?“ reagiert stärker (bis 9,5 % der Länge, am stärksten `cross_section_allocation.elements_min_m.sidewalk.standard`).
 - Prüflisten der Prompts 17–20 sind noch nicht ausgefüllt; eine Trefferquote der Regeln fehlt.
 
 ## Prüfungen
@@ -26,7 +26,7 @@ Erzeugt 2026-11-15T20:21:45+00:00 mit pipeline/c08_validate_cycling.py · cyclin
 Amtlich = WFS „Radnetz Hamburg“ (BVM, dl-de/by-2.0), Status Bestand; geplant = In Arbeit, Priorisierte Netzergänzungen/Netzverbesserungen, Netzbedeutende Abschnitte mit Verbesserungspotential. Überdeckung = Länge im Puffer 20 m (C-NET-13) um das jeweils andere Netz; amtliche Linien an den Bezirksgrenzen geschnitten. Das amtliche Netz ist Startpunkt und Vergleichsebene, nicht Ziel (docs/guide_radnetz.md, Abschnitt 1).
 
 - Amtlicher Bestand: 371,3 km; davon 58,1 % am Soll-Netz RSV/HAUPT und 73,6 % am Soll-Netz bis BASIS.
-- Soll RSV/HAUPT: 1 883,0 km; davon 12,9 % am amtlichen Bestand, 1 640,6 km zusätzlich.
+- Soll RSV/HAUPT: 1 882,8 km; davon 12,9 % am amtlichen Bestand, 1 640,7 km zusätzlich.
 - Amtlich geplant: 291,8 km; davon 158,1 km am Soll RSV/HAUPT.
 
 | Bezirk | amtlich Bestand km | am Soll RSV/HAUPT | am Soll bis BASIS | fehlt im Soll RSV/HAUPT km | Soll RSV/HAUPT km | davon am Bestand | zusätzlich km | geplant km | geplant am Soll RSV/HAUPT km |
@@ -34,11 +34,11 @@ Amtlich = WFS „Radnetz Hamburg“ (BVM, dl-de/by-2.0), Status Bestand; geplant
 | Altona | 37,2 | 78,6 % | 91,2 % | 8,0 | 301,9 | 11,4 % | 267,6 | 36,4 | 26,0 |
 | Bergedorf | 57,9 | 22,5 % | 43,0 % | 44,9 | 92,0 | 15,5 % | 77,8 | 30,5 | 5,2 |
 | Eimsbüttel | 40,8 | 68,3 % | 86,5 % | 12,9 | 225,0 | 13,5 % | 194,6 | 36,3 | 27,3 |
-| Hamburg-Mitte | 105,6 | 52,3 % | 66,1 % | 50,4 | 303,9 | 19,7 % | 244,1 | 58,9 | 32,9 |
+| Hamburg-Mitte | 105,6 | 52,3 % | 66,1 % | 50,4 | 303,8 | 19,6 % | 244,2 | 58,9 | 32,9 |
 | Hamburg-Nord | 48,5 | 69,0 % | 89,2 % | 15,0 | 242,3 | 15,3 % | 205,3 | 45,5 | 26,1 |
 | Harburg | 24,0 | 36,8 % | 57,5 % | 15,1 | 177,6 | 5,5 % | 167,9 | 55,1 | 20,6 |
 | Wandsbek | 57,3 | 83,6 % | 91,3 % | 9,4 | 540,3 | 10,5 % | 483,4 | 29,2 | 20,1 |
-| **Hamburg** | 371,3 | 58,1 % | 73,6 % | 155,7 | 1 883,0 | 12,9 % | 1 640,6 | 291,8 | 158,1 |
+| **Hamburg** | 371,3 | 58,1 % | 73,6 % | 155,7 | 1 882,8 | 12,9 % | 1 640,7 | 291,8 | 158,1 |
 
 Karte und längste Abweichungen (amtlich ohne Soll RSV/HAUPT, Soll RSV/HAUPT ohne amtlichen Bestand): reports/cycle_network.md, Abschnitt „Vergleich mit dem amtlichen Radnetz“.
 
@@ -55,7 +55,7 @@ Wie Prompt 15 (reports/cycle_demand.md): 312 Zählstellen, davon 104 ohne Richtu
 | Querschnitte mit Zähl- und Modellwert | 87 |
 | Spearman (Rang) | 0,57 |
 | Pearson (log) | 0,50 |
-| mittlere relative Abweichung | 116,5 % |
+| mittlere relative Abweichung | 116,4 % |
 | Median Zählwert/Modell | 0,74 |
 | Anteil innerhalb Faktor 2 | 48,3 % |
 
@@ -63,40 +63,40 @@ Zählwerte nach Soll-Kategorie am Querschnitt (höchste Kategorie der geschnitte
 
 | Soll-Kategorie | Querschnitte | Median Zählwert Rad/Werktag | Median Modell | geom. Mittel Zählwert/Modell |
 | --- | ---: | ---: | ---: | ---: |
-| RSV | 18 | 2 443 | 5 176 | 0,50 |
-| HAUPT | 51 | 1 307 | 1 421 | 0,82 |
+| RSV | 18 | 2 443 | 5 173 | 0,50 |
+| HAUPT | 51 | 1 307 | 1 420 | 0,82 |
 | BASIS | 18 | 1 105 | 278 | 3,04 |
-| ERSCHL | 10 | 1 330 | 51 | 3,65 |
+| ERSCHL | 10 | 1 330 | 51 | 3,66 |
 | none | 0 | – | – | – |
 
 Die 15 stärksten Zählstellen und ihre Soll-Kategorie:
 
 | Zählstelle | Bezirk | Zählwert | Modell | Soll-Kategorie | Prüfen |
 | --- | --- | ---: | ---: | --- | --- |
-| Verkehrszählstelle 6247950 | Eimsbüttel | 6 975 | 7 813 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565581,5935158]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.561198/9.990111) · [OSM](https://www.openstreetmap.org/?mlat=53.561198&mlon=9.990111#map=18/53.561198/9.990111) |
-| Verkehrszählstelle 7433950 | Eimsbüttel | 4 771 | 5 741 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564392,5937393]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.581429/9.972625) · [OSM](https://www.openstreetmap.org/?mlat=53.581429&mlon=9.972625#map=18/53.581429/9.972625) |
-| Verkehrszählstelle 7431960 | Eimsbüttel | 4 691 | 5 804 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565958,5934960]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.559375/9.995765) · [OSM](https://www.openstreetmap.org/?mlat=53.559375&mlon=9.995765#map=18/53.559375/9.995765) |
-| Verkehrszählstelle 0285940 | Hamburg-Mitte | 4 473 | 3 582 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564094,5934710]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.557355/9.967573) · [OSM](https://www.openstreetmap.org/?mlat=53.557355&mlon=9.967573#map=18/53.557355/9.967573) |
-| Verkehrszählstelle 0311970 | Hamburg-Nord | 4 367 | 7 699 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568484,5936662]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.574344/10.034262) · [OSM](https://www.openstreetmap.org/?mlat=53.574344&mlon=10.034262#map=18/53.574344/10.034262) |
-| Verkehrszählstelle 0287980 | Altona | 4 332 | 6 138 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561943,5934498]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555708/9.935064) · [OSM](https://www.openstreetmap.org/?mlat=53.555708&mlon=9.935064#map=18/53.555708/9.935064) |
-| Verkehrszählstelle 6999940 | Hamburg-Mitte | 4 331 | 8 449 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564528,5933856]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.549627/9.973947) · [OSM](https://www.openstreetmap.org/?mlat=53.549627&mlon=9.973947#map=18/53.549627/9.973947) |
-| Verkehrszählstelle 7432970 | Eimsbüttel | 4 305 | 5 822 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564238,5936758]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.575747/9.970165) · [OSM](https://www.openstreetmap.org/?mlat=53.575747&mlon=9.970165#map=18/53.575747/9.970165) |
-| Verkehrszählstelle 7297940 | Altona | 4 016 | 599 | BASIS | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561881,5933891]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.550256/9.934011) · [OSM](https://www.openstreetmap.org/?mlat=53.550256&mlon=9.934011#map=18/53.550256/9.934011) |
-| Verkehrszählstelle 6304980 | Altona | 3 910 | 4 909 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562903,5934520]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555792/9.949558) · [OSM](https://www.openstreetmap.org/?mlat=53.555792&mlon=9.949558#map=18/53.555792/9.949558) |
-| Verkehrszählstelle 0259920 | Hamburg-Mitte | 3 893 | 8 518 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564671,5935349]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.563027/9.976414) · [OSM](https://www.openstreetmap.org/?mlat=53.563027&mlon=9.976414#map=18/53.563027/9.976414) |
-| Verkehrszählstelle 6408960 | Hamburg-Mitte | 3 889 | 3 118 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565573,5934977]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.559573/9.989954) · [OSM](https://www.openstreetmap.org/?mlat=53.559573&mlon=9.989954#map=18/53.559573/9.989954) |
-| Verkehrszählstelle 6283960 | Eimsbüttel | 3 763 | 817 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565829,5934833]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.558246/9.993786) · [OSM](https://www.openstreetmap.org/?mlat=53.558246&mlon=9.993786#map=18/53.558246/9.993786) |
-| Verkehrszählstelle 7433910 | Eimsbüttel | 3 678 | 5 254 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564317,5937483]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.582254/9.971509) · [OSM](https://www.openstreetmap.org/?mlat=53.582254&mlon=9.971509#map=18/53.582254/9.971509) |
-| Verkehrszählstelle 0307930 | Hamburg-Nord | 3 197 | 3 339 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567445,5935569]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.564655/10.018337) · [OSM](https://www.openstreetmap.org/?mlat=53.564655&mlon=10.018337#map=18/53.564655/10.018337) |
+| Verkehrszählstelle 6247950 | Eimsbüttel | 6 975 | 7 839 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565581,5935158]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.561198/9.990111) · [OSM](https://www.openstreetmap.org/?mlat=53.561198&mlon=9.990111#map=18/53.561198/9.990111) |
+| Verkehrszählstelle 7433950 | Eimsbüttel | 4 771 | 5 739 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564392,5937393]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.581429/9.972625) · [OSM](https://www.openstreetmap.org/?mlat=53.581429&mlon=9.972625#map=18/53.581429/9.972625) |
+| Verkehrszählstelle 7431960 | Eimsbüttel | 4 691 | 5 799 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565958,5934960]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.559375/9.995765) · [OSM](https://www.openstreetmap.org/?mlat=53.559375&mlon=9.995765#map=18/53.559375/9.995765) |
+| Verkehrszählstelle 0285940 | Hamburg-Mitte | 4 473 | 3 580 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564094,5934710]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.557355/9.967573) · [OSM](https://www.openstreetmap.org/?mlat=53.557355&mlon=9.967573#map=18/53.557355/9.967573) |
+| Verkehrszählstelle 0311970 | Hamburg-Nord | 4 367 | 7 693 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568484,5936662]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.574344/10.034262) · [OSM](https://www.openstreetmap.org/?mlat=53.574344&mlon=10.034262#map=18/53.574344/10.034262) |
+| Verkehrszählstelle 0287980 | Altona | 4 332 | 6 133 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561943,5934498]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555708/9.935064) · [OSM](https://www.openstreetmap.org/?mlat=53.555708&mlon=9.935064#map=18/53.555708/9.935064) |
+| Verkehrszählstelle 6999940 | Hamburg-Mitte | 4 331 | 8 443 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564528,5933856]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.549627/9.973947) · [OSM](https://www.openstreetmap.org/?mlat=53.549627&mlon=9.973947#map=18/53.549627/9.973947) |
+| Verkehrszählstelle 7432970 | Eimsbüttel | 4 305 | 5 818 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564238,5936758]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.575747/9.970165) · [OSM](https://www.openstreetmap.org/?mlat=53.575747&mlon=9.970165#map=18/53.575747/9.970165) |
+| Verkehrszählstelle 7297940 | Altona | 4 016 | 598 | BASIS | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561881,5933891]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.550256/9.934011) · [OSM](https://www.openstreetmap.org/?mlat=53.550256&mlon=9.934011#map=18/53.550256/9.934011) |
+| Verkehrszählstelle 6304980 | Altona | 3 910 | 4 905 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562903,5934520]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.555792/9.949558) · [OSM](https://www.openstreetmap.org/?mlat=53.555792&mlon=9.949558#map=18/53.555792/9.949558) |
+| Verkehrszählstelle 0259920 | Hamburg-Mitte | 3 893 | 8 504 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564671,5935349]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.563027/9.976414) · [OSM](https://www.openstreetmap.org/?mlat=53.563027&mlon=9.976414#map=18/53.563027/9.976414) |
+| Verkehrszählstelle 6408960 | Hamburg-Mitte | 3 889 | 3 296 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565573,5934977]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.559573/9.989954) · [OSM](https://www.openstreetmap.org/?mlat=53.559573&mlon=9.989954#map=18/53.559573/9.989954) |
+| Verkehrszählstelle 6283960 | Eimsbüttel | 3 763 | 816 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565829,5934833]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.558246/9.993786) · [OSM](https://www.openstreetmap.org/?mlat=53.558246&mlon=9.993786#map=18/53.558246/9.993786) |
+| Verkehrszählstelle 7433910 | Eimsbüttel | 3 678 | 5 252 | RSV | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564317,5937483]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.582254/9.971509) · [OSM](https://www.openstreetmap.org/?mlat=53.582254&mlon=9.971509#map=18/53.582254/9.971509) |
+| Verkehrszählstelle 0307930 | Hamburg-Nord | 3 197 | 3 336 | HAUPT | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567445,5935569]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.564655/10.018337) · [OSM](https://www.openstreetmap.org/?mlat=53.564655&mlon=10.018337#map=18/53.564655/10.018337) |
 
 Von den 15 stärksten Zählstellen liegen 93,3 % am Soll RSV/HAUPT.
-Prüffälle (stark befahren, aber nicht im Soll RSV/HAUPT; Modellwert meist weit unter dem Zählwert, siehe Lesart in Prompt 15): Verkehrszählstelle 7297940 (BASIS, 4 016 gezählt, 599 modelliert).
+Prüffälle (stark befahren, aber nicht im Soll RSV/HAUPT; Modellwert meist weit unter dem Zählwert, siehe Lesart in Prompt 15): Verkehrszählstelle 7297940 (BASIS, 4 016 gezählt, 598 modelliert).
 
 ## 3. Sensitivität der Annahmen (±20%)
 
 Alle Zahlenwerte mit source_type assumption in cycling_rules.yaml und design_rules.yaml (177 Werte; source_type gilt auch für Einträge darunter), je einzeln um −20% und +20% (delta aus rules.yaml V-SENS-01). Neu gerechnet werden Führungsform (c05), Soll-Querschnitt (c06) und Knotentyp (c07) auf ihren gespeicherten Eingangswerten; Werte einer späteren Stufe rechnen nur ab dieser Stufe neu. Führung und Fahrstreifen als Anteil der Länge aller Straßenabschnitte, Knoten als Anteil der Knotenpunkte. Führung = Führungsform nach Prompt 19 (inklusive Fallback).
 
-- Variiert: 45 Werte, 90 Läufe; davon 31 mit einer Änderung.
+- Variiert: 45 Werte, 90 Läufe; davon 33 mit einer Änderung.
 - Nicht neu gerechnet (andere Stufen): 96 Werte – siehe unten.
 - Nicht variiert: 35 Zähl- oder Kennwerte (Seeds, Seitenzahl, Linientypen, Fahrstreifen-Vorgaben), 1 Werte gleich 0.
 - Ungültige Regelwerke nach Variation: 0.
@@ -107,39 +107,39 @@ Spalten je Richtung: Führung, Fahrstreifen und „Querschnitt passt?“ (fit_cl
 
 | Annahme | Wert | ab Stufe | −: Führung | −: Fahrstr. | −: passt? | −: Knoten | +: Führung | +: Fahrstr. | +: passt? | +: Knoten |
 | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `cross_section_allocation.elements_min_m.sidewalk.standard` (design) | 3,00 | c06 | 0,09 % | 0,13 % | 9,35 % | 0,00 % | 0,06 % | 0,13 % | 6,15 % | 0,00 % |
-| `cross_section_allocation.elements_min_m.sidewalk.min` (design) | 2,50 | c06 | 0,00 % | 0,00 % | 5,83 % | 0,00 % | 0,00 % | 0,00 % | 8,00 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.sidewalk.standard` (design) | 3,00 | c06 | 0,06 % | 0,44 % | 9,49 % | 0,00 % | 0,04 % | 0,45 % | 6,32 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.sidewalk.min` (design) | 2,50 | c06 | 0,01 % | 0,00 % | 5,83 % | 0,00 % | 0,13 % | 0,00 % | 8,00 % | 0,00 % |
 | `widths_m.project_target.cycle_street_carriageway.with_motor_traffic` (cycling) | 4,75 | c05 | 0,00 % | 0,00 % | 4,90 % | 0,00 % | 0,00 % | 0,00 % | 4,89 % | 0,00 % |
-| `junctions.method.[J-M-02].dtv_share_entering.value` (design) | 0,50 | c07 | 0,00 % | 0,00 % | 0,00 % | 1,02 % | 0,00 % | 0,00 % | 0,00 % | 0,89 % |
-| `cross_section_allocation.elements_min_m.loading_zone` (design) | 2,50 | c06 | 0,01 % | 0,00 % | 1,01 % | 0,00 % | 0,00 % | 0,00 % | 0,50 % | 0,00 % |
-| `cross_section_allocation.elements_min_m.parking_parallel` (design) | 2,00 | c06 | 0,00 % | 0,00 % | 0,72 % | 0,00 % | 0,00 % | 0,00 % | 0,58 % | 0,00 % |
-| `junctions.thresholds.roundabout_min_radius.value` (design) | 20,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,62 % | 0,00 % | 0,00 % | 0,00 % | 0,54 % |
-| `junctions.thresholds.turbo_max_dtv.value` (design) | 35 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,61 % | 0,00 % | 0,00 % | 0,00 % | 0,31 % |
+| `lanes.lane_width_m.GOW50.general` (design) | 3,25 | c06 | 0,00 % | 0,94 % | 1,05 % | 0,00 % | 0,00 % | 0,77 % | 0,88 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.loading_zone` (design) | 2,50 | c06 | 0,01 % | 0,06 % | 1,05 % | 0,00 % | 0,00 % | 0,04 % | 0,49 % | 0,00 % |
+| `junctions.method.[J-M-02].dtv_share_entering.value` (design) | 0,50 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,99 % | 0,00 % | 0,00 % | 0,00 % | 0,67 % |
+| `cross_section_allocation.elements_min_m.parking_parallel` (design) | 2,00 | c06 | 0,00 % | 0,00 % | 0,69 % | 0,00 % | 0,00 % | 0,00 % | 0,56 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.tree_strip` (design) | 2,00 | c06 | 0,00 % | 0,35 % | 0,63 % | 0,00 % | 0,00 % | 0,29 % | 0,61 % | 0,00 % |
+| `junctions.thresholds.roundabout_min_radius.value` (design) | 20,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,61 % | 0,00 % | 0,00 % | 0,00 % | 0,50 % |
 | `widths_m.project_target.cycle_street_carriageway.value` (cycling) | 4,00 | c05 | 0,00 % | 0,00 % | 0,57 % | 0,00 % | 0,00 % | 0,00 % | 0,30 % | 0,00 % |
-| `cross_section_allocation.elements_min_m.tree_strip` (design) | 2,00 | c06 | 0,00 % | 0,12 % | 0,49 % | 0,00 % | 0,00 % | 0,08 % | 0,49 % | 0,00 % |
-| `junctions.thresholds.roundabout_max_dtv.value` (design) | 25 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,41 % | 0,00 % | 0,00 % | 0,00 % | 0,48 % |
-| `lanes.lane_width_m.GOW50.general` (design) | 3,25 | c06 | 0,00 % | 0,29 % | 0,33 % | 0,00 % | 0,00 % | 0,19 % | 0,21 % | 0,00 % |
-| `junctions.thresholds.turbo_min_radius.value` (design) | 30,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,31 % | 0,00 % | 0,00 % | 0,00 % | 0,27 % |
-| `widths_m.project_target.separated_oneway.HAUPT` (cycling) | 2,50 | c05 | 0,07 % | 0,05 % | 0,26 % | 0,00 % | 0,04 % | 0,04 % | 0,30 % | 0,00 % |
-| `cross_section_allocation.elements_min_m.buffer_cycle_carriageway` (design) | 0,75 | c06 | 0,01 % | 0,04 % | 0,18 % | 0,00 % | 0,01 % | 0,05 % | 0,19 % | 0,00 % |
-| `widths_m.project_target.separated_oneway.ERSCHL` (cycling) | 2,00 | c05 | 0,00 % | 0,06 % | 0,10 % | 0,00 % | 0,00 % | 0,01 % | 0,15 % | 0,00 % |
-| `lanes.rules.[L-02].peak_h_dir_from_dtv.factor` (design) | 0,06 | c06 | 0,00 % | 0,08 % | 0,12 % | 0,00 % | 0,00 % | 0,02 % | 0,01 % | 0,00 % |
-| `lanes.rules.[L-02].lane_capacity_veh_h.value` (design) | 900,00 | c06 | 0,00 % | 0,02 % | 0,01 % | 0,00 % | 0,00 % | 0,08 % | 0,10 % | 0,00 % |
-| `lanes.rules.[L-02].target_vc.value` (design) | 0,85 | c06 | 0,00 % | 0,02 % | 0,01 % | 0,00 % | 0,00 % | 0,08 % | 0,10 % | 0,00 % |
-| `widths_m.project_target.separated_oneway.BASIS` (cycling) | 2,00 | c05 | 0,00 % | 0,01 % | 0,07 % | 0,00 % | 0,00 % | 0,00 % | 0,03 % | 0,00 % |
+| `junctions.thresholds.roundabout_max_dtv.value` (design) | 25 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,38 % | 0,00 % | 0,00 % | 0,00 % | 0,45 % |
+| `widths_m.project_target.separated_oneway.HAUPT` (cycling) | 2,50 | c05 | 0,05 % | 0,14 % | 0,32 % | 0,00 % | 0,03 % | 0,21 % | 0,41 % | 0,00 % |
+| `lanes.rules.[L-02].peak_h_dir_from_dtv.factor` (design) | 0,06 | c06 | 0,00 % | 0,29 % | 0,34 % | 0,00 % | 0,00 % | 0,05 % | 0,06 % | 0,00 % |
+| `junctions.thresholds.turbo_max_dtv.value` (design) | 35 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,31 % | 0,00 % | 0,00 % | 0,00 % | 0,10 % |
+| `junctions.thresholds.turbo_min_radius.value` (design) | 30,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,31 % | 0,00 % | 0,00 % | 0,00 % | 0,24 % |
+| `lanes.rules.[L-02].lane_capacity_veh_h.value` (design) | 900,00 | c06 | 0,00 % | 0,05 % | 0,06 % | 0,00 % | 0,00 % | 0,27 % | 0,26 % | 0,00 % |
+| `lanes.rules.[L-02].target_vc.value` (design) | 0,85 | c06 | 0,00 % | 0,05 % | 0,06 % | 0,00 % | 0,00 % | 0,27 % | 0,26 % | 0,00 % |
+| `lanes.rules.[L-04].bus_lane_trigger.value` (design) | 20,00 | c06 | 0,00 % | 0,26 % | 0,07 % | 0,00 % | 0,00 % | 0,16 % | 0,03 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.buffer_cycle_carriageway` (design) | 0,75 | c06 | 0,01 % | 0,12 % | 0,25 % | 0,00 % | 0,06 % | 0,10 % | 0,21 % | 0,00 % |
+| `junctions.thresholds.crossing_signal_min_dtv.value` (design) | 12 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,06 % | 0,00 % | 0,00 % | 0,00 % | 0,22 % |
+| `widths_m.project_target.separated_oneway.ERSCHL` (cycling) | 2,00 | c05 | 0,00 % | 0,15 % | 0,18 % | 0,00 % | 0,00 % | 0,06 % | 0,15 % | 0,00 % |
+| `lanes.lane_width_m.median_min_m.value` (design) | 2,00 | c06 | 0,00 % | 0,12 % | 0,12 % | 0,00 % | 0,00 % | 0,13 % | 0,13 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.bus_lane` (design) | 3,50 | c06 | 0,00 % | 0,00 % | 0,11 % | 0,00 % | 0,00 % | 0,00 % | 0,11 % | 0,00 % |
+| `widths_m.project_target.separated_oneway.BASIS` (cycling) | 2,00 | c05 | 0,00 % | 0,06 % | 0,11 % | 0,00 % | 0,00 % | 0,02 % | 0,05 % | 0,00 % |
 | `widths_m.project_target.cycle_lane.BASIS` (cycling) | 2,25 | c05 | 0,00 % | 0,00 % | 0,05 % | 0,00 % | 0,00 % | 0,00 % | 0,00 % | 0,00 % |
-| `lanes.rules.[L-04].bus_lane_trigger.value` (design) | 20,00 | c06 | 0,00 % | 0,05 % | 0,01 % | 0,00 % | 0,00 % | 0,01 % | 0,01 % | 0,00 % |
-| `lanes.lane_width_m.median_min_m.value` (design) | 2,00 | c06 | 0,00 % | 0,04 % | 0,04 % | 0,00 % | 0,00 % | 0,05 % | 0,05 % | 0,00 % |
-| `widths_m.project_target.intensity_upgrade.[1].add_m` (cycling) | 0,50 | c05 | 0,00 % | 0,00 % | 0,02 % | 0,00 % | 0,00 % | 0,00 % | 0,04 % | 0,00 % |
-| `widths_m.project_target.separated_oneway.RSV` (cycling) | 3,00 | c05 | 0,00 % | 0,00 % | 0,04 % | 0,00 % | 0,00 % | 0,00 % | 0,03 % | 0,00 % |
 
-Ohne Wirkung bei ±20% (14): `separation_matrix.rules.[S-04].motor_peak_hour_share.value`, `separation_matrix.mixed_rural_max_dtv.value`, `cycle_street.max_motor_vehicles_day.value`, `facility_assignment.rules.[C-FAC-02].dtv_proxy.proxy_betweenness.value`, `widths_m.project_target.separated_twoway.RSV`, `widths_m.project_target.separated_twoway.HAUPT`, `widths_m.project_target.separated_twoway.BASIS`, `widths_m.project_target.separated_twoway.ERSCHL`, `widths_m.project_target.separated_twoway.none`, `widths_m.project_target.cycle_lane.HAUPT`, `widths_m.project_target.cycle_lane.none`, `widths_m.project_target.intensity_upgrade.[0].add_m`, `cross_section_allocation.elements_min_m.tram.value`, `junctions.thresholds.grade_sep_min_dtv.value`
+Ohne Wirkung bei ±20% (12): `separation_matrix.rules.[S-04].motor_peak_hour_share.value`, `separation_matrix.mixed_rural_max_dtv.value`, `cycle_street.max_motor_vehicles_day.value`, `facility_assignment.rules.[C-FAC-02].dtv_proxy.proxy_betweenness.value`, `widths_m.project_target.separated_twoway.RSV`, `widths_m.project_target.separated_twoway.HAUPT`, `widths_m.project_target.separated_twoway.BASIS`, `widths_m.project_target.separated_twoway.ERSCHL`, `widths_m.project_target.separated_twoway.none`, `widths_m.project_target.cycle_lane.HAUPT`, `widths_m.project_target.cycle_lane.none`, `cross_section_allocation.elements_min_m.tram.value`
 
 ### Robustheit je Abschnitt und Knoten
 
-- Abschnitte, deren Führungsform sich in mindestens einem der 90 Läufe ändert: 70 von 36 526 (0,2 %).
-- Abschnitte mit geänderter Fahrstreifenzahl in mindestens einem Lauf: 279 (0,8 %).
-- Knotenpunkte mit geändertem Soll-Typ in mindestens einem Lauf: 405 von 14 312 (2,8 %).
+- Abschnitte, deren Führungsform sich in mindestens einem der 90 Läufe ändert: 91 von 36 526 (0,2 %).
+- Abschnitte mit geänderter Fahrstreifenzahl in mindestens einem Lauf: 1 240 (3,4 %).
+- Knotenpunkte mit geändertem Soll-Typ in mindestens einem Lauf: 378 von 14 312 (2,6 %).
 - Die Steckbriefe der Webseite nennen je Abschnitt und Knoten die Zahl der Läufe mit Änderung und bis zu 3 auslösende Annahmen.
 
 ### Nicht neu gerechnet
@@ -165,7 +165,7 @@ Diese Annahmen wirken über Nachfragemodell, Netzentwurf, Prinzipien oder die Kn
 | --- | --- | --- | --- |
 | Prompt 18 – Führungsform | reports/cycle_facility.md | 30 je Soll-Führung | Durchsicht ausstehend (keine Ergebnisspalten) |
 | Prompt 19 – Soll-Querschnitt | reports/cross_section_soll.md | 70 Skizzen (30 Zufall, 20 breiteste, 20 schmalste) | Durchsicht ausstehend (keine Ergebnisspalten) |
-| Prompt 20 – Knotenpunkte | reports/junctions.md | 30 Zufall, Prüfliste je Soll-Typ | 0 von 300 bewertet – Durchsicht ausstehend |
+| Prompt 20 – Knotenpunkte | reports/junctions.md | 30 Zufall, Prüfliste je Soll-Typ | 0 von 286 bewertet – Durchsicht ausstehend |
 | Prompt 17 – Routen (Prinzipien) | reports/cycle_principles_review.csv | 20 Routen | 0 von 20 bewertet |
 
 Ohne ausgefüllte Prüflisten lässt sich die Trefferquote der Regeln nicht angeben. Die Durchsicht durch Ortskundige ist der wichtigste nächste Schritt (docs/open_questions.md).
@@ -186,12 +186,12 @@ Zum Prüfen gegen Luftbild und Panoramax; dieselben Abschnitte mit Spalten für 
 | `seg_b937903465cf5b00` | Eimsbüttel | Sandkrugweg | ERSCHL | Rad auf der Fahrbahn | Rad auf der Fahrbahn | Misch/1 | passt mit Abstrichen | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559130,5942337]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.626482/9.894085) · [OSM](https://www.openstreetmap.org/?mlat=53.626482&mlon=9.894085#map=18/53.626482/9.894085) |
 | `seg_cb3513dab9af667f` | Eimsbüttel | Rahweg | HAUPT | Fahrradstraße | Rad auf der Fahrbahn | Misch/1 | passt mit Abstrichen | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564572,5943818]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.639154/9.976671) · [OSM](https://www.openstreetmap.org/?mlat=53.639154&mlon=9.976671#map=18/53.639154/9.976671) |
 | `seg_f49ea34515d25699` | Eimsbüttel | Edmund-Siemers-Allee | ERSCHL | eigener Radweg auf beiden Seiten | Rad auf der Fahrbahn | 1/4 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565371,5935345]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.562902/9.986974) · [OSM](https://www.openstreetmap.org/?mlat=53.562902&mlon=9.986974#map=18/53.562902/9.986974) |
-| `seg_0a2e095e1a9902bb` | Hamburg-Mitte | Eiffestraße | HAUPT | eigener Radweg auf beiden Seiten | Radweg für beide Richtungen | 1/2 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569220,5934247]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.552545/10.044845) · [OSM](https://www.openstreetmap.org/?mlat=53.552545&mlon=10.044845#map=18/53.552545/10.044845) |
+| `seg_0a2e095e1a9902bb` | Hamburg-Mitte | Eiffestraße | HAUPT | eigener Radweg auf beiden Seiten | Radweg für beide Richtungen | 1/2 | passt mit Abstrichen | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569220,5934247]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.552545/10.044845) · [OSM](https://www.openstreetmap.org/?mlat=53.552545&mlon=10.044845#map=18/53.552545/10.044845) |
 | `seg_1ad2cf5ed8af6a4a` | Hamburg-Mitte | Billbrookdeich | ERSCHL | Rad auf der Fahrbahn | Rad auf der Fahrbahn | Misch/1 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[571565,5932625]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.537650/10.079862) · [OSM](https://www.openstreetmap.org/?mlat=53.537650&mlon=10.079862#map=18/53.537650/10.079862) |
 | `seg_877d9282eba06763` | Hamburg-Mitte | Reiherstiegdeich | ERSCHL | Rad auf der Fahrbahn | Rad auf der Fahrbahn | Misch/– | passt nicht in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564675,5930089]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.515753/9.975383) · [OSM](https://www.openstreetmap.org/?mlat=53.515753&mlon=9.975383#map=18/53.515753/9.975383) |
 | `seg_b1303be8355a0682` | Hamburg-Mitte | Hohe-Schaar-Straße | ERSCHL | eigener Radweg auf beiden Seiten | eigener Radweg auf beiden Seiten | 1/2 | passt nicht in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565049,5926206]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.480810/9.980215) · [OSM](https://www.openstreetmap.org/?mlat=53.480810&mlon=9.980215#map=18/53.480810/9.980215) |
 | `seg_bf5e1cd5f07e6d24` | Hamburg-Mitte | Kirchdorfer Straße | BASIS | Rad auf der Fahrbahn | Rad auf der Fahrbahn | Misch/1 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567574,5927347]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.490744/10.018503) · [OSM](https://www.openstreetmap.org/?mlat=53.490744&mlon=10.018503#map=18/53.490744/10.018503) |
-| `seg_0c3028de9006fbc4` | Hamburg-Nord | Brombeerweg | ERSCHL | eigener Radweg auf beiden Seiten | eigener Radweg auf beiden Seiten | 1/2 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567901,5942596]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.627747/10.026756) · [OSM](https://www.openstreetmap.org/?mlat=53.627747&mlon=10.026756#map=18/53.627747/10.026756) |
+| `seg_0c3028de9006fbc4` | Hamburg-Nord | Brombeerweg | ERSCHL | eigener Radweg auf beiden Seiten | eigener Radweg auf beiden Seiten | 2/2 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567901,5942596]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.627747/10.026756) · [OSM](https://www.openstreetmap.org/?mlat=53.627747&mlon=10.026756#map=18/53.627747/10.026756) |
 | `seg_26d260caf83e1fa1` | Hamburg-Nord | Bi de Börner / Hogenlietgrund | BASIS | Rad auf der Fahrbahn | Rad auf der Fahrbahn | Misch/1 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567588,5947099]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.668259/10.023003) · [OSM](https://www.openstreetmap.org/?mlat=53.668259&mlon=10.023003#map=18/53.668259/10.023003) |
 | `seg_5c11219c3ba2d5e0` | Hamburg-Nord | Krohnskamp | HAUPT | Fahrradstraße | eigener Radweg auf beiden Seiten | Misch/1 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566990,5938322]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.589458/10.012057) · [OSM](https://www.openstreetmap.org/?mlat=53.589458&mlon=10.012057#map=18/53.589458/10.012057) |
 | `seg_61d64d6ca2cb1e1e` | Hamburg-Nord | Borsteler Chaussee | HAUPT | Fahrradstraße | eigener Radweg auf beiden Seiten | Misch/1 | passt in die Straße | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564392,5940950]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) · [Panoramax](https://api.panoramax.xyz/#focus=map&map=18/53.613395/9.973365) · [OSM](https://www.openstreetmap.org/?mlat=53.613395&mlon=9.973365#map=18/53.613395/9.973365) |

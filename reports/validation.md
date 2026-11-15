@@ -1,17 +1,17 @@
 # Validierung und Sensitivität
 
-Erzeugt: 2026-11-15T20:20:03+00:00 von `pipeline/validate.py`, rules.yaml 0.23.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
+Erzeugt: 2026-11-15T21:47:19+00:00 von `pipeline/validate.py`, rules.yaml 0.24.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
 
 ## Kurzfassung
 
-- HVS-Abgleich: 96,7 % der HVS-km sind GOW50 oder GOW30; 22,9 km HVS außerhalb, 20,0 km Bezirksstraßen mit GOW50.
+- HVS-Abgleich: 96,7 % der HVS-km sind GOW50 oder GOW30; 22,6 km HVS außerhalb, 33,8 km Bezirksstraßen mit GOW50.
 - Ist-Tempo: 72,1 % der Soll-ETW30-km (mit bekanntem Tempo) haben heute höchstens 30 km/h; 1939 Ausreißer sind mögliche Datenfehler.
-- Sensitivität: 2 222 Abschnitte (246,6 km, 5,6 % der Länge) sind „unsicher“; die Top 30 der Priorität bleiben im Mittel zu 91,5 % gleich.
+- Sensitivität: 2 256 Abschnitte (247,4 km, 5,6 % der Länge) sind „unsicher“; die Top 30 der Priorität bleiben im Mittel zu 96,0 % gleich.
 - Datenqualität: Conflation-Treffer 89,1 % der km, OSM-Gestaltungsmerkmale im Mittel 56,2 % bekannt, ohne Ist-Tempo 7,4 %.
 - Invarianten: 7 erfüllt, 2 verletzt (V-INV-05, V-INV-09; Abschnitt „Invarianten“).
 - Manuelle Stichproben, Rückmelderunde und externe Prüfung sind offen.
 
-Vergleich mit dem vorigen Lauf (2026-11-15T01:57:27+00:00, rules.yaml 0.22.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 213 → 2 222 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
+Vergleich mit dem vorigen Lauf (2026-11-15T21:30:39+00:00, rules.yaml 0.24.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 285 → 2 256 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
 
 ## Prüfungen dieses Laufs
 
@@ -42,15 +42,15 @@ Querbeziehungen zwischen rules.yaml, cycling_rules.yaml und design_rules.yaml, g
 
 | ID | Invariante | Befund | erwartet | Ergebnis | Detail | Eingang (Stand) |
 | --- | --- | --- | --- | --- | --- | --- |
-| V-INV-01 | Jede cat_final hat eine aktive Zeile in cycling_rules separation_matrix und eine Profilregel (design_rules PRF-03 parking_by_category) oder steht in design_rules PRF-04 no_profile_categories (SW, GOW80, ETW60) | F28 | gilt | ok | alle 5 Kategorien in cat_final abgedeckt | final.parquet (15.11. 21:13) |
-| V-INV-02 | Kein Knotenpunkt ohne Soll-Typ (kein Flag no_rule); Autobahnknoten tragen not_applicable (J-10d) | F10 | gilt | ok | 14312 Knoten, alle mit Soll-Typ | junctions.parquet (15.11. 03:03) |
-| V-INV-03 | Soll-Profil enthält kein Element, das requirements[cat] verbietet: kein Parken und kein Radfahrstreifen an GOW50, kein zweiter Fahrstreifen und kein Mittelstreifen an GOW30 (maßgeblich die D5-Kategorie, wo vorhanden) | F11 | gilt | ok | kein verbotenes Element in GOW50- und GOW30-Profilen | cross_section_soll.parquet (15.11. 02:57) |
-| V-INV-04 | Keine Soll-Führung cycle_lane an GOW30 mit DTV über profiles.wide.max_dtv (c05 und nach der Abbaukaskade c06) | F01 | gilt | ok | kein Radfahrstreifen an GOW30 über 10.000 Kfz/24 h | cycle_facility.parquet (15.11. 02:57), cross_section_soll.parquet (15.11. 02:57), final.parquet (15.11. 21:13) |
-| V-INV-05 | fits in S-XS-06 ⇒ c06 fits oder fits_after_degrade mit Abbaustufen höchstens bis D4 | F05 | verletzt | **verletzt** | 1075 Abschnitte (135,1 km): ETW30 768, GOW30 291, GOW50 16 | cross_section_soll.parquet (15.11. 02:57), final.parquet (15.11. 21:13) |
+| V-INV-01 | Jede cat_final hat eine aktive Zeile in cycling_rules separation_matrix und eine Profilregel (design_rules PRF-03 parking_by_category) oder steht in design_rules PRF-04 no_profile_categories (SW, GOW80, ETW60) | F28 | gilt | ok | alle 5 Kategorien in cat_final abgedeckt | final.parquet (15.11. 22:39) |
+| V-INV-02 | Kein Knotenpunkt ohne Soll-Typ (kein Flag no_rule); Autobahnknoten tragen not_applicable (J-10d) | F10 | gilt | ok | 14312 Knoten, alle mit Soll-Typ | junctions.parquet (15.11. 22:31) |
+| V-INV-03 | Soll-Profil enthält kein Element, das requirements[cat] verbietet: kein Parken und kein Radfahrstreifen an GOW50, kein zweiter Fahrstreifen und kein Mittelstreifen an GOW30 (maßgeblich die D5-Kategorie, wo vorhanden) | F11 | gilt | ok | kein verbotenes Element in GOW50- und GOW30-Profilen | cross_section_soll.parquet (15.11. 22:30) |
+| V-INV-04 | Keine Soll-Führung cycle_lane an GOW30 mit DTV über profiles.wide.max_dtv (c05 und nach der Abbaukaskade c06) | F01 | gilt | ok | kein Radfahrstreifen an GOW30 über 10.000 Kfz/24 h | cycle_facility.parquet (15.11. 22:30), cross_section_soll.parquet (15.11. 22:30), final.parquet (15.11. 22:39) |
+| V-INV-05 | fits in S-XS-06 ⇒ c06 fits oder fits_after_degrade mit Abbaustufen höchstens bis D4 | F05 | verletzt | **verletzt** | 1176 Abschnitte (145,8 km): ETW30 768, GOW30 251, GOW50 157 | cross_section_soll.parquet (15.11. 22:30), final.parquet (15.11. 22:39) |
 | V-INV-06 | value = berechnete formula für alle required_width.* mit formula | F05 | gilt | ok | required_width: value = formula | Regeldateien |
-| V-INV-07 | Rad-Vorrang (cyclist_treatment JC-01) nur an einstreifigen Kreisverkehren; Turbokreisel tragen JC-06 | F02 | gilt | ok | JC-01 an 216 einstreifigen Kreiseln, 57 Turbokreisel mit JC-06 | junctions.parquet (15.11. 03:03) |
-| V-INV-08 | Ist-Führung in s08 (Diskrepanz), c04 (Prinzipien) und c05 (Führungsform) identisch mit S-FEAT-13 (c03b) | F26 | gilt | ok | identisch in c05 (36526), s08 (36526) und c04 (23954 Kanten) | ist_facility.parquet (15.11. 21:17), cycle_facility.parquet (15.11. 02:57), discrepancy.parquet (15.11. 21:17), cycle_principles.parquet (15.11. 02:57), cycle_network.parquet (15.11. 21:17) |
-| V-INV-09 | Kein HVS-Abschnitt hat cat_final ETW30 oder ETW_ERF ohne approved Override (overrides/overrides.csv) | F29 | verletzt | **verletzt** | 20 Abschnitte (0,8 km): ETW30 20; davon aus der Kaskade 0, aus der Harmonisierung 20 | final.parquet (15.11. 21:13) |
+| V-INV-07 | Rad-Vorrang (cyclist_treatment JC-01) nur an einstreifigen Kreisverkehren; Turbokreisel tragen JC-06 | F02 | gilt | ok | JC-01 an 176 einstreifigen Kreiseln, 55 Turbokreisel mit JC-06 | junctions.parquet (15.11. 22:31) |
+| V-INV-08 | Ist-Führung in s08 (Diskrepanz), c04 (Prinzipien) und c05 (Führungsform) identisch mit S-FEAT-13 (c03b) | F26 | gilt | ok | identisch in c05 (36526), s08 (36526) und c04 (23943 Kanten) | ist_facility.parquet (15.11. 22:43), cycle_facility.parquet (15.11. 22:30), discrepancy.parquet (15.11. 22:43), cycle_principles.parquet (15.11. 22:47), cycle_network.parquet (15.11. 22:43) |
+| V-INV-09 | Kein HVS-Abschnitt hat cat_final ETW30 oder ETW_ERF ohne approved Override (overrides/overrides.csv) | F29 | verletzt | **verletzt** | 14 Abschnitte (0,5 km): ETW30 14; davon aus der Kaskade 0, aus der Harmonisierung 14 | final.parquet (15.11. 22:39) |
 
 Ergebnis: 7 erfüllt, 2 verletzt, 0 nicht geprüft; alle wie erwartet.
 
@@ -65,9 +65,9 @@ Kreuztabelle Soll-Kategorie (`cat_final`) × Hauptverkehrsstraße (`in_hvs`, DTV
 | Soll | HVS km | keine HVS km | unbekannt km | Summe km | Anteil an HVS-km |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | SW | 21,8 | 167,4 | 0,0 | 189,2 | 3,2 % |
-| GOW50 | 180,3 | 20,0 | 0,0 | 200,3 | 26,1 % |
-| GOW30 | 487,6 | 68,0 | 0,0 | 555,6 | 70,6 % |
-| ETW30 | 0,8 | 3323,4 | 0,0 | 3324,3 | 0,1 % |
+| GOW50 | 573,5 | 33,8 | 0,0 | 607,3 | 83,0 % |
+| GOW30 | 94,7 | 54,2 | 0,0 | 148,9 | 13,7 % |
+| ETW30 | 0,5 | 3323,4 | 0,0 | 3323,9 | 0,1 % |
 | ETW_ERF | 0,3 | 117,6 | 0,0 | 118,0 | 0,0 % |
 | **Summe** | 690,8 | 3696,5 | 0,0 | 4387,3 | |
 
@@ -76,9 +76,9 @@ Kreuztabelle Soll-Kategorie (`cat_final`) × Hauptverkehrsstraße (`in_hvs`, DTV
 | Soll | HVS km | keine HVS km | unbekannt km | Summe km | Anteil an HVS-km |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | SW | 21,8 | 163,9 | 0,0 | 185,7 | 3,2 % |
-| GOW50 | 179,4 | 20,0 | 0,0 | 199,5 | 26,0 % |
-| GOW30 | 487,6 | 67,8 | 0,0 | 555,4 | 70,7 % |
-| ETW30 | 0,8 | 3181,3 | 0,0 | 3182,1 | 0,1 % |
+| GOW50 | 572,7 | 33,6 | 0,0 | 606,3 | 83,0 % |
+| GOW30 | 94,7 | 54,2 | 0,0 | 148,9 | 13,7 % |
+| ETW30 | 0,5 | 3181,3 | 0,0 | 3181,8 | 0,1 % |
 | ETW_ERF | 0,3 | 117,4 | 0,0 | 117,7 | 0,0 % |
 | **Summe** | 690,0 | 3550,4 | 0,0 | 4240,4 | |
 
@@ -86,18 +86,18 @@ Kreuztabelle Soll-Kategorie (`cat_final`) × Hauptverkehrsstraße (`in_hvs`, DTV
 
 | Bezirk | km | HVS km | davon GOW50/GOW30 | HVS außerhalb GOW50/GOW30 km | Bezirksstraßen mit GOW50 km |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Altona | 620,5 | 84,8 | 96,4 % | 3,0 | 1,4 |
-| Bergedorf | 209,3 | 24,9 | 100,0 % | 0,0 | 1,0 |
-| Eimsbüttel | 470,4 | 78,6 | 99,5 % | 0,4 | 0,9 |
-| Hamburg-Mitte | 881,3 | 180,8 | 94,2 % | 10,6 | 3,9 |
-| Hamburg-Nord | 563,3 | 113,6 | 92,2 % | 8,9 | 4,4 |
-| Harburg | 465,2 | 72,0 | 100,0 % | 0,0 | 3,1 |
-| Wandsbek | 1030,4 | 135,3 | 100,0 % | 0,0 | 5,3 |
-| ohne Bezirk | 146,9 | 0,8 | 100,0 % | 0,0 | 0,0 |
+| Altona | 620,5 | 84,8 | 96,4 % | 3,0 | 2,6 |
+| Bergedorf | 209,3 | 24,9 | 100,0 % | 0,0 | 1,9 |
+| Eimsbüttel | 470,4 | 78,6 | 99,5 % | 0,4 | 2,5 |
+| Hamburg-Mitte | 881,3 | 180,8 | 94,3 % | 10,2 | 7,4 |
+| Hamburg-Nord | 563,3 | 113,6 | 92,2 % | 8,9 | 6,8 |
+| Harburg | 465,2 | 72,0 | 100,0 % | 0,0 | 4,1 |
+| Wandsbek | 1030,4 | 135,3 | 100,0 % | 0,0 | 8,1 |
+| ohne Bezirk | 146,9 | 0,8 | 100,0 % | 0,0 | 0,2 |
 
-### Abweichung A: HVS-Abschnitte außerhalb GOW50/GOW30 (64 Abschnitte, 22,9 km)
+### Abweichung A: HVS-Abschnitte außerhalb GOW50/GOW30 (58 Abschnitte, 22,6 km)
 
-Nach Kategorie: ETW30 20 (0,8 km), ETW_ERF 5 (0,3 km), SW 39 (21,8 km). SW auf HVS (Autobahnzubringer) ist fachlich folgerichtig; ETW30 und ETW_ERF auf HVS einzeln begründen.
+Nach Kategorie: ETW30 14 (0,5 km), ETW_ERF 5 (0,3 km), SW 39 (21,8 km). SW auf HVS (Autobahnzubringer) ist fachlich folgerichtig; ETW30 und ETW_ERF auf HVS einzeln begründen.
 
 | Bezirk | Straße | Soll | highway | Abschnitte | km | Beispiel |
 | --- | --- | --- | --- | ---: | ---: | --- |
@@ -106,15 +106,12 @@ Nach Kategorie: ETW30 20 (0,8 km), ETW_ERF 5 (0,3 km), SW 39 (21,8 km). SW auf H
 | Altona | Sülldorfer Landstraße | SW | trunk | 3 | 3,0 | `seg_e3e025e0d1630ebd` |
 | Eimsbüttel | – | SW | motorway_link | 2 | 0,3 | `seg_1c29f75d06449ca9` |
 | Hamburg-Nord | Sengelmannstraße | ETW30, ETW_ERF | living_street, trunk_link | 2 | 0,3 | `seg_59a776f5fc709026` |
-| Hamburg-Mitte | Dammtorstraße | ETW30 | tertiary | 4 | 0,2 | `seg_fcdd43dd34c6081d` |
 | Hamburg-Mitte | Holstenglacis | ETW30 | secondary | 3 | 0,2 | `seg_09b1a22a9b477859` |
-| Hamburg-Mitte | Kajen | ETW30 | secondary | 1 | 0,2 | `seg_1b9d4b4a0d248f2e` |
 | Hamburg-Mitte | – | ETW_ERF | pedestrian | 4 | 0,1 | `seg_d3f1c9d7bc9154ef` |
 | Hamburg-Mitte | Ellerholzbrücke | ETW30 | primary | 1 | 0,1 | `seg_6b81b7e2c4e1ff78` |
 | Altona | – | SW | motorway_link | 2 | 0,1 | `seg_05a7bf220b7ad3fa` |
 | Hamburg-Mitte | Neuer Jungfernstieg | ETW30 | secondary | 1 | 0,0 | `seg_550709d20236307d` |
 | Hamburg-Mitte | Finkenwerder Straße | SW | motorway_link | 1 | 0,0 | `seg_617f00ba8958e0a8` |
-| Hamburg-Nord | Weidestraße | ETW30 | tertiary | 1 | 0,0 | `seg_98b65280fba76bd9` |
 | Eimsbüttel | Neuer Jungfernstieg | ETW30 | primary | 1 | 0,0 | `seg_e08001af1dc9d2aa` |
 | Hamburg-Mitte | Helgoländer Allee | ETW30 | tertiary | 1 | 0,0 | `seg_f74640427f0cf489` |
 | Eimsbüttel | Alsterufer | ETW30 | residential | 1 | 0,0 | `seg_9d3ad8f1fea2fa54` |
@@ -124,71 +121,71 @@ Nach Kategorie: ETW30 20 (0,8 km), ETW_ERF 5 (0,3 km), SW 39 (21,8 km). SW auf H
 | Wandsbek | – | ETW30 | secondary | 1 | 0,0 | `seg_580035287bda8139` |
 | Hamburg-Nord | Erdkampsweg | ETW30 | secondary | 1 | 0,0 | `seg_1f401d9c265869b4` |
 
-### Abweichung B: Bezirksstraßen mit GOW50 (241 Abschnitte, 20,0 km)
+### Abweichung B: Bezirksstraßen mit GOW50 (566 Abschnitte, 33,8 km)
 
 Bezirksstraße = keine HVS und keine Autobahn. Grund ist immer C-GOW-01 über conn_score ohne GOW30-Auslöser. Kurze Stücke von Hauptstraßen deuten auf Lücken im HVS-Abgleich (nur match exact) hin.
 
 | Bezirk | Straße | Soll | highway | Abschnitte | km | Beispiel |
 | --- | --- | --- | --- | ---: | ---: | --- |
-| Harburg | Neuwiedenthaler Straße | GOW50 | tertiary | 13 | 1,4 | `seg_f9872823b050f4d2` |
+| Harburg | Neuwiedenthaler Straße | GOW50 | tertiary | 19 | 2,0 | `seg_f9872823b050f4d2` |
+| Hamburg-Mitte | Ausschläger Allee | GOW50 | tertiary | 8 | 1,7 | `seg_506addaae3afa613` |
+| Harburg | Marmstorfer Weg | GOW50 | tertiary | 12 | 1,5 | `seg_b4f4e5392c4391a3` |
 | Wandsbek | Schöneberger Straße | GOW50 | tertiary | 9 | 1,2 | `seg_f35532523b52e549` |
+| Bergedorf | Lohbrügger Landstraße | GOW50 | tertiary | 14 | 1,2 | `seg_20a6aa6901fd5731` |
 | Hamburg-Nord | Tangstedter Landstraße | GOW50 | tertiary | 10 | 1,2 | `seg_17bf7c91c9f7b828` |
-| Harburg | Marmstorfer Weg | GOW50 | tertiary | 10 | 1,2 | `seg_b4f4e5392c4391a3` |
+| Wandsbek | Berner Heerweg | GOW50 | secondary, tertiary | 11 | 1,0 | `seg_32d6f3f036687f9c` |
 | Hamburg-Mitte | Billhorner Brückenstraße | GOW50 | primary, trunk | 14 | 0,9 | `seg_2ec04644e430a922` |
-| Wandsbek | Berner Heerweg | GOW50 | tertiary | 7 | 0,9 | `seg_32d6f3f036687f9c` |
 | Altona | Kalckreuthweg | GOW50 | tertiary | 13 | 0,8 | `seg_af7a483012055d6d` |
+| Hamburg-Nord | Maienweg | GOW50 | secondary, tertiary | 10 | 0,8 | `seg_26347d3198391e2e` |
 | Wandsbek | Steilshooper Straße | GOW50 | tertiary | 8 | 0,8 | `seg_a6c165c7f0102e41` |
+| Wandsbek | Pezolddamm | GOW50 | tertiary | 7 | 0,7 | `seg_ea271dd24b6e4d18` |
 | Hamburg-Nord | Weg beim Jäger | GOW50 | tertiary | 1 | 0,7 | `seg_6f7aae04e2c2a022` |
+| Hamburg-Nord | Alsterdorfer Straße | GOW50 | tertiary | 3 | 0,6 | `seg_ce38c05e3f7cbf15` |
 | Wandsbek | Kielkoppelstraße | GOW50 | tertiary | 4 | 0,5 | `seg_b9d41859f5c59f15` |
-| Bergedorf | Lohbrügger Landstraße | GOW50 | tertiary | 8 | 0,5 | `seg_5284c21b1e8ef63e` |
+| Eimsbüttel | Edmund-Siemers-Allee | GOW50 | service | 3 | 0,5 | `seg_f49ea34515d25699` |
 | Hamburg-Mitte | – | GOW50 | secondary_link, trunk_link | 4 | 0,5 | `seg_a4b4f2ff7b7f96ac` |
-| Hamburg-Nord | Maienweg | GOW50 | tertiary | 6 | 0,5 | `seg_26347d3198391e2e` |
+| Wandsbek | Eilbeker Weg | GOW50 | tertiary | 3 | 0,5 | `seg_a78ed16ed0928032` |
 | Wandsbek | Ruscheweyhstraße | GOW50 | tertiary | 5 | 0,4 | `seg_e81dcbeb290831e2` |
-| Hamburg-Nord | Bebelallee | GOW50 | secondary, tertiary | 5 | 0,4 | `seg_06c7890a327eb8d1` |
+| Eimsbüttel | Quickbornstraße | GOW50 | tertiary | 2 | 0,4 | `seg_61f70b135937ae03` |
+| Wandsbek | Berner Allee | GOW50 | tertiary | 4 | 0,4 | `seg_09e17e6170276c08` |
+| Hamburg-Nord | Bebelallee | GOW50 | secondary, tertiary | 6 | 0,4 | `seg_06c7890a327eb8d1` |
 | Eimsbüttel | Lohkampstraße | GOW50 | tertiary | 3 | 0,4 | `seg_c9207f71e6f192ad` |
-| Eimsbüttel | Edmund-Siemers-Allee | GOW50 | service | 1 | 0,4 | `seg_f49ea34515d25699` |
 | Bergedorf | Nettelnburger Landweg | GOW50 | secondary | 3 | 0,4 | `seg_d8f79ba8e4ed243b` |
 | Hamburg-Mitte | Adenauerallee | GOW50 | secondary | 5 | 0,4 | `seg_62be92eb95e5519c` |
 | Hamburg-Mitte | Möllner Landstraße | GOW50 | tertiary | 3 | 0,3 | `seg_9f1d40ee552964ef` |
 | Hamburg-Nord | Ohlsdorfer Straße | GOW50 | tertiary | 8 | 0,3 | `seg_57b3b7704c8ebb70` |
 | Wandsbek | Meiendorfer Mühlenweg | GOW50 | tertiary | 1 | 0,3 | `seg_9ab5e01a03cc7f47` |
 | Hamburg-Nord | Meenkwiese | GOW50 | tertiary | 1 | 0,3 | `seg_4debe96f25eb0357` |
-| Hamburg-Mitte | Ausschläger Allee | GOW50 | tertiary | 1 | 0,3 | `seg_1f7981beee3fc490` |
+| Wandsbek | Pezolddamm / Berner Allee | GOW50 | tertiary | 1 | 0,3 | `seg_f98cc9459a231ea9` |
 | Wandsbek | Charlottenburger Straße | GOW50 | tertiary | 3 | 0,3 | `seg_3534a0281c4818f0` |
+| Wandsbek | Poppenbütteler Weg | GOW50 | primary | 8 | 0,3 | `seg_ea00316ade44a1e1` |
+| Hamburg-Nord | Steilshooper Straße | GOW50 | tertiary | 4 | 0,3 | `seg_9e2ad32434fcd6ed` |
 | Hamburg-Mitte | Veddeler Brückenstraße / Hovestieg | GOW50 | tertiary | 1 | 0,3 | `seg_2024efa5cd8010a0` |
+| Bergedorf | Oberer Landweg | GOW50 | secondary | 2 | 0,3 | `seg_1ac1379276edce2a` |
 | Harburg | Karnapp | GOW50 | residential | 2 | 0,3 | `seg_235b1e7d23ea74ec` |
-| Hamburg-Nord | Alsterdorfer Straße | GOW50 | tertiary | 1 | 0,2 | `seg_58c8665a50ce8fcb` |
+| Altona | Reventlowstraße | GOW50 | tertiary, tertiary_link | 5 | 0,2 | `seg_35d684d7fa615823` |
 | Hamburg-Mitte | Kandinskyallee | GOW50 | tertiary | 1 | 0,2 | `seg_62651b34e7cf00a0` |
-| Harburg | Am Schwarzenberg-Campus | GOW50 | tertiary | 1 | 0,2 | `seg_bd1647670cc9bf7a` |
-| Altona | Augustenburger Straße | GOW50 | tertiary | 1 | 0,2 | `seg_dec429e444c35324` |
-| Hamburg-Nord | Sierichstraße / Herbert-Weichmann-Straße | GOW50 | secondary | 1 | 0,2 | `seg_57fb054f5cb343db` |
-| Altona | Franzosenkoppel | GOW50 | tertiary | 1 | 0,2 | `seg_b4c6d3bf46bec651` |
-| Wandsbek | Saseler Damm | GOW50 | residential | 1 | 0,2 | `seg_dca9ee4f71ebce4a` |
-| Hamburg-Mitte | Veddeler Brückenstraße | GOW50 | tertiary | 1 | 0,1 | `seg_c2da4f80c0b760fa` |
-| Wandsbek | August-Krogmann-Straße | GOW50 | secondary | 1 | 0,1 | `seg_f57a2555cec280c8` |
-| Hamburg-Mitte | Rennbahnstraße | GOW50 | primary | 2 | 0,1 | `seg_a15941839deafe7a` |
-| Altona | Baron-Voght-Straße | GOW50 | tertiary | 1 | 0,1 | `seg_a01ba0fa71b1194e` |
-| Hamburg-Nord | Martinistraße | GOW50 | tertiary | 2 | 0,1 | `seg_7aad6709464c0bda` |
-| Wandsbek | Jenfelder Straße | GOW50 | tertiary | 1 | 0,1 | `seg_6882663318125f55` |
-| … | 56 weitere Straßen | | | 77 | 2,2 | |
+| Hamburg-Mitte | Esplanade | GOW50 | secondary | 1 | 0,2 | `seg_d3e14845b6c7d5c3` |
+| Altona | Kaltenkirchener Straße | GOW50 | tertiary | 3 | 0,2 | `seg_ecfe9b0ab73f9f11` |
+| … | 198 weitere Straßen | | | 341 | 9,9 | |
 
 ## 2. Soll-ETW30 und Ist-Tempo
 
 Ist-Tempo = amtliches Regeltempo vor OSM maxspeed (S-FEAT-09). Soll-Tempo ETW30 = 30 km/h (categories.ETW30). Erwartung: hoher Anteil; Ausreißer sind Kandidaten für Datenfehler.
 
-**Kennzahl: 72,1 % der Soll-ETW30-km mit bekanntem Ist-Tempo haben heute höchstens 30 km/h** (2252,4 von 3126,0 km; Ist-Tempo unbekannt: 198,2 km).
+**Kennzahl: 72,1 % der Soll-ETW30-km mit bekanntem Ist-Tempo haben heute höchstens 30 km/h** (2252,4 von 3125,7 km; Ist-Tempo unbekannt: 198,2 km).
 
 ### Soll × Ist-Tempo (km, Arbeitsgebiet)
 
 | Soll | ≤ 20 | 30 | 40–50 | > 50 | unbekannt |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | SW | 0,0 | 0,0 | 13,3 | 151,7 | 24,3 |
-| GOW50 | 0,0 | 4,0 | 155,5 | 39,8 | 1,1 |
-| GOW30 | 0,7 | 19,3 | 518,8 | 16,3 | 0,6 |
-| ETW30 | 66,7 | 2185,7 | 841,8 | 31,8 | 198,2 |
+| GOW50 | 0,2 | 13,5 | 544,5 | 47,8 | 1,2 |
+| GOW30 | 0,5 | 9,8 | 130,1 | 8,2 | 0,4 |
+| ETW30 | 66,7 | 2185,7 | 841,4 | 31,8 | 198,2 |
 | ETW_ERF | 86,2 | 2,5 | 1,2 | 0,0 | 28,1 |
 
-### Ausreißer: Soll-ETW30 mit Ist-Tempo über 30 km/h (7415 Abschnitte, 873,6 km)
+### Ausreißer: Soll-ETW30 mit Ist-Tempo über 30 km/h (7409 Abschnitte, 873,3 km)
 
 Davon **1939 Abschnitte (159,6 km) mögliche Datenfehler**: mindestens ein Hinweis widerspricht dem Ist-Tempo oder der Kategorie (Zone 30 laut Zonenebene, Quellen widersprechen sich, nur OSM-Tempo, HVS-Abgleich nur teilweise, kein amtlicher Abgleich). Die übrigen sind Wohn- oder Sammelstraßen mit Tempo 50 ohne Widerspruch in den Daten – dort ist die Diskrepanz fachlich gemeint (D-SPD-01).
 
@@ -239,7 +236,7 @@ Mögliche Datenfehler nach Straße (längste zuerst, höchstens 30):
 
 ## 3. Sensitivitätsanalyse
 
-Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01/H-PAIR-01 je Lauf); fachliche Korrekturen bleiben außen vor. Basis: rules.yaml 0.23.0, 34 702 Abschnitte, 4387,3 km.
+Geprüft wird die Automatik (`cat_proposed`: Kaskade und Harmonisierung H-STR-01/H-PAIR-01 je Lauf); fachliche Korrekturen bleiben außen vor. Basis: rules.yaml 0.24.0, 34 702 Abschnitte, 4387,3 km.
 
 ### 3.1 Einzelvariation (V-SENS-01): jede Annahme ±20 %
 
@@ -247,13 +244,13 @@ km mit anderer Kategorie als im Basislauf. Varianten: Annahme-Schwellen der Kask
 
 | Annahme | Regel | Basis | −20 %: km | Abschnitte | häufigste Wechsel | +20 %: km | Abschnitte | häufigste Wechsel |
 | --- | --- | ---: | ---: | ---: | --- | ---: | ---: | --- |
-| `thresholds.conn_gow` | C-GOW-01 | 0,87 | 323,7 | 2 920 | ETW30→GOW30 246,2, ETW30→GOW50 70,4, GOW50→GOW30 6,7 | 83,2 | 814 | GOW30→ETW30 62,8, GOW50→ETW30 18,4, GOW30→GOW50 1,9 |
-| `thresholds.access_radius` | C-G30-01 | 50 | 8,3 | 53 | GOW30→GOW50 7,6, GOW50→GOW30 0,7 | 4,0 | 34 | GOW50→GOW30 3,9, GOW30→GOW50 0,0 |
-| `thresholds.frontage` | C-G30-01 | 0,4 | 12,7 | 81 | GOW50→GOW30 12,6, GOW30→GOW50 0,0 | 9,9 | 69 | GOW30→GOW50 9,7, GOW50→GOW30 0,2 |
-| `required_width.GOW50` | C-G30-02 | 17 | 7,3 | 41 | GOW30→GOW50 7,1, GOW50→GOW30 0,2 | 8,3 | 60 | GOW50→GOW30 8,3 |
-| `required_width.GOW50_bus` | C-G30-02 | 17,5 | 28,1 | 206 | GOW30→GOW50 27,9, GOW50→GOW30 0,2 | 36,2 | 294 | GOW50→GOW30 35,8, GOW30→GOW50 0,4 |
-| `conn_score.betweenness_norm` | scores.conn_score | 0,45 | 7,3 | 70 | ETW30→GOW30 3,0, GOW30→ETW30 2,7, ETW30→GOW50 0,8 | 6,4 | 51 | ETW30→GOW30 3,3, GOW30→ETW30 2,6, ETW30→GOW50 0,3 |
-| `conn_score.bus_trips_weekday_norm` | scores.conn_score | 0,3 | 8,1 | 63 | ETW30→GOW30 3,4, GOW30→ETW30 3,3, GOW30→GOW50 0,8 | 5,9 | 56 | GOW30→ETW30 2,5, ETW30→GOW30 2,1, ETW30→GOW50 0,6 |
+| `thresholds.conn_gow` | C-GOW-01 | 0,87 | 321,5 | 2 906 | ETW30→GOW30 223,1, ETW30→GOW50 93,5, GOW50→GOW30 4,4 | 81,9 | 798 | GOW30→ETW30 53,7, GOW50→ETW30 27,6, GOW30→GOW50 0,5 |
+| `thresholds.access_radius` | C-G30-01 | 50 | 2,9 | 23 | GOW30→GOW50 2,9 | 2,3 | 18 | GOW50→GOW30 2,3 |
+| `thresholds.frontage` | C-G30-01 | 0,4 | 4,5 | 28 | GOW50→GOW30 4,5 | 2,9 | 21 | GOW30→GOW50 2,9 |
+| `required_width.GOW50_min` | C-G30-02 | 16,2 | 9,9 | 59 | GOW30→GOW50 9,9 | 13,4 | 101 | GOW50→GOW30 13,4 |
+| `required_width.GOW50_bus_min` | C-G30-02 | 16,7 | 35,2 | 270 | GOW30→GOW50 35,2 | 66,6 | 559 | GOW50→GOW30 66,6 |
+| `conn_score.betweenness_norm` | scores.conn_score | 0,45 | 7,3 | 68 | GOW30→ETW30 2,5, ETW30→GOW30 2,5, ETW30→GOW50 1,3 | 6,6 | 52 | GOW30→ETW30 2,6, ETW30→GOW30 2,3, ETW30→GOW50 1,4 |
+| `conn_score.bus_trips_weekday_norm` | scores.conn_score | 0,3 | 8,2 | 64 | GOW30→ETW30 3,3, ETW30→GOW30 2,3, ETW30→GOW50 1,5 | 5,9 | 54 | GOW30→ETW30 2,3, ETW30→GOW30 1,8, ETW30→GOW50 1,0 |
 | `conn_score.dtv_norm` | scores.conn_score | 0,25 | 0,0 | 0 | – | 0,0 | 0 | – |
 
 Nur auf die confidence wirken: `thresholds.near_threshold` (0,1, C-CONF-01). Sie ändern die Kategorie nicht und werden nicht variiert.
@@ -312,6 +309,8 @@ Nicht variiert (Annahmen früherer Stufen oder ohne Wirkung auf die Kategorie):
 | `feasibility_classes.fits` | 1 | width_ratio | Machbarkeit: ändert die Kategorie nicht |
 | `feasibility_classes.tight` | 0,85 | width_ratio | Machbarkeit: ändert die Kategorie nicht |
 | `feasibility_classes.does_not_fit` | 0,85 | width_ratio | Machbarkeit: ändert die Kategorie nicht |
+| `required_width.GOW50` | 17 | m | Machbarkeit (Stufe 7): nicht in einer Bedingung der Kaskade |
+| `required_width.GOW50_bus` | 17,5 | m | Machbarkeit (Stufe 7): nicht in einer Bedingung der Kaskade |
 | `required_width.GOW30_narrow` | 10,8 | m | Machbarkeit (Stufe 7): nicht in einer Bedingung der Kaskade |
 | `required_width.GOW30_wide` | 13,4 | m | Machbarkeit (Stufe 7): nicht in einer Bedingung der Kaskade |
 | `required_width.ETW30` | 9,75 | m | Machbarkeit (Stufe 7): nicht in einer Bedingung der Kaskade |
@@ -320,36 +319,36 @@ Nicht variiert (Annahmen früherer Stufen oder ohne Wirkung auf die Kategorie):
 
 Je Lauf wird jede der 13 Annahmen (conn_weight, risk_weight, threshold) unabhängig mit einem Faktor gleichverteilt in [0,8; 1,2] multipliziert. Wechselquote je Abschnitt = Anteil der Läufe mit anderer Kategorie. **„unsicher“ ab Wechselquote 0,3 (V-UNC-01).**
 
-**Kennzahl: 2 222 Abschnitte (246,6 km, 5,6 % der Länge) sind unsicher.** Mindestens einmal gewechselt: 4 465 Abschnitte (501,0 km).
+**Kennzahl: 2 256 Abschnitte (247,4 km, 5,6 % der Länge) sind unsicher.** Mindestens einmal gewechselt: 4 670 Abschnitte (522,6 km).
 
 | Wechselquote | Abschnitte | km |
 | --- | ---: | ---: |
-| 0 (stabil) | 30 237 | 3886,3 |
-| über 0 bis 0,1 | 689 | 79,4 |
-| über 0,1 bis unter 0,3 | 1 554 | 175,1 |
-| ab 0,3 (unsicher) | 2 222 | 246,6 |
+| 0 (stabil) | 30 032 | 3864,7 |
+| über 0 bis 0,1 | 838 | 97,7 |
+| über 0,1 bis unter 0,3 | 1 576 | 177,5 |
+| ab 0,3 (unsicher) | 2 256 | 247,4 |
 
 Unsichere Abschnitte je Soll-Kategorie (Basis) und häufigste andere Kategorie:
 
 | Kategorie | km gesamt | unsicher km | Anteil | häufigste andere Kategorie (km) |
 | --- | ---: | ---: | ---: | --- |
 | SW | 189,2 | 0,0 | 0,0 % | – |
-| GOW50 | 200,3 | 37,1 | 18,5 % | ETW30 (17,2), GOW30 (19,9) |
-| GOW30 | 555,3 | 81,6 | 14,7 % | ETW30 (57,4), GOW50 (24,2) |
-| ETW30 | 3324,3 | 127,9 | 3,8 % | GOW30 (98,3), GOW50 (29,5) |
+| GOW50 | 607,3 | 54,5 | 9,0 % | ETW30 (25,4), GOW30 (29,2) |
+| GOW30 | 148,6 | 64,8 | 43,6 % | ETW30 (49,0), GOW50 (15,8) |
+| ETW30 | 3323,9 | 128,0 | 3,9 % | GOW30 (85,0), GOW50 (43,0) |
 | ETW_ERF | 118,3 | 0,0 | 0,0 % | – |
 
 Je Bezirk:
 
 | Bezirk | km | unsicher km | Anteil |
 | --- | ---: | ---: | ---: |
-| Altona | 620,5 | 30,9 | 5,0 % |
-| Bergedorf | 209,3 | 16,0 | 7,6 % |
-| Eimsbüttel | 470,4 | 29,5 | 6,3 % |
-| Hamburg-Mitte | 881,3 | 42,6 | 4,8 % |
-| Hamburg-Nord | 563,3 | 41,1 | 7,3 % |
-| Harburg | 465,2 | 17,5 | 3,8 % |
-| Wandsbek | 1030,4 | 68,2 | 6,6 % |
+| Altona | 620,5 | 29,3 | 4,7 % |
+| Bergedorf | 209,3 | 16,5 | 7,9 % |
+| Eimsbüttel | 470,4 | 28,1 | 6,0 % |
+| Hamburg-Mitte | 881,3 | 41,2 | 4,7 % |
+| Hamburg-Nord | 563,3 | 40,0 | 7,1 % |
+| Harburg | 465,2 | 18,0 | 3,9 % |
+| Wandsbek | 1030,4 | 73,5 | 7,1 % |
 | ohne Bezirk | 146,9 | 0,8 | 0,5 % |
 
 Einfluss je Annahme im Monte-Carlo (Korrelation des Faktors mit dem Anteil gewechselter km je Lauf; nur zur Orientierung, nicht kausal):
@@ -357,17 +356,17 @@ Einfluss je Annahme im Monte-Carlo (Korrelation des Faktors mit dem Anteil gewec
 | Annahme | Korrelation |
 | --- | ---: |
 | `thresholds.conn_gow` | -0,76 |
-| `thresholds.access_radius` | -0,07 |
-| `required_width.GOW50` | +0,06 |
-| `conn_score.betweenness_norm` | -0,06 |
+| `required_width.GOW50_min` | +0,08 |
+| `conn_score.betweenness_norm` | -0,07 |
 | `conn_score.bus_trips_weekday_norm` | -0,05 |
-| `thresholds.frontage` | -0,04 |
+| `required_width.GOW50_bus_min` | +0,05 |
+| `thresholds.frontage` | -0,05 |
+| `thresholds.access_radius` | -0,04 |
 | `conn_score.dtv_norm` | +0,02 |
-| `required_width.GOW50_bus` | -0,01 |
 
 ### 3.3 Priorität: Top 30 in Hamburg (7 Bezirke) bei variierten Gewichten
 
-Gleiche Läufe; risk mit variierten `priority.risk_weights`, Diskrepanzen aus dem Basislauf (eine geänderte Kategorie ändert auch die Diskrepanz – das ist hier nicht abgebildet). Im Mittel bleiben **91,5 % der Top 30** in der Top 30. 23 Abschnitte bleiben in mindestens 90 % der Läufe, 0 in weniger als der Hälfte.
+Gleiche Läufe; risk mit variierten `priority.risk_weights`, Diskrepanzen aus dem Basislauf (eine geänderte Kategorie ändert auch die Diskrepanz – das ist hier nicht abgebildet). Im Mittel bleiben **96,0 % der Top 30** in der Top 30. 27 Abschnitte bleiben in mindestens 90 % der Läufe, 1 in weniger als der Hälfte.
 
 
 ### 3.4 Stichprobe: 30 zufällige unsichere Abschnitte in Hamburg (7 Bezirke), nach Bezirk geschichtet (Seed 42)
@@ -377,35 +376,35 @@ Zur Durchsicht: Welche Kategorie ist fachlich richtig? Befund als Korrektur in o
 | segment_id | Bezirk | Straße | highway | Soll | andere Kategorie | Wechselquote | Wechsel bei ±20 % | Orthophoto | Panoramax | OSM |
 | --- | --- | --- | --- | --- | --- | ---: | --- | --- | --- | --- |
 | `seg_0b225681433b7e34` | Altona | Bernadottestraße | residential | GOW30 | ETW30 (36,2 %) | 0,362 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561121,5933646]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.548148/9.922498) | [Way](https://www.openstreetmap.org/way/1178419065) |
-| `seg_35d684d7fa615823` | Altona | Reventlowstraße | tertiary | GOW30 | ETW30 (47,0 %) | 0,47 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559000,5934459]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.555696/9.890635) | [Way](https://www.openstreetmap.org/way/360038188) |
-| `seg_67c2e6f0a15aca12` | Altona | Friedensallee | tertiary | ETW30 | GOW30 (30,8 %) | 0,308 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561356,5934446]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.555307/9.926197) | [Way](https://www.openstreetmap.org/way/145689812) |
-| `seg_7509a1371d9e81e9` | Altona | Hohenzollernring / Elbchaussee | secondary | GOW50 | GOW30 (34,0 %) | 0,34 | `required_width.GOW50:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560794,5933527]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.547118/9.917532) | [Way](https://www.openstreetmap.org/way/144529933) |
-| `seg_20431270925f9d17` | Bergedorf | Curslacker Heerweg | secondary | ETW30 | GOW50 (34,4 %) | 0,344 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[582269,5925857]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.475263/10.239563) | [Way](https://www.openstreetmap.org/way/640915271) |
-| `seg_2e44bf9a9eaa03d9` | Bergedorf | Wentorfer Straße | primary | GOW30 | GOW50 (39,6 %) | 0,396 | `required_width.GOW50_bus:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[581095,5927221]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.487705/10.222228) | [Way](https://www.openstreetmap.org/way/178451629) |
-| `seg_11d39bf32e7724bf` | Eimsbüttel | Frohmestraße | tertiary | ETW30 | GOW30 (47,2 %) | 0,472 | `thresholds.conn_gow:-`, `conn_score.betweenness_norm:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[561110,5942905]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.631364/9.924137) | [Way](https://www.openstreetmap.org/way/1131066865) |
-| `seg_27587b6f844c51f7` | Eimsbüttel | Wendlohstraße | tertiary | ETW30 | GOW30 (40,0 %) | 0,4 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562321,5942708]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.629453/9.942412) | [Way](https://www.openstreetmap.org/way/1166241920) |
-| `seg_2df3de6b4d35f22e` | Eimsbüttel | Mittelweg | tertiary | GOW30 | ETW30 (50,0 %) | 0,5 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565792,5937014]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.577855/9.993688) | [Way](https://www.openstreetmap.org/way/206426305) |
-| `seg_caadfc974482539b` | Eimsbüttel | Heußweg | tertiary | ETW30 | GOW30 (43,0 %) | 0,43 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563004,5936739]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.575718/9.951524) | [Way](https://www.openstreetmap.org/way/362847835) |
-| `seg_09e4fe23d671e1e0` | Hamburg-Mitte | Reclamstraße | tertiary | ETW30 | GOW30 (41,8 %) | 0,418 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573294,5933175]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.542352/10.106078) | [Way](https://www.openstreetmap.org/way/567809436) |
-| `seg_20a73e0a0f9426be` | Hamburg-Mitte | Versmannstraße | secondary | ETW30 | GOW50 (33,0 %) | 0,33 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567753,5932658]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.538455/10.022357) | [Way](https://www.openstreetmap.org/way/458117703) |
-| `seg_460fee82807dc432` | Hamburg-Mitte | Veddeler Damm | primary | GOW30 | GOW50 (39,0 %) | 0,39 | `required_width.GOW50_bus:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566484,5931053]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.524196/10.002870) | [Way](https://www.openstreetmap.org/way/516884713) |
-| `seg_4bae95b1ae941eb0` | Hamburg-Mitte | Niedergeorgswerder Deich | tertiary | ETW30 | GOW50 (20,8 %) | 0,41 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567622,5930329]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.517541/10.019879) | [Way](https://www.openstreetmap.org/way/1410529259) |
-| `seg_a4e1097c48b32af8` | Hamburg-Mitte | Sievekingdamm | tertiary | GOW30 | ETW30 (32,2 %) | 0,322 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569337,5934892]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.558327/10.046748) | [Way](https://www.openstreetmap.org/way/940921900) |
-| `seg_08d292714ba78144` | Hamburg-Nord | Kellinghusenstraße | tertiary | GOW30 | ETW30 (46,0 %) | 0,46 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565678,5938484]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.591079/9.992272) | [Way](https://www.openstreetmap.org/way/584698808) |
-| `seg_3c7725ea93e1f359` | Hamburg-Nord | Alsterdorfer Straße | tertiary | ETW30 | GOW30 (40,2 %) | 0,402 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566059,5939867]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.603461/9.998317) | [Way](https://www.openstreetmap.org/way/467776520) |
-| `seg_a44d9c863bd78f7f` | Hamburg-Nord | Weidestraße | tertiary | ETW30 | GOW30 (36,6 %) | 0,368 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568369,5937273]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.579851/10.032654) | [Way](https://www.openstreetmap.org/way/834336773) |
-| `seg_b15c3cf4c8e3f106` | Hamburg-Nord | Maienweg | secondary | GOW30 | ETW30 (38,2 %) | 0,382 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567869,5942169]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.623917/10.026176) | [Way](https://www.openstreetmap.org/way/185058567) |
-| `seg_c11095f41cfcfa12` | Hamburg-Nord | Ohlsdorfer Straße | tertiary | GOW50 | ETW30 (33,2 %) | 0,402 | `thresholds.conn_gow:+`, `required_width.GOW50_bus:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566571,5939388]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.599086/10.005956) | [Way](https://www.openstreetmap.org/way/1042722966) |
-| `seg_d4a8d9012e74e98b` | Hamburg-Nord | Tangstedter Landstraße | tertiary | GOW50 | ETW30 (47,2 %) | 0,636 | `thresholds.conn_gow:+`, `thresholds.frontage:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567571,5946439]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.662332/10.022596) | [Way](https://www.openstreetmap.org/way/957978454) |
-| `seg_bf6e370e7ea18ec0` | Harburg | Wilstorfer Straße | tertiary | GOW30 | ETW30 (35,4 %) | 0,354 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565588,5923055]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.452424/9.987690) | [Way](https://www.openstreetmap.org/way/485697041) |
-| `seg_f8d8ab145978bdcd` | Harburg | Neuwiedenthaler Straße | tertiary | GOW30 | ETW30 (44,2 %) | 0,684 | `thresholds.conn_gow:+`, `required_width.GOW50_bus:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[557692,5925609]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.476302/9.869272) | [Way](https://www.openstreetmap.org/way/30692323) |
-| `seg_019c93438edaebfe` | Wandsbek | Berner Chaussee | tertiary | GOW30 | ETW30 (40,2 %) | 0,402 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[571567,5941635]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.618621/10.081956) | [Way](https://www.openstreetmap.org/way/4087798) |
-| `seg_50d6c604491e3cca` | Wandsbek | Hellmesbergerweg | tertiary | ETW30 | GOW30 (36,0 %) | 0,428 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[578024,5943339]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.633016/10.179982) | [Way](https://www.openstreetmap.org/way/1364011248) |
-| `seg_6f7b93ec5c288bec` | Wandsbek | Saseler Straße | tertiary | ETW30 | GOW30 (40,8 %) | 0,456 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[575843,5942958]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.629910/10.146911) | [Way](https://www.openstreetmap.org/way/18577896) |
-| `seg_892d5c5d23733d49` | Wandsbek | Bargteheider Straße | primary | GOW30 | GOW50 (32,6 %) | 0,326 | `required_width.GOW50_bus:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[576433,5941145]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.613535/10.155378) | [Way](https://www.openstreetmap.org/way/222326664) |
-| `seg_a3e7d4232b553d8a` | Wandsbek | Eilenau | tertiary | ETW30 | GOW30 (26,2 %) | 0,47 | `thresholds.conn_gow:-`, `conn_score.betweenness_norm:+`, `conn_score.bus_trips_weekday_norm:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[569025,5936272]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.570769/10.042347) | [Way](https://www.openstreetmap.org/way/43117891) |
-| `seg_cda063f0a1df28f4` | Wandsbek | Pezolddamm | tertiary | GOW30 | ETW30 (34,8 %) | 0,348 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573695,5942366]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.624894/10.114287) | [Way](https://www.openstreetmap.org/way/43791243) |
-| `seg_dc5a139458e9be6a` | Wandsbek | Sthamerstraße | tertiary | ETW30 | GOW50 (17,4 %) | 0,326 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[575089,5949866]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.692098/10.137172) | [Way](https://www.openstreetmap.org/way/32433658) |
+| `seg_31b4e203c5c88121` | Altona | Oderstraße | tertiary | ETW30 | GOW50 (26,6 %) | 0,376 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[557707,5940119]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.606707/9.872170) | [Way](https://www.openstreetmap.org/way/32984642) |
+| `seg_63d157e1376041e7` | Altona | Rissener Landstraße | secondary | GOW50 | GOW30 (32,6 %) | 0,326 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[551105,5936820]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.577748/9.771855) | [Way](https://www.openstreetmap.org/way/4068583) |
+| `seg_7097a9eb321ff2f9` | Altona | Dürerstraße | secondary | GOW50 | GOW30 (46,6 %) | 0,466 | `required_width.GOW50_bus_min:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[558758,5934983]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.560432/9.887075) | [Way](https://www.openstreetmap.org/way/920227306) |
+| `seg_1f24683bcec63117` | Bergedorf | Lohbrügger Landstraße | tertiary | ETW30 | GOW30 (47,0 %) | 0,47 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[579816,5928363]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.498162/10.203246) | [Way](https://www.openstreetmap.org/way/899477533) |
+| `seg_2e293f2fc2693b56` | Bergedorf | Ladenbeker Furtweg | tertiary | ETW30 | GOW30 (42,8 %) | 0,428 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[578428,5928342]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.498182/10.182319) | [Way](https://www.openstreetmap.org/way/740502199) |
+| `seg_123ea820645b953e` | Eimsbüttel | Halstenbeker Straße | tertiary | ETW30 | GOW50 (31,2 %) | 0,39 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560076,5942407]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.627002/9.908415) | [Way](https://www.openstreetmap.org/way/42734216) |
+| `seg_2bc54728118f644b` | Eimsbüttel | Heidlohstraße | secondary | ETW30 | GOW50 (41,2 %) | 0,424 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[560264,5942458]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.627441/9.911263) | [Way](https://www.openstreetmap.org/way/4228152) |
+| `seg_376d254a1b7c718c` | Eimsbüttel | Niendorfer Straße | secondary | ETW30 | GOW50 (24,6 %) | 0,344 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563165,5939979]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.604819/9.954624) | [Way](https://www.openstreetmap.org/way/908813072) |
+| `seg_d062ff49340be67e` | Eimsbüttel | Mittelweg | tertiary | ETW30 | GOW50 (38,6 %) | 0,426 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565638,5935094]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.560612/9.990966) | [Way](https://www.openstreetmap.org/way/34424807) |
+| `seg_097a4533f3598a68` | Hamburg-Mitte | Kattwykdamm | secondary | GOW30 | GOW50 (33,2 %) | 0,332 | `required_width.GOW50_min:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563343,5927774]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.495107/9.954828) | [Way](https://www.openstreetmap.org/way/1207844761) |
+| `seg_201cab02e0421b8a` | Hamburg-Mitte | Billstedter Hauptstraße | tertiary | ETW30 | GOW30 (31,4 %) | 0,346 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573683,5932424]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.535553/10.111757) | [Way](https://www.openstreetmap.org/way/298844193) |
+| `seg_46cb5af9a7b427a8` | Hamburg-Mitte | Ausschläger Allee | tertiary_link | ETW30 | GOW50 (43,0 %) | 0,43 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[570878,5931361]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.526382/10.069205) | [Way](https://www.openstreetmap.org/way/132013838) |
+| `seg_4c1e4dab351a4976` | Hamburg-Mitte | Georg-Blume-Straße | service | GOW30 | ETW30 (39,4 %) | 0,394 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[572975,5935356]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.561997/10.101762) | [Way](https://www.openstreetmap.org/way/151470908) |
+| `seg_a8d13126d8b52a40` | Hamburg-Mitte | Kattwykdamm | secondary | GOW30 | GOW50 (33,2 %) | 0,332 | `required_width.GOW50_min:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[563427,5927765]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.495020/9.956094) | [Way](https://www.openstreetmap.org/way/1207844754) |
+| `seg_080b961ca68ce807` | Hamburg-Nord | Poßmoorweg | tertiary | GOW30 | ETW30 (40,6 %) | 0,406 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566673,5937906]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.585760/10.007180) | [Way](https://www.openstreetmap.org/way/3752938) |
+| `seg_3b74b82ccd257493` | Hamburg-Nord | Sengelmannstraße | trunk_link | ETW30 | GOW50 (37,8 %) | 0,378 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[566982,5941878]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.621413/10.012705) | [Way](https://www.openstreetmap.org/way/463132678) |
+| `seg_ab97b1f9a8d116a5` | Hamburg-Nord | Otto-Wels-Straße | secondary | ETW30 | GOW30 (27,6 %) | 0,482 | `thresholds.conn_gow:-`, `conn_score.betweenness_norm:+`, `conn_score.bus_trips_weekday_norm:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567071,5939486]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.599908/10.013528) | [Way](https://www.openstreetmap.org/way/31902900) |
+| `seg_b54bb4274c240282` | Hamburg-Nord | Barcastraße | residential | GOW30 | ETW30 (36,0 %) | 0,364 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[567357,5935298]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.562227/10.016948) | [Way](https://www.openstreetmap.org/way/189764300) |
+| `seg_db66eec231093e80` | Hamburg-Nord | Hummelsbütteler Landstraße | secondary | GOW50 | GOW30 (47,6 %) | 0,476 | `required_width.GOW50_bus_min:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568224,5943398]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.634917/10.031811) | [Way](https://www.openstreetmap.org/way/147426912) |
+| `seg_5c2359f09bc23866` | Harburg | Eißendorfer Straße | secondary | GOW30 | GOW50 (43,6 %) | 0,436 | `required_width.GOW50_bus_min:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564006,5923600]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.457513/9.963972) | [Way](https://www.openstreetmap.org/way/32984365) |
+| `seg_bc52df9556807227` | Harburg | Hannoversche Straße | secondary | GOW30 | GOW50 (47,4 %) | 0,474 | `required_width.GOW50_bus_min:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565979,5925001]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.469867/9.993974) | [Way](https://www.openstreetmap.org/way/607336459) |
+| `seg_f5cd4013b56425c0` | Harburg | Heimfelder Straße | tertiary | ETW30 | GOW50 (36,4 %) | 0,426 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562415,5923960]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.460944/9.940084) | [Way](https://www.openstreetmap.org/way/785232818) |
+| `seg_0303a0972f40ffd3` | Wandsbek | Hummelsbüttler Hauptstraße | secondary | GOW50 | GOW30 (36,2 %) | 0,362 | `required_width.GOW50_bus_min:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568440,5943722]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.637797/10.035149) | [Way](https://www.openstreetmap.org/way/188499633) |
+| `seg_4689e675a5f67bac` | Wandsbek | Amtsstraße | residential | GOW30 | ETW30 (36,0 %) | 0,408 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[576547,5939952]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.602800/10.156809) | [Way](https://www.openstreetmap.org/way/103856251) |
+| `seg_48640e179f5bbe83` | Wandsbek | Eulenkrugstraße | secondary | ETW30 | GOW30 (19,2 %) | 0,346 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[576815,5944832]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.646613/10.162061) | [Way](https://www.openstreetmap.org/way/35919873) |
+| `seg_7d865dee73024e3a` | Wandsbek | Oldenfelder Straße | residential | ETW30 | GOW30 (45,0 %) | 0,45 | `thresholds.conn_gow:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[576495,5940761]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.610073/10.156221) | [Way](https://www.openstreetmap.org/way/151467958) |
+| `seg_9934d999a4286a7a` | Wandsbek | Pezolddamm | tertiary | GOW30 | ETW30 (34,6 %) | 0,346 | `thresholds.conn_gow:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573509,5942243]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.623815/10.111452) | [Way](https://www.openstreetmap.org/way/31691221) |
+| `seg_bacda43b5e88e934` | Wandsbek | Holstenhofweg | secondary | GOW30 | GOW50 (39,4 %) | 0,394 | `required_width.GOW50_bus_min:-` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573084,5936800]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.574962/10.103745) | [Way](https://www.openstreetmap.org/way/378914288) |
+| `seg_c71fb74a4d88a0ae` | Wandsbek | Bergstedter Chaussee | primary | GOW50 | GOW30 (32,6 %) | 0,326 | `required_width.GOW50_bus_min:+` | [DOP](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[574341,5947251]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Bilder](https://api.panoramax.xyz/#focus=map&map=18/53.668706/10.125228) | [Way](https://www.openstreetmap.org/way/1278821122) |
 
 ## 4. Datenqualität je Bezirk
 
@@ -458,16 +457,16 @@ Ziel (V-SAMP-01, guide.md 7.1): unter 15,0 % fachlich strittig je Kategorie. Sta
 Pilotlauf: rules.yaml 0.12.0, Normierung über Eimsbüttel + 500 m. Jetzt: Normierung über ganz Hamburg (S-FEAT-01), Schwellen unverändert. Verglichen werden Abschnitte mit gleicher segment_id.
 
 - Abschnitte in beiden Läufen: 4004; nur im Pilotlauf: 0; nur jetzt: 0
-- Kategorie (cat_final) geändert: 178 Abschnitte, 18,2 km (3,9 % der Länge)
-- Top 30 der Priorität: 83,3 % sind in beiden Läufen in der Top 30
+- Kategorie (cat_final) geändert: 696 Abschnitte, 59,4 km (12,6 % der Länge)
+- Top 30 der Priorität: 66,7 % sind in beiden Läufen in der Top 30
 
 | vorher | jetzt | Abschnitte | km |
 | --- | --- | ---: | ---: |
-| GOW50 | GOW30 | 73 | 6,9 |
-| GOW30 | GOW50 | 53 | 5,5 |
-| ETW30 | GOW30 | 37 | 4,1 |
+| GOW30 | GOW50 | 630 | 51,7 |
+| ETW30 | GOW30 | 30 | 3,3 |
+| GOW50 | GOW30 | 14 | 1,9 |
+| ETW30 | GOW50 | 11 | 1,3 |
 | GOW30 | ETW30 | 11 | 1,2 |
-| ETW30 | GOW50 | 4 | 0,4 |
 
 ## 6. Grenzen
 
@@ -476,7 +475,7 @@ Pilotlauf: rules.yaml 0.12.0, Normierung über Eimsbüttel + 500 m. Jetzt: Normi
 - Die niederländischen Kategorien passen nicht eins zu eins auf RIN/RASt; die Zuordnung ist eine Näherung.
 - Die GOW30-Merkmale der CROW (2023) sind ausdrücklich vorläufig; ihre Wirkung wird erst evaluiert.
 - Ein Soll-Plan sagt wenig über die Umsetzung: Richtlinien werden oft nicht eingehalten (SWOV 2023).
-- Multifunktionale Hauptstraßen landen konsequent in GOW30: 73,0 % der HVS-km in GOW50/GOW30 sind GOW30 – fachlich folgerichtig, politisch der härteste Punkt.
+- Multifunktionale Hauptstraßen landen konsequent in GOW30: 14,2 % der HVS-km in GOW50/GOW30 sind GOW30 – fachlich folgerichtig, politisch der härteste Punkt.
 - Busbetrieb, Rettungswege und Wirtschaftsverkehr sind nur Overlays; Fahrzeitwirkungen sind nicht modelliert.
 
 ### Rechtlich (guide.md 7.3)
@@ -674,6 +673,10 @@ Alle noch offenen Punkte, nach Abschnitt:
 - Schwellen der Paarbildung sind Setzungen ohne Quelle: `pair_max_distance_m` 40 m, `pair_max_angle_deg` 20° (wie S-CONF-01), `pair_min_overlap_share` 0,5. Per Stichprobe in reports/harmonisation.md prüfen (breite Mittelstreifen, gleichnamige Parallelfahrbahnen) – Methodik
 - Die Fahrtrichtung wird nicht geprüft: zwei gleichnamige, nebeneinander liegende Einbahn-Abschnitte gelten als Richtungsfahrbahnen. Gleichgerichtete Nebenfahrbahnen mit demselben Namen würden mitgepaart. Richtung aus OSM (`oneway=-1`, Zeichenrichtung des Wegs) zusätzlich prüfen? – Methodik
 - GOW50-Inseln ab `gap_close_m` (500 m) zwischen GOW30 bleiben GOW50 (Prüfliste in reports/harmonisation.md, reports/harmonisation_gow50_islands.geojson). Per Regel behandeln (welche Quelle?) oder nur je Lauf über overrides/overrides.csv entscheiden? Der Lückenschluss bis 500 m folgt StVO § 45 Abs. 9; ein größerer Wert hätte keine Quelle – Verkehrsplaner*in
+
+**DTV-Obergrenze für Tempo 30 (rules.yaml 0.24.0)** (1)
+
+- Kurze GOW30-Stücke zwischen GOW50 werden nur unter min_run_m (200 m) zu GOW50; 30 Läufe von 200–500 m (9,5 km) bleiben GOW30, meist aus C-G30-02 (zu schmal für einen Radweg). Grenze auf gap_close_m (500 m) anheben? Dann bekäme eine Engstelle ohne Platz für einen Radweg Tempo 50 – prstolpe
 
 ## Lizenz
 

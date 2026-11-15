@@ -30,7 +30,7 @@ from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, pano
 from pipeline.lib.manifest import REPO_ROOT
 from pipeline.lib.rules import load_rules
 from pipeline.s04_features import _fmt, _now, _pct
-from pipeline.s05b_harmonise import approved_override_ids, street_pairs, street_strokes
+from pipeline.s05b_harmonise import locked_ids, street_pairs, street_strokes
 
 IN_PATH = REPO_ROOT / "data" / "interim" / "discrepancy.parquet"
 OUT_PATH = REPO_ROOT / "data" / "interim" / "validation.parquet"
@@ -77,7 +77,7 @@ def harmonise_step(area_g: gpd.GeoDataFrame, rules):
     strokes = street_strokes(area_g, rules, cat_col="cat_cascade")
     pairs = street_pairs(area_g, rules)
     ids, lengths = area_g["segment_id"].tolist(), dict(zip(area_g["segment_id"], area_g["length_m"]))
-    locked = approved_override_ids()
+    locked = locked_ids(area_g, rules)  # C-G50-02 from the base run; variants keep this set
 
     def post(cats: pd.Series, r) -> pd.Series:
         new, _ = harmonise_all(strokes, pairs, dict(zip(ids, cats)), lengths, r, locked=locked)

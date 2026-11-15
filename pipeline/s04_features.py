@@ -70,7 +70,7 @@ FEATURE_DOC = {
     "bus_trips_weekday": ("GTFS HVV", "S-FEAT-08", "Rohwert für bus_trips_weekday_norm"),
     "bus_trips_weekday_norm": ("GTFS HVV", "S-FEAT-01/08", "scores.conn_score"),
     "bus_peak_h_dir": ("GTFS HVV", "S-FEAT-08 (PRF-02)", "Rohwert für bus_route"),
-    "bus_route": ("GTFS HVV", "S-FEAT-08", "C-G30-02 (required_width.GOW50_bus)"),
+    "bus_route": ("GTFS HVV", "S-FEAT-08", "C-G30-02 (required_width.GOW50_bus_min)"),
     "dtv_official": ("DTV-Linien HVS 2019", "S-CONF-01", "discrepancy.use, Rohwert für dtv_norm"),
     "dtv_norm": ("DTV-Linien HVS 2019", "S-FEAT-01", "scores.conn_score"),
     "conn_score": ("abgeleitet", "scores.conn_score", "C-RUR-01, C-GOW-01"),
