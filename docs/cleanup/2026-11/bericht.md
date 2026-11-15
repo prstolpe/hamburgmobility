@@ -1,7 +1,7 @@
 # Bericht – Aufräumen 2026-11, Karten verständlicher, Logo HMR
 
 Auftrag: `prompts/25_cleanup_logo.md`. Branch `cleanup/2026-11` (von `redesign/2026-11`). Stand 15.11.2026.
-**Noch nicht gemergt, nicht veröffentlicht.**
+**Lokal in `redesign/2026-11` gemergt (15.11.2026), nicht veröffentlicht.**
 
 **Entscheidung (15.11.2026):** Legende **Variante a**, Kopf **Variante B**, **Rasterlogo** (kein SVG-Nachbau). Die nicht
 gewählten Varianten, die Vorschau-Schalter `?kopf=`/`?legende=` und die SVG-Datei sind entfernt; die Abschnitte unten
@@ -189,5 +189,5 @@ Sitzung konnte sie noch nicht als eigene Typen laden; sie liefen deshalb als Unt
 
 ## Nächste Schritte (nach OK)
 1. ~~Varianten wählen, nicht gewählte entfernen~~ (erledigt: a, B, Rasterlogo).
-2. Pull Request, Merge (Reihenfolge mit `redesign/2026-11` klären: dieser Branch baut darauf auf), Deployment.
+2. ~~Merge in `redesign/2026-11`~~ (erledigt, lokal). Offen: `redesign/2026-11` nach `main` und Deployment.
 3. Kurzer Check der Live-Seite (Screenshots).
