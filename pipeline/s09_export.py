@@ -7,7 +7,7 @@ from make validate) and writes data/out/:
   downloads/  segments.parquet (GeoParquet), segments.geojson, segments.csv, rules.yaml, overrides.csv,
               datenbeschreibung.md
   segments/{segment_id}.json  profile per segment (plain-text reasons from rule_trace)
-  search.json, table.json, meta.json, district.geojson, licenses.md
+  search.json, table.json, meta.json, district.geojson, licenses.md, special_places.geojson (prompts/26)
   tiles/segments.pmtiles      tippecanoe, layers segments and facilities, zoom 10-16
   cycling (prompt 21, if the cycling stages have run): tiles/cycling.pmtiles (layers cycle_network, cycle_segments,
   cycle_official), tiles/junctions.pmtiles (junctions), junctions/{node_id}.json, a `cycling` block in every segment
@@ -32,11 +32,12 @@ from pipeline.lib import export as ex
 from pipeline.lib import export_cycling as xc
 from pipeline.lib import export_overview as ov
 from pipeline.lib import export_rules as er
+from pipeline.lib import special_places as spl
 from pipeline.lib.area import area_label, read_districts, read_rural
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
 from pipeline.lib.manifest import REPO_ROOT, load_manifest
-from pipeline.lib.rules import load_cycling_rules, load_design_rules, load_rules
+from pipeline.lib.rules import load_cycling_rules, load_design_rules, load_rules, load_special_places
 from pipeline.s04_features import _fmt, _now
 from pipeline.s06_coherence import FLAG_LABELS, RULE_LABELS
 from pipeline.s08_discrepancy import reason_text
@@ -357,6 +358,23 @@ def prepare_cycling(seg_ids: set, texts: dict) -> dict | None:
             "rob": rob, "blocks": blocks}
 
 
+def proposal_profiles(places, seg: gpd.GeoDataFrame, c: dict, texts: dict) -> dict:
+    """Cross section of each special-place segment with the proposal's measure (prompts/26), from the same inputs
+    and parameters as stage c06."""
+    from pipeline.c06_cross_section_soll import _params, segment_input  # GTFS imports only when needed
+    from pipeline.lib import overrides as ov
+
+    p = _params(c["des"], c["cyc"])
+    ids = {s for pl in places.places for s in pl.segment_ids()}
+    f = seg[seg["segment_id"].isin(ids)].set_index("segment_id")
+    fac, xs = c["fac"].set_index("segment_id"), c["xs"].set_index("segment_id")
+    lane_ovr = ov.lane_overrides(ov.read_overrides(ov.LANE_OVERRIDES_PATH), f.index, p.max_lanes)
+    inputs = {sid: (segment_input(r, fac.loc[sid], xs.at[sid, "bus_peak_h_dir"], xs.at[sid, "tram_present"], p, lane_ovr.get(sid)),
+                    r["parking"], r["width_p10_m"])
+              for sid, r in f.iterrows() if sid in fac.index and sid in xs.index}
+    return spl.proposal_profiles(places, inputs, p, texts["cycling"]["fit"])
+
+
 def write_cycling_downloads(c: dict, dl, texts: dict) -> None:
     cols = texts["cycling"]["columns"]
     segs = c["fac"].merge(c["xs"].drop(columns=[k for k in ("name", "bezirk", "length_m", "cat_final", "geometry", "cycle_cat_final")
@@ -543,6 +561,13 @@ def main() -> int:
         write_cycling_downloads(cyc, dl, texts)
     (dl / "datenbeschreibung.md").write_text(data_description(texts, ctx, cycling=cyc is not None), encoding="utf-8")
 
+    glossary = _load_yaml(GLOSSARY_PATH)
+    places = load_special_places()  # prompts/26: shown next to the rule result, never changes it
+    place_blocks = spl.segment_blocks(places, seg, cyc["fac"] if cyc else None, cyc["xs"] if cyc else None, texts, glossary,
+                                      proposal_profiles(places, seg, cyc, texts) if cyc else None)
+    place_lines = spl.place_frame(places, seg)
+    spl.geojson_frame(place_lines).to_file(OUT_DIR / spl.GEOJSON_NAME, driver="GeoJSON", COORDINATE_PRECISION=6)
+
     n_without_reason, sample_profiles = 0, []
     rnd = random.Random(SAMPLE_SEED)
     sample_idx = set(rnd.sample(range(len(seg)), min(SAMPLE_SIZE, len(seg))))
@@ -550,6 +575,7 @@ def main() -> int:
         p = profile(r, ctx)
         if cyc:
             p["cycling"] = cyc["blocks"].get(p["id"])
+        p["special_place"] = place_blocks.get(p["id"])
         n_without_reason += not p["reasons"]
         write_json(OUT_DIR / "segments" / f"{p['id']}.json", p)
         if i in sample_idx:
@@ -573,7 +599,6 @@ def main() -> int:
     rural[["name", "geometry"]].to_file(OUT_DIR / "rural_excluded.geojson", driver="GeoJSON")
     (OUT_DIR / "district.geojson").unlink(missing_ok=True)
     web = project["web"]
-    glossary = _load_yaml(GLOSSARY_PATH)
     assets = sources_yaml["web_assets"]
     attribution = ["© OpenStreetMap-Beitragende (ODbL)"] + sorted({s["attribution"] for s in ctx["sources"]
                                                                     if s["attribution"] and "OpenStreetMap" not in s["attribution"]})
@@ -601,6 +626,7 @@ def main() -> int:
             "basemap": {k: {"title": v["title"], "license": v["license"], "attribution": v.get("attribution")}
                         for k, v in assets.items()}}
     meta["cycling"] = cycling_meta(cyc) if cyc else None
+    meta["special_places"] = spl.meta_entry(places, place_lines, place_blocks, texts)
     meta["glossary"] = {k: v for k, v in glossary.items() if k != "meta"}
     meta["site_texts"] = texts["site"]
     meta["overview"] = {**write_overview(seg, cyc, names, web["overview"]), "texts": texts["overview"]} if cyc else None

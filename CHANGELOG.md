@@ -827,3 +827,26 @@ Auslöser seit 0.18.0 (Schule/Kita ≤ access_radius 50 m, Breite nur über den 
   width_p10_m unter dem Regelprofil, Radweg nur in Mindestbreite. Wirkung: Kaskade GOW30 154,9 → 132,0 km, Karte GOW50
   585,8 → 607,3 km, GOW30 170,2 → 148,6 km; Flag auf 164 Abschnitten (21,5 km).
   Goldene Fälle 26/27/31/32 auf die neuen Grenzen, neu 34 (zwischen Mindest- und Regelbreite → GOW50).
+
+## special_places.yaml 0.1.0, plain_language.yaml 0.14.0 – 2026-11-16 (Entwurf, Branch explore/special-places-schanze)
+- Neu: config/special_places.yaml (prompts/26) mit Schema config/schema/special_places_model.py. Besondere Orte
+  sind Vorschläge, Beschlüsse oder Bauten Dritter. Die Webseite zeigt sie neben dem Regelergebnis; die Klassifikation
+  ändert sich nicht.
+- Erster Ort: Bürgerbegehren „Verkehrsberuhigte Schanze“ (Stand 25.09.2026). 42 Abschnitte (2,9 km) sollen
+  Fahrradstraße werden, 3 Abschnitte (0,77 km) Fußgängerzone mit „Rad frei“. Die Zuordnung zu OSM-Abschnitten stammt
+  vom Projekt; die Karte der Initiative wurde nicht übernommen.
+- plain_language.yaml: neuer Abschnitt special_places. Er enthält den Satz im Steckbrief-Band und die Sätze für den
+  Vergleich mit dem Regelwerk, je Maßnahme mit Bedingung.
+- Export: neue Datei data/out/special_places.geojson, neuer Eintrag meta.special_places, neuer Block
+  `special_place` im Steckbrief der betroffenen Abschnitte.
+
+## special_places.yaml 0.2.0 – 2026-11-16 (Entwurf, Branch explore/special-places-schanze)
+- Zuschnitt nach Entscheidung prstolpe: Schanzenstraße nur bis zur Sternschanzenbrücke, Schulterblatt nur bis zur
+  Altonaer Straße, Lerchenstraße nur bis zur Stresemannstraße. Jetzt 24 Abschnitte (2,07 km) Fahrradstraße und
+  3 Abschnitte (0,77 km) Fußgängerzone.
+- Darstellung: nur Dunkelgrün, für die Fußgängerzone gestrichelt. Kein Leuchtschein und kein 3D mehr; das
+  Kippen der Karte entfällt wieder.
+- Neu `measures.*.profile`: Steckbrief-Skizze „Querschnitt im Vorschlag“. Sie wird mit derselben Logik wie der
+  Soll-Querschnitt gerechnet (pipeline/lib/profile.py), aber mit der Maßnahme: Fahrradstraße = Radführung
+  cycle_street, Fußgängerzone = Kategorie ETW_ERF mit Mischfläche. Die übrigen Eingaben bleiben wie im Ziel.
+

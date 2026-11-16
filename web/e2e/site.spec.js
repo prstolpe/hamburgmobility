@@ -7,6 +7,9 @@ const search = JSON.parse(readFileSync(new URL("../../data/out/search.json", imp
 const SEG = search.find((s) => s.name === "Hallerstraße")?.ids[0] ?? search[0].ids[0];
 const meta = JSON.parse(readFileSync(new URL("../../data/out/meta.json", import.meta.url)));
 const JCT = meta.cycling ? readdirSync(new URL("../../data/out/junctions/", import.meta.url)).sort()[0].replace(".json", "") : null;
+const PLACE = meta.special_places?.places?.[0];  // prompts/26
+const PLACE_SEG = PLACE ? JSON.parse(readFileSync(new URL(`../../data/out/${meta.special_places.file}`, import.meta.url)))
+  .features.find((f) => f.properties.place === PLACE.id)?.properties.id ?? SEG : SEG;
 const PAGES = {
   "Karte": "#karte",
   "Karte mit Steckbrief": `#karte?seg=${SEG}`,
@@ -20,6 +23,8 @@ const PAGES = {
   "Karte Fahrstreifen": "#karte?theme=platz",
   "Karte Abweichung": "#karte?theme=abweichung",
   "Karte Kreuzungen mit Steckbrief": `#karte?theme=knoten&jct=${JCT}&map=15/53.56/9.99`,
+  "Besondere Orte": "#orte",
+  "Karte besonderer Ort mit Steckbrief": `#karte?place=${PLACE?.id}&seg=${PLACE_SEG}`,
   "Daten": "#daten",
   "Impressum": "#impressum",
 };

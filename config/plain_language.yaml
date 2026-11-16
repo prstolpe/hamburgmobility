@@ -5,8 +5,9 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.13.0
-  date: 2026-11-15
+  version: 0.14.0
+  date: 2026-11-16
+# 0.14.0: Abschnitt special_places (Besondere Orte, prompts/26): Band im Steckbrief und Vergleich mit dem Regelwerk.
 # 0.13.0: Texte für C-G50-02, C-G30-02 mit Mindestbreite (GOW50_min) und Hinweis gow50_cycle_track_min; und den Grund „zu viel Verkehr“ bei C-G30-01 (DTV-Obergrenze, rules.yaml 0.24.0).
 # 0.12.1: Klartext für H-PAIR-01 (Richtungsfahrbahnen, rules.yaml 0.23.0).
 # 0.12.0: Aufräumen 2026-11 (prompts/25): Abschnitt method.news („Was ist neu“) entfernt, die Seite entfällt;
@@ -599,3 +600,45 @@ method:
   reference:
     title: "Alle Regeln"
     intro: "Hier stehen alle Regeln aus den drei Regeldateien. Jede hat einen einfachen Namen, eine Erklärung und einen Grund. Technische Angaben und Quellen kann man aufklappen. „Annahme“ steht bei Werten, die das Projekt ohne Quelle gesetzt hat."
+
+# Besondere Orte (prompts/26, config/special_places.yaml). Der Export füllt die Sätze je Abschnitt; der Regeltext
+# bleibt unverändert. Werte: cat (Soll-Kategorie), cat_plain (ihr einfacher Name), cycle_facility_soll (Radführung im
+# Ziel), cycle_cat (Stufe im Radnetz), bus_trips_weekday, speed_ist_kmh, measure_plain (Maßnahme des Vorschlags).
+# `compare`: der erste Eintrag mit wahrer Bedingung gilt. `notes`: alle Einträge mit wahrer Bedingung.
+special_places:
+  kind:
+    proposal: "Vorschlag"
+    decided: "beschlossen"
+    built: "gebaut"
+  band: "Besonderer Ort: {title} – {kind_plain} {by}: {measure_plain}"
+  by:
+    proposal: "des Bürgerbegehrens"
+  status_line: "Stand {status_date}: {status}"
+  legend: "Vorschlag Bürgerbegehren"
+  overlay: "Besondere Orte"
+  page_title: "Besondere Orte"
+  page_intro: "Hier zeigen wir Vorschläge und Pläne anderer für bestimmte Orte. Wir vergleichen sie mit unserem Regelwerk. Unser Entwurf bleibt dabei, wie er ist."
+  profile_title: "Querschnitt im Vorschlag"
+  profile_same: "Die Aufteilung der Straße bleibt wie in unserem Ziel. Anders sind nur die Verkehrsregeln."
+  measures:
+    cycle_street:
+      profile_note: "Gerechnet wie unser Ziel, aber mit Fahrradstraße: Rad und Auto teilen sich eine breitere Fahrbahn, Parken wie in unserem Ziel."
+      compare:
+        - {when: "cycle_facility_soll == cycle_street", text: "Unser Entwurf sieht hier auch eine Fahrradstraße vor. Vorschlag und Regelwerk passen zusammen."}
+        - {when: "cat == ETW30 and cycle_cat in [RSV, HAUPT, BASIS]", text: "Unser Regelwerk sieht hier eine Wohnstraße mit Tempo 30 vor. Die Straße gehört zum Radnetz. Eine Fahrradstraße passt dazu, wenn wenig Autoverkehr bleibt."}
+        - {when: "cat == ETW30", text: "Unser Regelwerk sieht hier eine Wohnstraße mit Tempo 30 vor. Die Straße gehört in unserem Entwurf nicht zum Radnetz. Eine Fahrradstraße geht darüber hinaus. Sie passt zu einer Wohnstraße, wenn wenig Autoverkehr bleibt."}
+        - {when: "cat == ETW_ERF", text: "Unser Regelwerk sieht hier schon mehr Ruhe vor: eine Fußgängerzone oder Spielstraße. Eine Fahrradstraße wäre weniger streng."}
+        - {when: "cat in [GOW30, GOW50]", text: "Hier weicht der Vorschlag vom Regelwerk ab. Für uns verbindet die Straße Stadtteile: {cat_plain}. Eine Fahrradstraße heißt: Autos, die nur durchfahren, müssen andere Straßen nehmen."}
+        - {text: "Unser Regelwerk sieht hier vor: {cat_plain}."}
+      notes:
+        - {when: "speed_ist_kmh > 30", text: "Heute gilt hier Tempo {speed_ist_kmh|.0f}. In einer Fahrradstraße gilt höchstens Tempo 30."}
+        - {when: "bus_trips_weekday > 0", text: "Hier fahren heute Busse. In einer Fahrradstraße dürfen Busse nur fahren, wenn ein Zusatzschild das erlaubt."}
+    pedestrian_zone_bikes_allowed:
+      profile_note: "Gerechnet wie eine Fußgängerzone in unserem Regelwerk: eine gemeinsame Fläche ohne Bordstein und ohne Parken am Rand. Was der Vorschlag zum Parken sagt, ist offen."
+      compare:
+        - {when: "cat == ETW_ERF", text: "Unser Regelwerk sieht hier auch eine Fußgängerzone oder Spielstraße vor. Vorschlag und Regelwerk passen zusammen."}
+        - {when: "cat == ETW30", text: "Hier geht der Vorschlag weiter als unser Regelwerk. Wir sehen eine Wohnstraße mit Tempo 30 vor. Eine Fußgängerzone sieht unser Regelwerk nur dort vor, wo heute schon eine ist. Neue Fußgängerzonen plant es nicht."}
+        - {when: "cat in [GOW30, GOW50]", text: "Hier weicht der Vorschlag stark vom Regelwerk ab. Für uns verbindet die Straße Stadtteile: {cat_plain}. In einer Fußgängerzone dürfen Autos nur mit Ausnahme fahren."}
+        - {text: "Unser Regelwerk sieht hier vor: {cat_plain}."}
+      notes:
+        - {when: "bus_trips_weekday > 0", text: "Hier fahren heute Busse. Für eine Fußgängerzone müssten die Busse einen anderen Weg nehmen oder eine Ausnahme bekommen."}

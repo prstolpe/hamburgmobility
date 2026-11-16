@@ -190,6 +190,17 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .panel dd { margin: 0; font-variant-numeric: tabular-nums; }
 .panel .rule { color: var(--muted); font-size: .875rem; }
 .panel .note { border-left: 2px solid var(--ink); padding: var(--s1) var(--s3); }
+/* special places (prompts/26): the colour of the place marks the band and the card; text stays ink on white */
+.place-band { border-left: 6px solid var(--place, var(--ink)); background: var(--surface); padding: var(--s2) var(--s3); margin: 0 0 var(--s3); }
+.place-band p { margin: 0; }
+.place-band .place-title { font-weight: 700; }
+.place-card { border-top: 6px solid var(--place, var(--ink)); padding-top: var(--s2); margin: var(--s5) 0; }
+.place-card h2 { margin-top: var(--s1); }
+.place-card .meta { color: var(--muted); font-size: .875rem; margin: 0; }
+.controls fieldset.places { margin-top: var(--s3); }
+.controls fieldset.places .t-small { margin: var(--s3) 0 0; }
+.controls fieldset.places .t-small a { display: inline-block; min-height: 24px; line-height: 24px; } /* WCAG 2.5.8 target size */
+.legend-sub { font-weight: 700; margin: var(--s3) 0 0; }
 .cat { font-size: 1.25rem; line-height: 28px; font-weight: 700; border-left: 6px solid #767676; padding-left: var(--s3); }
 .cat-SW { border-color: #332288; } .cat-GOW50 { border-color: #CC3311; } .cat-GOW30 { border-color: #0077BB; }
 .cat-ETW30 { border-color: #0077BB; } .cat-ETW_ERF { border-color: #117733; }

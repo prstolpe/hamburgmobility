@@ -1,9 +1,10 @@
 // App state <-> URL hash, e.g. #karte?theme=rad&view=luecken&bz=Altona&seg=seg_x&map=14/53.57/9.95
+// ?place=<id> switches on a special place (prompts/26, config/special_places.yaml) and zooms to it.
 // Redesign 2026-11 (package 2): five themes with views instead of 13 layers; each view maps to one map layer of
 // layers.js (state.layer is derived). Old links (?layer=…, #tabelle, #downloads, #quellen) are rewritten on load,
 // see docs/redesign/02_information_architecture.md. Defaults are left out of the URL so shared links stay short.
 
-export const PAGES = ["karte", "bezirke", "methode", "daten", "impressum"];
+export const PAGES = ["karte", "bezirke", "orte", "methode", "daten", "impressum"];
 const PAGE_ALIASES = { tabelle: "bezirke", downloads: "daten", quellen: "daten" };
 export const CYCLING_LAYER_KEYS = ["cnet", "cfac", "cgap", "lanes", "cfit", "jct", "coff"];
 export const LAYERS = ["cat", "speed", "disc", "prio", "width", "feas", "hvs", ...CYCLING_LAYER_KEYS];
@@ -44,7 +45,7 @@ const OLD_LAYER = Object.fromEntries(Object.entries(THEMES).flatMap(([t, th]) =>
 
 export const DEFAULTS = Object.freeze({
   page: "karte", theme: "aufgabe", view: "ziel", layer: "cat", overlays: [], cats: [], dts: [], prmin: 0, bz: "",
-  seg: null, jct: null, table: false, map: null, sub: null, rule: null,
+  seg: null, jct: null, table: false, map: null, sub: null, rule: null, place: null,
 });
 
 const list = (v, allowed) => (v ? v.split(",").filter((x) => !allowed || allowed.includes(x)) : []);
@@ -84,6 +85,7 @@ export function parseHash(hash) {
   state.table = state.page === "bezirke" && Boolean(state.bz) && (pagePart === "tabelle" || p.get("tabelle") === "1");
   state.seg = /^seg_[0-9a-f]+$/.test(p.get("seg") || "") ? p.get("seg") : null;
   state.jct = /^[0-9]+$/.test(p.get("jct") || "") ? p.get("jct") : null;
+  state.place = /^[a-z0-9_]+$/.test(p.get("place") || "") ? p.get("place") : null;
   const m = (p.get("map") || "").split("/").map(Number);
   if (m.length === 3 && m.every(Number.isFinite)) state.map = { zoom: m[0], lat: m[1], lon: m[2] };
   return state;
@@ -101,6 +103,7 @@ export function toHash(state) {
   if (state.table) p.set("tabelle", "1");
   if (state.seg) p.set("seg", state.seg);
   if (state.jct) p.set("jct", state.jct);
+  if (state.place) p.set("place", state.place);
   if (state.page === "methode" && state.sub === "regeln" && state.rule) p.set("regel", state.rule);
   if (state.map) p.set("map", `${state.map.zoom.toFixed(2)}/${state.map.lat.toFixed(5)}/${state.map.lon.toFixed(5)}`);
   const q = p.toString().replaceAll("%2C", ",").replaceAll("%2F", "/");

@@ -135,3 +135,21 @@ describe("method sub pages", () => {
     expect(toHash({ ...DEFAULTS, page: "daten", sub: "aufgabe", rule: "X-1" })).toBe("#daten");
   });
 });
+
+// prompt 26: special places
+describe("special place parameter", () => {
+  it("round-trips ?place= and keeps other parameters", () => {
+    const s = parseHash("#karte?place=schanze_verkehrsberuhigt&seg=seg_00ab");
+    expect([s.place, s.seg]).toEqual(["schanze_verkehrsberuhigt", "seg_00ab"]);
+    expect(toHash(s)).toBe("#karte?seg=seg_00ab&place=schanze_verkehrsberuhigt");
+  });
+
+  it("ignores invalid place ids and has no place by default", () => {
+    expect(parseHash("#karte?place=<x>").place).toBeNull();
+    expect(parseHash("#karte").place).toBeNull();
+  });
+
+  it("knows the page Besondere Orte", () => {
+    expect(parseHash("#orte").page).toBe("orte");
+  });
+});

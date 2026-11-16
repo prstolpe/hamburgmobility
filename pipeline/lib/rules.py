@@ -1,4 +1,4 @@
-"""Load and validate config/rules.yaml, config/cycling_rules.yaml and config/design_rules.yaml."""
+"""Load and validate config/rules.yaml, config/cycling_rules.yaml, config/design_rules.yaml and config/special_places.yaml."""
 
 import re
 from pathlib import Path
@@ -9,11 +9,13 @@ from config.schema.cycling_model import CyclingRuleSet
 from config.schema.design_model import DesignRuleSet
 from config.schema.provenance import collect_ids
 from config.schema.rules_model import INACTIVE, RULE_REF, RuleSet, Threshold
+from config.schema.special_places_model import SpecialPlaces
 
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
 DEFAULT_RULES_PATH = CONFIG_DIR / "rules.yaml"
 DEFAULT_CYCLING_RULES_PATH = CONFIG_DIR / "cycling_rules.yaml"
 DEFAULT_DESIGN_RULES_PATH = CONFIG_DIR / "design_rules.yaml"
+DEFAULT_SPECIAL_PLACES_PATH = CONFIG_DIR / "special_places.yaml"
 
 # Words in rule conditions that are operators or control words, not segment features.
 _KEYWORDS = {"and", "or", "not", "in", "if", "else", "default", "no", "passed"}
@@ -36,6 +38,12 @@ def load_design_rules(path: str | Path = DEFAULT_DESIGN_RULES_PATH) -> DesignRul
     """Read design_rules.yaml and validate it; raises pydantic.ValidationError if invalid."""
     with open(path, encoding="utf-8") as f:
         return DesignRuleSet.model_validate(yaml.safe_load(f))
+
+
+def load_special_places(path: str | Path = DEFAULT_SPECIAL_PLACES_PATH) -> SpecialPlaces:
+    """Read special_places.yaml and validate it; raises pydantic.ValidationError if invalid."""
+    with open(path, encoding="utf-8") as f:
+        return SpecialPlaces.model_validate(yaml.safe_load(f))
 
 
 def all_rule_ids(rules: RuleSet, cycling: CyclingRuleSet, design: DesignRuleSet) -> list[str]:

@@ -274,3 +274,8 @@ Fachlich:
 - [x] HVS ohne `dtv_official` (274 GOW-Abschnitte, 23 km): bleiben vorerst GOW50 (Entscheidung prstolpe 2026-11-15).
 - [x] C-G50-02-Abschnitte sind in H-STR-01 und H-PAIR-01 gesperrt (`locked_rules`, Entscheidung prstolpe 2026-11-15).
 - [ ] Kurze GOW30-Stücke zwischen GOW50 werden nur unter min_run_m (200 m) zu GOW50; 30 Läufe von 200–500 m (9,5 km) bleiben GOW30, meist aus C-G30-02 (zu schmal für einen Radweg). Grenze auf gap_close_m (500 m) anheben? Dann bekäme eine Engstelle ohne Platz für einen Radweg Tempo 50 – prstolpe
+
+## Besondere Orte (prompts/26, special_places.yaml 0.2.0)
+- [ ] Schanze: Was der Vorschlag für das Parken am Straßenrand vorsieht, steht nicht in den Quellen. Die Skizze „Querschnitt im Vorschlag“ rechnet die Fahrradstraße mit Parken wie in unserem Ziel und die Fußgängerzone ohne Parken (PRF-03 für ETW_ERF). Bei der Initiative nachfragen? – prstolpe
+- [ ] Schanze: Stand der Unterschriftensammlung vor jeder Veröffentlichung prüfen (zuletzt 25.09.2026; Frist sechs Monate).
+- [x] Zuschnitt Schanzenstraße/Schulterblatt/Lerchenstraße (Entscheidung prstolpe 2026-11-16): bis Sternschanzenbrücke, Altonaer Straße bzw. Stresemannstraße.

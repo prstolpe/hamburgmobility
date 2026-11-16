@@ -1,9 +1,10 @@
 import "./style.css";
 import { dataHtml } from "./datapage.js";
 import { bindDistrictPage, districtHtml, districtListHtml } from "./districts.js";
-import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO } from "./layers.js";
+import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO, placeLegendHtml, placeOf } from "./layers.js";
 import { chapterHtml, referenceHtml, referenceListHtml, resolveRule, summaryHtml } from "./method.js";
 import { imprintHtml } from "./pages.js";
+import { placesHtml } from "./places.js";
 import { junctionHtml, segmentHtml } from "./profile.js";
 import { setupSearch } from "./search.js";
 import { parseHash, THEMES, toHash, viewsOf, withView } from "./state.js";
@@ -47,6 +48,17 @@ function themesHtml() {
       `<button type="button" data-view="${k}" aria-pressed="${k === state.view}">${esc(v.label)}</button>`).join("")}</span>` : ""}`;
 }
 
+/** Special places (prompts/26): one switch per place, like the overlays. */
+function placesControlHtml() {
+  const sp = meta.special_places;
+  if (!sp?.places?.length) return "";
+  const items = sp.places.map((p) => `<label class="opt">
+    <input type="checkbox" name="place" value="${esc(p.id)}" ${state.place === p.id ? "checked" : ""}> <span>${esc(p.title)}<br>
+    <span class="muted t-small">(${esc(p.kind_plain)}, Stand ${esc(new Date(p.status_date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }))})</span></span></label>`).join("");
+  return `<fieldset class="places"><legend>${esc(sp.texts.overlay)}</legend>${items}
+    <p class="t-small"><a href="#orte">Was sind besondere Orte?</a></p></fieldset>`;
+}
+
 function controlsHtml() {
   const more = Object.entries(THEMES).flatMap(([t, th]) => viewsOf(t).filter(([, v]) => v.level === 3)
     .map(([v, x]) => `<li><button type="button" class="link" data-theme-view="${t}:${v}" aria-pressed="${state.theme === t && state.view === v}">${esc(th.title)}: ${esc(x.label)}</button></li>`)).join("");
@@ -60,10 +72,11 @@ function controlsHtml() {
   return `
     <h2 class="legend-title">Was die Farben bedeuten</h2>
     <p id="layer-text">${esc(LAYER_INFO[state.layer].text)}</p>
-    <div id="legend" aria-live="polite">${legendHtml(state.layer, meta)}</div>
+    <div id="legend" aria-live="polite">${legendHtml(state.layer, meta)}${placeLegendHtml(state, meta)}</div>
     <label for="f-bz" class="bz-label">Bezirk</label>
     <select id="f-bz" name="bz"><option value="">ganz Hamburg</option>${meta.districts.map((b) =>
       `<option value="${esc(b)}" ${state.bz === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>
+    ${placesControlHtml()}
     <details class="level l3" ${state.cats.length || state.dts.length || state.prmin || state.overlays.length || THEMES[state.theme].views[state.view].level ? "open" : ""}>
       <summary>Mehr Ansichten und Filter</summary>
       <h3>Weitere Ansichten</h3><ul class="plain">${more}</ul>
@@ -92,6 +105,7 @@ function bindControls() {
     else if (t.name === "cat") setState({ cats: checked("cat") });
     else if (t.name === "dt") setState({ dts: checked("dt") });
     else if (t.name === "bz") setState({ bz: t.value });
+    else if (t.name === "place") showPlace(t.checked ? t.value : null);
     else if (t.name === "pr") setState({ prmin: Number(t.value) });
   };
   root.oninput = (ev) => {
@@ -102,6 +116,13 @@ function bindControls() {
     const tv = ev.target.closest("[data-theme-view]");
     if (tv) { const [theme, view] = tv.dataset.themeView.split(":"); setState({ theme, view }); }
   };
+}
+
+/** Switch a special place on (and zoom to it) or off. */
+function showPlace(id, { push = false } = {}) {
+  setState({ page: "karte", place: id }, { push });
+  const p = placeOf(state, meta);
+  if (p?.bbox) setTimeout(() => mapView?.fitBbox(p.bbox), 50);
 }
 
 function renderControls() {
@@ -264,7 +285,7 @@ async function render() {
     if (a.getAttribute("href") === `#${state.page}`) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
-  const titles = { bezirke: "Bezirke", methode: "Methode", daten: "Daten", impressum: "Impressum" };
+  const titles = { bezirke: "Bezirke", orte: "Besondere Orte", methode: "Methode", daten: "Daten", impressum: "Impressum" };
   const chapter = meta.method?.chapters?.find((c) => c.key === state.sub);
   const subTitle = state.page !== "methode" ? null : state.sub === "regeln" ? "Alle Regeln" : chapter?.title;
   document.title = `${meta.site_title}${titles[state.page] ? ` – ${subTitle ? `${titles.methode}: ${subTitle}` : titles[state.page]}` : ""} · ${ORG_NAME}`;
@@ -278,6 +299,8 @@ async function render() {
         onSelectJunction: (id) => setState({ jct: id, seg: null }),
         onMove: (m) => { state = { ...state, map: m }; writeUrl(); },
       });
+      const p = placeOf(state, meta);
+      if (p?.bbox && !state.map) mapView.fitBbox(p.bbox);  // ?place= without a map position: zoom to the place
     } else {
       mapView.resize();
     }
@@ -286,7 +309,7 @@ async function render() {
   if (state.page === "bezirke") await renderDistricts();
   if (state.page === "methode") await renderMethod();
   else {
-    const pages = { daten: async () => dataHtml(meta), impressum: async () => imprintHtml(meta) };
+    const pages = { daten: async () => dataHtml(meta), impressum: async () => imprintHtml(meta), orte: async () => placesHtml(meta) };
     const sec = $(`[data-page="${state.page}"]`);
     if (pages[state.page] && !sec.dataset.loaded) {
       sec.innerHTML = await pages[state.page]();
@@ -306,6 +329,7 @@ async function init() {
   for (const s of streets) for (const id of s.ids) idToStreet.set(id, s);
   $("#foot-version").textContent = `Version ${meta.version} · Datenstand ${new Date(meta.data_date).toLocaleDateString("de-DE")}`;
   bindControls();
+  if (!meta.special_places?.places?.length) document.querySelector('nav.main a[href="#orte"]')?.remove();  // older data
   const entries = [...streets.map((s) => ({ ...s, kind: "seg" })), ...junctions.map((j) => ({ ...j, kind: "jct" }))];
   setupSearch($("#search"), $("#search-list"), entries, (s) => {
     if (s.kind === "jct") {
@@ -334,6 +358,11 @@ async function init() {
       else $("#main").focus();
     });
   }
+  // "Auf der Karte zeigen" on the page Besondere Orte
+  $('[data-page="orte"]').addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-show-place]");
+    if (b) showPlace(b.dataset.showPlace, { push: true });
+  });
   window.addEventListener("popstate", () => { state = parseHash(location.hash); render(); });
   window.addEventListener("hashchange", () => { state = parseHash(location.hash); render(); });
   writeUrl();  // rewrite old links (?layer=, #tabelle, #downloads, #quellen) to the new parameters

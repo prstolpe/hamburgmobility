@@ -1,0 +1,64 @@
+# Besondere Orte: Vorschläge, Beschlüsse oder gebaute Maßnahmen Dritter, die auf der Karte und im Steckbrief neben
+# dem Regelwerk gezeigt werden (prompts/26_special_places_trees_parking.md). Kein Teil der Klassifikation: Die
+# Soll-Kategorie und ihre Begründung bleiben unverändert. Schema: config/schema/special_places_model.py.
+# Neue Orte: einen Eintrag unter `places` anlegen; die Vergleichssätze kommen aus config/plain_language.yaml
+# (Abschnitt special_places) und werden beim Export erzeugt.
+
+meta:
+  version: 0.2.0
+  updated: 2026-11-16
+
+# profile: Eingaben unserer Querschnittslogik, die die Maßnahme ändert (Skizze „Querschnitt im Vorschlag“ im
+# Steckbrief). Fahrradstraße: Radführung cycle_street, die Kategorie bleibt. Fußgängerzone: Kategorie ETW_ERF mit
+# Mischfläche; Parken dann nach PRF-03 wie bei ETW_ERF (kein Parken am Rand). Was der Vorschlag zum Parken sagt, ist
+# offen (docs/open_questions.md).
+measures:
+  cycle_street: {label_plain: "Fahrradstraße", profile: {facility: cycle_street}}
+  pedestrian_zone_bikes_allowed: {label_plain: "Fußgängerzone, Rad frei", profile: {cat: ETW_ERF, facility: mixed}}
+
+places:
+  - id: schanze_verkehrsberuhigt
+    title: "Verkehrsberuhigte Schanze"
+    kind: proposal
+    initiator: "Bürgerbegehren im Bezirk Altona, Teil des Hamburger Zukunftsentscheids"
+    status: "Unterschriften werden gesammelt"
+    status_date: 2026-09-25
+    status_note: "Das Bezirksamt Altona hat das Bürgerbegehren zugelassen. Nötig sind die Unterschriften von 3 % der Wahlberechtigten in Altona innerhalb von sechs Monaten."
+    sources:
+      - {title: "Zukunftsentscheid Hamburg: Verkehrsberuhigte Schanze", url: "https://zukunftsentscheid-hamburg.de/verkehrsberuhigteschanze", checked: 2026-11-16}
+      - {title: "Radio Reeperbahn, 25.09.2026: Bürgerbegehren für autofreies Schanzenviertel gestartet", url: "https://radioreeperbahn.de/2026/09/25/buergerbegehren-fuer-autofreies-schanzenviertel-gestartet/", checked: 2026-11-16}
+    exceptions: ["Rettungsdienst, Feuerwehr und Polizei", "Müllabfuhr", "Lieferverkehr zu bestimmten Zielen", "Menschen mit eigenem Stellplatz", "Handwerk, Pflegedienste und Umzüge"]
+    # Farbe: Dunkelgrün aus dem Stylesheet des Zukunftsentscheids (zukunftsentscheid-hamburg.de, gelesen 2026-11-16),
+    # ohne Logo, ohne Leuchtschein und ohne 3D (Vorgabe prstolpe 2026-11-16). Reine Darstellung, keine Fachregel.
+    theme:
+      palette: {main: "#235753", casing: "#ffffff"}
+      pattern: {cycle_street: solid, pedestrian_zone_bikes_allowed: dashed}
+    # Zuordnung: street-matcher 2026-11-16 (data/interim/special_places_match.csv); Zuschnitt nach Vorgabe
+    # prstolpe 2026-11-16: Schanzenstraße nur bis zur Sternschanzenbrücke (Verbindungsbahn; die Brücke liegt im
+    # Abschnitt seg_8792f14eff61d5ea, 117 m, rund 40–64 m vor seinem Nordende – der Abschnitt zählt dazu), Schulterblatt
+    # nur bis zur Altonaer Straße, Lerchenstraße nur bis zur Stresemannstraße (jeweils ohne die Abschnitte im Knoten).
+    # Bartelsstraße hat in OSM nur Abschnitte mit Doppelnamen „Susannenstraße / Bartelsstraße“; sie zählen zur
+    # Fußgängerzone.
+    segments:
+      - measure: cycle_street
+        streets: [Schanzenstraße, Schulterblatt, Susannenstraße, Kampstraße, Ludwigstraße, Lerchenstraße, Juliusstraße]
+        segment_ids: [
+          # Schanzenstraße bis zur Sternschanzenbrücke
+          seg_db0bb183b9098c15, seg_cfb606bbc65ec29b, seg_7daaad556dc21bde, seg_32bfbafbfb7ac16b, seg_727551a997f9a28b,
+          seg_0403061761322d82, seg_871c414145fd8054, seg_8792f14eff61d5ea,
+          # Schulterblatt bis zur Altonaer Straße
+          seg_cfd6331927b29862, seg_72b44d1ec02852ff, seg_f1fdcb0159bc3e68, seg_20370db786102c6d, seg_d2a81efd71ac9a51,
+          seg_fb76644aa54c26c2, seg_feb8ff48ce6a081e,
+          # Lerchenstraße bis zur Stresemannstraße
+          seg_18b183f866dd1de3, seg_20ce0d6580c5b9c6,
+          # Juliusstraße, Ludwigstraße, Kampstraße, Susannenstraße
+          seg_34b060289cc0d67e, seg_6ce9aef17032f285, seg_f84b5c4c998f88f1, seg_5512bfdb522895e7,
+          seg_5835d5bafa892b99, seg_86903c245099be91, seg_d2873025eeb33d10,
+        ]
+      - measure: pedestrian_zone_bikes_allowed
+        streets: [Bartelsstraße, Rosenhofstraße]
+        segment_ids: [seg_0b9a14a593eade03, seg_0f2d374987fc48f2, seg_7e4500762dc41521]
+    texts:
+      glance: "Ein Bürgerbegehren schlägt vor, im Schanzenviertel sieben Straßen zu Fahrradstraßen und zwei zu Fußgängerzonen zu machen."
+      explain: "Autos sollen nicht mehr quer durch das Viertel fahren. Dafür sollen Rad- und Fußverkehr mehr Platz bekommen. Feuerwehr, Müllabfuhr, Lieferungen, Handwerk, Pflege und Menschen mit eigenem Stellplatz dürfen weiter hineinfahren."
+      details: "Wir zeigen den Vorschlag so, wie die Initiative ihn beschreibt. Er ist kein Beschluss. Die Straßen haben wir selbst aus OpenStreetMap zugeordnet; die Karte der Initiative haben wir nicht übernommen."
