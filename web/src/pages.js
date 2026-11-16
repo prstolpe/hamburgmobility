@@ -9,7 +9,7 @@ async function text(url) {
 
 export function downloadsHtml(meta) {
   const rows = (meta.downloads ?? []).map((d) => `<tr><td><a href="downloads/${esc(d.file)}" download>${esc(d.file)}</a></td>
-    <td>${esc(d.text)}</td><td>${num(d.bytes / 1e6, 1)} MB</td></tr>`).join("");
+    <td>${esc(d.text)}</td><td>${num(d.bytes / 1e6, 1)}&nbsp;MB</td></tr>`).join("");
   return `
   <h1>Daten herunterladen</h1>
   <p>Alle Abschnitte in ${esc(meta.area_label)} (${num(meta.n_segments)} Abschnitte), Version ${esc(meta.version)}.

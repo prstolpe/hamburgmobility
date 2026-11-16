@@ -19,6 +19,12 @@ export const THEMES = {
   aufgabe: { title: "Aufgabe und Tempo", views: {
     ziel: { label: "Ziel", layer: "cat" }, heute: { label: "heute", layer: "speed" },
     hvs: { label: "Hauptverkehrsstraßen (Vergleich)", layer: "hvs", level: 3 } } },
+  rad: { title: "Radnetz", views: {
+    ziel: { label: "Ziel", layer: "cnet" },
+    radweg: { label: "Radweg", layer: "cfac", enabled: false },
+    luecken: { label: "Lücken", layer: "cgap", enabled: false },
+    amtlich: { label: "amtliches Netz", layer: "coff", level: 3 } } },
+  knoten: { title: "Kreuzungen", views: { ziel: { label: "Ziel", layer: "jct" } } },
   abweichung: { title: "Heute und Ziel", views: {
     ziel: { label: "Abweichung", layer: "disc" }, prio: { label: "Dringlichkeit", layer: "prio" } } },
   platz: { title: "Fahrstreifen", views: {
@@ -26,12 +32,6 @@ export const THEMES = {
     fahrstreifen: { label: "Fahrstreifen", layer: "lanes" },
     breite: { label: "Breite der Straße", layer: "width", level: 3, enabled: false },
     regelprofil: { label: "Regelprofil der Aufgabe", layer: "feas", level: 3, enabled: false } } },
-  rad: { title: "Radnetz", views: {
-    ziel: { label: "Ziel", layer: "cnet" },
-    radweg: { label: "Radweg", layer: "cfac", enabled: false },
-    luecken: { label: "Lücken", layer: "cgap", enabled: false },
-    amtlich: { label: "amtliches Netz", layer: "coff", level: 3 } } },
-  knoten: { title: "Kreuzungen", views: { ziel: { label: "Ziel", layer: "jct" } } },
 };
 /** Enabled views of a theme as [id, view] pairs, in order. */
 export const viewsOf = (theme) => Object.entries(THEMES[theme]?.views ?? {}).filter(([, v]) => v.enabled !== false);

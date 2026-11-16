@@ -89,8 +89,9 @@ nav.main a:hover { border-bottom-color: var(--line); }
 
 main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 main:focus { outline: none; }
-.page { padding: var(--s4) var(--margin) var(--s6); width: 100%; max-width: calc(8 * 72px + 7 * var(--gutter) + 2 * var(--margin)); }
-.prose { max-width: calc(68ch + 2 * var(--margin)); }
+/* text pages: columns 1-8 of the fluid grid (tokens.json grid.text_page), Bezirke all 12; only running text keeps 68ch */
+.page { padding: var(--s4) var(--margin) var(--s6); width: 100%; max-width: calc(8 * var(--col) + 7 * var(--gutter) + 2 * var(--margin)); }
+.page.wide { max-width: none; }
 .prose p, .prose li { max-width: 68ch; }
 .lead { font-size: 1.25rem; line-height: 28px; }
 
