@@ -199,6 +199,9 @@ def _check_profile(profile: dict, allocation: dict) -> None:
         for key in ("element", "buffer"):
             if cell.get(key) is not None and cell[key] not in elements:
                 raise ValueError(f"PRF-03.cycle_elements.{fac}.{key}: unknown element {cell[key]!r}")
+    hosts = set(prf03.get("loading_shares_with", []))
+    if not hosts <= {"parking_parallel", "tree_strip"}:
+        raise ValueError(f"PRF-03.loading_shares_with: only parking_parallel and tree_strip can take the loading zone, got {sorted(hosts)}")
     positions = set(prf03["parking_positions"])
     for cat, v in (prf03.get("parking_by_category") or {}).items():
         if cat not in EXPECTED_CATEGORIES:

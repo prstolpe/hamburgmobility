@@ -132,7 +132,7 @@ def test_optional_elements_ist_based():
     assert len(_elements(plain, "tree_strip")) == P.tree_sides
     rich = pf.evaluate_profile(_seg(parking_sides=2, business=True), 100.0, P)
     assert len(_elements(rich, "parking_parallel")) == 2
-    assert len(_elements(rich, "loading_zone")) == P.loading_sides
+    assert not _elements(rich, "loading_zone") and pf.LOADING_SHARED_FLAG in rich.flags  # shares the parking strip
     etw = pf.evaluate_profile(_seg(cat="ETW30", facility="mixed", cycle_width=None), 100.0, P)
     assert not _elements(etw, "tree_strip")
 
@@ -203,11 +203,38 @@ def test_d1_skipped_without_parking_then_d2_trees():
     assert pf.TREE_PITS_FLAG in res.flags
 
 
-def test_loading_zone_kept_by_d1():
-    seg = _seg(parking_sides=2, business=True)
+def test_loading_zone_shares_the_parking_or_tree_strip():
+    # PRF-03 loading_shares_with: loading bays alternate with parking spaces or trees in the same strip, no extra width
+    assert P.loading_shares_with[0] == "parking_parallel" and "tree_strip" in P.loading_shares_with
+    etw = dict(cat="ETW30", facility="mixed", cycle_width=None)
+    with_parking = pf.evaluate_profile(_seg(**etw, parking_sides=1, business=True), 100.0, P)
+    without = pf.evaluate_profile(_seg(**etw, parking_sides=1, business=False), 100.0, P)
+    assert not _elements(with_parking, "loading_zone")
+    assert with_parking.total_required_m == pytest.approx(without.total_required_m)
+    assert pf.LOADING_SHARED_FLAG in with_parking.flags and pf.LOADING_SHARED_FLAG not in without.flags
+    trees = pf.evaluate_profile(_seg(cat="GOW50", parking_sides=0, business=True), 100.0, P)  # GOW50: tree strips
+    assert _elements(trees, "tree_strip") and not _elements(trees, "loading_zone")
+    assert pf.LOADING_SHARED_FLAG in trees.flags
+
+
+def test_loading_zone_own_strip_without_parking_or_trees():
+    res = pf.evaluate_profile(_seg(cat="ETW30", facility="mixed", cycle_width=None, parking_sides=0, business=True), 100.0, P)
+    assert len(_elements(res, "loading_zone")) == P.loading_sides
+    assert pf.LOADING_SHARED_FLAG not in res.flags
+
+
+def test_d1_removes_parking_and_loading_zone():
+    seg = _seg(cat="ETW30", facility="mixed", cycle_width=None, parking_sides=0, business=True)
     full = pf.evaluate_profile(seg, 100.0, P).total_required_m
     res = pf.evaluate_profile(seg, full - 0.1, P)
-    assert _elements(res, "loading_zone")
+    assert res.degrade_steps_applied[0] == "D1"
+    assert not _elements(res, "loading_zone") and pf.LOADING_REMOVED_FLAG in res.flags
+    d1 = next(t for t in res.trace if t["id"] == "D1")
+    assert d1["values"]["loading_removed"] is True
+    shared = _seg(cat="ETW30", facility="mixed", cycle_width=None, parking_sides=2, business=True)
+    full = pf.evaluate_profile(shared, 100.0, P).total_required_m
+    res = pf.evaluate_profile(shared, full - 0.1, P)
+    assert not _elements(res, "parking_parallel") and not _elements(res, "loading_zone")
 
 
 def test_fallback_after_d2_before_d3():

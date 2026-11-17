@@ -45,7 +45,7 @@ SAMPLE_SEED = 42
 CASE_LIST_N = 40
 CAT_ORDER = ["SW", "GOW80", "GOW50", "GOW30", "ETW60", "ETW30", "ETW_ERF"]
 FIT_DE = {"fits": "passt", "fits_after_degrade": "passt nach Abbau", "does_not_fit": "passt nicht", None: "nicht bewertet"}
-STEP_DE = {"D1": "Parken entfernen", "D2": "neuer Baumstreifen → Baumscheiben im Trenn-/Seitenraum",
+STEP_DE = {"D1": "Parken und Ladezone entfernen", "D2": "neuer Baumstreifen → Baumscheiben im Trenn-/Seitenraum",
            "fallback": "Fallback der Matrixzelle (Prompt 18)",
            "D3": "zweiten Kfz-Fahrstreifen streichen", "D4": "Rad- und Gehweg auf Mindestbreite",
            "D5": "Vorschlag GOW50 → GOW30 (C-G30-02)", "D6": "Flag: Einrichtungsverkehr / Durchfahrtsunterbrechung prüfen",
@@ -259,7 +259,7 @@ def write_report(out: gpd.GeoDataFrame, sel: pd.DataFrame, ctx: dict) -> None:
         "",
         "Verfügbare Breite = width_p10_m der Variante Verkehrsfläche (maßgeblich); die Variante Fassade zeigt das Potenzial "
         "inklusive Vorgärten. Das gewünschte Profil enthält Gehwege (Regelmaß), die Radanlage mit Sollbreite aus Prompt 18, "
-        "ÖPNV, Fahrbahn, Trennstreifen, Bäume (GOW), Ladezone bei Geschäftsnutzung und Parken nur dort, wo OSM heute Parken "
+        "ÖPNV, Fahrbahn, Trennstreifen, Bäume (GOW), Ladezone bei Geschäftsnutzung (im Park- oder Baumstreifen, sonst eigener Streifen) und Parken nur dort, wo OSM heute Parken "
         "zeigt (Entscheidung 2026-11-06) und die Kategorie es erlaubt (PRF-03 parking_by_category: GOW50 und ETW_ERF keins, "
         "GOW30 nur Parkstreifen, ETW30 wie Ist). Passt es nicht, gilt die Kaskade "
         f"{', '.join('Fallback' if s == 'fallback' else s for s in ctx['cascade_order'])} (PRF-06).",

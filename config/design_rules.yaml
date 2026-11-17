@@ -5,7 +5,7 @@
 # scope: rural = Regel betrifft nur außerorts (Kennzeichnung, Review 2026-11 F33).
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.11.1
+  version: 0.12.0
   date: 2026-11-17
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
@@ -129,7 +129,7 @@ cross_section_allocation:
     buffer_cycle_carriageway: 0.75
     parking_parallel: 2.00
     tree_strip: 2.00
-    loading_zone: 2.50
+    loading_zone: {value: 2.50, note: 'eigener Streifen nur ohne Park- oder Baumstreifen auf der Seite (PRF-03 loading_shares_with)'}
     bus_lane: 3.50
     tram: {value: 6.50, note: 'zweigleisig; nur falls vorhanden/geplant'}
   fill_order:
@@ -145,7 +145,7 @@ cross_section_allocation:
     - parking
   degrade_cascade_if_not_fit:
     # Reihenfolge der Liste = Abbaureihenfolge (PRF-06 cascade_order); D3 vor D2 seit 0.9.0 (Review 2026-11 F17, Entscheidung Q1 b)
-    - {step: D1, action: 'Parken entfernen (Ladezonen behalten, wenn Geschäftsnutzung)'}
+    - {step: D1, action: 'Parken und Ladezone entfernen'}
     - {step: D3, action: 'zweiten Kfz-Fahrstreifen streichen (L-02 neu prüfen, ggf. Busspur behalten)'}
     - {step: D2, action: 'Neuen Baumstreifen auf Baumscheiben im Trenn- oder Seitenraum reduzieren; Bestandsbäume nicht entfernen (Flag existing_trees_conflict, sobald Baumdaten vorliegen)',
        todo: 'existing_trees_conflict nicht umgesetzt: keine Baumdaten (sources.yaml street_trees ohne Endpunkt, docs/open_questions.md)'}
@@ -187,24 +187,29 @@ profile_assignment:
         Bausteine des gewünschten Profils je Kategorie: Gehwege beidseitig außer ETW_ERF (Mischfläche); Radanlage nach
         Führungsform (cycle_elements); Busfahrstreifen je Richtung bei bus_lane_soll; Straßenbahn nur, wenn vorhanden;
         Baumstreifen an tree_categories (tree_sides Seiten); Ladezone (loading_sides Seiten), wenn Geschäftsnutzung =
-        shop_frontage_share >= rules.yaml C-G30-01 thresholds.frontage; Längsparken nur, wo OSM heute Parken am
+        shop_frontage_share >= rules.yaml C-G30-01 thresholds.frontage: sie liegt im ersten Streifen aus
+        loading_shares_with auf derselben Seite (Ladebuchten wechseln sich mit Parkplätzen oder Baumscheiben ab, keine
+        zusätzliche Breite) und bekommt nur ohne einen solchen Streifen einen eigenen Streifen; Längsparken nur, wo OSM heute Parken am
         Fahrbahnrand zeigt (parking_positions), je Seite mit Parken (Wert no in der Liste = eine Seite ohne Parken),
         und nur nach Kategorie (parking_by_category): none = kein Parken, as_ist = alle parking_positions, Liste = nur
         diese Positionen (Seiten: alle Werte erlaubt -> 2, sonst 1)
       history:
         - "seit 0.9.0: Parken nur nach Kategorie (parking_by_category)"
+        - "seit 0.12.0: Ladezone teilt sich den Park- oder Baumstreifen (loading_shares_with); vorher immer eigener Streifen von 2,50 m über den ganzen Abschnitt (Entscheidung prstolpe 2026-11-17)"
       sidewalk_sides: 2
       no_sidewalk_categories: [ETW_ERF]
       tree_categories: [GOW50, GOW30]
       tree_sides: 2
       loading_sides: 1
+      loading_shares_with: [parking_parallel, tree_strip]
+      loading_shares_with_note: 'Annahme: Ladebuchten im Parkstreifen (2,00 m) oder zwischen Baumscheiben; Reihenfolge = Vorrang'
       parking_positions: [lane, street_side, on_kerb, half_on_kerb, shoulder]
       parking_by_category:
         GOW50: none            # rules.yaml requirements.GOW50.parking_along_carriageway: false
         GOW30: [street_side]   # nur Parkstreifen, neben Radfahrstreifen mit buffer_to_parking (PL-03); requirements.GOW30.parking_on_carriageway: false
         ETW30: as_ist
         ETW_ERF: none
-      parking_by_category_note: 'Review 2026-11 F11: das Soll darf nicht enthalten, was die Kategorie verbietet (D-DES-01); Ladezonen bleiben'
+      parking_by_category_note: 'Review 2026-11 F11: das Soll darf nicht enthalten, was die Kategorie verbietet (D-DES-01); Ladezonen bleiben (im Baumstreifen oder als eigener Streifen)'
       extra_elements: [cycle_lane, buffer_to_parking, carriageway, median, shared_surface]
       extra_elements_note: 'Bausteine ohne Eintrag in elements_min_m; Breiten aus cycling_rules (Prompt 18) bzw. lanes.lane_width_m (PRF-04)'
       cycle_elements:
@@ -259,8 +264,8 @@ profile_assignment:
       description: >-
         Passt das Profil nicht, werden die Schritte in cascade_order nacheinander angewendet und nach jedem Schritt
         neu geprüft; ein Schritt ohne Wirkung zählt nicht als angewendet. fallback = Fallback der Matrixzelle
-        (C-FAC-01, space_fits_preferred = false) mit dessen Sollbreite. D1 entfernt Parken (Ladezone bleibt, sie gibt
-        es nur bei Geschäftsnutzung); D3 streicht den zweiten Kfz-Fahrstreifen und den Mittelstreifen (Busfahrstreifen
+        (C-FAC-01, space_fits_preferred = false) mit dessen Sollbreite. D1 entfernt Parken und die Ladezone (seit 0.12.0;
+        vorher blieb die Ladezone, Flag loading_removed); D3 streicht den zweiten Kfz-Fahrstreifen und den Mittelstreifen (Busfahrstreifen
         bleibt); D2 setzt den neuen Baumstreifen auf 0 (Baumscheiben im Trenn- oder Seitenraum, Flag trees_as_pits;
         Bestandsbäume nicht erfasst, TODO existing_trees_conflict); D4 setzt Radanlage auf die Untergrenze aus
         C-FAC-04 floor und Gehweg auf min; D5 nur GOW50: Vorschlag GOW30 (C-G30-02) in cat_change_proposal, Profil mit
