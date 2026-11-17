@@ -250,6 +250,13 @@ details > summary { cursor: pointer; }
 /* cycling layers */
 .controls .note, .prose .note { border-left: 2px solid var(--ink); padding: var(--s1) var(--s3); }
 .sketch.xs svg { max-width: 100%; height: auto; }
+.sketch.jx svg { max-width: 440px; height: auto; }
+.sketch-zoom { all: unset; display: block; width: 100%; cursor: zoom-in; }
+.sketch-zoom:focus-visible { outline: 3px solid var(--focus); box-shadow: 0 0 0 4px var(--ink); }
+.sketch-zoom svg { display: block; margin: 0 auto; }
+.sketch-dialog { width: min(92vw, 1100px); max-width: none; max-height: 90vh; padding: var(--s3); border: 2px solid var(--ink); border-radius: 0; background: #fff; }
+.sketch-dialog::backdrop { background: rgba(0, 0, 0, .55); }
+.sketch-dialog-body svg { display: block; width: 100%; height: auto; max-height: calc(90vh - 7rem); margin: 0 auto; }
 table.compact td { text-align: right; }
 .maplibregl-ctrl-group { border-radius: 0 !important; box-shadow: none !important; border: 1px solid var(--ink); }
 .maplibregl-ctrl-attrib, .maplibregl-ctrl-scale { font-family: inherit; }

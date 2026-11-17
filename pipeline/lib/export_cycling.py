@@ -16,6 +16,7 @@ import pandas as pd
 from config.schema.cycling_model import NO_CYCLE_CATEGORY, CyclingRuleSet
 from config.schema.design_model import DesignRuleSet
 from pipeline.lib import profile as pf
+from pipeline.lib.junctions import _lanes
 from pipeline.lib.export import EXPORT_CRS
 
 CYCLE_CATS = ("RSV", "HAUPT", "BASIS", "ERSCHL")
@@ -276,15 +277,32 @@ def junction_redirects(j: pd.DataFrame) -> dict:
     return {str(n): str(nid) for nid, ms in zip(j["node_id"], j["member_nodes"]) for n in json.loads(ms) if str(n) != str(nid)}
 
 
-def junction_profile(r: pd.Series, labels: Labels, version: str) -> dict:
-    """Junction profile ("Steckbrief Knoten"): Soll and Ist type, cyclist treatment, reason, conflicts."""
+def leg_cross_sections(xs: pd.DataFrame) -> dict:
+    """segment_id -> Soll cross section (elements left to right) and oneway, for the junction sketch on the website."""
+    return {sid: {"elements": json.loads(el) if isinstance(el, str) else [], "oneway": None if _missing(ow) else bool(ow)}
+            for sid, el, ow in zip(xs["segment_id"], xs["profile_elements"], xs["oneway"])}
+
+
+def _leg_section(leg: dict, xs: dict | None) -> dict | None:
+    return next((xs[i] for i in leg.get("ids") or [] if xs and i in xs), None)
+
+
+def junction_profile(r: pd.Series, labels: Labels, version: str, xs: dict | None = None) -> dict:
+    """Junction profile ("Steckbrief Knoten"): Soll and Ist type, cyclist treatment, reason, conflicts.
+
+    xs (leg_cross_sections): Soll cross section of each arm's first segment with one, drawn in the junction sketch."""
     t = labels.t
     legs = json.loads(r["legs"]) if isinstance(r["legs"], str) else []
+    sec = [_leg_section(leg, xs) for leg in legs]
     override = r["junction_type_source"] == "override"
     return {
         "id": str(r["node_id"]), "names": _str(r["names"]), "bezirk": _str(r["bezirk"]), "pair": _str(r["pair"]),
         "legs": [{"name": _str(leg.get("name")), "cat": leg.get("cat"), "cycle_cat": labels.cat(leg.get("cycle_cat")),
-                  "facility_text": labels.text("facility", leg.get("facility")), "dtv": _num(leg.get("dtv"), 0)} for leg in legs],
+                  "facility_text": labels.text("facility", leg.get("facility")), "dtv": _num(leg.get("dtv"), 0),
+                  "bearing": _int(leg.get("bearing")), "lanes": _lanes(leg.get("lanes")), "facility": leg.get("facility"),
+                  "oneway": sc["oneway"] if sc else None,
+                  "elements": [[e["element"], _num(e["width_m"], 2)] for e in sc["elements"] if (e["width_m"] or 0) > 0] if sc else None}
+                 for leg, sc in zip(legs, sec)],
         "entering_dtv": _num(r["entering_dtv_sum"], 0), "space_radius_m": _num(r["space_radius_m"], 1),
         "tram": bool(r["tram_present"]), "signal_ist": bool(r["signal_present_ist"]),
         "soll": {"code": _str(r["junction_type_final"]), "text": labels.text("junction_type", r["junction_type_final"]),

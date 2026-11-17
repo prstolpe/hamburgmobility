@@ -201,6 +201,29 @@ test("junction profile opens from the URL", async ({ page }) => {
   await expect(page).not.toHaveURL(/jct=/);
 });
 
+test("sketches enlarge in a dialog; Escape closes only the dialog", async ({ page }) => {
+  test.skip(!meta.cycling, "no cycling layers in this export");
+  for (const [hash, kind] of [[`#karte?theme=knoten&jct=${JCT}`, "jx"], [`#karte?seg=${SEG}`, "xs"]]) {
+    await ready(page, hash);
+    const panel = page.locator("#panel");
+    await expect(page.locator("#panel-title")).toBeVisible(); // profile loaded (level 2 starts closed on phones)
+    await panel.locator("details").evaluateAll((ds) => ds.forEach((d) => { d.open = true; }));
+    const zoom = panel.locator(`.sketch.${kind} .sketch-zoom`);
+    if (kind === "xs" && !(await zoom.count())) continue; // this segment has no cross-section drawing
+    await zoom.click();
+    const dialog = page.locator("#sketch-dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator("svg")).toBeVisible();
+    const r = await new AxeBuilder({ page }).include("#sketch-dialog").withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
+    expect(r.violations.filter((v) => ["critical", "serious"].includes(v.impact)), JSON.stringify(r.violations, null, 1)).toEqual([]);
+    await page.screenshot({ path: `test-results/skizze-${kind}-${test.info().project.name}.png` });
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(panel).toBeVisible();
+    await expect(zoom).toBeFocused();
+  }
+});
+
 test("tiles are served with HTTP range requests", async ({ request }) => {
   const files = ["tiles/segments.pmtiles", "basemap/basemap.pmtiles"];
   if (meta.cycling) files.push(meta.cycling.tiles.cycling, meta.cycling.tiles.junctions);

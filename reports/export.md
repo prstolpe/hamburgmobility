@@ -1,6 +1,6 @@
 # Export – Stufe 9
 
-Erzeugt: 2026-11-17T06:49:36+00:00 von `pipeline/s09_export.py`, Version 0.24.0+2026-10-28. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-17T21:32:10+00:00 von `pipeline/s09_export.py`, Version 0.24.0+2026-10-28. Nicht amtlicher Entwurf.
 
 ## Prüfungen
 
@@ -8,7 +8,7 @@ Erzeugt: 2026-11-17T06:49:36+00:00 von `pipeline/s09_export.py`, Version 0.24.0+
 | --- | --- | --- |
 | nur Bezirke des Arbeitsgebiets | ok | 33712 Abschnitte in 7 Bezirken |
 | Tabelle je Bezirk | ok | table/altona.json, table/bergedorf.json, table/eimsbuettel.json, table/hamburg-mitte.json, table/hamburg-nord.json, table/harburg.json, table/wandsbek.json |
-| Seite unter 1 GB (GitHub Pages) | ok | data/out zusammen 534 MB |
+| Seite unter 1 GB (GitHub Pages) | ok | data/out zusammen 542 MB |
 | segment_id eindeutig und unverändert | ok | Reihenfolge wie discrepancy.parquet |
 | Export in EPSG:4326 | ok | EPSG:4326 |
 | keine Einzelunfälle oder Rohspuren | ok | Spalten aus PUBLIC_COLUMNS |
@@ -24,7 +24,7 @@ Erzeugt: 2026-11-17T06:49:36+00:00 von `pipeline/s09_export.py`, Version 0.24.0+
 ## Kennzahlen
 
 - Abschnitte: 33 712 in Hamburg (7 Bezirke) (4240.4 km)
-- Gesamtgröße data/out: 534 MB (Grenze GitHub Pages 1 GB)
+- Gesamtgröße data/out: 542 MB (Grenze GitHub Pages 1 GB)
 - Suchindex: 8 396 Straßennamen; Schulen/Kitas in den Kacheln: 1 545
 - Steckbriefe: 33 712 Dateien, zusammen 229.5 MB
 - Robustheit (make validate, 500 Läufe): 2 247 Abschnitte „unsicher“ (246.6 km)
@@ -83,7 +83,7 @@ Erzeugt: 2026-11-17T06:49:36+00:00 von `pipeline/s09_export.py`, Version 0.24.0+
 | `data/out/tiles/junctions.pmtiles` | 2.80 MB |
 | `data/out/tiles/segments.pmtiles` | 13.56 MB |
 | `data/out/basemap/fonts/ (768 Glyphen-Dateien)` | 11.08 MB |
-| `data/out/junctions/ (14312 Knoten-Steckbriefe)` | 23.06 MB |
+| `data/out/junctions/ (14312 Knoten-Steckbriefe)` | 30.33 MB |
 | `data/out/table/ (7 Dateien, je Bezirk)` | 5.68 MB |
 
 ## Stichprobe (30 zufällige Steckbriefe, Seed 42)

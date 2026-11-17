@@ -398,9 +398,10 @@ def write_cycling_downloads(c: dict, dl, texts: dict) -> None:
 
 def write_junction_profiles(c: dict, version: str) -> int:
     n = 0
+    xs = xc.leg_cross_sections(c["xs"])
     for r in c["j"].itertuples(index=False):
         row = pd.Series(r._asdict())
-        p = xc.junction_profile(row, c["labels"], version)
+        p = xc.junction_profile(row, c["labels"], version, xs)
         p["robustness"] = xc.robustness(c["rob"].get(("junction", p["id"])))
         write_json(OUT_DIR / "junctions" / f"{p['id']}.json", p)
         n += 1

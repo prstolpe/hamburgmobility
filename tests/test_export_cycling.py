@@ -126,9 +126,9 @@ def test_every_junction_type_has_a_group_and_text():
 
 
 def _junction(**kw) -> dict:
-    legs = [{"ids": ["seg_a"], "cat": "GOW50", "cycle_cat": "HAUPT", "facility": "separated_oneway_both", "dtv": 30000.0, "name": "Hauptstraße", "bearing": 90},
-            {"ids": ["seg_b"], "cat": "GOW50", "cycle_cat": "HAUPT", "facility": "separated_oneway_both", "dtv": 30000.0, "name": "Hauptstraße", "bearing": 270},
-            {"ids": ["seg_c"], "cat": "ETW30", "cycle_cat": "ERSCHL", "facility": "mixed", "dtv": None, "name": "Nebenweg", "bearing": 0}]
+    legs = [{"ids": ["seg_a"], "cat": "GOW50", "cycle_cat": "HAUPT", "facility": "separated_oneway_both", "dtv": 30000.0, "name": "Hauptstraße", "bearing": 90, "lanes": 2},
+            {"ids": ["seg_b"], "cat": "GOW50", "cycle_cat": "HAUPT", "facility": "separated_oneway_both", "dtv": 30000.0, "name": "Hauptstraße", "bearing": 270, "lanes": "shared"},
+            {"ids": ["seg_c"], "cat": "ETW30", "cycle_cat": "ERSCHL", "facility": "mixed", "dtv": None, "name": "Nebenweg"}]
     row = {"node_id": "123", "names": "Hauptstraße / Nebenweg", "bezirk": "Altona", "pair": "GOW50+ETW30", "legs": json.dumps(legs),
            "legs_count": 3, "entering_dtv_sum": 30000.0, "space_radius_m": 12.0, "tram_present": False, "signal_present_ist": False,
            "decision_rule": "J-04", "junction_type_soll": "continuous_footway_exit", "junction_type_final": "continuous_footway_exit",
@@ -224,6 +224,21 @@ def test_junction_profile():
     assert p["conflicts"] == [TEXTS["cycling"]["junction_flags"]["dtv_partial"]]
     assert [leg["name"] for leg in p["legs"]] == ["Hauptstraße", "Hauptstraße", "Nebenweg"]
     assert p["legs"][0]["facility_text"] == TEXTS["cycling"]["facility"]["separated_oneway_both"]
+    assert [(leg["bearing"], leg["lanes"]) for leg in p["legs"]] == [(90, 2), (270, 1), (None, None)]
+    assert [leg["facility"] for leg in p["legs"]] == ["separated_oneway_both", "separated_oneway_both", "mixed"]
+    assert all(leg["elements"] is None and leg["oneway"] is None for leg in p["legs"])  # without cross sections
+
+
+def test_junction_profile_leg_cross_sections():
+    xs = {"seg_a": {"elements": [{"element": "sidewalk", "width_m": 2.5}, {"element": "cycle_track", "width_m": 2.0},
+                                 {"element": "carriageway", "width_m": 6.5}, {"element": "parking_parallel", "width_m": 0.0}],
+                    "oneway": False},
+          "seg_c": {"elements": [{"element": "carriageway", "width_m": 4.0}], "oneway": True}}
+    p = xc.junction_profile(pd.Series(_junction()), LABELS, "1.0+2026-11-01", xs)
+    assert p["legs"][0]["elements"] == [["sidewalk", 2.5], ["cycle_track", 2.0], ["carriageway", 6.5]]
+    assert p["legs"][0]["oneway"] is False
+    assert p["legs"][1]["elements"] is None
+    assert p["legs"][2]["elements"] == [["carriageway", 4.0]] and p["legs"][2]["oneway"] is True
     assert p["crashes"] == {"cyc": 2, "cyc_severe": 1}
     assert p["override"] is None
     assert "rule_trace_junction" not in json.dumps(p)

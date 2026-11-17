@@ -888,3 +888,11 @@ Auslöser seit 0.18.0 (Schule/Kita ≤ access_radius 50 m, Breite nur über den 
 - QA-Korrekturen: lange LBV-Flächen nach Fläche gezählt (space_area_m2), Absolutes Haltverbot und Ladezone
   ausgeschlossen, leere Gegenseite auf Abschnitten unter 30 m unbekannt statt 0 (official_zero_min_length_m).
 
+
+## Export Knotenprofile – 2026-11-17 (nur Anzeige, keine Regelversion)
+- `junctions/<id>.json`: jeder Arm enthält zusätzlich `bearing` (Grad im Uhrzeigersinn ab Nord) und `lanes`
+  (Soll-Fahrstreifen je Richtung, „shared“ = 1; null wenn unbekannt). Für die Knotenskizze, ohne Einfluss auf die Klassifikation.
+- Außerdem je Arm `facility` (Soll-Führungsform), `oneway` und `elements` (Soll-Querschnitt des ersten Abschnitts des Arms,
+  Elemente von links nach rechts mit Breite). Die Website zeichnet daraus eine Draufsicht der Kreuzung: Arme maßstäblich im
+  Soll-Querschnitt, Kreuzungsbereich je Soll-Typ schematisch (Radfurten, Fußgängerüberwege, Ampeln, Vorfahrt, Plateau).
+  Skizzen von Querschnitt und Kreuzung lassen sich per Klick vergrößern.

@@ -1,6 +1,7 @@
 // Profile ("Steckbrief") in three levels: level 1 at a glance, level 2 explanation ("Mehr erfahren"),
 // level 3 details and sources. Rule IDs, category codes and segment ids appear only on level 3.
 // Port of prototypes/redesign/shared/profile.js to the website code style.
+import { junctionSvg } from "./junction_sketch.js";
 import { crossSectionSvg } from "./panel.js";
 import { issueUrl, mailtoUrl } from "./feedback.js";
 import { approx, approxRange, esc, num } from "./util.js";
@@ -240,6 +241,7 @@ export function junctionHtml(j, meta, pageUrl, { level2Open = true } = {}) {
       <h3>Was ändert sich?</h3>
       <p>Ziel: ${esc(sollText)}.${need ? " Dafür muss die Kreuzung umgebaut werden." : " Die Kreuzung passt schon."}</p>
       ${j.treatment ? `<p>Für Radfahrende: ${esc(j.treatment)}</p>` : ""}
+      ${junctionSvg(j, meta)}
       ${conf?.code === "low" ? '<p class="note">Diese Einstufung ist unsicher: Werte fehlen. Bitte prüfen.</p>' : ""}
       ${fb}
     </details>`;
