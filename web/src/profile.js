@@ -3,7 +3,7 @@
 // Port of prototypes/redesign/shared/profile.js to the website code style.
 import { crossSectionSvg } from "./panel.js";
 import { issueUrl, mailtoUrl } from "./feedback.js";
-import { esc, num } from "./util.js";
+import { approx, approxRange, esc, num } from "./util.js";
 
 const TARGET_KMH = { SW: null, GOW50: 50, GOW30: 30, ETW30: 30, ETW_ERF: 7 };
 const WALK = "Schritttempo";
@@ -127,6 +127,26 @@ function placeProfile(sp, meta) {
       ${sp.profile_note ? `<p class="t-small">${esc(sp.profile_note)}</p>` : ""}`;
 }
 
+/** Trees and parking of the segment (prompts/26 Teil 2), level 2; estimates, missing data stays "keine Daten". */
+function treesParking(tp, meta) {
+  const t = meta.trees_parking?.texts;
+  if (!tp || !t) return "";
+  const f = (tpl, v) => String(tpl ?? "").replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
+  const pk = tp.parking;
+  let parking;
+  if (pk.complete) parking = f(t.profile_parking, { today: approx(pk.today), target: approxRange(pk.target_min, pk.target_max) });
+  else if (pk.today_known != null) parking = f(t.profile_parking_partial, { today: approx(pk.today_known) });
+  else parking = t.profile_parking_none;
+  const src = [...new Set([pk.src_left, pk.src_right])].map((s) => t.profile_source?.[s]).filter(Boolean).join(", ");
+  const tr = tp.trees;
+  const trees = tr.n ? f(t.profile_trees, { n: num(tr.n), affected: approxRange(tr.affected_min, tr.affected_max), new: approx(tr.new) })
+    : t.profile_trees_none;
+  return `<h3>${esc(t.profile_title)}</h3>
+      <p>${esc(parking)}${src ? ` <span class="t-small muted">(${esc(src)})</span>` : ""}</p>
+      <p>${esc(trees)}</p>
+      <p class="t-small">${esc(t.profile_note)}</p>`;
+}
+
 function placeCompare(sp) {
   if (!sp) return "";
   return `<h3>Vorschlag für diesen Ort</h3>
@@ -163,6 +183,7 @@ export function segmentHtml(p, meta, pageUrl, { level2Open = true } = {}) {
       ${fit ? `<h3>Hat das Ziel Platz?</h3><p class="fit">${esc(fit.text)}</p>${fit.drawing ? `<p class="t-small">${FIT_EXPLAIN}</p>` : ""}` : ""}
       ${xs}
       ${placeProfile(p.special_place, meta)}
+      ${treesParking(p.trees_parking, meta)}
       ${measure ? `<p class="note">${esc(sentence(measure))}</p>` : ""}
       ${c.uncertain ? UNSURE : ""}
       ${feedback(p, meta, pageUrl)}

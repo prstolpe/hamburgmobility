@@ -850,3 +850,41 @@ Auslöser seit 0.18.0 (Schule/Kita ≤ access_radius 50 m, Breite nur über den 
   Soll-Querschnitt gerechnet (pipeline/lib/profile.py), aber mit der Maßnahme: Fahrradstraße = Radführung
   cycle_street, Fußgängerzone = Kategorie ETW_ERF mit Mischfläche. Die übrigen Eingaben bleiben wie im Ziel.
 
+
+## sources.yaml 0.1.13 – 2026-11-16: Straßenbaumkataster und Öffentlicher Parkraum (prompts/26 Teil 2)
+- street_trees: WFS https://geodienste.hamburg.de/HH_WFS_Strassenbaumkataster (de.hh.up:strassenbaumkataster,
+  229 876 Bäume), dl-de/by-2.0 laut GetCapabilities, check_status verified. Vorher url: null.
+- Neu parking_spaces: WFS Öffentlicher Parkraum Hamburg (LBV, de.hh.up:parkraum, 203 046 Flächen),
+  dl-de/by-2.0, check_status verified. Laut Dienstbeschreibung nur in ausgewählten Bereichen.
+
+## design_rules.yaml 0.11.0, cycling_rules.yaml 0.13.0, plain_language.yaml 0.15.0 – 2026-11-16 (Branch feature/trees-parking-stats)
+- design_rules: neuer Abschnitt `trees_parking` mit 7 Regeln (prompts/26 Teil 2). Methode freigegeben von prstolpe
+  am 2026-11-16 (docs/trees_parking/methode_vorschlag.md).
+  - TP-P-01: Parkplätze heute aus dem Öffentlichen Parkraum (LBV), sonst OSM je Seite. Stellplatzmaße aus dem
+    Median der LBV-Flächen (längs 5,2 m, quer 2,5 m; hamburg), schräg 3,9 m (assumption). Der Abzug für Einfahrten
+    (osm_factor) wird an den Seiten mit beiden Angaben geeicht, aktuell 0,74.
+  - TP-P-02: Abstände an Kreuzungen nach StVO § 12 Abs. 3 Nr. 1, 5 m bzw. 8 m vor Kreuzungen mit baulichem
+    Radweg (de_regelwerk).
+  - TP-P-03: Parkplätze im Ziel nach PRF-03 parking_by_category, mit Abbaustufe D1. Erst war das Profil-Element
+    vorgesehen; das Profil setzt Parkreihen aber nur nach OSM-Angaben, sodass amtlich erfasste Plätze sonst als
+    entfallend gezählt hätten.
+  - TP-P-04: Hochrechnung für Straßen ohne Daten als Spanne (25.–75. Perzentil je Kategorie).
+  - TP-T-01 bis TP-T-03: Zuordnung der Bäume, Bänder des Soll-Profils mit Lageunsicherheit ±1,5 m und
+    gespiegeltem Profil, Bäume im Gehweg als Spanne, neue Bäume alle 12 m Baumstreifen (assumption).
+  - Schema: Feld `trees_parking`; neue Quellen STVO_12 und LBV_PARKRAUM.
+- cycling_rules: C-PRI-10 nimmt das Straßenbaumkataster statt der OSM-Einzelbäume (Kronenradius = halber
+  Kronendurchmesser, zwischen 1 und 30 m gültig), Baumreihen weiter aus OSM (Entscheidung prstolpe 2026-11-16).
+  Wirkung: Grünanteil an den Radnetzkanten im Mittel 19,4 % → 22,3 %, Punkte P-ATT-01 0,48 → 0,54, Gesamtwertung
+  +0,003.
+- plain_language: Abschnitt trees_parking (Karten, Steckbrief, Satz beim Ort), Methodenkapitel „Bäume und
+  Parkplätze“, Spaltenbeschreibungen der Downloads.
+- Neue Stufe c09 (`make trees-parking`) in der Kette vor export-cycling. Export: Block `trees_parking` im Steckbrief,
+  `meta.trees_parking`, neue Spalten im Download, `parking` je besonderem Ort. Regelzahl in den Tests 190 → 197.
+
+## design_rules.yaml 0.11.1 – 2026-11-17 (Entscheidungen prstolpe nach Bericht Teil 2)
+- TP-P-04 (Hochrechnung ohne Daten) inaktiv: Die Spanne für Hamburg reichte von 950 bis 573 000 und sagte nichts.
+  Gezeigt wird nur die gezählte Zahl mit Abdeckung.
+- TP-T-02: Bäume im Gehweg zählen als „bleibt“. Obere Zahl „möglicherweise betroffen“ in Hamburg 159 600 → 62 200.
+- QA-Korrekturen: lange LBV-Flächen nach Fläche gezählt (space_area_m2), Absolutes Haltverbot und Ladezone
+  ausgeschlossen, leere Gegenseite auf Abschnitten unter 30 m unbekannt statt 0 (official_zero_min_length_m).
+

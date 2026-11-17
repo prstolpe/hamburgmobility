@@ -33,6 +33,7 @@ from pipeline.lib import export_cycling as xc
 from pipeline.lib import export_overview as ov
 from pipeline.lib import export_rules as er
 from pipeline.lib import special_places as spl
+from pipeline.lib import trees_parking as tp
 from pipeline.lib.area import area_label, read_districts, read_rural
 from pipeline.lib.crs import WORK_CRS
 from pipeline.lib.links import load_viewers, orthophoto_link, osm_way_link, panoramax_link
@@ -52,6 +53,9 @@ OUT_DIR = REPO_ROOT / "data" / "out"
 TILES_TMP = REPO_ROOT / "data" / "interim" / "tiles"
 REPORT_PATH = REPO_ROOT / "reports" / "export.md"
 INTERIM = REPO_ROOT / "data" / "interim"
+TREES_PARKING_PATH = INTERIM / "trees_parking.parquet"  # prompts/26 Teil 2 (stage c09)
+TP_COLUMNS = ["park_today", "park_today_known", "park_target_min", "park_target_max", "trees_n", "trees_affected_min",
+              "trees_affected_mid", "trees_affected_max", "trees_new"]
 CYCLING_PATHS = {"facility": INTERIM / "cycle_facility.parquet", "xs": INTERIM / "cross_section_soll.parquet",
                  "junctions": INTERIM / "junctions.parquet", "network": INTERIM / "cycle_network.parquet",
                  "principles": INTERIM / "cycle_principles.parquet",
@@ -538,6 +542,11 @@ def main() -> int:
     seg = gpd.read_parquet(IN_PATH)
     seg = seg[seg["conflated"].astype(bool) & seg["cat_final"].notna() & seg["bezirk"].isin(names)].reset_index(drop=True)
     seg, sens_ctx = join_validation(seg, rules)
+    tpdf = pd.read_parquet(TREES_PARKING_PATH).drop(columns="geometry") if TREES_PARKING_PATH.exists() else None
+    if tpdf is None:
+        print("export: data/interim/trees_parking.parquet missing; run `make trees-parking` (c09) first", file=sys.stderr)
+    else:
+        seg = seg.merge(tpdf[["segment_id", *TP_COLUMNS]], on="segment_id", how="left")
     date = data_date(manifest)
     version = f"{rules.meta.version}+{date}"
     ctx = {"rules": rules, "texts": texts, "pilot": area_label(names), "districts": names, "version": version, "n": len(seg),
@@ -563,8 +572,10 @@ def main() -> int:
 
     glossary = _load_yaml(GLOSSARY_PATH)
     places = load_special_places()  # prompts/26: shown next to the rule result, never changes it
+    place_profiles = proposal_profiles(places, seg, cyc, texts) if cyc else None
     place_blocks = spl.segment_blocks(places, seg, cyc["fac"] if cyc else None, cyc["xs"] if cyc else None, texts, glossary,
-                                      proposal_profiles(places, seg, cyc, texts) if cyc else None)
+                                      place_profiles)
+    tp_rows = {r.segment_id: r for r in tpdf.itertuples()} if tpdf is not None else {}
     place_lines = spl.place_frame(places, seg)
     spl.geojson_frame(place_lines).to_file(OUT_DIR / spl.GEOJSON_NAME, driver="GeoJSON", COORDINATE_PRECISION=6)
 
@@ -576,6 +587,7 @@ def main() -> int:
         if cyc:
             p["cycling"] = cyc["blocks"].get(p["id"])
         p["special_place"] = place_blocks.get(p["id"])
+        p["trees_parking"] = tp.profile_block(tp_rows[p["id"]]) if p["id"] in tp_rows else None
         n_without_reason += not p["reasons"]
         write_json(OUT_DIR / "segments" / f"{p['id']}.json", p)
         if i in sample_idx:
@@ -627,6 +639,16 @@ def main() -> int:
                         for k, v in assets.items()}}
     meta["cycling"] = cycling_meta(cyc) if cyc else None
     meta["special_places"] = spl.meta_entry(places, place_lines, place_blocks, texts)
+    if tpdf is not None and cyc:
+        tpp = tp.Params.from_rules(cyc["des"])
+        meta["trees_parking"] = {"summary": tp.rounded_summary(tp.district_summary(tpdf, tpp)),
+                                 "osm_factor": round(float(tpdf["osm_factor"].iloc[0]), 2), "texts": texts["trees_parking"]}
+        parking = spl.place_parking(places, tpdf, place_profiles or {}, dict(zip(seg["segment_id"], seg["cat_final"])), tpp)
+        for entry in meta["special_places"]["places"]:
+            entry["parking"] = parking.get(entry["id"])
+        meta["special_places"]["texts"]["place_parking"] = texts["trees_parking"]["place_parking"]
+    else:
+        meta["trees_parking"] = None
     meta["glossary"] = {k: v for k, v in glossary.items() if k != "meta"}
     meta["site_texts"] = texts["site"]
     meta["overview"] = {**write_overview(seg, cyc, names, web["overview"]), "texts": texts["overview"]} if cyc else None

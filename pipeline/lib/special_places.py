@@ -184,3 +184,41 @@ def meta_entry(sp: SpecialPlaces, lines: gpd.GeoDataFrame, blocks: dict[str, dic
     return {"file": GEOJSON_NAME, "version": sp.meta.version,
             "texts": {k: t[k] for k in ("legend", "overlay", "page_title", "page_intro", "profile_title", "profile_same")},
             "places": places}
+
+
+def place_parking(sp: SpecialPlaces, tpdf: pd.DataFrame, profiles: dict[str, dict], categories: dict[str, str],
+                  p) -> dict[str, dict]:
+    """Parking under each place's proposal (prompts/26 Teil 2): place id -> today and target range on the place's
+    streets with data on both sides. Target with the proposal's cross section (pipeline/lib/trees_parking.py
+    target_parking): the category of the measure (or the segment's), D1 if the proposal's profile drops parking."""
+    from pipeline.lib import trees_parking as tp
+
+    t = tpdf.set_index("segment_id")
+    out = {}
+    for place in sp.places:
+        today = lo = hi = 0.0
+        n = n_complete = 0
+        for g in place.segments:
+            change = sp.measures[g.measure].profile
+            for sid in g.segment_ids:
+                if sid not in t.index or sid not in profiles:
+                    continue
+                n += 1
+                r = t.loc[sid]
+                if not bool(r["park_today_complete"]):
+                    continue
+                n_complete += 1
+                prof = profiles[sid]
+                cat = (change.cat if change and change.cat else None) or categories.get(sid)
+                sides = {"left": float(r["park_today_left"]), "right": float(r["park_today_right"])}
+                usable = {"left": float(r["usable_left_m"]), "right": float(r["usable_right_m"])}
+                known = {"left": r["park_src_left"] == "osm", "right": r["park_src_right"] == "osm"}
+                t_lo, t_hi = tp.target_parking(sides, usable, prof["elements"], float(r["osm_factor"]), p, cat,
+                                               "D1" in (prof.get("steps") or []), known)
+                today += sides["left"] + sides["right"]
+                lo += t_lo if t_lo is not None else 0.0
+                hi += t_hi
+        out[place.id] = {"segments": n, "segments_complete": n_complete, "today": round(today),
+                         "target_min": round(lo), "target_max": round(hi), "lost": round(today - (lo + hi) / 2)}
+    return out
+

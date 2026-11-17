@@ -201,6 +201,13 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .controls fieldset.places .t-small { margin: var(--s3) 0 0; }
 .controls fieldset.places .t-small a { display: inline-block; min-height: 24px; line-height: 24px; } /* WCAG 2.5.8 target size */
 .legend-sub { font-weight: 700; margin: var(--s3) 0 0; }
+/* trees and parking (prompts/26 Teil 2): two cards next to each other, one column on phones */
+.tp-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: var(--gutter); margin: var(--s4) 0; }
+.tp-card { border-top: 2px solid var(--ink); padding-top: var(--s2); }
+.tp-card h2, .tp-card h3 { font-size: 1rem; margin: 0; }
+.tp-figure { font-size: 1.25rem; line-height: 28px; font-weight: 700; margin: var(--s2) 0 0; font-variant-numeric: tabular-nums; }
+.tp-extra { margin: 0; color: var(--text2); font-variant-numeric: tabular-nums; }
+.tp-head { margin-top: var(--s6); }
 .cat { font-size: 1.25rem; line-height: 28px; font-weight: 700; border-left: 6px solid #767676; padding-left: var(--s3); }
 .cat-SW { border-color: #332288; } .cat-GOW50 { border-color: #CC3311; } .cat-GOW30 { border-color: #0077BB; }
 .cat-ETW30 { border-color: #0077BB; } .cat-ETW_ERF { border-color: #117733; }

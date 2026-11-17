@@ -5,8 +5,8 @@
 # scope: rural = Regel betrifft nur außerorts (Kennzeichnung, Review 2026-11 F33).
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.10.0
-  date: 2026-11-15
+  version: 0.11.1
+  date: 2026-11-17
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
 
@@ -19,6 +19,8 @@ sources:
   RAST_06: {title: 'FGSV RASt 06', url: null, note: 'Original prüfen'}
   ERA_2010: {title: 'FGSV Empfehlungen für Radverkehrsanlagen (2010)', url: 'https://www.fgsv-verlag.de/pub/media/pdf/284_Gwiasda_P_Radverkehr_an_inneroertlichen_Hauptverkehrsstrassen.pdf', note: 'Werte über Sekundärquellen; Original prüfen'}
   HBS_2015: {title: 'FGSV Handbuch für die Bemessung von Straßenverkehrsanlagen', url: null, note: 'Kapazitätswerte am Original prüfen'}
+  STVO_12: {title: 'StVO § 12 Halten und Parken', url: 'https://www.gesetze-im-internet.de/stvo_2013/__12.html', note: 'Wortlaut Abs. 3 Nr. 1 gelesen 2026-11-16'}
+  LBV_PARKRAUM: {title: 'WFS Öffentlicher Parkraum Hamburg (LBV)', url: 'https://geodienste.hamburg.de/HH_WFS_Parkraum', note: 'sources.yaml parking_spaces; Maße als Median der Flächen (min. umschreibendes Rechteck), Abruf 2026-11-16'}
 
 # ---------------------------------------------------------------
 # 1. Anzahl der Kfz-Fahrstreifen (je Richtung)
@@ -444,3 +446,96 @@ junctions:
       status: draft
       sort_keys: [crashes_cyc, cycle_rank, entering_dtv_sum]
   output_fields: [node_id, legs, junction_type_soll, junction_type_ist, rule_trace_junction, cyclist_treatment, conflict_flags, confidence]
+
+# ---------------------------------------------------------------
+# 5. Bäume und Parkplätze je Soll-Querschnitt (prompts/26 Teil 2, pipeline/c09_trees_parking.py)
+# Schätzung, keine Planung: Parkplätze heute aus dem Öffentlichen Parkraum (LBV), sonst OSM; Bäume aus dem
+# Straßenbaumkataster. Methode: docs/trees_parking/methode_vorschlag.md (Freigabe prstolpe 2026-11-16).
+# ---------------------------------------------------------------
+trees_parking:
+  parking:
+    - id: TP-P-01
+      label_plain: "Parkplätze heute"
+      explain_plain: "Amtlich erfasste Stellplätze zählen einzeln; wo sie fehlen, rechnen wir mit den Angaben aus OpenStreetMap."
+      why: "Die amtlichen Daten sind genauer, decken aber nicht alle Straßen ab."
+      rule: 'Je Abschnitt und Seite: Flächen aus LBV_PARKRAUM, deren Mittelpunkt höchstens assign_extra_m außerhalb des halben Straßenraums (width_median_m / 2) vom nächsten Abschnitt liegt; Seite aus der Lage zur Achse. Eine Fläche = ein Stellplatz; ist ihre lange Seite länger als long_factor x kerb_m_per_space.parallel (Reihe), zählt Fläche / space_area_m2 ihrer Aufstellart (mindestens 1). Auf Abschnitten kürzer als official_zero_min_length_m gilt die Gegenseite ohne Flächen als unbekannt. exclude_management zählt nicht. Ohne amtliche Fläche auf beiden Seiten: OSM je Seite (parking:<seite>, alt parking:lane:<seite>), nutzbare Bordlänge / Bordlänge je Platz x osm_factor. Hat eine Straßenseite amtliche Flächen, gilt die Gegenseite ohne Flächen als erfasst (0). Sonst unbekannt – nie 0.'
+      source: LBV_PARKRAUM
+      source_type: hamburg
+      status: draft
+      assign_extra_m: {value: 2.0, unit: m, source_type: assumption, note: 'wie TP-T-01'}
+      long_factor: {value: 1.5, source_type: assumption}
+      exclude_management: ['Eingeschränktes Haltverbot', 'Absolutes Haltverbot', 'Ladezone']
+      exclude_management_note: 'QA 2026-11-16 (stats-qa): Absolutes Haltverbot und Ladezone sind keine Stellplätze'
+      space_area_m2:
+        parallel: {value: 10.9, unit: m², source: LBV_PARKRAUM, source_type: hamburg, note: 'Median Fläche längs'}
+        perpendicular: {value: 12.75, unit: m², source: LBV_PARKRAUM, source_type: hamburg, note: 'Median Fläche quer'}
+        diagonal: {value: 15.0, unit: m², source: LBV_PARKRAUM, source_type: hamburg, note: 'Median Fläche schräg; QA 2026-11-16: lange Schrägflächen sonst doppelt gezählt'}
+      official_zero_min_length_m: {value: 30, unit: m, source_type: assumption, note: 'QA 2026-11-16: kurze Stücke an Kreuzungen haben oft nur auf einer Seite Flächen'}
+      uncertain_management: ['Klärung']
+      kerb_m_per_space:
+        parallel: {value: 5.2, unit: m, source: LBV_PARKRAUM, source_type: hamburg, note: 'Median Längsflächen 5,20 x 2,10 m'}
+        perpendicular: {value: 2.5, unit: m, source: LBV_PARKRAUM, source_type: hamburg, note: 'Median Querflächen 5,10 x 2,50 m'}
+        diagonal: {value: 3.9, unit: m, source_type: assumption, note: 'Breite 2,73 m (Median Schrägflächen LBV) / sin 45°'}
+      osm_factor: {value: calibrated, source_type: hamburg, note: 'Abzug für Einfahrten und Querungen: Median von gezählt (LBV) / rechnerisch (Bordlänge / Platzlänge) auf Seiten mit LBV-Flächen und OSM-Parkangabe; wird je Lauf berechnet und im Bericht genannt'}
+    - id: TP-P-02
+      label_plain: "Abstand an Kreuzungen"
+      explain_plain: "An Kreuzungen darf man nicht parken: 5 Meter davor und dahinter, vor Kreuzungen mit Radweg 8 Meter."
+      why: "So steht es in der Straßenverkehrs-Ordnung."
+      rule: 'Nutzbare Bordlänge = Länge - Abstand an jedem Ende, das an einem Knoten mit drei oder mehr Armen liegt. Abstand je Ende setback_m; vor der Kreuzung (in Fahrtrichtung auf der rechten Seite) setback_cycle_track_m, wenn der Abschnitt einen baulichen Radweg hat. Nicht kürzer als 0.'
+      source: STVO_12
+      source_type: de_regelwerk
+      status: draft
+      setback_m: {value: 5, unit: m}
+      setback_cycle_track_m: {value: 8, unit: m}
+    - id: TP-P-03
+      label_plain: "Parkplätze im Ziel"
+      explain_plain: "Die Aufgabe der Straße entscheidet: In Wohnstraßen bleiben die Plätze, an Hauptstraßen mit Tempo 50 und in Fußgängerzonen entfallen sie."
+      why: "So steht es in der Regel für das Parken je Aufgabe der Straße. Das Ziel kennt nur Parken längs zur Fahrbahn."
+      rule: 'Nach PRF-03 parking_by_category: none -> 0; as_ist -> je Seite min(heute, nutzbare Bordlänge / kerb_m_per_space.parallel x osm_factor); Liste von Positionen -> nur Seiten mit Element parking_parallel im Soll-Profil (beide Zuordnungen der Profilseiten zur Straßenseite, Spanne; ist die Position heute unbekannt, 0 bis heute). Abbaustufe D1 -> 0. Heute unbekannt -> Ziel höchstens die Bordlänge-Kapazität, Veränderung unbekannt. Neu nur, wo heute sicher 0.'
+      history:
+        - "2026-11-16: nach PRF-03 statt nur nach dem Profil-Element, weil das Profil Parkreihen nur aus OSM-Angaben setzt und amtlich erfasste Stellplätze sonst als entfallend zählten"
+      source_type: assumption
+      status: draft
+    - id: TP-P-04
+      label_plain: "Hochrechnung ohne Daten"
+      explain_plain: "Für Straßen ohne Angaben schätzen wir eine breite Spanne aus ähnlichen Straßen."
+      why: "Fehlende Daten heißen nicht, dass es keine Parkplätze gibt."
+      rule: 'Je Bezirk: Abschnitte ohne Angabe erhalten Stellplätze je km ihrer Kategorie aus allen Abschnitten mit Angabe (Perzentile quantiles); Summe als Spanne zusätzlich zur gezählten Zahl.'
+      source_type: assumption
+      status: inactive
+      history:
+        - "2026-11-17 inaktiv (Entscheidung prstolpe): Spanne Hamburg 950–573 000 ohne Aussage, weil Straßen mit Daten oft 0 Plätze haben und LBV nur Straßen mit Plätzen enthält; gezeigt wird nur die gezählte Zahl mit Abdeckung"
+      quantiles: [0.25, 0.75]
+  trees:
+    - id: TP-T-01
+      label_plain: "Straßenbaum eines Abschnitts"
+      explain_plain: "Ein Baum gehört zu der nächsten Straße, wenn er im Straßenraum steht."
+      why: "Bäume in Parks oder Gärten hängen nicht vom Straßenquerschnitt ab."
+      rule: 'Baum aus dem Straßenbaumkataster gehört zum nächsten Abschnitt des Arbeitsgebiets, wenn der Abstand zur Achse höchstens width_median_m / 2 + assign_extra_m ist; ohne Breite nur bis no_width_max_m.'
+      source_type: assumption
+      status: draft
+      assign_extra_m: {value: 2.0, unit: m}
+      no_width_max_m: {value: 10, unit: m, note: 'Median Abstand Baum-Achse 6,1 m, 80 % bis 10 m (Kataster, 2026-11-16)'}
+    - id: TP-T-02
+      label_plain: "Bleibt oder möglicherweise betroffen"
+      explain_plain: "Steht ein Baum dort, wo im Ziel Fahrbahn oder Radweg liegt, ist er möglicherweise betroffen. Bäume im Gehweg bleiben."
+      why: "Ob ein Baum wirklich weichen müsste, zeigt erst eine Planung vor Ort."
+      rule: 'Bänder quer zur Achse aus profile_elements: Mittelelemente mittig, Seitenelemente nach außen in ihrer Reihenfolge, nicht benötigter Platz außen (Rest). Baum in affected -> möglicherweise betroffen; in keep -> bleibt; in uncertain -> untere Zahl bleibt, obere Zahl betroffen. Spanne: Bandgrenzen um position_uncertainty_m verschoben und Profil gespiegelt.'
+      source_type: assumption
+      status: draft
+      position_uncertainty_m: {value: 1.5, unit: m, note: 'OSM-Achse etwa 1 m, Vereinfachung des Profils'}
+      affected: [carriageway, cycle_track, cycle_lane, bus_lane, buffer_cycle_carriageway, buffer_to_parking, tram]
+      keep: [tree_strip, parking_parallel, loading_zone, median, rest, sidewalk]
+      uncertain: [shared_surface]
+      history:
+        - "2026-11-17 (Entscheidung prstolpe): Bäume im Gehweg zählen als „bleibt“ (Baumscheibe im Gehweg), vorher untere Zahl bleibt / obere betroffen"
+      wording_note: 'immer „möglicherweise betroffen“, nie „wird gefällt“ (prompts/26)'
+    - id: TP-T-03
+      label_plain: "Neue Bäume möglich"
+      explain_plain: "Wo das Ziel einen neuen Baumstreifen hat, passen dort etwa alle zwölf Meter ein Baum."
+      why: "So lässt sich grob zeigen, wie viel Grün das Ziel bringen kann."
+      rule: 'Je Seite mit Element tree_strip: nutzbare Länge (wie TP-P-02) / spacing_m, abzüglich der Bäume, die schon im Baumstreifen-Band stehen; nicht unter 0.'
+      source_type: assumption
+      status: draft
+      spacing_m: {value: 12, unit: m, note: 'übliche Spanne 8–15 m; am Regelwerk prüfen'}
+

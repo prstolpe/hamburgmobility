@@ -19,6 +19,7 @@ const PAGES = {
   "Methode": "#methode",
   "Methode Kapitel Radnetz": "#methode/radnetz",
   "Methode Regeln": "#methode/regeln",
+  "Methode Bäume und Parkplätze": "#methode/baeume_parken",
   "Karte Radnetz": "#karte?theme=rad",
   "Karte Fahrstreifen": "#karte?theme=platz",
   "Karte Abweichung": "#karte?theme=abweichung",

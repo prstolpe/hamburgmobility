@@ -36,6 +36,9 @@ PUBLIC_COLUMNS = [
     "disc_speed", "disc_design", "disc_use", "disc_max", "disc_type",
     "crashes_ped_cyc", "crashes_ped", "crashes_cyc", "crashes_severe_fatal", "crash_years",
     "risk", "priority",
+    # trees and parking per target cross section (prompts/26 Teil 2, stage c09); estimates, missing = unknown
+    "park_today", "park_today_known", "park_target_min", "park_target_max",
+    "trees_n", "trees_affected_min", "trees_affected_mid", "trees_affected_max", "trees_new",
 ]
 
 # Short attribute names in the vector tiles (layer `segments`) -> source column.

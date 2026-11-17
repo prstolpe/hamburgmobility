@@ -27,6 +27,8 @@ ODbL 1.0: https://opendatacommons.org/licenses/odbl/1-0/, CC BY 4.0: https://cre
 | Radnetz Hamburg (WFS) | dl-de/by-2.0 | Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende |
 | Rad-Zählstellen (Infrarotdetektoren, SensorThings) | dl-de/by-2.0 | Freie und Hansestadt Hamburg |
 | Zulässige Höchstgeschwindigkeiten, Verkehrsmengen HVS 2019 (api.hamburg.de) | dl-de/by-2.0 (laut Transparenzportal; die API nennt keine Lizenz) | Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM) |
+| Straßenbaumkataster (WFS) | dl-de/by-2.0 | Freie und Hansestadt Hamburg, Behörde für Umwelt, Klima, Energie und Agrarwirtschaft |
+| Öffentlicher Parkraum (WFS) | dl-de/by-2.0 | Freie und Hansestadt Hamburg, Landesbetrieb Verkehr |
 | Weitere (api.hamburg.de u. a.) | je Landing Page prüfen | siehe config/sources.yaml |
 
 ## Schrift der Webseite

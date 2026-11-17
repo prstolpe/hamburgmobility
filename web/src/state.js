@@ -10,7 +10,7 @@ export const CYCLING_LAYER_KEYS = ["cnet", "cfac", "cgap", "lanes", "cfit", "jct
 export const LAYERS = ["cat", "speed", "disc", "prio", "width", "feas", "hvs", ...CYCLING_LAYER_KEYS];
 // sub pages of "methode": chapters (keys as in meta.method.chapters) and the rule reference; the news page
 // (#methode/neu) was removed in prompt 25, old links fall back to the summary
-export const METHOD_SUBS = ["aufgabe", "abweichung", "platz", "radnetz", "knoten", "sicherheit", "daten", "regeln"];
+export const METHOD_SUBS = ["aufgabe", "abweichung", "platz", "radnetz", "knoten", "baeume_parken", "sicherheit", "daten", "regeln"];
 export const OVERLAYS = ["bus", "cyc", "fac", "acc"];
 
 // theme -> {title, views: {view: {label, layer, level, enabled}}}; level 3 views are offered under "Mehr Ansichten".

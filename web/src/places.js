@@ -1,11 +1,17 @@
 // Page "Besondere Orte" (prompts/26): one card per place from meta.special_places, in three levels –
 // level 1 one sentence, status and date; level 2 what is proposed and why; level 3 sources and the comparison with
 // the rule result. New places come from config/special_places.yaml only; this file has no place-specific text.
-import { esc, num } from "./util.js";
+import { approx, esc, num } from "./util.js";
 
 const dateDe = (iso) => new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-function placeCard(p) {
+/** "Im Vorschlag entfallen etwa X Parkplätze" (prompts/26 Teil 2), when the export computed it. */
+function parkingSentence(p, texts) {
+  if (!p.parking || !texts?.place_parking || !p.parking.segments_complete) return "";
+  return `<p>${esc(texts.place_parking.replace("{lost}", approx(p.parking.lost) ?? "–"))}</p>`;
+}
+
+function placeCard(p, texts) {
   const measures = p.measures.map((m) => `<li><strong>${esc(m.label)}:</strong> ${esc(m.streets.join(", "))}
     <span class="muted">(${num(m.km, 1)} km)</span></li>`).join("");
   const compare = p.measures.map((m) => `<h4>${esc(m.label)}</h4><ul>${m.compare.map((c) =>
@@ -15,6 +21,7 @@ function placeCard(p) {
     <h2 id="place-${esc(p.id)}">${esc(p.title)}</h2>
     <p class="lead">${esc(p.texts.glance)}</p>
     <p><strong>Stand ${esc(dateDe(p.status_date))}:</strong> ${esc(p.status)}.${p.status_note ? ` ${esc(p.status_note)}` : ""}</p>
+    ${parkingSentence(p, texts)}
     <p><button type="button" data-show-place="${esc(p.id)}">Auf der Karte zeigen</button></p>
     <details class="level l2"><summary>Was wird vorgeschlagen?</summary>
       <p>${esc(p.texts.explain)}</p>
@@ -34,5 +41,5 @@ function placeCard(p) {
 export function placesHtml(meta) {
   const sp = meta.special_places;
   if (!sp?.places?.length) return "<h1>Besondere Orte</h1><p>In diesem Datenstand gibt es keine besonderen Orte.</p>";
-  return `<h1>${esc(sp.texts.page_title)}</h1><p class="lead">${esc(sp.texts.page_intro)}</p>${sp.places.map(placeCard).join("")}`;
+  return `<h1>${esc(sp.texts.page_title)}</h1><p class="lead">${esc(sp.texts.page_intro)}</p>${sp.places.map((p) => placeCard(p, sp.texts)).join("")}`;
 }

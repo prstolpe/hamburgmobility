@@ -221,6 +221,22 @@ describe("special place in the profile", () => {
     expect(same).not.toContain("Querschnitt im Vorschlag:");
   });
 
+  it("shows trees and parking on level 2, 'keine Daten' when unknown", () => {
+    const t = { profile_title: "Bäume und Parkplätze", profile_parking: "Parkplätze: heute etwa {today}, im Ziel etwa {target}.",
+      profile_parking_partial: "Parkplätze: auf einer Seite etwa {today}.", profile_parking_none: "Parkplätze: keine Daten.",
+      profile_trees: "Straßenbäume: {n}, davon möglicherweise betroffen {affected}, neu möglich etwa {new}.",
+      profile_trees_none: "Straßenbäume: keine.", profile_source: { official: "amtlich erfasste Stellplätze", none: "keine Daten" }, profile_note: "Schätzung." };
+    const m = { ...meta, trees_parking: { texts: t } };
+    const tp = { parking: { complete: true, today: 26.5, today_known: 26.5, target_min: 0, target_max: 0, src_left: "official", src_right: "official" },
+      trees: { n: 7, affected_min: 1, affected_max: 4, new: 2.4 } };
+    const html = segmentHtml({ ...seg(), trees_parking: tp }, m, "https://x");
+    expect(html).toContain("Parkplätze: heute etwa 27, im Ziel etwa 0.");
+    expect(html).toContain("(amtlich erfasste Stellplätze)");
+    expect(html).toContain("Straßenbäume: 7, davon möglicherweise betroffen 1–4, neu möglich etwa 2.");
+    const none = segmentHtml({ ...seg(), trees_parking: { parking: { complete: false, today_known: null, src_left: "none", src_right: "none" }, trees: { n: 0 } } }, m, "https://x");
+    expect(none).toContain("Parkplätze: keine Daten.");
+  });
+
   it("shows nothing without a special place", () => {
     expect(segmentHtml(seg(), meta, "https://x")).not.toContain("place-band");
   });

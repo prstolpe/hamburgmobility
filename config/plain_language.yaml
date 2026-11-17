@@ -5,8 +5,10 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.14.0
+  version: 0.15.0
   date: 2026-11-16
+# 0.15.0: Abschnitt trees_parking (Bäume und Parkplätze, prompts/26 Teil 2), Methodenkapitel „Bäume und Parkplätze“,
+#   Satz zu Parkplätzen beim besonderen Ort.
 # 0.14.0: Abschnitt special_places (Besondere Orte, prompts/26): Band im Steckbrief und Vergleich mit dem Regelwerk.
 # 0.13.0: Texte für C-G50-02, C-G30-02 mit Mindestbreite (GOW50_min) und Hinweis gow50_cycle_track_min; und den Grund „zu viel Verkehr“ bei C-G30-01 (DTV-Obergrenze, rules.yaml 0.24.0).
 # 0.12.1: Klartext für H-PAIR-01 (Richtungsfahrbahnen, rules.yaml 0.23.0).
@@ -216,6 +218,15 @@ columns:
   crash_years: "Unfalljahre"
   risk: "Risikowert 0–1 (Unfälle, Radnetz, Einwohner, Schule/Kita)"
   priority: "Priorität = größte Diskrepanz × Risiko (0–3)"
+  park_today: "Parkplätze heute, Schätzung (nur wenn beide Seiten bekannt; leer = unbekannt, nicht 0; Stufe c09)"
+  park_today_known: "Parkplätze heute auf den bekannten Seiten (Schätzung)"
+  park_target_min: "Parkplätze im Ziel, untere Schätzung (leer = unbekannt)"
+  park_target_max: "Parkplätze im Ziel, obere Schätzung"
+  trees_n: "Straßenbäume im Straßenraum (Straßenbaumkataster)"
+  trees_affected_min: "davon möglicherweise betroffen, untere Zahl"
+  trees_affected_mid: "davon möglicherweise betroffen, mittlere Schätzung"
+  trees_affected_max: "davon möglicherweise betroffen, obere Zahl"
+  trees_new: "neue Bäume möglich (Baumstreifen im Ziel, etwa alle 12 m)"
   geometry: "Linie in WGS 84 (EPSG:4326)"
 
 # Radnetz, Führungsform, Soll-Querschnitt und Knotenpunkte (Prompt 21, pipeline/lib/export_cycling.py, Webseite).
@@ -557,6 +568,18 @@ method:
 
         Die Skizze im Steckbrief zeigt die Art der Kreuzung und die Führung des Rads. Kreisverkehre und Ampeln brauchen eine genaue Planung. Der Platz ist nur geschätzt.
       sections: ["design_rules.yaml:junctions"]
+    - key: baeume_parken
+      title: "Bäume und Parkplätze"
+      l1: "Der Entwurf schätzt, wie viele Straßenbäume und Parkplätze das Ziel betrifft. Das ist eine Schätzung, keine Planung."
+      l2: |
+        **Parkplätze heute.** Wo die Stadt die Stellplätze erfasst hat (Öffentlicher Parkraum, Landesbetrieb Verkehr), zählt der Entwurf jeden Platz einzeln. Das sind etwa ein Viertel der Straßen. Wo diese Daten fehlen, rechnet er mit den Angaben aus OpenStreetMap: Länge des Bordsteins geteilt durch die Länge eines Platzes. Vor Kreuzungen bleibt der Abstand frei, den die Straßenverkehrs-Ordnung verlangt. Für Einfahrten zieht er einen Teil ab; wie viel, lernt er aus den Straßen mit amtlichen Daten. Gibt es gar keine Angabe, steht dort „keine Daten“. Das heißt nicht, dass es dort keine Parkplätze gibt; der Entwurf rechnet für diese Straßen nicht hoch.
+
+        **Parkplätze im Ziel.** Die Aufgabe der Straße entscheidet. In Wohnstraßen bleiben die Plätze, so viele wie längs zur Fahrbahn Platz haben. Passt das Ziel nicht in die Straße, fällt das Parken zuerst weg. An Hauptstraßen mit Tempo 50 und in Fußgängerzonen gibt es kein Parken am Rand. An Hauptstraßen mit Tempo 30 nur auf Parkstreifen.
+
+        **Straßenbäume.** Grundlage ist das Straßenbaumkataster der Stadt. Ein Baum gehört zu einer Straße, wenn er in ihrem Straßenraum steht. Der Entwurf legt die Aufteilung des Ziels quer über die Straße. Steht ein Baum dort, wo im Ziel Fahrbahn oder Radweg liegt, ist er „möglicherweise betroffen“. Bäume im Gehweg bleiben, als Baumscheibe im Gehweg. Lage und Aufteilung sind ungenau. Darum zeigt der Entwurf Spannen. Ob ein Baum wirklich weichen müsste, zeigt erst eine Planung vor Ort.
+
+        **Neue Bäume.** Wo das Ziel einen Baumstreifen vorsieht, passt etwa alle zwölf Meter ein Baum, abzüglich der Bäume, die dort schon stehen.
+      sections: ["design_rules.yaml:trees_parking"]
     - key: sicherheit
       title: "Wie sicher ist das?"
       l1: "Für jede Einstufung prüft der Entwurf, wie sicher sie ist: unsicher, eher sicher oder sicher."
@@ -642,3 +665,31 @@ special_places:
         - {text: "Unser Regelwerk sieht hier vor: {cat_plain}."}
       notes:
         - {when: "bus_trips_weekday > 0", text: "Hier fahren heute Busse. Für eine Fußgängerzone müssten die Busse einen anderen Weg nehmen oder eine Ausnahme bekommen."}
+
+# Bäume und Parkplätze (prompts/26 Teil 2, pipeline/c09_trees_parking.py). Platzhalter füllt die Webseite aus
+# meta.trees_parking bzw. dem Steckbrief; Zahlen sind gerundet.
+trees_parking:
+  parking_title: "Parkplätze am Straßenrand"
+  parking_card: "heute ≈ {today}, im Ziel ≈ {target}"
+  parking_less: "{n} weniger als heute"
+  parking_more: "{n} mehr als heute"
+  parking_l2: "Gezählt sind Parkplätze an Straßen mit Daten auf beiden Seiten ({share_known} % der Straßenlänge). Im Ziel fallen Plätze vor allem weg, wo die Straße zu schmal für Gehwege und Fahrbahn ist und wo eine Hauptstraße mit Tempo 50 entsteht."
+  parking_l3: "Amtlich erfasst: {share_official} % der Straßenlänge, nur OpenStreetMap: {share_osm} %, keine Angabe: {share_none} %. Für Straßen ohne Angabe rechnen wir nicht hoch: Fehlende Daten heißen nicht, dass es dort keine Parkplätze gibt. Insgesamt gezählt, auch an Straßen mit Daten auf nur einer Seite: {counted}."
+  trees_title: "Straßenbäume"
+  trees_card: "{keep} bleiben, {affected} möglicherweise betroffen, {new} neu möglich"
+  trees_l2: "„Möglicherweise betroffen“ heißt: Der Baum steht dort, wo im Ziel Fahrbahn oder Radweg liegt. Bäume im Gehweg bleiben. Ob ein Baum wirklich weichen müsste, zeigt erst eine Planung vor Ort."
+  trees_l3: "Spanne für „möglicherweise betroffen“: {affected_lo} bis {affected_hi}, weil Lage und Aufteilung ungenau sind. Gezählt sind {n} Bäume aus dem Straßenbaumkataster im Straßenraum. Neue Bäume: etwa alle 12 Meter Baumstreifen ein Baum."
+  profile_title: "Bäume und Parkplätze"
+  profile_parking: "Parkplätze: heute etwa {today}, im Ziel etwa {target}."
+  profile_parking_partial: "Parkplätze: auf einer Seite etwa {today}, für die andere Seite gibt es keine Daten."
+  profile_parking_none: "Parkplätze: keine Daten."
+  profile_trees: "Straßenbäume: {n}, davon möglicherweise betroffen {affected}, neu möglich etwa {new}."
+  profile_trees_none: "Straßenbäume: keine im Straßenraum erfasst."
+  profile_source:
+    official: "amtlich erfasste Stellplätze"
+    official_zero: "amtlich erfasst, keine Stellplätze"
+    osm: "geschätzt aus OpenStreetMap"
+    none: "keine Daten"
+  profile_note: "Schätzung, keine Planung. Mehr im Methodenkapitel „Bäume und Parkplätze“."
+  place_parking: "Im Vorschlag entfallen etwa {lost} Parkplätze, an den Straßen mit Daten. Der Vorschlag selbst sagt zum Parken nichts; gerechnet ist die Fußgängerzone ohne Parken am Rand und die Fahrradstraße wie unser Ziel."
+

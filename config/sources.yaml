@@ -2,8 +2,8 @@
 # check_status: verified (Endpunkt/Metadaten geöffnet) | catalog (Existenz belegt, Endpunkt prüfen) | open (nicht belegt)
 # url: null bedeutet: Endpunkt noch nicht bestätigt -> vor Nutzung ermitteln (TODO), nicht erfinden.
 meta:
-  version: 0.1.12
-  date: 2026-11-07
+  version: 0.1.13
+  date: 2026-11-16
   crs_work: EPSG:25832
 
 sources:
@@ -182,11 +182,22 @@ sources:
   street_trees:
     title: Straßenbaumkataster
     provider: BUKEA
-    access: wfs_or_download
-    url: null  # TODO: Transparenzportal
-    license: unknown  # vermutlich dl-de/by-2.0, prüfen
-    purpose: [place_function, obstacles]
-    check_status: verified_info
+    access: wfs
+    url: https://geodienste.hamburg.de/HH_WFS_Strassenbaumkataster
+    license: dl-de/by-2.0  # 2026-11-16: laut GetCapabilities (Fees), Quellenvermerk FHH, BUKEA
+    purpose: [place_function, obstacles, green_share, tree_stats]  # green_share: C-PRI-10; tree_stats: prompts/26 Teil 2
+    check_status: verified  # 2026-11-16: GetCapabilities und DescribeFeatureType gelesen, 229 876 Bäume (hits)
+    fetch: {typenames: ["de.hh.up:strassenbaumkataster"]}
+
+  parking_spaces:
+    title: WFS Öffentlicher Parkraum Hamburg
+    provider: LBV
+    access: wfs
+    url: https://geodienste.hamburg.de/HH_WFS_Parkraum
+    license: dl-de/by-2.0  # 2026-11-16: laut GetCapabilities (Fees), Quellenvermerk FHH, Landesbetrieb Verkehr
+    purpose: [parking_stats]  # prompts/26 Teil 2; laut WMS-Beschreibung nur „in ausgewählten Bereichen“
+    check_status: verified  # 2026-11-16: GetCapabilities gelesen, 203 046 Flächen (hits), Felder ausrichtung_zur_strasse, primaere_bewirtschaftung u. a.
+    fetch: {typenames: ["de.hh.up:parkraum"]}
 
   road_condition_zeb:
     title: WFS ZEB Zustandsklassen

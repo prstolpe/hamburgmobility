@@ -323,6 +323,33 @@ def _parking(tags: dict) -> tuple[set[str], set[str]]:
     return positions, orientations
 
 
+def parking_by_side(tags: dict) -> dict[str, tuple[str, str | None]]:
+    """Parking per side of the way ('left'/'right' in way direction): (position, orientation), same schemes as
+    _parking (prompts/26 Teil 2); 'no' for no parking, 'separate' for separately mapped parking. Untagged sides
+    are missing (unknown)."""
+    out: dict[str, tuple[str, str | None]] = {}
+    for side in ("left", "right"):
+        new = next((tags[k] for k in (f"parking:{side}", "parking:both") if isinstance(tags.get(k), str)), None)
+        if new is not None and new != "yes":
+            o = next((tags[k] for k in (f"parking:{side}:orientation", "parking:both:orientation")
+                      if isinstance(tags.get(k), str)), None)
+            out[side] = ("no" if new in _PARK_NO else new, o if o in _ORIENTATIONS else None)
+            continue
+        old_key = next((k for k in (f"parking:lane:{side}", "parking:lane:both") if isinstance(tags.get(k), str)), None)
+        if old_key is None:
+            continue
+        old = tags[old_key]
+        if old in _PARK_NO:
+            out[side] = ("no", None)
+        elif old == "separate":
+            out[side] = ("separate", None)
+        else:
+            pos = next((tags[f"{k}:{old}"] for k in (f"parking:lane:{side}", "parking:lane:both")
+                        if isinstance(tags.get(f"{k}:{old}"), str)), "on_street")
+            out[side] = (_OLD_POSITION.get(pos, "lane"), old if old in _ORIENTATIONS else None)
+    return out
+
+
 def _int_or_none(v) -> int | None:
     return int(v) if isinstance(v, str) and v.strip().isdigit() else None
 
