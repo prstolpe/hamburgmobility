@@ -14,6 +14,7 @@ const D = {
   ring: { single: { outer: 13, width: 6 }, turbo: { outer: 19, width: 9 }, apron: 1.5, verge: 5, cycle: 2.5, walk: 2.5 },
   splitter: { length: 10, width: 2.5 },
   pathWidth: 3, // separate cycle path without cross section
+  carriagewayDeg: 30, // legs of one street within this angle are drawn as one arm (two carriageways)
   fallback: { sidewalk: 2.5, lane: 3.25, track: 2 }, // arm without Soll cross section
 };
 const FALLBACK_COLOUR = {
@@ -44,7 +45,8 @@ function frame(b) {
   const u = [Math.sin(rad(b)), -Math.cos(rad(b))];
   return { u, r: [-u[1], u[0]] };
 }
-const at = (a, d, s) => [a.u[0] * d + a.r[0] * s, a.u[1] * d + a.r[1] * s];
+/** Point d metres along the arm from its node o, s metres to the right of its axis. */
+const at = (a, d, s) => [a.o[0] + a.u[0] * d + a.r[0] * s, a.o[1] + a.u[1] * d + a.r[1] * s];
 
 function fallbackElements(leg) {
   const fb = D.fallback;
@@ -72,16 +74,45 @@ function zones(els, W) {
   return { L: side(els), R: side([...els].reverse()) };
 }
 
-function arms(legs) {
-  const known = legs.every((l) => l.bearing != null);
-  return legs.map((l, i) => {
+/** Arms in clockwise order. Direction: the leg's own axis from its node (export: axis), else the bearing from the
+ * junction centre; with offsets each arm starts at its own node (export: offset, metres east and north). */
+function arms(legs, offsets) {
+  const known = legs.every((l) => (l.axis ?? l.bearing) != null);
+  return (known ? carriageways(legs) : legs).map((l, i, all) => {
     const path = l.cat === "cycle_path";
     const est = !path && !l.elements?.length;
     const els = path ? [["cycle_track", D.pathWidth]] : est ? fallbackElements(l) : l.elements;
     const W = els.reduce((a, [, w]) => a + w, 0);
-    const b = known ? l.bearing : (360 / legs.length) * i;
-    return { ...l, b, path, est, els, W, ...frame(b), ...zones(els, W) };
+    const b = known ? l.axis ?? l.bearing : (360 / all.length) * i;
+    const o = offsets && known && l.offset ? [l.offset[0], -l.offset[1]] : [0, 0];
+    return { ...l, b, o, path, est, els, W, ...frame(b), ...zones(els, W) };
   }).sort((a, b) => a.b - b.b);
+}
+
+const angle = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+const width = (l) => (l.elements ?? []).reduce((a, [, w]) => a + w, 0);
+const names = (l) => new Set((l.name ?? "").split(" / ").filter(Boolean));
+
+/** Carriageways of one street (same name, directions within D.carriagewayDeg) become one arm in the drawing: mean
+ * direction and node, the widest cross section, the highest category and lane count. Classification is unchanged. */
+function carriageways(legs) {
+  const groups = [];
+  for (const l of legs) {
+    const dir = l.axis ?? l.bearing;
+    const g = l.cat === "cycle_path" || !l.name ? null
+      : groups.find((x) => x[0].cat !== "cycle_path" && [...names(l)].some((n) => names(x[0]).has(n)) && angle(x[0].axis ?? x[0].bearing, dir) <= D.carriagewayDeg);
+    if (g) g.push(l); else groups.push([l]);
+  }
+  return groups.map((g) => {
+    if (g.length === 1) return g[0];
+    const dirs = g.map((l) => rad(l.axis ?? l.bearing));
+    const mean = (Math.atan2(dirs.reduce((a, d) => a + Math.sin(d), 0), dirs.reduce((a, d) => a + Math.cos(d), 0)) * 180) / Math.PI;
+    const wide = [...g].sort((a, b) => width(b) - width(a))[0];
+    const off = g.every((l) => l.offset) ? [0, 1].map((k) => g.reduce((a, l) => a + l.offset[k], 0) / g.length) : wide.offset;
+    const top = [...g].sort((a, b) => (CAT_RANK[b.cat] ?? 0) - (CAT_RANK[a.cat] ?? 0))[0];
+    return { ...wide, axis: (mean + 360) % 360, bearing: (mean + 360) % 360, offset: off, cat: top.cat,
+      lanes: Math.max(...g.map((l) => l.lanes || 1)), oneway: false };
+  });
 }
 
 const roadW = (a) => a.L.road + a.R.road;
@@ -92,16 +123,20 @@ const rank = (a) => (a.facility === "cycle_street" ? 10 : 0) + (CAT_RANK[a.cat] 
 function corner(A, B, k, R) {
   const hA = A.R[k], hB = B.L[k];
   const g = ((B.b - A.b) + 360) % 360 || 360;
-  if (g >= 175) {
+  const open = () => {
     const pA = at(A, 0, hA), pB = at(B, 0, -hB);
     const bis = frame(A.b + g / 2).u, m = Math.max(hA, hB) / Math.max(Math.sin(rad(g / 2)), 0.5);
-    return { tA: 0, tB: 0, FA: pA, P: [bis[0] * m, bis[1] * m], FB: pB };
-  }
-  // A.r*hA + A.u*t = -B.r*hB + B.u*t'
-  const rx = -B.r[0] * hB - A.r[0] * hA, ry = -B.r[1] * hB - A.r[1] * hA;
+    const c = [(A.o[0] + B.o[0]) / 2, (A.o[1] + B.o[1]) / 2];
+    return { tA: 0, tB: 0, FA: pA, P: [c[0] + bis[0] * m, c[1] + bis[1] * m], FB: pB };
+  };
+  if (g >= 175) return open();
+  // A.o + A.r*hA + A.u*t = B.o - B.r*hB + B.u*t'
+  const rx = B.o[0] - A.o[0] - B.r[0] * hB - A.r[0] * hA, ry = B.o[1] - A.o[1] - B.r[1] * hB - A.r[1] * hA;
   const det = A.u[0] * -B.u[1] + B.u[0] * A.u[1];
   const t = (rx * -B.u[1] + B.u[0] * ry) / det;
   const t2 = (A.u[0] * ry - A.u[1] * rx) / det;
+  // nearly parallel arms (two carriageways of one street) meet far away or behind their nodes: bridge them
+  if (!(t > -15 && t < 40 && t2 > -15 && t2 < 40)) return open();
   const fl = Math.min(R / Math.tan(rad(g) / 2), 25);
   const tA = t + fl, tB = t2 + fl;
   return { tA, tB, FA: at(A, tA, hA), P: at(A, t, hA), FB: at(B, tB, -hB) };
@@ -149,10 +184,10 @@ export function junctionSvg(j, meta, { title: name = "Skizze der Kreuzung" } = {
   if (!legs.length) return "";
   const colour = (e) => meta?.cycling?.elements?.[e]?.color ?? FALLBACK_COLOUR[e] ?? "#cccccc";
   const label = (e) => meta?.cycling?.elements?.[e]?.label ?? e;
-  const all = arms(legs);
+  const all = arms(legs, !(j.soll?.group === "roundabout")); // a roundabout is drawn around the centre
   const st = all.filter((a) => !a.path);
   const paths = all.filter((a) => a.path);
-  const known = legs.every((l) => l.bearing != null);
+  const known = legs.every((l) => (l.axis ?? l.bearing) != null);
   const code = j.soll?.code ?? "";
   const group = j.soll?.group ?? "none";
   const roundabout = group === "roundabout" && st.length > 0;
@@ -358,18 +393,19 @@ export function junctionSvg(j, meta, { title: name = "Skizze der Kreuzung" } = {
   const pathEnd = Math.max(extent, 24);
   const over = ["cycle_crossing_priority", "cycle_crossing_signal", "cycle_crossing_refuge", "grade_separated_cycle"].includes(code);
   // a path that does not cross ends at the cycle ring of a roundabout or at the corner of the junction area
-  const pathFrom = roundabout ? D.ring[code.startsWith("turbo") ? "turbo" : "single"].outer + D.ring.verge + cw / 2
-    : st.length ? Math.min(...d0) * 0.8 : 0;
+  // (in a street junction it starts at its node underneath the junction area, so it meets the corner at its edge)
+  const pathFrom = roundabout ? D.ring[code.startsWith("turbo") ? "turbo" : "single"].outer + D.ring.verge + cw / 2 : 0;
   for (const a of paths) {
     const from = over ? 0 : pathFrom;
+    const under = !over && !roundabout && st.length > 0;
     const w = a.W;
     if (code === "cycle_crossing_refuge" && st.length) {
       const m = [...st].sort((x, y) => rank(y) - rank(x))[0];
       fill(quad(m, -4 - w, 4 + w, -1.25, 1.25), colour("sidewalk"), ` stroke="${LINE}" stroke-width="0.15"`);
       marks.add("refuge");
     }
-    fill(quad(a, over ? -0.01 : from, pathEnd, -w / 2, w / 2), colour("cycle_track"));
-    stroke(quad(a, over ? -0.01 : from, pathEnd, -w / 2, w / 2), LINE, 0.1);
+    const strip = `<path d="${quad(a, over ? -0.01 : from, pathEnd, -w / 2, w / 2)}" fill="${colour("cycle_track")}" stroke="${LINE}" stroke-width="0.1"/>`;
+    if (under) g.unshift(strip); else g.push(strip);
     used.add("cycle_track");
     if (code === "grade_separated_cycle") {
       for (const s of [-w / 2 - 0.3, w / 2 + 0.3]) stroke(`M${P(at(a, 0, s))}L${P(at(a, Math.min(pathEnd, 14), s))}`, LINE, 0.35);

@@ -299,7 +299,8 @@ def junction_profile(r: pd.Series, labels: Labels, version: str, xs: dict | None
         "id": str(r["node_id"]), "names": _str(r["names"]), "bezirk": _str(r["bezirk"]), "pair": _str(r["pair"]),
         "legs": [{"name": _str(leg.get("name")), "cat": leg.get("cat"), "cycle_cat": labels.cat(leg.get("cycle_cat")),
                   "facility_text": labels.text("facility", leg.get("facility")), "dtv": _num(leg.get("dtv"), 0),
-                  "bearing": _int(leg.get("bearing")), "lanes": _lanes(leg.get("lanes")), "facility": leg.get("facility"),
+                  "bearing": _int(leg.get("bearing")), "axis": _int(leg.get("axis")), "offset": leg.get("offset"),
+                  "lanes": _lanes(leg.get("lanes")), "facility": leg.get("facility"),
                   "oneway": sc["oneway"] if sc else None,
                   "elements": [[e["element"], _num(e["width_m"], 2)] for e in sc["elements"] if (e["width_m"] or 0) > 0] if sc else None}
                  for leg, sc in zip(legs, sec)],

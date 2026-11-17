@@ -209,7 +209,12 @@ def describe_legs(clusters: dict, seg: pd.DataFrame, paths: pd.DataFrame, pts: d
     out = {root: {"legs": [], "internal": [], "flags": []} for root in clusters}
 
     def add(c, base: dict, geom, at_start: bool) -> None:
-        out[c]["legs"].append({**base, "bearing": _bearing(centre[c], geom, at_start, search_m)})
+        # bearing from the cluster centre (J-M-02 arm_merge); axis and offset only for the junction sketch on the
+        # website: direction of the leg from its own node and that node relative to the centre (metres east, north)
+        node = geom.coords[0] if at_start else geom.coords[-1]
+        out[c]["legs"].append({**base, "bearing": _bearing(centre[c], geom, at_start, search_m),
+                               "axis": _bearing(node, geom, at_start, search_m),
+                               "offset": [round(node[0] - centre[c][0], 1), round(node[1] - centre[c][1], 1)]})
 
     for r in seg.itertuples(index=False):
         cu, cv = node_to.get(int(r.node_u)), node_to.get(int(r.node_v))
@@ -304,7 +309,7 @@ def crash_counts(geoms: gpd.GeoSeries, crashes: gpd.GeoDataFrame, radius: float)
 def _leg_json(legs: list[dict]) -> str:
     return json.dumps([{"ids": leg["ids"], **{k: leg[k] for k in ("cat", "cycle_cat", "facility", "dtv", "name")},
                         "lanes": leg.get("lanes"),
-                        "bearing": round(leg["bearing"])} for leg in legs],
+                        "bearing": round(leg["bearing"]), "axis": round(leg["axis"]), "offset": leg["offset"]} for leg in legs],
                       ensure_ascii=False, default=float)
 
 
