@@ -192,6 +192,26 @@ function closePanel() {
   lastFocus?.focus?.();
 }
 
+// A sketch in the panel (cross section, junction) opens enlarged in a modal dialog; focus returns to its button.
+function initSketchDialog() {
+  const dialog = $("#sketch-dialog");
+  const body = dialog.querySelector(".sketch-dialog-body");
+  let opener = null;
+  $("#panel-body").addEventListener("click", (ev) => {
+    const btn = ev.target.closest(".sketch-zoom");
+    if (!btn) return;
+    const svg = btn.querySelector("svg").cloneNode(true);
+    const t = svg.querySelector("title");
+    if (t) { t.id = `${t.id}-zoom`; svg.setAttribute("aria-labelledby", t.id); }
+    body.replaceChildren(svg);
+    opener = btn;
+    dialog.showModal();
+  });
+  $("#sketch-close").onclick = () => dialog.close();
+  dialog.addEventListener("click", (ev) => { if (ev.target === dialog) dialog.close(); }); // backdrop
+  dialog.addEventListener("close", () => { body.replaceChildren(); opener?.focus(); opener = null; });
+}
+
 // --- district page -----------------------------------------------------------------------------
 
 async function renderDistricts() {
@@ -346,8 +366,9 @@ async function init() {
     setState({ page: "karte" }, { push: true });
     if (s) setTimeout(() => mapView?.fitBbox(s.bbox), 50);
   };
+  initSketchDialog();
   document.addEventListener("keydown", (ev) => {
-    if (ev.key === "Escape" && !$("#panel").hidden) setState({ seg: null, jct: null });
+    if (ev.key === "Escape" && !$("#panel").hidden && !$("#sketch-dialog").open) setState({ seg: null, jct: null });
   });
   for (const a of document.querySelectorAll("nav.main a, a.home, .site-foot a[href^='#']")) {
     a.addEventListener("click", (ev) => {

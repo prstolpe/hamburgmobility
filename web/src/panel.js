@@ -51,7 +51,7 @@ export function crossSectionSvg(elements, available, meta, { title: name = "Soll
   const title = `${name}: ${shown.map((e) => `${el[e.element]?.label ?? e.element} ${num(e.width_m, 2)} m`).join(", ")}. `
     + `${need} ${num(total, 1)} m${available != null ? `, verfügbar ${num(available, 1)} m` : ""}.`;
   const id = `xs-${Math.random().toString(36).slice(2, 8)}`;
-  const out = [`<figure class="sketch xs"><svg viewBox="0 0 ${width.toFixed(0)} ${height.toFixed(0)}" role="img" aria-labelledby="${id}" font-size="11">`,
+  const out = [`<figure class="sketch xs">${zoomButton(id)}<svg viewBox="0 0 ${width.toFixed(0)} ${height.toFixed(0)}" role="img" aria-labelledby="${id}" font-size="11">`,
     `<title id="${id}">${esc(title)}</title>`];
   let x = x0;
   for (const e of shown) {
@@ -74,9 +74,12 @@ export function crossSectionSvg(elements, available, meta, { title: name = "Soll
     out.push(`<line x1="${ax.toFixed(1)}" y1="${y2}" x2="${(ax + available * PX_PER_M).toFixed(1)}" y2="${y2}" stroke="#1f6fb2" stroke-width="2" stroke-dasharray="6 3"/>`);
     out.push(`<text x="${ax.toFixed(1)}" y="${y2 + 16}" fill="#1f5f99">verfügbar ${num(available, 1)} m (Verkehrsfläche an Engstellen)</text>`);
   }
-  out.push("</svg></figure>");
+  out.push("</svg></button></figure>");
   return out.join("");
 }
+
+// Button that enlarges a sketch (main.js opens it in #sketch-dialog); described by the sketch's title.
+export const zoomButton = (id) => `<button type="button" class="sketch-zoom" aria-label="Skizze vergrößern" aria-describedby="${id}">`;
 
 function principlesTable(pr, meta) {
   if (!pr) return "";

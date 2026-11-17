@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { CYCLING_LAYERS, groups, LAYER_INFO, legendHtml, sfpLayers } from "../src/layers.js";
 import { allColors, CASING, contrast, JUNCTION_STYLE, SHAPES } from "../src/palette.js";
+import { junctionSvg } from "../src/junction_sketch.js";
 import { crossSectionSvg, junctionHtml, profileHtml } from "../src/panel.js";
 import { DEFAULTS, LAYERS, parseHash, toHash } from "../src/state.js";
 
@@ -122,6 +123,74 @@ describe("cross-section sketch", () => {
 
   it("returns nothing without elements", () => {
     expect(crossSectionSvg([], null, META)).toBe("");
+  });
+
+  it("can be enlarged: the svg sits in a zoom button", () => {
+    expect(crossSectionSvg(elements, 12.0, META)).toMatch(/<button type="button" class="sketch-zoom"[^>]*><svg[\s\S]*<\/svg><\/button>/);
+  });
+});
+
+describe("junction sketch", () => {
+  const xs = (cw) => [["sidewalk", 2.5], ...(cw ? [["cycle_track", cw]] : []), ["carriageway", 6.5], ...(cw ? [["cycle_track", cw]] : []), ["sidewalk", 2.5]];
+  const legs = [
+    { name: "Hufnerstraße", cat: "GOW30", cycle_cat: { code: "HAUPT" }, lanes: 1, bearing: 0, elements: xs(2) },
+    { name: "Hellbrookstraße", cat: "GOW30", cycle_cat: { code: "BASIS" }, lanes: 1, bearing: 90, elements: xs(2) },
+    { name: "Hellbrookstraße", cat: "ETW30", cycle_cat: { code: null }, lanes: 1, bearing: 270, elements: xs(0) },
+    { name: "Fuhlsbüttler Straße", cat: "GOW50", cycle_cat: { code: "ERSCHL" }, lanes: 1, bearing: 180, elements: xs(2) },
+    { name: null, cat: "cycle_path", cycle_cat: { code: "HAUPT" }, lanes: null, bearing: 225, elements: null },
+  ];
+  const j = (code, group, over = {}) => ({ legs, ist: { text: "Ampel" }, soll: { code, text: "Ziel-Typ", group }, ...over });
+  const META_X = { cycling: { elements: { sidewalk: { label: "Gehweg", color: "#d9d4c7" }, cycle_track: { label: "Radweg", color: "#c0392b" },
+    carriageway: { label: "Fahrbahn", color: "#555b61" }, median: { label: "Mittelstreifen", color: "#7da35a" } } } };
+  const CODES = [["roundabout_single_lane_cycle_priority", "roundabout"], ["roundabout_single_lane_cycle_yield", "roundabout"],
+    ["turbo_roundabout", "roundabout"], ["signal_protected", "signal"], ["cycle_crossing_signal", "signal"], ["priority_raised", "priority"],
+    ["priority_flat_coloured", "priority"], ["cycle_crossing_priority", "priority"], ["cycle_crossing_refuge", "priority"],
+    ["continuous_footway_exit", "continuous"], ["equal_right_before_left", "equal"], ["grade_separated_cycle", "grade_separated"],
+    ["not_applicable", "none"]];
+
+  it("is a plan in metres with title, legend from the element colours, widths, names, scale bar and north arrow", () => {
+    const svg = junctionSvg(j("roundabout_single_lane_cycle_priority", "roundabout"), META_X);
+    expect(svg).toContain('role="img"');
+    expect(svg).toMatch(/<figure class="sketch jx"><button type="button" class="sketch-zoom"[^>]*aria-describedby="jx-/);
+    for (const t of ["Gehweg", "Radweg", "Fahrbahn", "Radfurt, Radverkehr hat Vorrang", "Grünfläche, Insel", "Fußgängerüberweg",
+      "15,5 m", "11,5 m", "20 m", ">N<", "Ziel: Ziel-Typ", "heute: Ampel"]) expect(svg).toContain(t);
+    expect(svg).toContain('fill="#c0392b"');
+    expect((svg.match(/>Hellbrookstraße</g) || []).length).toBe(1);
+    expect(svg).not.toContain("Lage der Arme schematisch");
+  });
+
+  it("draws every Soll type without invalid numbers", () => {
+    for (const [code, group] of CODES) {
+      const svg = junctionSvg(j(code, group), META_X);
+      expect(svg, code).toContain("</svg>");
+      expect(svg, code).not.toMatch(/NaN|Infinity|undefined/);
+    }
+  });
+
+  it("shows what each type adds: signals, footway, raised or coloured area, bridge", () => {
+    const has = (code, group, t) => expect(junctionSvg(j(code, group), META_X), code).toContain(t);
+    has("signal_protected", "signal", "Ampel");
+    has("signal_protected", "signal", "Haltlinie");
+    has("continuous_footway_exit", "continuous", "durchgehender Gehweg (erhöht)");
+    has("priority_raised", "priority", "erhöhte Fläche (Plateau)");
+    has("priority_flat_coloured", "priority", "eingefärbte Kreuzungsfläche");
+    has("grade_separated_cycle", "grade_separated", "Radweg auf Brücke oder im Tunnel");
+    has("roundabout_single_lane_cycle_yield", "roundabout", "Radfurt, Radverkehr wartet");
+  });
+
+  it("points arms by bearing, north up: a north arm runs along x = 0 towards negative y", () => {
+    const svg = junctionSvg(j("equal_right_before_left", "equal", { legs: [legs[0]] }), META_X);
+    expect(svg).toMatch(/translate\(0,-\d/);
+  });
+
+  it("says when the arm layout or a cross section is estimated", () => {
+    expect(junctionSvg(j("equal_right_before_left", "equal", { legs: legs.map(({ bearing, ...l }) => l) }), META_X)).toContain("Lage der Arme schematisch");
+    expect(junctionSvg(j("equal_right_before_left", "equal", { legs: legs.map((l) => ({ ...l, elements: null })) }), META_X))
+      .toContain("Querschnitt einzelner Arme geschätzt");
+  });
+
+  it("returns nothing without arms", () => {
+    expect(junctionSvg({ legs: [] }, META_X)).toBe("");
   });
 });
 

@@ -1,6 +1,6 @@
 # Validierung Radnetz, Radanlagen, Querschnitte und Knoten (Prompt 21)
 
-Erzeugt 2026-11-15T21:48:45+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.12.0 · design_rules.yaml 0.10.0 · rules.yaml 0.24.0 · nicht amtlicher Entwurf.
+Erzeugt 2026-11-17T21:31:12+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.13.0 · design_rules.yaml 0.11.1 · rules.yaml 0.24.0 · nicht amtlicher Entwurf.
 
 ## Kurzfassung
 
@@ -94,10 +94,10 @@ Prüffälle (stark befahren, aber nicht im Soll RSV/HAUPT; Modellwert meist weit
 
 ## 3. Sensitivität der Annahmen (±20%)
 
-Alle Zahlenwerte mit source_type assumption in cycling_rules.yaml und design_rules.yaml (177 Werte; source_type gilt auch für Einträge darunter), je einzeln um −20% und +20% (delta aus rules.yaml V-SENS-01). Neu gerechnet werden Führungsform (c05), Soll-Querschnitt (c06) und Knotentyp (c07) auf ihren gespeicherten Eingangswerten; Werte einer späteren Stufe rechnen nur ab dieser Stufe neu. Führung und Fahrstreifen als Anteil der Länge aller Straßenabschnitte, Knoten als Anteil der Knotenpunkte. Führung = Führungsform nach Prompt 19 (inklusive Fallback).
+Alle Zahlenwerte mit source_type assumption in cycling_rules.yaml und design_rules.yaml (189 Werte; source_type gilt auch für Einträge darunter), je einzeln um −20% und +20% (delta aus rules.yaml V-SENS-01). Neu gerechnet werden Führungsform (c05), Soll-Querschnitt (c06) und Knotentyp (c07) auf ihren gespeicherten Eingangswerten; Werte einer späteren Stufe rechnen nur ab dieser Stufe neu. Führung und Fahrstreifen als Anteil der Länge aller Straßenabschnitte, Knoten als Anteil der Knotenpunkte. Führung = Führungsform nach Prompt 19 (inklusive Fallback).
 
 - Variiert: 45 Werte, 90 Läufe; davon 33 mit einer Änderung.
-- Nicht neu gerechnet (andere Stufen): 96 Werte – siehe unten.
+- Nicht neu gerechnet (andere Stufen): 108 Werte – siehe unten.
 - Nicht variiert: 35 Zähl- oder Kennwerte (Seeds, Seitenzahl, Linientypen, Fahrstreifen-Vorgaben), 1 Werte gleich 0.
 - Ungültige Regelwerke nach Variation: 0.
 
@@ -154,10 +154,11 @@ Diese Annahmen wirken über Nachfragemodell, Netzentwurf, Prinzipien oder die Kn
 | `junctions` | 1 | andere Stufe |
 | `junctions.method` | 7 | Knotenbildung und Platz (J-M-01, J-M-03) – Geometrie, nicht neu gebildet |
 | `network_design` | 20 | Netzentwurf (Prompt 16) – je Lauf eine neue Umlegung |
-| `principle_scoring` | 9 | Prinzipienprüfung (Prompt 17) |
+| `principle_scoring` | 11 | Prinzipienprüfung (Prompt 17) |
 | `principle_weights` | 5 | Prinzipienprüfung (Prompt 17); Gewichts-Sensitivität in reports/cycle_principles.md |
 | `principles` | 11 | Prinzipienprüfung (Prompt 17), keine Wirkung auf Führung, Fahrstreifen, Knoten |
 | `routing_impedance` | 10 | Routenwahl und Netzentwurf (Prompts 15–16) – je Lauf eine neue Umlegung |
+| `trees_parking` | 10 | andere Stufe |
 
 ## 4. Stichproben aus den Prompts 17–20
 

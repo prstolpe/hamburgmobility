@@ -1,6 +1,6 @@
 # Barrierefreiheit der Webseite (axe-core)
 
-Erzeugt: 2026-11-16T22:10:38Z mit `npm --prefix web run a11y` (Playwright, axe-core 4.13.0, Regeln WCAG 2.0/2.1/2.2 A und AA) gegen `vite preview` mit den Daten aus data/out. Geräte: Desktop Chrome und Pixel 7 (emuliert).
+Erzeugt: 2026-11-17T21:41:28Z mit `npm --prefix web run a11y` (Playwright, axe-core 4.13.0, Regeln WCAG 2.0/2.1/2.2 A und AA) gegen `vite preview` mit den Daten aus data/out. Geräte: Desktop Chrome und Pixel 7 (emuliert).
 
 Ergebnis: **0 kritisch, 0 schwerwiegend, 0 mittel, 0 gering.**
 
@@ -8,28 +8,30 @@ Ergebnis: **0 kritisch, 0 schwerwiegend, 0 mittel, 0 gering.**
 | --- | --- | --- | ---: | ---: |
 | desktop | Karte | keine | 31 | 2 |
 | desktop | Karte mit Steckbrief | keine | 32 | 2 |
-| desktop | Bezirke | keine | 27 | 0 |
+| desktop | Bezirke | keine | 28 | 0 |
 | desktop | Bezirk Eimsbüttel | keine | 30 | 0 |
 | desktop | Bezirk mit Tabelle | keine | 32 | 0 |
 | desktop | Methode | keine | 26 | 0 |
 | desktop | Methode Kapitel Radnetz | keine | 29 | 0 |
 | desktop | Methode Regeln | keine | 27 | 0 |
+| desktop | Methode Bäume und Parkplätze | keine | 27 | 0 |
 | desktop | Karte Radnetz | keine | 31 | 2 |
 | desktop | Karte Fahrstreifen | keine | 31 | 2 |
 | desktop | Karte Abweichung | keine | 31 | 2 |
-| desktop | Karte Kreuzungen mit Steckbrief | keine | 31 | 2 |
+| desktop | Karte Kreuzungen mit Steckbrief | keine | 32 | 2 |
 | desktop | Besondere Orte | keine | 27 | 0 |
 | desktop | Karte besonderer Ort mit Steckbrief | keine | 33 | 2 |
 | desktop | Daten | keine | 29 | 0 |
 | desktop | Impressum | keine | 26 | 0 |
 | mobile | Karte | keine | 31 | 2 |
 | mobile | Karte mit Steckbrief | keine | 31 | 2 |
-| mobile | Bezirke | keine | 27 | 0 |
+| mobile | Bezirke | keine | 28 | 0 |
 | mobile | Bezirk Eimsbüttel | keine | 30 | 0 |
 | mobile | Bezirk mit Tabelle | keine | 33 | 1 |
 | mobile | Methode | keine | 26 | 0 |
 | mobile | Methode Kapitel Radnetz | keine | 29 | 0 |
 | mobile | Methode Regeln | keine | 27 | 0 |
+| mobile | Methode Bäume und Parkplätze | keine | 27 | 0 |
 | mobile | Karte Radnetz | keine | 31 | 2 |
 | mobile | Karte Fahrstreifen | keine | 31 | 2 |
 | mobile | Karte Abweichung | keine | 31 | 2 |

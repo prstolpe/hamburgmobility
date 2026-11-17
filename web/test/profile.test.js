@@ -168,6 +168,7 @@ describe("junctionHtml", () => {
     expect((visible(l2).match(/Schulterblatt/g) ?? []).length).toBe(1);
     expect(l2).toContain("Ziel: durchgehender Gehweg.");
     expect(l2).toContain("Mittelinsel für die Querung.");
+    expect(l2).toContain('<figure class="sketch jx">');
     expect(visible(l2)).not.toMatch(CODES);
   });
 
