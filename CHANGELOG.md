@@ -827,3 +827,64 @@ Auslöser seit 0.18.0 (Schule/Kita ≤ access_radius 50 m, Breite nur über den 
   width_p10_m unter dem Regelprofil, Radweg nur in Mindestbreite. Wirkung: Kaskade GOW30 154,9 → 132,0 km, Karte GOW50
   585,8 → 607,3 km, GOW30 170,2 → 148,6 km; Flag auf 164 Abschnitten (21,5 km).
   Goldene Fälle 26/27/31/32 auf die neuen Grenzen, neu 34 (zwischen Mindest- und Regelbreite → GOW50).
+
+## special_places.yaml 0.1.0, plain_language.yaml 0.14.0 – 2026-11-16 (Entwurf, Branch explore/special-places-schanze)
+- Neu: config/special_places.yaml (prompts/26) mit Schema config/schema/special_places_model.py. Besondere Orte
+  sind Vorschläge, Beschlüsse oder Bauten Dritter. Die Webseite zeigt sie neben dem Regelergebnis; die Klassifikation
+  ändert sich nicht.
+- Erster Ort: Bürgerbegehren „Verkehrsberuhigte Schanze“ (Stand 25.09.2026). 42 Abschnitte (2,9 km) sollen
+  Fahrradstraße werden, 3 Abschnitte (0,77 km) Fußgängerzone mit „Rad frei“. Die Zuordnung zu OSM-Abschnitten stammt
+  vom Projekt; die Karte der Initiative wurde nicht übernommen.
+- plain_language.yaml: neuer Abschnitt special_places. Er enthält den Satz im Steckbrief-Band und die Sätze für den
+  Vergleich mit dem Regelwerk, je Maßnahme mit Bedingung.
+- Export: neue Datei data/out/special_places.geojson, neuer Eintrag meta.special_places, neuer Block
+  `special_place` im Steckbrief der betroffenen Abschnitte.
+
+## special_places.yaml 0.2.0 – 2026-11-16 (Entwurf, Branch explore/special-places-schanze)
+- Zuschnitt nach Entscheidung prstolpe: Schanzenstraße nur bis zur Sternschanzenbrücke, Schulterblatt nur bis zur
+  Altonaer Straße, Lerchenstraße nur bis zur Stresemannstraße. Jetzt 24 Abschnitte (2,07 km) Fahrradstraße und
+  3 Abschnitte (0,77 km) Fußgängerzone.
+- Darstellung: nur Dunkelgrün, für die Fußgängerzone gestrichelt. Kein Leuchtschein und kein 3D mehr; das
+  Kippen der Karte entfällt wieder.
+- Neu `measures.*.profile`: Steckbrief-Skizze „Querschnitt im Vorschlag“. Sie wird mit derselben Logik wie der
+  Soll-Querschnitt gerechnet (pipeline/lib/profile.py), aber mit der Maßnahme: Fahrradstraße = Radführung
+  cycle_street, Fußgängerzone = Kategorie ETW_ERF mit Mischfläche. Die übrigen Eingaben bleiben wie im Ziel.
+
+
+## sources.yaml 0.1.13 – 2026-11-16: Straßenbaumkataster und Öffentlicher Parkraum (prompts/26 Teil 2)
+- street_trees: WFS https://geodienste.hamburg.de/HH_WFS_Strassenbaumkataster (de.hh.up:strassenbaumkataster,
+  229 876 Bäume), dl-de/by-2.0 laut GetCapabilities, check_status verified. Vorher url: null.
+- Neu parking_spaces: WFS Öffentlicher Parkraum Hamburg (LBV, de.hh.up:parkraum, 203 046 Flächen),
+  dl-de/by-2.0, check_status verified. Laut Dienstbeschreibung nur in ausgewählten Bereichen.
+
+## design_rules.yaml 0.11.0, cycling_rules.yaml 0.13.0, plain_language.yaml 0.15.0 – 2026-11-16 (Branch feature/trees-parking-stats)
+- design_rules: neuer Abschnitt `trees_parking` mit 7 Regeln (prompts/26 Teil 2). Methode freigegeben von prstolpe
+  am 2026-11-16 (docs/trees_parking/methode_vorschlag.md).
+  - TP-P-01: Parkplätze heute aus dem Öffentlichen Parkraum (LBV), sonst OSM je Seite. Stellplatzmaße aus dem
+    Median der LBV-Flächen (längs 5,2 m, quer 2,5 m; hamburg), schräg 3,9 m (assumption). Der Abzug für Einfahrten
+    (osm_factor) wird an den Seiten mit beiden Angaben geeicht, aktuell 0,74.
+  - TP-P-02: Abstände an Kreuzungen nach StVO § 12 Abs. 3 Nr. 1, 5 m bzw. 8 m vor Kreuzungen mit baulichem
+    Radweg (de_regelwerk).
+  - TP-P-03: Parkplätze im Ziel nach PRF-03 parking_by_category, mit Abbaustufe D1. Erst war das Profil-Element
+    vorgesehen; das Profil setzt Parkreihen aber nur nach OSM-Angaben, sodass amtlich erfasste Plätze sonst als
+    entfallend gezählt hätten.
+  - TP-P-04: Hochrechnung für Straßen ohne Daten als Spanne (25.–75. Perzentil je Kategorie).
+  - TP-T-01 bis TP-T-03: Zuordnung der Bäume, Bänder des Soll-Profils mit Lageunsicherheit ±1,5 m und
+    gespiegeltem Profil, Bäume im Gehweg als Spanne, neue Bäume alle 12 m Baumstreifen (assumption).
+  - Schema: Feld `trees_parking`; neue Quellen STVO_12 und LBV_PARKRAUM.
+- cycling_rules: C-PRI-10 nimmt das Straßenbaumkataster statt der OSM-Einzelbäume (Kronenradius = halber
+  Kronendurchmesser, zwischen 1 und 30 m gültig), Baumreihen weiter aus OSM (Entscheidung prstolpe 2026-11-16).
+  Wirkung: Grünanteil an den Radnetzkanten im Mittel 19,4 % → 22,3 %, Punkte P-ATT-01 0,48 → 0,54, Gesamtwertung
+  +0,003.
+- plain_language: Abschnitt trees_parking (Karten, Steckbrief, Satz beim Ort), Methodenkapitel „Bäume und
+  Parkplätze“, Spaltenbeschreibungen der Downloads.
+- Neue Stufe c09 (`make trees-parking`) in der Kette vor export-cycling. Export: Block `trees_parking` im Steckbrief,
+  `meta.trees_parking`, neue Spalten im Download, `parking` je besonderem Ort. Regelzahl in den Tests 190 → 197.
+
+## design_rules.yaml 0.11.1 – 2026-11-17 (Entscheidungen prstolpe nach Bericht Teil 2)
+- TP-P-04 (Hochrechnung ohne Daten) inaktiv: Die Spanne für Hamburg reichte von 950 bis 573 000 und sagte nichts.
+  Gezeigt wird nur die gezählte Zahl mit Abdeckung.
+- TP-T-02: Bäume im Gehweg zählen als „bleibt“. Obere Zahl „möglicherweise betroffen“ in Hamburg 159 600 → 62 200.
+- QA-Korrekturen: lange LBV-Flächen nach Fläche gezählt (space_area_m2), Absolutes Haltverbot und Ladezone
+  ausgeschlossen, leere Gegenseite auf Abschnitten unter 30 m unbekannt statt 0 (official_zero_min_length_m).
+

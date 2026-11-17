@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { bindDistrictPage, districtHtml, districtListHtml, fill } from "../src/districts.js";
+import { bindDistrictPage, districtHtml, districtListHtml, fill, treesParkingHtml } from "../src/districts.js";
 
 const fig = (n) => ({ km_total: 100 * n, km_need: 12.5 * n, km_speed_down: 3, km_cycle_main: 20, km_cycle_missing: 4.2 * n,
   km_profile_no_fit: 7, junctions: 50, junctions_rebuild: 3 * n });
@@ -87,5 +87,35 @@ describe("districts", () => {
     expect(cb.onOpenSegment).toHaveBeenCalledWith("s1", [9.9, 53.5]);
     expect(cb.onOpenJunction).toHaveBeenCalledWith("j1", null);
     expect(cb.onShowTable).toHaveBeenCalledOnce();
+  });
+});
+
+// prompt 26 Teil 2: trees and parking cards
+
+describe("trees and parking cards", () => {
+  const texts = {
+    parking_title: "Parkplätze am Straßenrand", parking_card: "heute ≈ {today}, im Ziel ≈ {target}",
+    parking_less: "{n} weniger als heute", parking_more: "{n} mehr als heute",
+    parking_l2: "Daten auf {share_known} %.", parking_l3: "amtlich {share_official} %, gezählt {counted}.",
+    trees_title: "Straßenbäume", trees_card: "{keep} bleiben, {affected} möglicherweise betroffen, {new} neu möglich",
+    trees_l2: "Erklärung.", trees_l3: "Spanne {affected_lo} bis {affected_hi} von {n}.",
+  };
+  const summary = { share_complete: 0.39, share_official: 0.245, share_osm: 0.148, share_none: 0.607, park_today_complete: 252479,
+    park_target_lo: 134368, park_target_hi: 138310, park_change_lo: -118105, park_change_hi: -114164,
+    park_counted: 258430, trees_n: 190567, trees_affected_lo: 3557, trees_affected_mid: 21286,
+    trees_affected_hi: 159600, trees_new: 61945 };
+  const meta = { trees_parking: { texts, summary: { Hamburg: summary } } };
+
+  it("words rounded estimates and ranges", () => {
+    const html = treesParkingHtml(meta, "Hamburg");
+    expect(html).toContain("heute ≈ 252.000, im Ziel ≈ 134.000–138.000");
+    expect(html).toContain("114.000–118.000 weniger als heute");
+    expect(html).toContain("169.000 bleiben, 21.000 möglicherweise betroffen, 62.000 neu möglich");
+    expect(html).toContain("Spanne 3.600 bis 160.000 von 191.000.");
+  });
+
+  it("shows nothing without data", () => {
+    expect(treesParkingHtml({}, "Hamburg")).toBe("");
+    expect(treesParkingHtml(meta, "Altona")).toBe("");
   });
 });

@@ -425,3 +425,12 @@ def test_inactive_checks_change_neither_scores_nor_coverage():
     appl = {c: np.ones(n, dtype=bool) for c in P.check_principle}
     assert np.allclose(pr.confidence(known, appl, P), pr.confidence(known, appl, P2))
     assert np.all(pr.confidence(known, appl, P) < 1.0)
+
+
+def test_green_share_crown_radius_per_tree():
+    # Straßenbaumkataster (cycling_rules 0.13.0): one crown radius per tree
+    line = shapely.LineString([(0, 0), (100, 0)])
+    trees = np.array([shapely.Point(20, 5), shapely.Point(80, -5)], dtype=object)
+    green = pr.prepare_green(np.array([], dtype=object), trees, crown_radius_m=np.array([2.0, 6.0]))
+    expected = (shapely.Point(20, 5).buffer(2).area + shapely.Point(80, -5).buffer(6).area) / line.buffer(20).area
+    assert pr.green_share(np.array([line]), green, buffer_m=20)[0] == pytest.approx(expected, rel=5e-3)  # polygonal circles

@@ -1,6 +1,6 @@
 # Datenbericht – Abruf Arbeitsgebiet
 
-Erzeugt: 2026-11-05T18:18:20+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-16T22:24:58+00:00 von `pipeline/s01_fetch.py`. Nicht amtlicher Entwurf.
 
 ## Arbeitsgebiet
 
@@ -34,7 +34,7 @@ Bezirke von Hamburg (admin_level 9, Grenzen aus OSM, weil die ALKIS-URL in confi
 | speed_limits | ok | 57511 | unknown | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
 | traffic_volumes | ok | 4303 | unknown | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
 | traffic_counters | ok | 11673 | unknown | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
-| bike_volumes_dbradplus | ok | 150778 | ODbL-1.0 | 2026-11-05 | jahr2025: 3 Datensatz/Datensätze vom Server nicht lieferbar (HTTP 500), übersprungen bei offset 1581, 36024, 40622 |
+| bike_volumes_dbradplus | ok | 150778 | ODbL-1.0 | 2026-11-05 | aus früherem Abruf (nicht neu geladen) |
 | cycle_network | fallback | 24 | ODbL-1.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
 | cycle_network_official | ok | 1116 | dl-de/by-2.0 | 2026-11-05 | aus früherem Abruf (nicht neu geladen) |
 | bike_counters | ok | 312 | dl-de/by-2.0 | 2026-11-05 | aus früherem Abruf (nicht neu geladen) |
@@ -42,7 +42,8 @@ Bezirke von Hamburg (admin_level 9, Grenzen aus OSM, weil die ALKIS-URL in confi
 | buildings_3d | fehlt | – | dl-de/by-2.0 | – | TODO: Transparenzportal |
 | orthophotos | fehlt | – | dl-de/by-2.0 | – | TODO: Transparenzportal / WMS |
 | laserscan | fehlt | – | unknown | – | TODO |
-| street_trees | fehlt | – | unknown | – | TODO: Transparenzportal |
+| street_trees | ok | 229876 | dl-de/by-2.0 | 2026-11-16 |  |
+| parking_spaces | ok | 203029 | dl-de/by-2.0 | 2026-11-16 |  |
 | road_condition_zeb | ok | 808932 | dl-de/by-2.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
 | road_surface | ok | 37835 | dl-de/by-2.0 | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
 | quiet_areas | ok | 15 | unknown | 2026-11-04 | aus früherem Abruf (nicht neu geladen) |
@@ -79,6 +80,8 @@ Bezirke von Hamburg (admin_level 9, Grenzen aus OSM, weil die ALKIS-URL in confi
 | bike_counters | daily_2025 | – | – | – | `data/raw/bike_counters__daily_2025.parquet` |
 | alkis | ave:Nutzung | 102339 | EPSG:25832 | [548365.3, 5916918.1, 588010.4, 5955161.7] | `data/raw/alkis__Nutzung.parquet` |
 | alkis | ave:GebaeudeBauwerk | 424972 | EPSG:25832 | [548681.9, 5917227.9, 587611.8, 5953580.7] | `data/raw/alkis__GebaeudeBauwerk.parquet` |
+| street_trees | de.hh.up:strassenbaumkataster | 229876 | EPSG:25832 | [548628.9, 5917302.3, 587559.0, 5953531.7] | `data/raw/street_trees__strassenbaumkataster.parquet` |
+| parking_spaces | de.hh.up:parkraum | 203029 | EPSG:25832 | [553431.1, 5921467.9, 581123.1, 5948633.6] | `data/raw/parking_spaces__parkraum.parquet` |
 | road_condition_zeb | de.hh.up:zeb2025_geb | 134822 | EPSG:25832 | [548946.7, 5917198.8, 587470.7, 5952682.1] | `data/raw/road_condition_zeb__zeb2025_geb.parquet` |
 | road_condition_zeb | de.hh.up:zeb2025_gw | 404466 | EPSG:25832 | [548946.7, 5917198.8, 587470.7, 5952682.1] | `data/raw/road_condition_zeb__zeb2025_gw.parquet` |
 | road_condition_zeb | de.hh.up:zeb2025_sub | 269644 | EPSG:25832 | [548946.7, 5917198.8, 587470.7, 5952682.1] | `data/raw/road_condition_zeb__zeb2025_sub.parquet` |
@@ -102,19 +105,22 @@ Bezirke von Hamburg (admin_level 9, Grenzen aus OSM, weil die ALKIS-URL in confi
 
 ## Angebotene Feature-Typen und Collections
 
-- **bike_volumes_dbradplus**: aktuelles_jahr, jahr2022, jahr2023, jahr2024, jahr2025 ✔, letzte_woche
+- **street_trees**: de.hh.up:strassenbaumkataster ✔
+- **parking_spaces**: de.hh.up:parkraum ✔
 
 ## Quellenvermerke
 
 - dedications: Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM) (dl-de/by-2.0)
-- speed_limits: Quellenvermerk unbekannt – klären (unknown)
-- traffic_volumes: Quellenvermerk unbekannt – klären (unknown)
+- speed_limits: Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM) (unknown)
+- traffic_volumes: Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM) (unknown)
 - traffic_counters: Quellenvermerk unbekannt – klären (unknown)
 - bike_volumes_dbradplus: Quellenvermerk unbekannt – klären (ODbL-1.0)
 - cycle_network: © OpenStreetMap-Beitragende (ODbL-1.0)
 - cycle_network_official: Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (dl-de/by-2.0)
 - bike_counters: Freie und Hansestadt Hamburg (dl-de/by-2.0)
 - alkis: Freie und Hansestadt Hamburg, Landesbetrieb Geoinformation und Vermessung (LGV) (dl-de/by-2.0)
+- street_trees: Freie und Hansestadt Hamburg, Behörde für Umwelt, Klima, Energie und Agrarwirtschaft (dl-de/by-2.0)
+- parking_spaces: Freie und Hansestadt Hamburg, Landesbetrieb Verkehr (dl-de/by-2.0)
 - road_condition_zeb: Quellenvermerk unbekannt – klären (dl-de/by-2.0)
 - road_surface: Quellenvermerk unbekannt – klären (dl-de/by-2.0)
 - quiet_areas: Quellenvermerk unbekannt – klären (unknown)
@@ -133,33 +139,33 @@ Links auf OpenStreetMap. Orthophoto- und Panoramax-Links folgen, sobald das Link
 
 | Quelle | Ebene | Bezeichnung | Karte |
 | --- | --- | --- | --- |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.567454&mlon=9.895407#map=18/53.567454/9.895407) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.472933&mlon=9.961027#map=18/53.472933/9.961027) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.442045&mlon=9.939391#map=18/53.442045/9.939391) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.442130&mlon=9.970969#map=18/53.442130/9.970969) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.521031&mlon=10.031010#map=18/53.521031/10.031010) |
-| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.678397&mlon=10.039135#map=18/53.678397/10.039135) |
-| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.481029&mlon=10.052757#map=18/53.481029/10.052757) |
-| bike_volumes_dbradplus | jahr2025 |  | [OSM](https://www.openstreetmap.org/?mlat=53.584433&mlon=9.878983#map=18/53.584433/9.878983) |
-| bike_volumes_dbradplus | jahr2025 |  | [OSM](https://www.openstreetmap.org/?mlat=53.639898&mlon=10.214724#map=18/53.639898/10.214724) |
-| bike_volumes_dbradplus | jahr2025 |  | [OSM](https://www.openstreetmap.org/?mlat=53.586654&mlon=10.088586#map=18/53.586654/10.088586) |
-| bike_volumes_dbradplus | jahr2025 |  | [OSM](https://www.openstreetmap.org/?mlat=53.647419&mlon=10.136551#map=18/53.647419/10.136551) |
-| road_condition_zeb | zeb2025_geb | Reinbeker Redder | [OSM](https://www.openstreetmap.org/?mlat=53.511836&mlon=10.195055#map=18/53.511836/10.195055) |
-| road_condition_zeb | zeb2025_gw | Gurlittstraße | [OSM](https://www.openstreetmap.org/?mlat=53.557954&mlon=10.009939#map=18/53.557954/10.009939) |
-| road_condition_zeb | zeb2025_gw | Fritz-Solmitz-Weg | [OSM](https://www.openstreetmap.org/?mlat=53.664816&mlon=10.029816#map=18/53.664816/10.029816) |
-| road_condition_zeb | zeb2025_gw | Alsterweg | [OSM](https://www.openstreetmap.org/?mlat=53.640832&mlon=10.053772#map=18/53.640832/10.053772) |
-| road_condition_zeb | zeb2025_gw | Kirchwerder Elbdeich | [OSM](https://www.openstreetmap.org/?mlat=53.400144&mlon=10.175199#map=18/53.400144/10.175199) |
-| road_condition_zeb | zeb2025_gw | Eckenerstraße | [OSM](https://www.openstreetmap.org/?mlat=53.587207&mlon=10.119707#map=18/53.587207/10.119707) |
-| road_condition_zeb | zeb2025_gw | Klosterwisch | [OSM](https://www.openstreetmap.org/?mlat=53.646247&mlon=10.151893#map=18/53.646247/10.151893) |
-| road_condition_zeb | zeb2025_sub | Sandmoorweg | [OSM](https://www.openstreetmap.org/?mlat=53.592561&mlon=9.746520#map=18/53.592561/9.746520) |
-| road_condition_zeb | zeb2025_sub | Pletschgang | [OSM](https://www.openstreetmap.org/?mlat=53.582528&mlon=9.819898#map=18/53.582528/9.819898) |
-| road_condition_zeb | zeb2025_sub | Bei der Lutherbuche | [OSM](https://www.openstreetmap.org/?mlat=53.597512&mlon=9.962920#map=18/53.597512/9.962920) |
-| road_condition_zeb | zeb2025_sub | Eekboomkoppel | [OSM](https://www.openstreetmap.org/?mlat=53.651256&mlon=10.000025#map=18/53.651256/10.000025) |
-| road_condition_zeb | zeb2025_sub | Billwiese | [OSM](https://www.openstreetmap.org/?mlat=53.491614&mlon=10.188829#map=18/53.491614/10.188829) |
-| road_condition_zeb | zeb2025_sub | Prinzenweg | [OSM](https://www.openstreetmap.org/?mlat=53.555281&mlon=10.113448#map=18/53.555281/10.113448) |
-| road_condition_zeb | zeb2025_sub | Blakshörn | [OSM](https://www.openstreetmap.org/?mlat=53.628968&mlon=10.122806#map=18/53.628968/10.122806) |
-| road_condition_zeb | zeb2025_sub | Eckloßberg | [OSM](https://www.openstreetmap.org/?mlat=53.637882&mlon=10.096247#map=18/53.637882/10.096247) |
-| speed_limits | tempo30zonen | Am Großen Dahlen | [OSM](https://www.openstreetmap.org/?mlat=53.445547&mlon=9.960285#map=18/53.445547/9.960285) |
-| speed_limits | tempo30zonen | Innocentiastraße | [OSM](https://www.openstreetmap.org/?mlat=53.579121&mlon=9.981825#map=18/53.579121/9.981825) |
-| speed_limits | tempo30zonen | Meriandamm | [OSM](https://www.openstreetmap.org/?mlat=53.549722&mlon=10.115492#map=18/53.549722/10.115492) |
-| speed_limits | tempo30zonen | Chrysanderstraße | [OSM](https://www.openstreetmap.org/?mlat=53.496070&mlon=10.214557#map=18/53.496070/10.214557) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.476377&mlon=9.890229#map=18/53.476377/9.890229) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.470856&mlon=9.841663#map=18/53.470856/9.841663) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.570677&mlon=9.812616#map=18/53.570677/9.812616) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.555955&mlon=9.857206#map=18/53.555955/9.857206) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.508216&mlon=10.013636#map=18/53.508216/10.013636) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.620854&mlon=9.912266#map=18/53.620854/9.912266) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.589089&mlon=10.096389#map=18/53.589089/10.096389) |
+| alkis | GebaeudeBauwerk | nan | [OSM](https://www.openstreetmap.org/?mlat=53.548488&mlon=10.062386#map=18/53.548488/10.062386) |
+| alkis | Nutzung | nan | [OSM](https://www.openstreetmap.org/?mlat=53.660385&mlon=10.087041#map=18/53.660385/10.087041) |
+| bike_volumes_dbradplus | jahr2025 |  | [OSM](https://www.openstreetmap.org/?mlat=53.565548&mlon=9.830908#map=18/53.565548/9.830908) |
+| bike_volumes_dbradplus | jahr2025 |  | [OSM](https://www.openstreetmap.org/?mlat=53.612719&mlon=9.973556#map=18/53.612719/9.973556) |
+| dedications | widmung_linie | Teutonenweg | [OSM](https://www.openstreetmap.org/?mlat=53.635264&mlon=9.971432#map=18/53.635264/9.971432) |
+| parking_spaces | parkraum | Eilbeker Weg | [OSM](https://www.openstreetmap.org/?mlat=53.570654&mlon=10.047942#map=18/53.570654/10.047942) |
+| parking_spaces | parkraum | Sierichstraße | [OSM](https://www.openstreetmap.org/?mlat=53.585854&mlon=10.003843#map=18/53.585854/10.003843) |
+| parking_spaces | parkraum | Birkenau | [OSM](https://www.openstreetmap.org/?mlat=53.568344&mlon=10.028773#map=18/53.568344/10.028773) |
+| road_condition_zeb | zeb2025_gw | Liebermannstraße | [OSM](https://www.openstreetmap.org/?mlat=53.547596&mlon=9.899352#map=18/53.547596/9.899352) |
+| road_condition_zeb | zeb2025_gw | Im Keil | [OSM](https://www.openstreetmap.org/?mlat=53.602511&mlon=9.896887#map=18/53.602511/9.896887) |
+| road_condition_zeb | zeb2025_gw | Kakenhaner Weg | [OSM](https://www.openstreetmap.org/?mlat=53.704860&mlon=10.099697#map=18/53.704860/10.099697) |
+| road_condition_zeb | zeb2025_gw | Brookdeich | [OSM](https://www.openstreetmap.org/?mlat=53.477375&mlon=10.240171#map=18/53.477375/10.240171) |
+| road_condition_zeb | zeb2025_gw | Ahrensfelder Weg | [OSM](https://www.openstreetmap.org/?mlat=53.634913&mlon=10.211433#map=18/53.634913/10.211433) |
+| road_condition_zeb | zeb2025_sub | Grünebergstraße | [OSM](https://www.openstreetmap.org/?mlat=53.557021&mlon=9.914288#map=18/53.557021/9.914288) |
+| street_trees | strassenbaumkataster |  | [OSM](https://www.openstreetmap.org/?mlat=53.488316&mlon=9.905703#map=18/53.488316/9.905703) |
+| street_trees | strassenbaumkataster |  | [OSM](https://www.openstreetmap.org/?mlat=53.585016&mlon=9.988075#map=18/53.585016/9.988075) |
+| street_trees | strassenbaumkataster |  | [OSM](https://www.openstreetmap.org/?mlat=53.636889&mlon=9.920115#map=18/53.636889/9.920115) |
+| street_trees | strassenbaumkataster |  | [OSM](https://www.openstreetmap.org/?mlat=53.629494&mlon=10.055444#map=18/53.629494/10.055444) |
+| street_trees | strassenbaumkataster |  | [OSM](https://www.openstreetmap.org/?mlat=53.457703&mlon=10.075808#map=18/53.457703/10.075808) |
+| street_trees | strassenbaumkataster |  | [OSM](https://www.openstreetmap.org/?mlat=53.576201&mlon=10.137084#map=18/53.576201/10.137084) |
+| street_trees | strassenbaumkataster |  | [OSM](https://www.openstreetmap.org/?mlat=53.486396&mlon=10.223566#map=18/53.486396/10.223566) |
+| traffic_counters | locations_things | StadtRad-Station Fähranleger Finkenwerder/ Butendeichsweg | [OSM](https://www.openstreetmap.org/?mlat=53.536200&mlon=9.877750#map=18/53.536200/9.877750) |
+| traffic_volumes | verkehrsmengen_dtv_hvs_2019 |  | [OSM](https://www.openstreetmap.org/?mlat=53.585042&mlon=9.739364#map=18/53.585042/9.739364) |

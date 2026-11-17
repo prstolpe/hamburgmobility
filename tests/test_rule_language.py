@@ -65,7 +65,7 @@ def plain_ok(text: str) -> list[str]:
 
 
 def test_rule_count():
-    assert len(RULES) == 190  # 0.23.0: H-PAIR-01; 0.24.0: C-G50-02
+    assert len(RULES) == 197  # 0.23.0: H-PAIR-01; 0.24.0: C-G50-02; design_rules 0.11.0: TP-P-01..04, TP-T-01..03
 
 
 @pytest.mark.parametrize("file,rule", RULES, ids=[r["id"] for _, r in RULES])

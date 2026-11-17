@@ -1,6 +1,6 @@
 # Export – Stufe 9
 
-Erzeugt: 2026-11-15T22:12:48+00:00 von `pipeline/s09_export.py`, Version 0.24.0+2026-10-28. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-17T06:49:36+00:00 von `pipeline/s09_export.py`, Version 0.24.0+2026-10-28. Nicht amtlicher Entwurf.
 
 ## Prüfungen
 
@@ -8,7 +8,7 @@ Erzeugt: 2026-11-15T22:12:48+00:00 von `pipeline/s09_export.py`, Version 0.24.0+
 | --- | --- | --- |
 | nur Bezirke des Arbeitsgebiets | ok | 33712 Abschnitte in 7 Bezirken |
 | Tabelle je Bezirk | ok | table/altona.json, table/bergedorf.json, table/eimsbuettel.json, table/hamburg-mitte.json, table/hamburg-nord.json, table/harburg.json, table/wandsbek.json |
-| Seite unter 1 GB (GitHub Pages) | ok | data/out zusammen 513 MB |
+| Seite unter 1 GB (GitHub Pages) | ok | data/out zusammen 534 MB |
 | segment_id eindeutig und unverändert | ok | Reihenfolge wie discrepancy.parquet |
 | Export in EPSG:4326 | ok | EPSG:4326 |
 | keine Einzelunfälle oder Rohspuren | ok | Spalten aus PUBLIC_COLUMNS |
@@ -24,9 +24,9 @@ Erzeugt: 2026-11-15T22:12:48+00:00 von `pipeline/s09_export.py`, Version 0.24.0+
 ## Kennzahlen
 
 - Abschnitte: 33 712 in Hamburg (7 Bezirke) (4240.4 km)
-- Gesamtgröße data/out: 513 MB (Grenze GitHub Pages 1 GB)
+- Gesamtgröße data/out: 534 MB (Grenze GitHub Pages 1 GB)
 - Suchindex: 8 396 Straßennamen; Schulen/Kitas in den Kacheln: 1 545
-- Steckbriefe: 33 712 Dateien, zusammen 217.8 MB
+- Steckbriefe: 33 712 Dateien, zusammen 229.5 MB
 - Robustheit (make validate, 500 Läufe): 2 247 Abschnitte „unsicher“ (246.6 km)
 
 - Radnetz (Prompt 21): 33 712 Abschnitte mit Radnetz-Block, 14 312 Knoten-Steckbriefe; Kacheln tiles/cycling.pmtiles und tiles/junctions.pmtiles werden erst geladen, wenn eine Radnetz-Ebene gewählt ist
@@ -63,21 +63,22 @@ Erzeugt: 2026-11-15T22:12:48+00:00 von `pipeline/s09_export.py`, Version 0.24.0+
 | `data/out/downloads/cycle_segments.parquet` | 6.03 MB |
 | `data/out/downloads/cycling_rules.yaml` | 0.08 MB |
 | `data/out/downloads/datenbeschreibung.md` | 0.01 MB |
-| `data/out/downloads/design_rules.yaml` | 0.05 MB |
+| `data/out/downloads/design_rules.yaml` | 0.06 MB |
 | `data/out/downloads/junctions.geojson` | 11.12 MB |
 | `data/out/downloads/junctions.parquet` | 0.86 MB |
 | `data/out/downloads/overrides.csv` | 0.00 MB |
 | `data/out/downloads/rules.yaml` | 0.10 MB |
-| `data/out/downloads/segments.csv` | 15.54 MB |
-| `data/out/downloads/segments.geojson` | 59.40 MB |
-| `data/out/downloads/segments.parquet` | 8.15 MB |
+| `data/out/downloads/segments.csv` | 17.00 MB |
+| `data/out/downloads/segments.geojson` | 66.86 MB |
+| `data/out/downloads/segments.parquet` | 8.63 MB |
 | `data/out/junction_redirects.json` | 0.12 MB |
 | `data/out/licenses.md` | 0.00 MB |
-| `data/out/meta.json` | 0.04 MB |
-| `data/out/rules.json` | 0.23 MB |
+| `data/out/meta.json` | 0.05 MB |
+| `data/out/rules.json` | 0.24 MB |
 | `data/out/rural_excluded.geojson` | 0.13 MB |
 | `data/out/search.json` | 1.67 MB |
 | `data/out/search_junctions.json` | 1.58 MB |
+| `data/out/special_places.geojson` | 0.01 MB |
 | `data/out/tiles/cycling.pmtiles` | 27.08 MB |
 | `data/out/tiles/junctions.pmtiles` | 2.80 MB |
 | `data/out/tiles/segments.pmtiles` | 13.56 MB |

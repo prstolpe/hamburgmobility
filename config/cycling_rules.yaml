@@ -8,8 +8,8 @@
 # Klassentabellen (demand.intensity_classes_peak_h) sind halboffen [min, max): ein Wert auf der Grenze gehört zur
 #   oberen Klasse; intensity_upgrade greift darum ab der Untergrenze (>=) einer Klasse (F27).
 meta:
-  version: 0.12.0
-  date: 2026-11-15
+  version: 0.13.0
+  date: 2026-11-16
   crs_work: EPSG:25832
   depends_on: 'config/rules.yaml (Straßenkategorien cat_final)'
 
@@ -230,15 +230,17 @@ principle_scoring:
       explain_plain: "Anteil von Grün und Bäumen entlang des Wegs."
       why: "Der Punktwert zeigt, wie nah der Grünanteil dem Zielwert von 30 Prozent kommt."
       description: >-
-        P-ATT-01 Grünanteil im Puffer buffer_m um die Kante: Fläche aus ALKIS-Nutzung (nutzart in green_nutzart) und
-        OSM-Bäumen (natural=tree als Kreis mit tree_crown_radius_m, natural=tree_row als Linie mit demselben Puffer),
-        ohne Doppelzählung. Score = min(Grünanteil / target_share, 1). Kein Straßenbaumkataster (sources.yaml
-        street_trees ohne Endpunkt). Soll = Ist
+        P-ATT-01 Grünanteil im Puffer buffer_m um die Kante: Fläche aus ALKIS-Nutzung (nutzart in green_nutzart),
+        Bäumen aus dem Straßenbaumkataster (sources.yaml street_trees; Kreis mit dem halben Kronendurchmesser, außerhalb
+        crown_diameter_valid_m mit tree_crown_radius_m) und OSM-Baumreihen (natural=tree_row als Linie mit Puffer
+        tree_crown_radius_m), ohne Doppelzählung. Score = min(Grünanteil / target_share, 1). Soll = Ist
       history:
         - "Entscheidung 2026-11-06: ohne Straßenbaumkataster rechnen"
+        - "0.13.0 (2026-11-16, Entscheidung prstolpe, prompts/26): Straßenbaumkataster statt OSM-Einzelbäumen (natural=tree); Baumreihen weiter aus OSM"
       buffer_m: 20
       green_nutzart: [Wald, Gehoelz, Sport Freizeit Und Erholungsflaeche, Friedhof, Landwirtschaft, Heide, Moor, Sumpf]
       tree_crown_radius_m: 4
+      crown_diameter_valid_m: {value: [1, 30], unit: m, source_type: assumption, note: 'Kataster: 427 Bäume mit 0, 6 über 30 m (Prüfung 2026-11-16)'}
       target_share: 0.3
       status: draft
     - id: C-PRI-11

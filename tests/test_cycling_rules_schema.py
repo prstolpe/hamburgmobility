@@ -476,7 +476,7 @@ def test_inactive_rules_and_blocks():
     assert _by_id(cycling.separation_matrix["rules"], "S-03")["scope"] == "rural"
     every = all_rule_ids(load_rules(), cycling, design)
     active = active_rule_ids(load_rules(), cycling, design)
-    assert set(every) - set(active) == {"C-RUR-01", "PL-02", "P-COM-03", "P-ATT-02"}
+    assert set(every) - set(active) == {"C-RUR-01", "PL-02", "P-COM-03", "P-ATT-02", "TP-P-04"}  # TP-P-04: 2026-11-17
     assert collect_ids({"status": "inactive", "rules": [{"id": "X-01", "status": "draft"}]}, active_only=True) == []
 
 

@@ -25,6 +25,7 @@ reports/coherence_flags.geojson
 
 # Full screenshot sets of review reports (a selection is committed next to the report)
 docs/cleanup/*/img/alle/
+docs/*/screenshots/alle/
 
 # Logo source images (not committed; exports are in web/src/brand/)
 assets/brand/*.jpg

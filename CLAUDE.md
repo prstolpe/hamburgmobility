@@ -55,7 +55,10 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
   prompts/24_redesign_swiss_plain_language.md (Redesign der Webseite, einfache Sprache, schlankere Regeln;
   Teil A in docs/redesign/, Teil B erst nach docs/redesign/decisions.md),
   prompts/25_cleanup_logo.md (Aufräumen: kein Kopfband, keine Changelog-Seite, Ansichten per `enabled: false` in
-  web/src/state.js ausgeblendet, Logo HMR; Bericht in docs/cleanup/2026-11/).
+  web/src/state.js ausgeblendet, Logo HMR; Bericht in docs/cleanup/2026-11/),
+  prompts/26_special_places_trees_parking.md (Besondere Orte, zuerst „Verkehrsberuhigte Schanze“, in
+  config/special_places.yaml; Bäume und Parkplätze je Soll-Querschnitt; Berichte in docs/special_places/ und
+  docs/trees_parking/).
 - docs/guide_radnetz.md – Methodik mit Quellen. Bei Fachfragen zum Radnetz zuerst hier nachsehen.
 - config/cycling_rules.yaml – Radnetzkategorien, Prinzipien, Trennungsmatrix, Breiten.
 - config/design_rules.yaml – Fahrstreifen, Lage der Radanlagen, Raumaufteilung, Knotenpunkte.
@@ -67,7 +70,10 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
   overrides/lane_overrides.csv (segment_id, Fahrstreifen und Busfahrstreifen).
 - Pipeline-Skripte: pipeline/cNN_name.py; goldene Fälle in tests/golden/cycling/.
 - Make-Ziele: make cycle-demand | make cycle-network | make cycle-principles | make cycle-facility |
-  make cross-section-soll | make junctions | make export-cycling
+  make cross-section-soll | make junctions | make trees-parking | make export-cycling
+- Bäume und Parkplätze (Prompt 26 Teil 2): pipeline/c09_trees_parking.py, Regeln design_rules.yaml trees_parking
+  (TP-…); Parkplätze aus dem Öffentlichen Parkraum (LBV), sonst OSM je Seite; Bäume aus dem Straßenbaumkataster.
+  Fehlende Daten nie als 0 zählen; Bäume nur „möglicherweise betroffen“.
 
 ## Befehle
 make fetch | make network | make conflate | make features | make crosssection | make classify |

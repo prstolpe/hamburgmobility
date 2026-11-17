@@ -3,7 +3,7 @@
 // Port of prototypes/redesign/shared/profile.js to the website code style.
 import { crossSectionSvg } from "./panel.js";
 import { issueUrl, mailtoUrl } from "./feedback.js";
-import { esc, num } from "./util.js";
+import { approx, approxRange, esc, num } from "./util.js";
 
 const TARGET_KMH = { SW: null, GOW50: 50, GOW30: 30, ETW30: 30, ETW_ERF: 7 };
 const WALK = "Schritttempo";
@@ -104,6 +104,55 @@ function cyclingDetails(p) {
   return `<h3>Radverkehr</h3><dl>${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
 }
 
+/** Special place (prompts/26): a band right below level 1 (one sentence, status with date); the comparison with the
+ * rule result follows the rule explanation on level 2. The rule text itself stays unchanged. */
+function placeBand(sp) {
+  if (!sp) return "";
+  return `<div class="place-band" style="--place:${esc(sp.colour)}">
+      <p class="place-title">${esc(sp.band)}</p>
+      <p class="t-small">${esc(sp.status_line)} · <a href="#orte">Mehr zum Vorschlag</a></p>
+    </div>`;
+}
+
+/** Cross section with the proposal's measure (computed in the export with our cross-section logic), after our own. */
+function placeProfile(sp, meta) {
+  const pr = sp?.profile;
+  if (!pr?.elements?.length) return "";
+  const t = meta.special_places?.texts ?? {};
+  const title = t.profile_title ?? "Querschnitt im Vorschlag";
+  if (pr.same_as_soll) return `<h3>${esc(title)}</h3><p>${esc(t.profile_same ?? "")}</p>`;
+  return `<h3>${esc(title)}</h3>
+      ${pr.fit_text ? `<p class="fit">${esc(cap(pr.fit_text))}.</p>` : ""}
+      ${crossSectionSvg(pr.elements, pr.available_m, meta, { title, need: "Bedarf im Vorschlag" })}
+      ${sp.profile_note ? `<p class="t-small">${esc(sp.profile_note)}</p>` : ""}`;
+}
+
+/** Trees and parking of the segment (prompts/26 Teil 2), level 2; estimates, missing data stays "keine Daten". */
+function treesParking(tp, meta) {
+  const t = meta.trees_parking?.texts;
+  if (!tp || !t) return "";
+  const f = (tpl, v) => String(tpl ?? "").replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
+  const pk = tp.parking;
+  let parking;
+  if (pk.complete) parking = f(t.profile_parking, { today: approx(pk.today), target: approxRange(pk.target_min, pk.target_max) });
+  else if (pk.today_known != null) parking = f(t.profile_parking_partial, { today: approx(pk.today_known) });
+  else parking = t.profile_parking_none;
+  const src = [...new Set([pk.src_left, pk.src_right])].map((s) => t.profile_source?.[s]).filter(Boolean).join(", ");
+  const tr = tp.trees;
+  const trees = tr.n ? f(t.profile_trees, { n: num(tr.n), affected: approxRange(tr.affected_min, tr.affected_max), new: approx(tr.new) })
+    : t.profile_trees_none;
+  return `<h3>${esc(t.profile_title)}</h3>
+      <p>${esc(parking)}${src ? ` <span class="t-small muted">(${esc(src)})</span>` : ""}</p>
+      <p>${esc(trees)}</p>
+      <p class="t-small">${esc(t.profile_note)}</p>`;
+}
+
+function placeCompare(sp) {
+  if (!sp) return "";
+  return `<h3>Vorschlag für diesen Ort</h3>
+      <p>${esc(sp.compare)}${(sp.notes ?? []).map((n) => ` ${esc(n)}`).join("")}</p>`;
+}
+
 export function segmentHtml(p, meta, pageUrl, { level2Open = true } = {}) {
   const code = p.category.code;
   const c = certainty(p);
@@ -122,16 +171,19 @@ export function segmentHtml(p, meta, pageUrl, { level2Open = true } = {}) {
     <div class="l1 cat cat-${esc(code)}">
       <p class="label">${esc(name)}</p>
       <p class="key">${esc(keyLine(p))}</p>
-    </div>`;
+    </div>${placeBand(p.special_place)}`;
 
   const l2 = `
     <details class="level l2"${level2Open ? " open" : ""}><summary>Mehr erfahren</summary>
       <h3 id="h-why">Warum?</h3>
       <p>${esc(WHY_INTRO[code] ?? "")} ${yes.map(esc).join(" ")}</p>
+      ${placeCompare(p.special_place)}
       <h3>Was ändert sich?</h3>
       ${ch.length ? `<ul>${ch.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "<p>Für die Aufgabe der Straße ist kein Umbau nötig.</p>"}
       ${fit ? `<h3>Hat das Ziel Platz?</h3><p class="fit">${esc(fit.text)}</p>${fit.drawing ? `<p class="t-small">${FIT_EXPLAIN}</p>` : ""}` : ""}
       ${xs}
+      ${placeProfile(p.special_place, meta)}
+      ${treesParking(p.trees_parking, meta)}
       ${measure ? `<p class="note">${esc(sentence(measure))}</p>` : ""}
       ${c.uncertain ? UNSURE : ""}
       ${feedback(p, meta, pageUrl)}

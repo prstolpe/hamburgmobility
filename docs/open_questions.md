@@ -274,3 +274,22 @@ Fachlich:
 - [x] HVS ohne `dtv_official` (274 GOW-Abschnitte, 23 km): bleiben vorerst GOW50 (Entscheidung prstolpe 2026-11-15).
 - [x] C-G50-02-Abschnitte sind in H-STR-01 und H-PAIR-01 gesperrt (`locked_rules`, Entscheidung prstolpe 2026-11-15).
 - [ ] Kurze GOW30-Stücke zwischen GOW50 werden nur unter min_run_m (200 m) zu GOW50; 30 Läufe von 200–500 m (9,5 km) bleiben GOW30, meist aus C-G30-02 (zu schmal für einen Radweg). Grenze auf gap_close_m (500 m) anheben? Dann bekäme eine Engstelle ohne Platz für einen Radweg Tempo 50 – prstolpe
+
+## Besondere Orte (prompts/26, special_places.yaml 0.2.0)
+- [ ] Schanze: Was der Vorschlag für das Parken am Straßenrand vorsieht, steht nicht in den Quellen. Die Skizze „Querschnitt im Vorschlag“ rechnet die Fahrradstraße mit Parken wie in unserem Ziel und die Fußgängerzone ohne Parken (PRF-03 für ETW_ERF). Bei der Initiative nachfragen? – prstolpe
+- [ ] Schanze: Stand der Unterschriftensammlung vor jeder Veröffentlichung prüfen (zuletzt 25.09.2026; Frist sechs Monate).
+- [x] Zuschnitt Schanzenstraße/Schulterblatt/Lerchenstraße (Entscheidung prstolpe 2026-11-16): bis Sternschanzenbrücke, Altonaer Straße bzw. Stresemannstraße.
+
+## Bäume und Parkplätze (prompts/26 Teil 2, design_rules.yaml 0.11.0)
+- [x] Hochrechnung für Straßen ohne Parkdaten: weggelassen, TP-P-04 inaktiv (Entscheidung prstolpe 2026-11-17).
+- [x] Bäume im Gehweg zählen als „bleibt“ (Entscheidung prstolpe 2026-11-17).
+- [ ] Endpunkt für Luftbilder (sources.yaml `orthophotos`, url: null): nötig, damit die QA-Stichproben automatisch gegen Luftbilder geprüft werden können. Bis dahin Sichtprüfung über die Geoportal-Links in reports/trees_parking.md. Recherche 2026-11-17 (noch nicht abgerufen oder eingetragen, Entscheidung prstolpe: erst in einer späteren Runde). Kandidaten aus dem Dienstekatalog des Geoportals (https://geodienste.hamburg.de/services-internet.json, verwiesen aus https://geoportal-hamburg.de/config.js als layerConf):
+  - Layer 19968 „DOP20 RGB“ (der Layer unserer Orthophoto-Links): WMS https://geodienste.hamburg.de/wms_bkg_dop, Layer `rgb`. Nach Name vermutlich BKG-DOP20 (nicht LGV). GetCapabilities lieferte beim kurzen Test keine Titel; Lizenz und Stand prüfen.
+  - Layer 34127 „DOP Zeitreihe belaubt“: WMS https://geodienste.hamburg.de/wms_dop_zeitreihe_belaubt, Layer `dop_zeitreihe_belaubt`.
+  - Layer 34039 „DOP Zeitreihe unbelaubt“: WMS https://geodienste.hamburg.de/wms_dop_zeitreihe_unbelaubt, Layer `dop_zeitreihe_unbelaubt`. Unbelaubt ist für Bordsteine und Parkstände vermutlich besser.
+  - Metadaten: WMTS Digitale Orthophotos 20 cm, https://gdk.gdi-de.org/geonetwork/srv/api/records/A3A145DE-2B1B-4EBA-9D09-8F5D72ED4F7D
+  - Nächster Schritt: GetCapabilities lesen (Lizenz, Jahrgänge, Auflösung), dann einen Eintrag in sources.yaml mit check_status verified und eine GetMap-Hilfe für die QA.
+- [ ] Schrägparken: 3,9 m Bordlänge je Platz bei angenommenen 45° (assumption). Aus den LBV-Flächen messen?
+- [ ] Baumabstand 12 m für „neu möglich“ und Lageunsicherheit ±1,5 m: fachlich prüfen.
+- [ ] Profilseiten ↔ Straßenseiten: Das Soll-Profil legt einseitige Elemente nicht auf eine bestimmte Straßenseite. Die Rechnung nimmt deshalb beide Zuordnungen als Spanne.
+

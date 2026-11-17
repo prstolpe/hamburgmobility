@@ -38,7 +38,7 @@ const m2 = (v) => `${num(v, 2)} m`;
 
 /** Soll cross section to scale (port of pipeline/lib/profile.py profile_svg): one bar per element, required and
  * available width. Responsive (viewBox), with a text alternative in <title>. */
-export function crossSectionSvg(elements, available, meta) {
+export function crossSectionSvg(elements, available, meta, { title: name = "Soll-Querschnitt", need = "Soll-Bedarf" } = {}) {
   const shown = (elements ?? []).filter((e) => e.width_m > 0);
   if (!shown.length) return "";
   const total = shown.reduce((a, e) => a + e.width_m, 0);
@@ -48,8 +48,8 @@ export function crossSectionSvg(elements, available, meta) {
   const height = top + band + (available != null ? 62 : 36);
   const x0 = margin + ((span - total) * PX_PER_M) / 2;
   const el = meta.cycling?.elements ?? {};
-  const title = `Soll-Querschnitt: ${shown.map((e) => `${el[e.element]?.label ?? e.element} ${num(e.width_m, 2)} m`).join(", ")}. `
-    + `Soll-Bedarf ${num(total, 1)} m${available != null ? `, verfügbar ${num(available, 1)} m` : ""}.`;
+  const title = `${name}: ${shown.map((e) => `${el[e.element]?.label ?? e.element} ${num(e.width_m, 2)} m`).join(", ")}. `
+    + `${need} ${num(total, 1)} m${available != null ? `, verfügbar ${num(available, 1)} m` : ""}.`;
   const id = `xs-${Math.random().toString(36).slice(2, 8)}`;
   const out = [`<figure class="sketch xs"><svg viewBox="0 0 ${width.toFixed(0)} ${height.toFixed(0)}" role="img" aria-labelledby="${id}" font-size="11">`,
     `<title id="${id}">${esc(title)}</title>`];
@@ -67,7 +67,7 @@ export function crossSectionSvg(elements, available, meta) {
   }
   const y = top + band + 12;
   out.push(`<line x1="${x0.toFixed(1)}" y1="${y}" x2="${(x0 + total * PX_PER_M).toFixed(1)}" y2="${y}" stroke="#222222" stroke-width="2"/>`);
-  out.push(`<text x="${x0.toFixed(1)}" y="${y + 16}" fill="#222222">Soll-Bedarf ${num(total, 1)} m</text>`);
+  out.push(`<text x="${x0.toFixed(1)}" y="${y + 16}" fill="#222222">${esc(need)} ${num(total, 1)} m</text>`);
   if (available != null) {
     const ax = margin + ((span - available) * PX_PER_M) / 2;
     const y2 = y + 28;

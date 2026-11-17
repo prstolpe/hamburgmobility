@@ -20,10 +20,11 @@ SHELL := /bin/bash
 PIPELINE_TARGETS := fetch network conflate features crosssection classify coherence discrepancy export validate
 # Cycle network extension (prompts 14–21, docs/guide_radnetz.md); runs after classify (needs cat_final).
 #   cycle-demand -> cycle-network -> ist-facility -> cycle-principles -> cycle-facility -> cross-section-soll
-#   -> junctions -> export-cycling
+#   -> junctions -> trees-parking -> export-cycling
+# trees-parking (c09, prompts/26 Teil 2) reads the Soll profiles of cross-section-soll and the LBV/cadastre data.
 # ist-facility (c03b) computes the Ist facility once per segment for c04, c05 and s08 (V-INV-08).
 # junctions (c07) reads the Soll lanes of cross-section-soll (J-14/J-15) and the N5 nodes of coherence and writes the section "Übergänge (N5)".
-CYCLING_TARGETS := cycle-demand cycle-network ist-facility cycle-principles cycle-facility cross-section-soll junctions export-cycling
+CYCLING_TARGETS := cycle-demand cycle-network ist-facility cycle-principles cycle-facility cross-section-soll junctions trees-parking export-cycling
 .PHONY: help install dirs test web web-test a11y basemap site-data override-template rerun $(PIPELINE_TARGETS) $(CYCLING_TARGETS)
 
 # run_step(target, script): run pipeline/<script>.py if it exists, otherwise report that it is missing.
@@ -119,6 +120,9 @@ cross-section-soll: dirs ## Target cross section: lanes, placement, space alloca
 junctions: dirs ## Target junction type, cyclist treatment per node (prompt 20) and junction coherence report
 	$(call run_step,junctions,c07_junctions)
 
+trees-parking: dirs ## Street trees and parking spaces per target cross section (prompts/26 Teil 2)
+	$(call run_step,trees-parking,c09_trees_parking)
+
 export-cycling: dirs ## Cycling validation (c08) and export incl. cycling layers (prompt 21) -> reports/validation_cycling.md
 	$(call run_step,export-cycling,c08_validate_cycling)
 	$(call run_step,export-cycling,s09_export)
@@ -128,7 +132,7 @@ export-cycling: dirs ## Cycling validation (c08) and export incl. cycling layers
 # export-cycling. FROM may also name a stage of the cycling tail (validate is then skipped).
 # Workers per stage: SFP_WORKERS (default all cores, 1 = serial).
 CHAIN := network conflate features crosssection classify coherence cycle-demand cycle-network ist-facility discrepancy
-TAIL := cycle-principles cycle-facility cross-section-soll junctions
+TAIL := cycle-principles cycle-facility cross-section-soll junctions trees-parking
 FROM ?= classify
 rerun: dirs ## Full rerun from FROM (default classify) to export; validate runs alongside the cycling chain
 	@run=0; for s in $(CHAIN); do \

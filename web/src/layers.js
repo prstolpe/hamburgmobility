@@ -1,6 +1,7 @@
 // Map layers, legends and filters. Street function layers use source "sfp" (layers "segments" and "facilities");
 // cycling layers (prompt 21) use source "cyc" (tiles/cycling.pmtiles: cycle_network, cycle_segments, cycle_official)
 // and "jct" (tiles/junctions.pmtiles: junctions). map.js adds the cycling sources only when such a layer is shown.
+// Special places (prompts/26) use the GeoJSON source "places" (special_places.geojson), loaded when a place is on.
 import {
   CASING, CATEGORY_STYLE, CYCLE_CAT_STYLE, DISC_TYPE_STYLE, FACILITY_STYLE, FEASIBILITY_STYLE, FIT_STYLE, GAP_STYLE,
   INK, JUNCTION_STYLE, NEED, NONE, LANES_STYLE, OFFICIAL_STYLE, OVERLAY_COLORS, REFERENCE_COLOR, RURAL_FILL, SHAPES, SPEED_CLASSES, UNKNOWN,
@@ -242,6 +243,7 @@ export function sfpLayers(state, meta) {
       filter: cyclingFilter(state, "junctions"),
       paint: { "circle-radius": 3.5, "circle-color": INK, "circle-stroke-color": CASING, "circle-stroke-width": 1.5 } });
   }
+  if (state.place) out.push(...placeLayers(state, meta));
   const segLayer = cycling && CYCLING_SOURCE[state.layer][1] === "cycle_segments" ? ["cyc", "cycle_segments"] : [SRC, SEG];
   out.push({ id: "selected", type: "line", source: segLayer[0], "source-layer": segLayer[1], filter: ["==", ["get", "id"], state.seg ?? ""],
     paint: { "line-color": "#000000", "line-width": zoomWidth(10), "line-opacity": 0.35 } });
@@ -250,6 +252,37 @@ export function sfpLayers(state, meta) {
       paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#000000", "circle-stroke-width": 3 } });
   }
   return out;
+}
+
+/** The place of the state from meta.special_places, or null. */
+export const placeOf = (state, meta) => meta.special_places?.places?.find((p) => p.id === state.place) ?? null;
+
+/** Special place (prompts/26): a line in the colour of the place on a white casing – solid for a cycle street, dashed
+ * for a pedestrian zone (the measure is told by pattern, not colour alone). No glow, no 3D, no animation. */
+export function placeLayers(state, meta) {
+  const p = placeOf(state, meta);
+  if (!p) return [];
+  const c = p.theme.palette;
+  const own = ["==", ["get", "place"], p.id];
+  const out = [{ id: "place-casing", type: "line", source: "places", filter: own, layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": c.casing ?? CASING, "line-width": zoomWidth(11) } }];
+  for (const m of [...new Set(p.measures.map((x) => x.measure))]) {
+    const dashed = p.theme.pattern?.[m] === "dashed";
+    out.push({ id: `main-place-${m}`, type: "line", source: "places", filter: ["all", own, ["==", ["get", "measure"], m]],
+      layout: { "line-cap": dashed ? "butt" : "round", "line-join": "round" },
+      paint: { "line-color": c.main, "line-width": zoomWidth(7), ...(dashed ? { "line-dasharray": [1.5, 1] } : {}) } });
+  }
+  return out;
+}
+
+/** Legend entries of the place: one line sample per measure (decorative SVG; the text carries the meaning). */
+export function placeLegendHtml(state, meta) {
+  const p = placeOf(state, meta);
+  if (!p) return "";
+  const c = p.theme.palette;
+  const sample = (dashed) => `<svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${c.casing ?? CASING}" stroke-width="11"/><line x1="2" y1="7" x2="34" y2="7" stroke="${c.main}" stroke-width="7"${dashed ? ' stroke-dasharray="10.5 7"' : ""}/></svg>`;
+  const items = p.measures.map((m) => `<li>${sample(p.theme.pattern?.[m.measure] === "dashed")}<span>${esc(m.label)}${p.theme.pattern?.[m.measure] === "dashed" ? " (gestrichelt)" : ""}</span></li>`).join("");
+  return `<p class="legend-sub">${esc(meta.special_places.texts.legend)}: ${esc(p.title)}</p><ul class="legend">${items}</ul>`;
 }
 
 // Basemap labels above the data (prompt 25): Stadtteil and place names get a white halo and darker text, minor

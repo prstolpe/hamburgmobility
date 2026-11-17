@@ -110,19 +110,33 @@ def read_way_tags(pbf, way_ids: set) -> dict[int, dict]:
     return out
 
 
-def read_trees(pbf) -> np.ndarray:
-    """OSM natural=tree (points) and natural=tree_row (lines), EPSG:25832 (C-PRI-10)."""
+def read_tree_rows(pbf) -> np.ndarray:
+    """OSM natural=tree_row (lines), EPSG:25832 (C-PRI-10; single trees come from the Straßenbaumkataster)."""
     from pyrosm import OSM
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        g = OSM(str(pbf)).get_data_by_custom_criteria(custom_filter={"natural": ["tree", "tree_row"]}, osm_keys_to_keep=["natural"],
-                                                       filter_type="keep", keep_nodes=True, keep_ways=True, keep_relations=False)
+        g = OSM(str(pbf)).get_data_by_custom_criteria(custom_filter={"natural": ["tree_row"]}, osm_keys_to_keep=["natural"],
+                                                       filter_type="keep", keep_nodes=False, keep_ways=True, keep_relations=False)
     if g is None or g.empty:
         return np.array([], dtype=object)
     g = to_work_crs(g)
-    g = g[g["natural"].isin(["tree", "tree_row"]) & g.geom_type.isin(["Point", "LineString", "MultiLineString"])]
+    g = g[(g["natural"] == "tree_row") & g.geom_type.isin(["LineString", "MultiLineString"])]
     return g.geometry.values
+
+
+def read_cadastre_trees(manifest: dict, p: pr.PrincipleParams) -> tuple[np.ndarray, np.ndarray]:
+    """Straßenbaumkataster (sources.yaml street_trees): points and crown radius (half the crown diameter; outside
+    crown_diameter_valid_m the default tree_crown_radius_m), C-PRI-10 since cycling_rules 0.13.0."""
+    files = (manifest["sources"].get("street_trees") or {}).get("files") or []
+    paths = [REPO_ROOT / f["path"] for f in files if str(f.get("path", "")).endswith(".parquet")]
+    if not paths or not all(x.exists() for x in paths):
+        raise FileNotFoundError("street_trees missing in data/raw; run `make fetch` first")
+    g = to_work_crs(pd.concat([gpd.read_parquet(x, columns=["kronendurchmesser", "geometry"]) for x in paths], ignore_index=True))
+    lo, hi = p.crown_diameter_valid_m
+    d = pd.to_numeric(g["kronendurchmesser"], errors="coerce")
+    radius = np.where(d.between(lo, hi), d / 2, p.tree_radius_m)
+    return g.geometry.representative_point().values, radius.astype("float64")
 
 
 def read_green(p: pr.PrincipleParams, area) -> np.ndarray:
@@ -803,11 +817,11 @@ def main() -> int:
 
     # green share (network edges only)
     green_polys = read_green(p, hamburg)
-    trees = read_trees(pbf)
-    tree_pts = np.array([g for g in trees if g.geom_type == "Point"], dtype=object)
-    tree_rows = np.array([g for g in trees if g.geom_type != "Point"], dtype=object)
+    tree_pts, tree_radius = read_cadastre_trees(manifest, p)
+    tree_rows = read_tree_rows(pbf)
     crowns = np.concatenate([tree_pts, tree_rows]) if len(tree_rows) else tree_pts
-    green = pr.prepare_green(green_polys, crowns, p.tree_radius_m)
+    radius = np.concatenate([tree_radius, np.full(len(tree_rows), p.tree_radius_m)])
+    green = pr.prepare_green(green_polys, crowns, radius)
     green_share = np.full(n, np.nan)
     green_share[in_net] = pr.green_share(geoms[in_net], green, p.green_buffer_m)
     tick(f"green share ({len(green_polys)} ALKIS areas, {len(tree_pts)} trees, {len(tree_rows)} tree rows)")

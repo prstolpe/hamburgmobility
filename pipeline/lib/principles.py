@@ -98,6 +98,7 @@ class PrincipleParams:
     green_buffer_m: float
     green_nutzart: frozenset
     tree_radius_m: float
+    crown_diameter_valid_m: tuple
     green_target: float
     patt_dtv: float
     gap_edge_buffer_m: float
@@ -156,6 +157,7 @@ class PrincipleParams:
             green_buffer_m=float(r["C-PRI-10"]["buffer_m"]),
             green_nutzart=frozenset(r["C-PRI-10"]["green_nutzart"]),
             tree_radius_m=float(r["C-PRI-10"]["tree_crown_radius_m"]),
+            crown_diameter_valid_m=tuple(float(x) for x in r["C-PRI-10"]["crown_diameter_valid_m"]["value"]),
             green_target=float(r["C-PRI-10"]["target_share"]),
             patt_dtv=float(checks["P-ATT-03"][1]["dtv"]),
             gap_edge_buffer_m=float(r["C-PRI-12"]["gap_edge_buffer_m"]),
@@ -421,8 +423,9 @@ def od_sample(xy: np.ndarray, node_ids: np.ndarray, band_m: tuple[float, float],
 # --- C-PRI-10 green ----------------------------------------------------------------------------------
 
 
-def prepare_green(polys: np.ndarray, trees: np.ndarray, crown_radius_m: float) -> np.ndarray:
-    """Non-overlapping green polygons: the land-use polygons plus tree crowns outside them."""
+def prepare_green(polys: np.ndarray, trees: np.ndarray, crown_radius_m) -> np.ndarray:
+    """Non-overlapping green polygons: the land-use polygons plus tree crowns outside them. crown_radius_m is one
+    radius for all trees or one per tree (Straßenbaumkataster: half the crown diameter)."""
     polys = np.asarray(polys, dtype=object)
     trees = np.asarray(trees, dtype=object)
     parts = [shapely.make_valid(p) for p in polys] if len(polys) else []

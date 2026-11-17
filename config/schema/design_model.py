@@ -221,6 +221,7 @@ class DesignRuleSet(_Strict):
     cross_section_allocation: dict[str, Any]
     profile_assignment: dict[str, Any]
     junctions: Junctions
+    trees_parking: dict[str, Any]  # prompts/26 Teil 2
 
     def rule_ids(self) -> list[str]:
         return collect_ids(self.model_dump(exclude={"meta", "sources"}, by_alias=True))

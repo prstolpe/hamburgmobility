@@ -13,6 +13,7 @@ const protocol = new Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
 const INTERACTIVE_PREFIX = "main-";
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ICON_PX = 40; // icon bitmap size (pixelRatio 2 -> 20 px on the map)
 
 /** Junction symbols as map images, drawn from the same shapes as the legend (palette.js SHAPES). */
@@ -39,6 +40,11 @@ function addJunctionIcons(map) {
 function ensureSources(map, meta, layers, tilesBase) {
   const urls = { cyc: meta.cycling?.tiles?.cycling, jct: meta.cycling?.tiles?.junctions };
   for (const l of layers) {
+    // special places (prompts/26): small GeoJSON, loaded the first time a place is switched on
+    if (l.source === "places" && !map.getSource("places")) {
+      map.addSource("places", { type: "geojson", data: dataUrl(meta.special_places.file),
+        attribution: "Besondere Orte: Vorschläge Dritter" });
+    }
     if (l.source === "gaps" && !map.getSource("gaps")) map.addSource("gaps", { type: "geojson", data: dataUrl("cycle_mesh_gaps.geojson") });
     if (map.getSource(l.source) || !urls[l.source]) continue;
     map.addSource(l.source, { type: "vector", url: `pmtiles://${dataUrl(urls[l.source], tilesBase)}`, promoteId: "id",
@@ -111,7 +117,7 @@ export function createMap(container, meta, state, { onSelect, onSelectJunction, 
     else if (layer !== "cycle_official") onSelect(hit.properties.id);
   });
   map.on("mousemove", (ev) => {
-    const ids = current.filter((id) => id.startsWith("casing") || (id.startsWith(INTERACTIVE_PREFIX) && id.includes("grp-")));
+    const ids = current.filter((id) => id.startsWith("casing") || (id.startsWith(INTERACTIVE_PREFIX) && (id.includes("grp-") || id.startsWith("main-place-"))));
     map.getCanvas().style.cursor = map.queryRenderedFeatures(ev.point, { layers: ids }).length ? "pointer" : "";
   });
   map.on("moveend", () => {
@@ -122,8 +128,8 @@ export function createMap(container, meta, state, { onSelect, onSelectJunction, 
   return {
     map,
     update(st) { if (map.isStyleLoaded()) apply(st); else map.once("load", () => apply(st)); },
-    fitBbox(b) { map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 17 }); },
-    flyTo([lon, lat], zoom = 16) { map.flyTo({ center: [lon, lat], zoom, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 800 }); },
+    fitBbox(b) { map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 17, ...(reducedMotion() ? { duration: 0 } : {}) }); },
+    flyTo([lon, lat], zoom = 16) { map.flyTo({ center: [lon, lat], zoom, duration: reducedMotion() ? 0 : 800 }); },
     resize() { map.resize(); },
   };
 }

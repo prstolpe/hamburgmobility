@@ -184,3 +184,60 @@ describe("rule links", () => {
     expect(html).toContain('<a href="#methode/regeln?regel=C-GOW-01"><code>C-GOW-01</code></a> → <a href="#methode/regeln?regel=C-G30-01">');
   });
 });
+
+// prompt 26: special places
+describe("special place in the profile", () => {
+  const sp = { place: "schanze_verkehrsberuhigt", band: "Besonderer Ort: Verkehrsberuhigte Schanze – Vorschlag des Bürgerbegehrens: Fahrradstraße",
+    status_line: "Stand 25.09.2026: Unterschriften werden gesammelt", colour: "#cc0070",
+    compare: "Unser Entwurf sieht hier auch eine Fahrradstraße vor.", notes: ["Heute gilt hier Tempo 50."] };
+
+  it("shows the band below level 1 and the comparison after the rule text", () => {
+    const html = segmentHtml({ ...seg(), special_place: sp }, meta, "https://x", { level2Open: true });
+    const band = html.indexOf("place-band");
+    expect(band).toBeGreaterThan(html.indexOf('class="key"'));
+    expect(band).toBeLessThan(html.indexOf("Mehr erfahren"));
+    expect(html).toContain("Stand 25.09.2026");
+    expect(html.indexOf("Vorschlag für diesen Ort")).toBeGreaterThan(html.indexOf('id="h-why"'));
+    expect(html).toContain("Heute gilt hier Tempo 50.");
+  });
+
+  it("keeps the rule explanation unchanged", () => {
+    const norm = (h) => h.replace(/\s+/g, "").replace(/xs-[a-z0-9]+/g, "xs-id"); // random id of the cross-section drawing
+    const strip = (h) => h.replace(/<divclass="place-band"[\s\S]*?<\/div>/, "").replace(/<h3>Vorschlagfürdiesen.*?<\/p>/, "");
+    const without = segmentHtml(seg(), meta, "https://x");
+    const withPlace = segmentHtml({ ...seg(), special_place: sp }, meta, "https://x");
+    expect(strip(norm(withPlace))).toBe(norm(without));
+  });
+
+  it("draws the proposal's cross section after ours, or says it stays the same", () => {
+    const profile = { elements: [{ element: "shared_surface", width_m: 4.75, side: "centre" }], available_m: 13.2, fit: "fits", fit_text: "passt in die Straße", same_as_soll: false };
+    const m = { ...meta, special_places: { texts: { profile_title: "Querschnitt im Vorschlag", profile_same: "Der Querschnitt bleibt wie in unserem Ziel." } } };
+    const html = segmentHtml({ ...seg(), special_place: { ...sp, profile, profile_note: "Ohne Parken am Rand." } }, m, "https://x");
+    expect(html).toContain("Querschnitt im Vorschlag:");
+    expect(html).toContain("Passt in die Straße.");
+    expect(html).toContain("Ohne Parken am Rand.");
+    const same = segmentHtml({ ...seg(), special_place: { ...sp, profile: { ...profile, same_as_soll: true } } }, m, "https://x");
+    expect(same).toContain("Der Querschnitt bleibt wie in unserem Ziel.");
+    expect(same).not.toContain("Querschnitt im Vorschlag:");
+  });
+
+  it("shows trees and parking on level 2, 'keine Daten' when unknown", () => {
+    const t = { profile_title: "Bäume und Parkplätze", profile_parking: "Parkplätze: heute etwa {today}, im Ziel etwa {target}.",
+      profile_parking_partial: "Parkplätze: auf einer Seite etwa {today}.", profile_parking_none: "Parkplätze: keine Daten.",
+      profile_trees: "Straßenbäume: {n}, davon möglicherweise betroffen {affected}, neu möglich etwa {new}.",
+      profile_trees_none: "Straßenbäume: keine.", profile_source: { official: "amtlich erfasste Stellplätze", none: "keine Daten" }, profile_note: "Schätzung." };
+    const m = { ...meta, trees_parking: { texts: t } };
+    const tp = { parking: { complete: true, today: 26.5, today_known: 26.5, target_min: 0, target_max: 0, src_left: "official", src_right: "official" },
+      trees: { n: 7, affected_min: 1, affected_max: 4, new: 2.4 } };
+    const html = segmentHtml({ ...seg(), trees_parking: tp }, m, "https://x");
+    expect(html).toContain("Parkplätze: heute etwa 27, im Ziel etwa 0.");
+    expect(html).toContain("(amtlich erfasste Stellplätze)");
+    expect(html).toContain("Straßenbäume: 7, davon möglicherweise betroffen 1–4, neu möglich etwa 2.");
+    const none = segmentHtml({ ...seg(), trees_parking: { parking: { complete: false, today_known: null, src_left: "none", src_right: "none" }, trees: { n: 0 } } }, m, "https://x");
+    expect(none).toContain("Parkplätze: keine Daten.");
+  });
+
+  it("shows nothing without a special place", () => {
+    expect(segmentHtml(seg(), meta, "https://x")).not.toContain("place-band");
+  });
+});
