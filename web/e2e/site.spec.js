@@ -240,3 +240,14 @@ test("arm filter: old link to a lane-split point opens its junction, a dropped o
   await page.goto("/#karte?theme=knoten&jct=10031912535");
   await expect(page.locator("#panel-body")).toContainText("gibt es im Entwurf nicht mehr");
 });
+
+test("footer links to the LinkedIn and Instagram profiles, opening in a new tab", async ({ page }) => {
+  await ready(page, "#karte");
+  for (const [name, href] of [["LinkedIn", "https://www.linkedin.com/company/hamburg-mobility-revolution/"],
+    ["Instagram", "https://www.instagram.com/hamburgmobilityrevolution/"]]) {
+    const link = page.locator(".foot-social a", { hasText: name });
+    await expect(link).toHaveAttribute("href", href);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", /noopener/);
+  }
+});
