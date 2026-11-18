@@ -1,0 +1,119 @@
+# Ruhige Quartiere – Regelentwurf (prompts/27, Phase 1.3). NICHT ANGEWENDET.
+# Dieser Entwurf wird von keiner Pipeline-Stufe gelesen. Übernahme in config/*.yaml erst nach Freigabe (STOPP 3),
+# mit neuer meta.version und CHANGELOG-Eintrag.
+# value: null = Schwelle noch nicht gesetzt. Neue Werte werden nicht geraten, sondern bei STOPP 1 entschieden
+# (docs/open_questions.md, Abschnitt „Ruhige Quartiere“).
+# inherited_from = Wert steht bereits im Regelwerk und wird hier nur referenziert.
+meta:
+  version: 0.1.0-draft
+  date: 2026-11-18
+  prompt: prompts/27_durchgangsverkehr_filter_einbahn.md
+  target_file: config/rules.yaml
+  applied: false
+
+sources:
+  PROMPT_27: {title: "Projektauftrag Ruhige Quartiere (prompts/27_durchgangsverkehr_filter_einbahn.md)", date: 2026-11-18, url: null}
+  SWOV_FS_2023: {title: "Principles for a safe road network, SWOV fact sheet", date: 2023-04, url: "https://swov.nl/en/fact-sheet/principles-safe-road-network", note: "aus config/rules.yaml übernommen; bei dieser Recherche nicht neu abrufbar"}
+  VWV_STVO_2025: {title: "VwV-StVO, zu Zeichen 220 Nr. IV (Fassungen vom 27.02.2025 und 03.04.2025)", date: 2025-04-03, url: "https://www.verwaltungsvorschriften-im-internet.de/bsvwvbund_26012001_S3236420014.htm"}
+  GENT_EVAL_2019: {title: "Evaluatie Circulatieplan Gent, tweede periode april-november 2018 (IVA Mobiliteitsbedrijf, Transport & Mobility Leuven)", date: 2019-05, url: "https://www.stad.gent/sites/default/files/onepager/cta/Evaluatierapport%20Circulatieplan%20Gent%202019%20finaal.pdf"}
+  FURLONG_2025: {title: "Low Traffic Neighbourhoods in London reduce road traffic injuries: a controlled before-and-after analysis (2012-2024), Injury Prevention", date: 2025, url: "https://researchonline.lshtm.ac.uk/id/eprint/4676732"}
+  BERLIN_BELLERMANN: {title: "Kiezblock Bellermannkiez, Evaluation der Zählungen (Bezirksamt Mitte)", date: null, url: "https://www.berlin.de/ba-mitte/politik-und-verwaltung/aemter/strassen-und-gruenflaechenamt/planung-entwurf-neubau/pdf/bellermannkiez-evaluation-zaehlung-online.pdf"}
+
+measures:
+  F1: {label_plain: "Durchfahrtssperre auf der Strecke", effect: "trennt die Durchfahrt; Rad und Fuß bleiben frei", conditions: [turning_option, emergency_access, no_bus_route]}
+  F2: {label_plain: "Diagonalsperre an der Kreuzung", effect: "lenkt Kfz um die Ecke; keine Geradeausfahrt", conditions: [junction_space, swept_path_refuse_emergency]}
+  F3: {label_plain: "Busschleuse oder Kamera-Filter", effect: "nur Bus, Taxi und Rettung fahren durch", conditions: [bus_route, legal_basis_checked]}
+  E1: {label_plain: "Gegenläufige Einbahnstraßen", effect: "Abschnitte zeigen gegeneinander; keine durchgehende Fahrt", conditions: [contraflow_cycling, carriageway_width_contraflow]}
+  E2: {label_plain: "Einbahnschleife", effect: "Ein- und Ausfahrt am selben Randabschnitt", conditions: [all_addresses_reachable]}
+  A1: {label_plain: "Abbiegegebot oder Abbiegeverbot am Rand", effect: "verhindert die Einfahrt in die Abkürzung", conditions: [junction_type, alternative_route]}
+  Z1: {label_plain: "Zeitweise Sperre (Schulstraße)", effect: "schützt zu Schulzeiten", conditions: [school_on_section]}
+
+rules:
+  - id: Q-01
+    label_plain: "Quartiere bilden"
+    explain_plain: "Ein Quartier ist eine Fläche, die von Hauptstraßen, Bahnlinien oder Wasser umschlossen ist."
+    why: "Durchgangsverkehr lässt sich nur für ein geschlossenes Gebiet prüfen."
+    rule: "Flächen aus GOW/SW-Linien und Barrieren wie N3; zu kleine Flächen zusammenfassen, sehr große unterteilen"
+    extends: N3
+    source: SWOV_FS_2023
+    source_type: assumption
+    status: draft
+    thresholds:
+      min_cell_area_ha: {label_plain: "kleinste Fläche, die als Quartier gerechnet wird", value: null, unit: ha, source_type: assumption, todo: "bei STOPP 1 setzen"}
+      max_cell_area_ha: {label_plain: "größte Fläche, ab der ein Quartier unterteilt wird", value: null, unit: ha, source_type: assumption, todo: "bei STOPP 1 setzen"}
+
+  - id: Q-02
+    label_plain: "Durchgangsverkehr erkennen"
+    explain_plain: "Eine Wohnstraße ist gefährdet, wenn der schnellste Weg zwischen zwei verschiedenen Randabschnitten durch das Quartier führt und Zeit spart."
+    why: "N4 prüft heute ohne Fahrtrichtungen. Einbahnstraßen und Abbiegeverbote ändern, welche Abkürzungen es wirklich gibt."
+    rule: "Gerichteter Kfz-Graph mit Einbahnstraßen, Abbiegeverboten und Sperren; Weg zwischen verschiedenen Randabschnitten durch das Quartier mit Zeitgewinn >= min_time_saving_s gegenüber dem Weg über die Randstraßen"
+    extends: N4
+    source: SWOV_FS_2023
+    source_type: assumption
+    status: draft
+    thresholds:
+      min_etw_m: {label_plain: "kürzeste Strecke durch Wohnstraßen, die zählt", value: 300, unit: m, source_type: assumption, inherited_from: N4.max_etw_m}
+      min_time_saving_s: {label_plain: "kleinster Zeitgewinn, ab dem eine Abkürzung zählt", value: null, unit: s, source_type: assumption, todo: "bei STOPP 1 setzen"}
+
+  - id: Q-03
+    label_plain: "Ziel: keine Abkürzung, jede Adresse erreichbar"
+    explain_plain: "Kein Kfz-Weg führt von einem Randabschnitt zu einem anderen durch das Quartier. Jede Adresse bleibt mit dem Auto erreichbar."
+    why: "Das ist das Prüfkriterium für jede Variante."
+    rule: "Nach den Maßnahmen: kein gerichteter Weg zwischen verschiedenen Randabschnitten durch das Quartier; jede Adresse von und zu mindestens einem Randzugang erreichbar"
+    source: SWOV_FS_2023
+    source_type: assumption
+    status: draft
+
+  - id: Q-04
+    label_plain: "Randbedingungen"
+    explain_plain: "Rettung, Müllabfuhr, Lieferverkehr und Busse kommen weiter durch. Es entsteht keine Sackgasse ohne Wendemöglichkeit."
+    why: "Eine Maßnahme, die Rettung oder Erschließung behindert, ist keine Lösung."
+    rule: "Buslinien nur mit F3; Rettungszufahrt an jedem Filter; Grundstückszufahrten bleiben; keine neue Sackgasse ohne Wendemöglichkeit; Umweg für Anwohnende <= max_resident_detour_factor"
+    source: PROMPT_27
+    source_type: assumption
+    status: draft
+    thresholds:
+      max_resident_detour_factor: {label_plain: "größter Umweg für Anwohnende, als Vielfaches des heutigen Wegs", value: null, unit: factor, source_type: assumption, todo: "bei STOPP 1 setzen"}
+      max_resident_detour_m: {label_plain: "größter Umweg für Anwohnende in Metern", value: null, unit: m, source_type: assumption, todo: "bei STOPP 1 setzen"}
+      max_emergency_time_increase_s: {label_plain: "größte zusätzliche Fahrzeit für die Rettung", value: null, unit: s, source_type: assumption, todo: "Hamburger Vorgabe suchen, sonst bei STOPP 1 setzen"}
+      min_turning_diameter_m: {label_plain: "kleinster Wendekreis am Sackgassenende", value: null, unit: m, source_type: de_regelwerk, todo: "aus RASt 06 belegen; Quelle liegt nicht offen vor"}
+      min_contraflow_width_bus_truck_m: {label_plain: "kleinste Begegnungsbreite für Radverkehr gegen die Einbahnstraße bei Linienbus oder stärkerem Lkw-Verkehr", value: 3.5, unit: m, source: VWV_STVO_2025, source_type: de_regelwerk}
+
+  - id: Q-05
+    label_plain: "Bevorzugte Lösungen"
+    explain_plain: "Zuerst Filter mit Nutzen für Rad und Fuß, dann Einbahnlösungen. Möglichst wenige Maßnahmen, möglichst am Quartiersrand."
+    why: "Wenige, gut gelegene Maßnahmen sind leichter umzusetzen und zu erklären."
+    rule: "Rangfolge: (1) Q-03 und Q-04 erfüllt, (2) wenigste Maßnahmen, (3) Filter an Radroute, Schulweg oder mit Platzgewinn vor Einbahnlösung, (4) Quartiersrand vor Quartiersmitte"
+    source: PROMPT_27
+    source_type: assumption
+    status: draft
+    note: "Als Rangfolge formuliert, damit keine Gewichte erfunden werden müssen. Gewichte erst, wenn die Pilotquartiere das erfordern."
+
+  - id: Q-06
+    label_plain: "Randstraßen prüfen"
+    explain_plain: "Der verlagerte Verkehr muss auf die Hauptstraßen passen. Mehr Verkehr auf anderen Wohnstraßen ist ein Fehler."
+    why: "Evaluationen zeigen, dass Verkehr sich auf einzelne Achsen verlagern kann (Gent: R40 und N430; Berlin: Spanheimstraße)."
+    rule: "Mehrverkehr auf GOW gegen L-02 prüfen (peak_h_dir <= lane_capacity_veh_h * target_vc); Variante mit Mehrverkehr auf ETW außerhalb der Toleranz verwerfen"
+    extends: L-02
+    source: GENT_EVAL_2019
+    source_type: assumption
+    status: draft
+    thresholds:
+      lane_capacity_veh_h: {label_plain: "Kapazität je Fahrstreifen", value: 900, unit: veh/h, source_type: assumption, inherited_from: L-02.lane_capacity_veh_h}
+      target_vc: {label_plain: "angestrebte Auslastung", value: 0.85, unit: ratio, source_type: assumption, inherited_from: L-02.target_vc}
+      etw_increase_tolerance_veh_day: {label_plain: "Modellrauschen, bis zu dem Mehrverkehr auf Wohnstraßen nicht als Fehler zählt", value: null, unit: veh/day, source_type: assumption, todo: "nach Kalibrierung des Kfz-Modells setzen"}
+
+  - id: Q-07
+    label_plain: "Rückkopplung auf alle Ergebnisse"
+    explain_plain: "Ändern Maßnahmen die Verkehrsmenge oder Fahrtrichtung, gelten die neuen Werte für alle abhängigen Regeln."
+    why: "Sonst passen Kategorie, Querschnitt, Radnetz und Knoten nicht mehr zusammen."
+    rule: "Szenariowerte ersetzen DTV und Fahrtrichtung in Kategorie, Diskrepanz, Querschnitt, Radnetz, Führungsform, Knotentyp, Bäumen und Parkplätzen"
+    source: PROMPT_27
+    source_type: assumption
+    status: draft
+    depends_on: [N4, L-02, C-FAC-02, P-ATT-03, PL-06, J-M-05, J-M-06]
+    prerequisites:
+      - "fill_order wird heute nicht ausgewertet (pipeline/lib/profile.py)"
+      - "oneway ist im Querschnitt nur mit amtlichen Fahrstreifendaten wahr; OSM oneway=-1 verliert die Richtung (pipeline/lib/features.py)"
+      - "PL-06 (Gegenrichtungsradverkehr) ist nicht im Code umgesetzt"
+      - "Es gibt noch keinen Szenario-Mechanismus in der Pipeline"

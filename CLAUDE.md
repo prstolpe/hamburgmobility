@@ -58,7 +58,9 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
   web/src/state.js ausgeblendet, Logo HMR; Bericht in docs/cleanup/2026-11/),
   prompts/26_special_places_trees_parking.md (Besondere Orte, zuerst „Verkehrsberuhigte Schanze“, in
   config/special_places.yaml; Bäume und Parkplätze je Soll-Querschnitt; Berichte in docs/special_places/ und
-  docs/trees_parking/).
+  docs/trees_parking/),
+  prompts/27_durchgangsverkehr_filter_einbahn.md (Ruhige Quartiere: Modalfilter und gegenläufige Einbahnstraßen,
+  vier Haltepunkte; Zwischenergebnisse in data/scenarios/quartiere/, Berichte in docs/quartiere/).
 - docs/guide_radnetz.md – Methodik mit Quellen. Bei Fachfragen zum Radnetz zuerst hier nachsehen.
 - config/cycling_rules.yaml – Radnetzkategorien, Prinzipien, Trennungsmatrix, Breiten.
 - config/design_rules.yaml – Fahrstreifen, Lage der Radanlagen, Raumaufteilung, Knotenpunkte.

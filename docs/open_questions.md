@@ -293,3 +293,16 @@ Fachlich:
 - [ ] Baumabstand 12 m für „neu möglich“ und Lageunsicherheit ±1,5 m: fachlich prüfen.
 - [ ] Profilseiten ↔ Straßenseiten: Das Soll-Profil legt einseitige Elemente nicht auf eine bestimmte Straßenseite. Die Rechnung nimmt deshalb beide Zuordnungen als Spanne.
 
+
+## Ruhige Quartiere (prompts/27, Regelentwurf docs/quartiere/regelentwurf.yaml)
+- [ ] Q-01: kleinste Quartiersfläche und Fläche, ab der ein Quartier unterteilt wird (`min_cell_area_ha`, `max_cell_area_ha`).
+- [ ] Q-02: kleinster Zeitgewinn, ab dem eine Abkürzung zählt (`min_time_saving_s`).
+- [ ] Q-04: größter Umweg für Anwohnende (`max_resident_detour_factor`, `max_resident_detour_m`).
+- [ ] Q-04: größte zusätzliche Fahrzeit für die Rettung (`max_emergency_time_increase_s`). Gibt es eine Hamburger Vorgabe?
+- [ ] Q-04: kleinster Wendekreis (`min_turning_diameter_m`). Aus RASt 06 belegen; die Quelle liegt nicht offen vor.
+- [ ] Q-06: Toleranz für Mehrverkehr auf Wohnstraßen (`etw_increase_tolerance_veh_day`), erst nach Kalibrierung des Kfz-Modells.
+- [ ] Recht: Wortlaut des Hamburgischen Wegegesetzes (§§ 6–8) war nicht abrufbar; Verhältnis von Teileinziehung und Beschränkung der Widmung klären.
+- [ ] Recht: Zuständigkeit der Straßenverkehrsbehörde in Hamburg belegen.
+- [ ] Recht: Fällt ein Modalfilter ohne Fahrradstraße unter § 45 Abs. 1 Satz 2 Nr. 7 Buchst. b StVO? Keine Rechtsprechung gefunden.
+- [ ] Recht: Rechtsgrundlage für Schulstraßen und Kamera- oder Busschleusen (F3, Z1) ist nicht belegt.
+- [ ] Recht: Wurde gegen VG Berlin 11 K 799/24 (05.05.2025) die Zulassung der Berufung beantragt, und mit welchem Ergebnis?
