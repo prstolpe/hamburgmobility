@@ -217,6 +217,23 @@ def test_loading_zone_shares_the_parking_or_tree_strip():
     assert pf.LOADING_SHARED_FLAG in trees.flags
 
 
+def test_d2_removes_a_loading_zone_in_the_tree_strip():
+    # the loading zone lives in the tree strip; when D2 removes the strip it must not come back as an own strip
+    seg = _seg(cat="GOW50", parking_sides=0, business=True)
+    full = pf.evaluate_profile(seg, 100.0, P).total_required_m
+    res = pf.evaluate_profile(seg, full - 0.1, P)
+    assert "D2" in res.degrade_steps_applied
+    assert not _elements(res, "loading_zone") and pf.LOADING_REMOVED_FLAG in res.flags
+    assert next(t for t in res.trace if t["id"] == "D2")["values"]["loading_removed"] is True
+
+
+def test_no_loading_zone_in_pedestrian_zones():
+    assert "ETW_ERF" in P.no_loading
+    res = pf.evaluate_profile(_seg(cat="ETW_ERF", facility="mixed", cycle_width=None, business=True), 100.0, P)
+    assert not _elements(res, "loading_zone")
+    assert pf.LOADING_SHARED_FLAG not in res.flags and pf.LOADING_REMOVED_FLAG not in res.flags
+
+
 def test_loading_zone_own_strip_without_parking_or_trees():
     res = pf.evaluate_profile(_seg(cat="ETW30", facility="mixed", cycle_width=None, parking_sides=0, business=True), 100.0, P)
     assert len(_elements(res, "loading_zone")) == P.loading_sides

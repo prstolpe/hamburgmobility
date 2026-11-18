@@ -1,6 +1,6 @@
 # Validierung Radnetz, Radanlagen, Querschnitte und Knoten (Prompt 21)
 
-Erzeugt 2026-11-17T22:31:47+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.13.0 · design_rules.yaml 0.12.0 · rules.yaml 0.24.0 · nicht amtlicher Entwurf.
+Erzeugt 2026-11-18T06:55:19+00:00 mit pipeline/c08_validate_cycling.py · cycling_rules.yaml 0.13.0 · design_rules.yaml 0.12.1 · rules.yaml 0.24.0 · nicht amtlicher Entwurf.
 
 ## Kurzfassung
 
@@ -107,8 +107,8 @@ Spalten je Richtung: Führung, Fahrstreifen und „Querschnitt passt?“ (fit_cl
 
 | Annahme | Wert | ab Stufe | −: Führung | −: Fahrstr. | −: passt? | −: Knoten | +: Führung | +: Fahrstr. | +: passt? | +: Knoten |
 | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `cross_section_allocation.elements_min_m.sidewalk.standard` (design) | 3,00 | c06 | 0,07 % | 0,50 % | 9,41 % | 0,00 % | 0,05 % | 0,44 % | 6,35 % | 0,00 % |
-| `cross_section_allocation.elements_min_m.sidewalk.min` (design) | 2,50 | c06 | 0,01 % | 0,00 % | 5,61 % | 0,00 % | 0,13 % | 0,00 % | 7,95 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.sidewalk.standard` (design) | 3,00 | c06 | 0,07 % | 0,50 % | 9,37 % | 0,00 % | 0,04 % | 0,44 % | 6,35 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.sidewalk.min` (design) | 2,50 | c06 | 0,00 % | 0,00 % | 5,53 % | 0,00 % | 0,13 % | 0,00 % | 7,95 % | 0,00 % |
 | `widths_m.project_target.cycle_street_carriageway.with_motor_traffic` (cycling) | 4,75 | c05 | 0,00 % | 0,00 % | 4,69 % | 0,00 % | 0,00 % | 0,00 % | 4,84 % | 0,00 % |
 | `lanes.lane_width_m.GOW50.general` (design) | 3,25 | c06 | 0,00 % | 1,04 % | 1,18 % | 0,00 % | 0,00 % | 0,76 % | 0,84 % | 0,00 % |
 | `junctions.method.[J-M-02].dtv_share_entering.value` (design) | 0,50 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,98 % | 0,00 % | 0,00 % | 0,00 % | 0,67 % |
@@ -117,17 +117,17 @@ Spalten je Richtung: Führung, Fahrstreifen und „Querschnitt passt?“ (fit_cl
 | `junctions.thresholds.roundabout_min_radius.value` (design) | 20,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,61 % | 0,00 % | 0,00 % | 0,00 % | 0,50 % |
 | `widths_m.project_target.cycle_street_carriageway.value` (cycling) | 4,00 | c05 | 0,00 % | 0,00 % | 0,56 % | 0,00 % | 0,00 % | 0,00 % | 0,27 % | 0,00 % |
 | `junctions.thresholds.roundabout_max_dtv.value` (design) | 25 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,38 % | 0,00 % | 0,00 % | 0,00 % | 0,45 % |
-| `widths_m.project_target.separated_oneway.HAUPT` (cycling) | 2,50 | c05 | 0,07 % | 0,15 % | 0,35 % | 0,00 % | 0,03 % | 0,21 % | 0,41 % | 0,00 % |
+| `widths_m.project_target.separated_oneway.HAUPT` (cycling) | 2,50 | c05 | 0,06 % | 0,15 % | 0,35 % | 0,00 % | 0,03 % | 0,21 % | 0,41 % | 0,00 % |
 | `lanes.rules.[L-02].peak_h_dir_from_dtv.factor` (design) | 0,06 | c06 | 0,00 % | 0,31 % | 0,32 % | 0,00 % | 0,00 % | 0,05 % | 0,07 % | 0,00 % |
 | `junctions.thresholds.turbo_max_dtv.value` (design) | 35 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,31 % | 0,00 % | 0,00 % | 0,00 % | 0,10 % |
 | `junctions.thresholds.turbo_min_radius.value` (design) | 30,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,31 % | 0,00 % | 0,00 % | 0,00 % | 0,24 % |
 | `lanes.rules.[L-04].bus_lane_trigger.value` (design) | 20,00 | c06 | 0,00 % | 0,30 % | 0,10 % | 0,00 % | 0,00 % | 0,18 % | 0,02 % | 0,00 % |
 | `lanes.rules.[L-02].lane_capacity_veh_h.value` (design) | 900,00 | c06 | 0,00 % | 0,05 % | 0,07 % | 0,00 % | 0,00 % | 0,29 % | 0,26 % | 0,00 % |
 | `lanes.rules.[L-02].target_vc.value` (design) | 0,85 | c06 | 0,00 % | 0,05 % | 0,07 % | 0,00 % | 0,00 % | 0,29 % | 0,26 % | 0,00 % |
-| `cross_section_allocation.elements_min_m.loading_zone.value` (design) | 2,50 | c06 | 0,01 % | 0,00 % | 0,28 % | 0,00 % | 0,00 % | 0,00 % | 0,14 % | 0,00 % |
-| `cross_section_allocation.elements_min_m.buffer_cycle_carriageway` (design) | 0,75 | c06 | 0,01 % | 0,11 % | 0,26 % | 0,00 % | 0,06 % | 0,11 % | 0,20 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.buffer_cycle_carriageway` (design) | 0,75 | c06 | 0,01 % | 0,11 % | 0,22 % | 0,00 % | 0,06 % | 0,11 % | 0,21 % | 0,00 % |
 | `junctions.thresholds.crossing_signal_min_dtv.value` (design) | 12 000,00 | c07 | 0,00 % | 0,00 % | 0,00 % | 0,06 % | 0,00 % | 0,00 % | 0,00 % | 0,21 % |
 | `widths_m.project_target.separated_oneway.ERSCHL` (cycling) | 2,00 | c05 | 0,00 % | 0,17 % | 0,21 % | 0,00 % | 0,00 % | 0,06 % | 0,14 % | 0,00 % |
+| `cross_section_allocation.elements_min_m.loading_zone.value` (design) | 2,50 | c06 | 0,00 % | 0,00 % | 0,20 % | 0,00 % | 0,00 % | 0,00 % | 0,10 % | 0,00 % |
 | `widths_m.project_target.separated_oneway.BASIS` (cycling) | 2,00 | c05 | 0,00 % | 0,11 % | 0,16 % | 0,00 % | 0,00 % | 0,02 % | 0,05 % | 0,00 % |
 | `lanes.lane_width_m.median_min_m.value` (design) | 2,00 | c06 | 0,00 % | 0,11 % | 0,11 % | 0,00 % | 0,00 % | 0,15 % | 0,15 % | 0,00 % |
 | `cross_section_allocation.elements_min_m.bus_lane` (design) | 3,50 | c06 | 0,00 % | 0,00 % | 0,14 % | 0,00 % | 0,00 % | 0,00 % | 0,09 % | 0,00 % |
@@ -137,7 +137,7 @@ Ohne Wirkung bei ±20% (12): `separation_matrix.rules.[S-04].motor_peak_hour_sha
 
 ### Robustheit je Abschnitt und Knoten
 
-- Abschnitte, deren Führungsform sich in mindestens einem der 90 Läufe ändert: 91 von 36 526 (0,2 %).
+- Abschnitte, deren Führungsform sich in mindestens einem der 90 Läufe ändert: 87 von 36 526 (0,2 %).
 - Abschnitte mit geänderter Fahrstreifenzahl in mindestens einem Lauf: 1 330 (3,6 %).
 - Knotenpunkte mit geändertem Soll-Typ in mindestens einem Lauf: 377 von 14 312 (2,6 %).
 - Die Steckbriefe der Webseite nennen je Abschnitt und Knoten die Zahl der Läufe mit Änderung und bis zu 3 auslösende Annahmen.

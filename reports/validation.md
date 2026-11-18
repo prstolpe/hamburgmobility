@@ -1,6 +1,6 @@
 # Validierung und Sensitivität
 
-Erzeugt: 2026-11-17T22:36:18+00:00 von `pipeline/validate.py`, rules.yaml 0.24.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
+Erzeugt: 2026-11-18T06:58:52+00:00 von `pipeline/validate.py`, rules.yaml 0.24.0. Nicht amtlicher Diskussionsentwurf: Die Automatik schlägt vor, Menschen entscheiden. Grundlage für die externe Fachprüfung (guide.md Teil 7).
 
 ## Kurzfassung
 
@@ -11,7 +11,7 @@ Erzeugt: 2026-11-17T22:36:18+00:00 von `pipeline/validate.py`, rules.yaml 0.24.0
 - Invarianten: 7 erfüllt, 2 verletzt (V-INV-05, V-INV-09; Abschnitt „Invarianten“).
 - Manuelle Stichproben, Rückmelderunde und externe Prüfung sind offen.
 
-Vergleich mit dem vorigen Lauf (2026-11-15T21:47:19+00:00, rules.yaml 0.24.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 256 → 2 256 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
+Vergleich mit dem vorigen Lauf (2026-11-17T22:36:18+00:00, rules.yaml 0.24.0): HVS-km als GOW50/GOW30 96,7 % → 96,7 %; unsicher 2 256 → 2 256 Abschnitte. Eine Abbruchgrenze für einen Rückgang (guide.md 3.4) ist nicht festgelegt (docs/open_questions.md).
 
 ## Prüfungen dieses Laufs
 
@@ -43,12 +43,12 @@ Querbeziehungen zwischen rules.yaml, cycling_rules.yaml und design_rules.yaml, g
 | ID | Invariante | Befund | erwartet | Ergebnis | Detail | Eingang (Stand) |
 | --- | --- | --- | --- | --- | --- | --- |
 | V-INV-01 | Jede cat_final hat eine aktive Zeile in cycling_rules separation_matrix und eine Profilregel (design_rules PRF-03 parking_by_category) oder steht in design_rules PRF-04 no_profile_categories (SW, GOW80, ETW60) | F28 | gilt | ok | alle 5 Kategorien in cat_final abgedeckt | final.parquet (15.11. 22:39) |
-| V-INV-02 | Kein Knotenpunkt ohne Soll-Typ (kein Flag no_rule); Autobahnknoten tragen not_applicable (J-10d) | F10 | gilt | ok | 14312 Knoten, alle mit Soll-Typ | junctions.parquet (17.11. 23:30) |
-| V-INV-03 | Soll-Profil enthält kein Element, das requirements[cat] verbietet: kein Parken und kein Radfahrstreifen an GOW50, kein zweiter Fahrstreifen und kein Mittelstreifen an GOW30 (maßgeblich die D5-Kategorie, wo vorhanden) | F11 | gilt | ok | kein verbotenes Element in GOW50- und GOW30-Profilen | cross_section_soll.parquet (17.11. 23:30) |
-| V-INV-04 | Keine Soll-Führung cycle_lane an GOW30 mit DTV über profiles.wide.max_dtv (c05 und nach der Abbaukaskade c06) | F01 | gilt | ok | kein Radfahrstreifen an GOW30 über 10.000 Kfz/24 h | cycle_facility.parquet (15.11. 22:47), cross_section_soll.parquet (17.11. 23:30), final.parquet (15.11. 22:39) |
-| V-INV-05 | fits in S-XS-06 ⇒ c06 fits oder fits_after_degrade mit Abbaustufen höchstens bis D4 | F05 | verletzt | **verletzt** | 533 Abschnitte (81,6 km): GOW30 221, GOW50 168, ETW30 144 | cross_section_soll.parquet (17.11. 23:30), final.parquet (15.11. 22:39) |
+| V-INV-02 | Kein Knotenpunkt ohne Soll-Typ (kein Flag no_rule); Autobahnknoten tragen not_applicable (J-10d) | F10 | gilt | ok | 14312 Knoten, alle mit Soll-Typ | junctions.parquet (18.11. 07:54) |
+| V-INV-03 | Soll-Profil enthält kein Element, das requirements[cat] verbietet: kein Parken und kein Radfahrstreifen an GOW50, kein zweiter Fahrstreifen und kein Mittelstreifen an GOW30 (maßgeblich die D5-Kategorie, wo vorhanden) | F11 | gilt | ok | kein verbotenes Element in GOW50- und GOW30-Profilen | cross_section_soll.parquet (18.11. 07:53) |
+| V-INV-04 | Keine Soll-Führung cycle_lane an GOW30 mit DTV über profiles.wide.max_dtv (c05 und nach der Abbaukaskade c06) | F01 | gilt | ok | kein Radfahrstreifen an GOW30 über 10.000 Kfz/24 h | cycle_facility.parquet (15.11. 22:47), cross_section_soll.parquet (18.11. 07:53), final.parquet (15.11. 22:39) |
+| V-INV-05 | fits in S-XS-06 ⇒ c06 fits oder fits_after_degrade mit Abbaustufen höchstens bis D4 | F05 | verletzt | **verletzt** | 388 Abschnitte (65,8 km): GOW30 185, ETW30 144, GOW50 59 | cross_section_soll.parquet (18.11. 07:53), final.parquet (15.11. 22:39) |
 | V-INV-06 | value = berechnete formula für alle required_width.* mit formula | F05 | gilt | ok | required_width: value = formula | Regeldateien |
-| V-INV-07 | Rad-Vorrang (cyclist_treatment JC-01) nur an einstreifigen Kreisverkehren; Turbokreisel tragen JC-06 | F02 | gilt | ok | JC-01 an 173 einstreifigen Kreiseln, 55 Turbokreisel mit JC-06 | junctions.parquet (17.11. 23:30) |
+| V-INV-07 | Rad-Vorrang (cyclist_treatment JC-01) nur an einstreifigen Kreisverkehren; Turbokreisel tragen JC-06 | F02 | gilt | ok | JC-01 an 173 einstreifigen Kreiseln, 55 Turbokreisel mit JC-06 | junctions.parquet (18.11. 07:54) |
 | V-INV-08 | Ist-Führung in s08 (Diskrepanz), c04 (Prinzipien) und c05 (Führungsform) identisch mit S-FEAT-13 (c03b) | F26 | gilt | ok | identisch in c05 (36526), s08 (36526) und c04 (23943 Kanten) | ist_facility.parquet (15.11. 22:43), cycle_facility.parquet (15.11. 22:47), discrepancy.parquet (15.11. 22:43), cycle_principles.parquet (16.11. 23:46), cycle_network.parquet (15.11. 22:43) |
 | V-INV-09 | Kein HVS-Abschnitt hat cat_final ETW30 oder ETW_ERF ohne approved Override (overrides/overrides.csv) | F29 | verletzt | **verletzt** | 14 Abschnitte (0,5 km): ETW30 14; davon aus der Kaskade 0, aus der Harmonisierung 14 | final.parquet (15.11. 22:39) |
 

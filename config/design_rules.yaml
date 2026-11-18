@@ -5,8 +5,8 @@
 # scope: rural = Regel betrifft nur außerorts (Kennzeichnung, Review 2026-11 F33).
 # source/source_type gelten auch für alle Einträge darunter (Vererbung, config/schema/provenance.py).
 meta:
-  version: 0.12.0
-  date: 2026-11-17
+  version: 0.12.1
+  date: 2026-11-18
   crs_work: EPSG:25832
   depends_on: ['config/rules.yaml', 'config/cycling_rules.yaml']
 
@@ -189,19 +189,22 @@ profile_assignment:
         Baumstreifen an tree_categories (tree_sides Seiten); Ladezone (loading_sides Seiten), wenn Geschäftsnutzung =
         shop_frontage_share >= rules.yaml C-G30-01 thresholds.frontage: sie liegt im ersten Streifen aus
         loading_shares_with auf derselben Seite (Ladebuchten wechseln sich mit Parkplätzen oder Baumscheiben ab, keine
-        zusätzliche Breite) und bekommt nur ohne einen solchen Streifen einen eigenen Streifen; Längsparken nur, wo OSM heute Parken am
+        zusätzliche Breite) und bekommt nur ohne einen solchen Streifen einen eigenen Streifen; keine Ladezone in
+        no_loading_categories; Längsparken nur, wo OSM heute Parken am
         Fahrbahnrand zeigt (parking_positions), je Seite mit Parken (Wert no in der Liste = eine Seite ohne Parken),
         und nur nach Kategorie (parking_by_category): none = kein Parken, as_ist = alle parking_positions, Liste = nur
         diese Positionen (Seiten: alle Werte erlaubt -> 2, sonst 1)
       history:
         - "seit 0.9.0: Parken nur nach Kategorie (parking_by_category)"
         - "seit 0.12.0: Ladezone teilt sich den Park- oder Baumstreifen (loading_shares_with); vorher immer eigener Streifen von 2,50 m über den ganzen Abschnitt (Entscheidung prstolpe 2026-11-17)"
+        - "seit 0.12.1: keine Ladezone in no_loading_categories (ETW_ERF); D2 entfernt eine Ladezone im Baumstreifen mit (Entscheidung prstolpe 2026-11-18)"
       sidewalk_sides: 2
       no_sidewalk_categories: [ETW_ERF]
       tree_categories: [GOW50, GOW30]
       tree_sides: 2
       loading_sides: 1
       loading_shares_with: [parking_parallel, tree_strip]
+      no_loading_categories: [ETW_ERF]   # Fußgängerzone/verkehrsberuhigter Bereich: Lieferverkehr auf der Mischfläche (seit 0.12.1)
       loading_shares_with_note: 'Annahme: Ladebuchten im Parkstreifen (2,00 m) oder zwischen Baumscheiben; Reihenfolge = Vorrang'
       parking_positions: [lane, street_side, on_kerb, half_on_kerb, shoulder]
       parking_by_category:
@@ -267,7 +270,8 @@ profile_assignment:
         (C-FAC-01, space_fits_preferred = false) mit dessen Sollbreite. D1 entfernt Parken und die Ladezone (seit 0.12.0;
         vorher blieb die Ladezone, Flag loading_removed); D3 streicht den zweiten Kfz-Fahrstreifen und den Mittelstreifen (Busfahrstreifen
         bleibt); D2 setzt den neuen Baumstreifen auf 0 (Baumscheiben im Trenn- oder Seitenraum, Flag trees_as_pits;
-        Bestandsbäume nicht erfasst, TODO existing_trees_conflict); D4 setzt Radanlage auf die Untergrenze aus
+        Bestandsbäume nicht erfasst, TODO existing_trees_conflict) und entfernt eine Ladezone, die darin liegt (seit
+        0.12.1); D4 setzt Radanlage auf die Untergrenze aus
         C-FAC-04 floor und Gehweg auf min; D5 nur GOW50: Vorschlag GOW30 (C-G30-02) in cat_change_proposal, Profil mit
         GOW30-Fahrbahn und Führung der GOW30-Matrixzelle neu bilden, cat_final bleibt; D6 und D7 nur als Flag, wenn
         danach nicht passt (D7 nur im Radnetz, cycle_cat_final != none, und nur wenn die Radanlage eigene Breite im

@@ -907,3 +907,14 @@ Auslöser seit 0.18.0 (Schule/Kita ≤ access_radius 50 m, Breite nur über den 
 - Wirkung (Hamburg): eigener Ladestreifen 725 → 309 km; im Park-/Baumstreifen 261 km; durch D1 entfernt 155 km.
   1 215 Abschnitte wechseln die Passungsklasse, alle zum Besseren: 537 „passt nach Abbau“ → „passt“, 678 „passt nicht“
   → „passt nach Abbau“ (keiner verschlechtert sich); V-INV-05 1 176 → 533 Abschnitte (145,8 → 81,6 km). Knotentypen unverändert.
+
+## design_rules.yaml 0.12.1 – 2026-11-18 (Ladezone, Nachbesserung, Entscheidung prstolpe)
+- Fehler aus 0.12.0 behoben: Lag die Ladezone im Baumstreifen und entfernte D2 den Baumstreifen, kam sie als eigener
+  Streifen von 2,50 m zurück (65 km an GOW50/GOW30). D2 entfernt sie jetzt mit (Hinweis loading_removed).
+- PRF-03 `no_loading_categories: [ETW_ERF]`: keine Ladezone in Fußgängerzonen und verkehrsberuhigten Bereichen,
+  Lieferverkehr nutzt die Mischfläche (26 km).
+- Erschließungsstraßen (ETW30) unverändert: eigener Streifen, wo Geschäftsnutzung, kein Park- oder Baumstreifen und Platz ist.
+- Wirkung: eigener Ladestreifen 309 → 219 km (nur noch ETW30); 137 Abschnitte passen besser (38 „passt nach Abbau“ →
+  „passt“, 99 „passt nicht“ → „passt nach Abbau“), keiner schlechter; V-INV-05 533 → 388 Abschnitte (81,6 → 65,8 km);
+  Knotentypen unverändert.
+
