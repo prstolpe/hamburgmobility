@@ -209,7 +209,7 @@ def _check_profile(profile: dict, allocation: dict) -> None:
         if not ((isinstance(v, str) and v in PARKING_BY_CATEGORY_WORDS) or (isinstance(v, list) and set(v) <= positions)):
             raise ValueError(f"PRF-03.parking_by_category.{cat}: must be {sorted(PARKING_BY_CATEGORY_WORDS)} "
                              f"or a list of parking_positions, got {v!r}")
-    for rule_id, key in (("PRF-03", "no_sidewalk_categories"), ("PRF-03", "tree_categories"),
+    for rule_id, key in (("PRF-03", "no_sidewalk_categories"), ("PRF-03", "tree_categories"), ("PRF-03", "no_loading_categories"),
                          ("PRF-04", "no_profile_categories")):
         unknown = set(rules[rule_id][key]) - EXPECTED_CATEGORIES
         if unknown:

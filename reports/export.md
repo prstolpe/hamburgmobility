@@ -1,6 +1,6 @@
 # Export – Stufe 9
 
-Erzeugt: 2026-11-17T22:32:41+00:00 von `pipeline/s09_export.py`, Version 0.24.0+2026-10-28. Nicht amtlicher Entwurf.
+Erzeugt: 2026-11-18T06:56:15+00:00 von `pipeline/s09_export.py`, Version 0.24.0+2026-10-28. Nicht amtlicher Entwurf.
 
 ## Prüfungen
 
@@ -26,7 +26,7 @@ Erzeugt: 2026-11-17T22:32:41+00:00 von `pipeline/s09_export.py`, Version 0.24.0+
 - Abschnitte: 33 712 in Hamburg (7 Bezirke) (4240.4 km)
 - Gesamtgröße data/out: 543 MB (Grenze GitHub Pages 1 GB)
 - Suchindex: 8 396 Straßennamen; Schulen/Kitas in den Kacheln: 1 545
-- Steckbriefe: 33 712 Dateien, zusammen 229.4 MB
+- Steckbriefe: 33 712 Dateien, zusammen 229.2 MB
 - Robustheit (make validate, 500 Läufe): 2 247 Abschnitte „unsicher“ (246.6 km)
 
 - Radnetz (Prompt 21): 33 712 Abschnitte mit Radnetz-Block, 14 312 Knoten-Steckbriefe; Kacheln tiles/cycling.pmtiles und tiles/junctions.pmtiles werden erst geladen, wenn eine Radnetz-Ebene gewählt ist
@@ -83,7 +83,7 @@ Erzeugt: 2026-11-17T22:32:41+00:00 von `pipeline/s09_export.py`, Version 0.24.0+
 | `data/out/tiles/junctions.pmtiles` | 2.80 MB |
 | `data/out/tiles/segments.pmtiles` | 13.56 MB |
 | `data/out/basemap/fonts/ (768 Glyphen-Dateien)` | 11.08 MB |
-| `data/out/junctions/ (14312 Knoten-Steckbriefe)` | 31.65 MB |
+| `data/out/junctions/ (14312 Knoten-Steckbriefe)` | 31.63 MB |
 | `data/out/table/ (7 Dateien, je Bezirk)` | 5.68 MB |
 
 ## Stichprobe (30 zufällige Steckbriefe, Seed 42)

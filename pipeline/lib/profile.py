@@ -76,6 +76,7 @@ class ProfileParams:
     tree_sides: int
     loading_sides: int
     loading_shares_with: tuple   # PRF-03: strips of the same side that take the loading zone, in this order
+    no_loading: frozenset        # PRF-03: categories without a loading zone (pedestrian zones load on the shared surface)
     parking_positions: frozenset
     parking_by_category: dict    # cat -> frozenset of allowed positions (PRF-03, F11); missing cat = all
     cycle_elements: dict
@@ -137,6 +138,7 @@ class ProfileParams:
             tree_sides=int(prf["PRF-03"]["tree_sides"]),
             loading_sides=int(prf["PRF-03"]["loading_sides"]),
             loading_shares_with=tuple(prf["PRF-03"]["loading_shares_with"]),
+            no_loading=frozenset(prf["PRF-03"]["no_loading_categories"]),
             parking_positions=positions,
             parking_by_category=by_cat,
             cycle_elements=dict(prf["PRF-03"]["cycle_elements"]),
@@ -456,7 +458,9 @@ def _apply(step: str, st: _State, seg: SegmentInput, p: ProfileParams, flags: li
         has = st.trees and st.cat in p.tree_categories
         if has and TREE_PITS_FLAG not in flags:
             flags.append(TREE_PITS_FLAG)
-        return replace(st, trees=False), {"tree_strip": has}
+        # a loading zone in the tree strip goes with it (it would otherwise come back as an own strip)
+        in_trees = any(_loading_here(st, p, left) and _loading_host(st, p, left) == "tree_strip" for left in (True, False))
+        return replace(st, trees=False, loading=st.loading and not in_trees), {"tree_strip": has, "loading_removed": in_trees}
     if step == FALLBACK_STEP:
         if seg.fallback is None or st.facility != seg.facility:
             return st, {"fallback": seg.fallback}
@@ -505,7 +509,7 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
                              _cycle_side(seg.facility, p), lanes.lanes, lanes.bus_lane, lanes.median,
                              lanes.low_confidence, flags, trace, lanes.reduction_dtv)
     st = _State(seg.cat, seg.facility, _num(seg.cycle_width), p.sidewalk_std, lanes.lanes, lanes.bus_lane,
-                lanes.median, seg.parking_sides, True, loading=bool(seg.business))
+                lanes.median, seg.parking_sides, True, loading=bool(seg.business) and seg.cat not in p.no_loading)
     cell = p.cycle_elements.get(seg.facility) or {}
     if cell.get("rule"):
         trace.append({"id": cell["rule"], "result": cell.get("cycle_side"), "values": {"facility": seg.facility}})
@@ -516,7 +520,7 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
     total = _total(elements)
     trace.append({"id": "PRF-03", "result": len(elements), "values": {
         "parking_sides": seg.parking_sides, "business": seg.business, "tram": seg.tram, "oneway": seg.oneway,
-        "loading_in": _loading_host(st, p, left=False) if seg.business else None}})
+        "loading_in": _loading_host(st, p, left=False) if st.loading else None}})
     trace.append({"id": "PRF-05", "result": None if available is None else total <= available,
                   "values": {"total_required_m": total, "available_m": available}})
     applied: list[str] = []
@@ -555,7 +559,7 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
         fit = ("fits" if not steps else "fits_after_degrade") if fits else "does_not_fit"
         trace.append({"id": "PRF-06", "result": fit, "values": {"steps": applied, "total_required_m": total,
                                                                   "available_m": available}})
-    if seg.business:
+    if seg.business and seg.cat not in p.no_loading:
         sides = [left for left in (True, False) if p.loading_sides >= 2 or not left]
         if not st.loading:
             flags.append(LOADING_REMOVED_FLAG)

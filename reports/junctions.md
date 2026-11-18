@@ -1,6 +1,6 @@
 # Knotenpunkte: Soll-Knotentyp und Radverkehrsführung (Stufe c07)
 
-Erzeugt 2026-11-17T22:30:45+00:00 mit pipeline/c07_junctions.py · design_rules.yaml 0.12.0 · nicht amtlicher Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-04, JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.
+Erzeugt 2026-11-18T06:54:16+00:00 mit pipeline/c07_junctions.py · design_rules.yaml 0.12.1 · nicht amtlicher Entwurf. Entscheidungstabelle J-01…J-16, Führungen JC-01…JC-04, JC-06 und Verfahren J-M-01…J-M-07 sind Entwürfe bzw. Annahmen (status draft) und vor Gebrauch fachlich zu prüfen.
 
 ## Kurzfassung
 

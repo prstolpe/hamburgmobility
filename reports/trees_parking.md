@@ -1,6 +1,6 @@
 # Bäume und Parkplätze je Soll-Querschnitt (Stufe c09)
 
-Stand 2026-11-17 · design_rules.yaml 0.12.0 · Regeln TP-P-01 bis TP-T-03 · Methode: docs/trees_parking/methode_vorschlag.md
+Stand 2026-11-18 · design_rules.yaml 0.12.1 · Regeln TP-P-01 bis TP-T-03 · Methode: docs/trees_parking/methode_vorschlag.md
 
 Schätzung, keine Planung. Bäume: „möglicherweise betroffen“, nie „wird gefällt“. Fehlende Daten zählen nie als 0.
 
@@ -28,14 +28,14 @@ Schätzung, keine Planung. Bäume: „möglicherweise betroffen“, nie „wird 
 
 | Bezirk | Parkplätze gezählt | davon Straßen vollständig | Ziel (vollständige Straßen) | Bäume | möglicherweise betroffen: Mitte (Spanne) | neu möglich |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Altona | 43 330 | 39 729 | 17 824–18 529 | 20 761 | 2 408 (341–7 305) | 7 422 |
-| Bergedorf | 5 208 | 4 647 | 2 948–2 964 | 11 406 | 1 117 (150–4 104) | 2 014 |
-| Eimsbüttel | 40 697 | 40 289 | 19 346–19 580 | 22 775 | 2 213 (497–6 185) | 8 422 |
-| Hamburg-Mitte | 50 728 | 50 424 | 27 111–28 236 | 35 412 | 4 328 (834–10 982) | 20 982 |
-| Hamburg-Nord | 83 358 | 82 990 | 49 566–50 793 | 30 527 | 3 480 (575–9 032) | 12 028 |
-| Harburg | 8 344 | 8 213 | 3 385–3 519 | 16 166 | 1 740 (215–5 401) | 5 407 |
-| Wandsbek | 23 114 | 22 098 | 13 977–14 382 | 53 520 | 6 620 (1 288–18 172) | 10 673 |
-| Hamburg | 254 779 | 248 390 | 134 157–138 004 | 190 567 | 21 904 (3 900–61 181) | 66 947 |
+| Altona | 43 330 | 39 729 | 17 824–18 529 | 20 761 | 2 430 (375–7 241) | 7 422 |
+| Bergedorf | 5 208 | 4 647 | 2 948–2 964 | 11 406 | 1 118 (150–4 091) | 2 014 |
+| Eimsbüttel | 40 697 | 40 289 | 19 346–19 580 | 22 775 | 2 223 (524–6 112) | 8 422 |
+| Hamburg-Mitte | 50 728 | 50 424 | 27 111–28 236 | 35 412 | 4 287 (850–10 946) | 20 982 |
+| Hamburg-Nord | 83 358 | 82 990 | 49 566–50 793 | 30 527 | 3 424 (619–8 948) | 12 028 |
+| Harburg | 8 344 | 8 213 | 3 385–3 519 | 16 166 | 1 746 (241–5 337) | 5 407 |
+| Wandsbek | 23 114 | 22 098 | 13 977–14 382 | 53 520 | 6 646 (1 348–18 043) | 10 673 |
+| Hamburg | 254 779 | 248 390 | 134 157–138 004 | 190 567 | 21 874 (4 107–60 718) | 66 947 |
 
 ## 30 Zufallsstichproben (Abschnitte mit Parkdaten oder Bäumen)
 
