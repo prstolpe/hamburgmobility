@@ -5,8 +5,9 @@
 # `when` ist eine Bedingung in der Syntax von rules.yaml (dreiwertig, pipeline/lib/expr.py); ein Satz
 # erscheint nur, wenn die Bedingung sicher wahr ist.
 meta:
-  version: 0.15.0
-  date: 2026-11-16
+  version: 0.15.1
+  date: 2026-11-17
+# 0.15.1: Profil-Hinweise loading_shared und loading_removed (design_rules 0.12.0)
 # 0.15.0: Abschnitt trees_parking (Bäume und Parkplätze, prompts/26 Teil 2), Methodenkapitel „Bäume und Parkplätze“,
 #   Satz zu Parkplätzen beim besonderen Ort.
 # 0.14.0: Abschnitt special_places (Besondere Orte, prompts/26): Band im Steckbrief und Vergleich mit dem Regelwerk.
@@ -309,6 +310,8 @@ cycling:
     lanes_capped_l06: "nicht mehr Fahrstreifen als heute (L-06)"
     pl02_unchecked: "Lage des Zweirichtungsradwegs nicht prüfbar"
     trees_as_pits: "neue Bäume in Baumscheiben im Trenn- oder Seitenraum statt Baumstreifen"
+    loading_shared: "Ladezone im Park- oder Baumstreifen: Ladebuchten wechseln sich mit Parkplätzen oder Bäumen ab"
+    loading_removed: "keine Ladezone – zu wenig Platz"
     capacity_reduction_needed: "mehr Autoverkehr, als ein Fahrstreifen je Richtung schafft – der Autoverkehr müsste weniger werden"
     gow30_dtv_above_profile: "mehr Autoverkehr, als für Tempo 30 vorgesehen ist"
     D6: "Einbahnstraße oder Durchfahrtssperre für Autos prüfen"

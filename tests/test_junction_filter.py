@@ -109,3 +109,15 @@ def test_far_split_point_does_not_join():
     legs = c07.describe_legs(clusters, SEG, NO_PATHS, pts, M02, SEARCH)
     out, stats = jf.filter_pseudo(clusters, legs, pts, p)
     assert out[3] == [3, 4] and sorted(stats["dropped"]) == [1, 2, 10]
+
+
+def test_legs_carry_local_axis_and_node_offset_for_the_sketch():
+    # cluster of nodes 3 (0,8) and 4 (0,-8), centre (0,0): a_n1 leaves node 3 to the west, its own direction is 270°
+    # and it starts 8 m north of the centre; bearing (from the centre, J-M-02 arm_merge) stays as it was
+    pts = c07.node_points(SEG)
+    clusters = c07.build_clusters(SEG, NO_PATHS, set(), radius=25)
+    root = next(r for r, m in clusters.items() if {3, 4} <= set(m))
+    leg = next(leg for leg in c07.describe_legs(clusters, SEG, NO_PATHS, pts, M02, SEARCH)[root]["legs"] if leg["id"] == "a_n1")
+    assert round(leg["axis"]) == 270
+    assert leg["offset"] == [0.0, 8.0]
+    assert leg["bearing"] != leg["axis"]

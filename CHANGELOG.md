@@ -896,3 +896,14 @@ Auslöser seit 0.18.0 (Schule/Kita ≤ access_radius 50 m, Breite nur über den 
   Elemente von links nach rechts mit Breite). Die Website zeichnet daraus eine Draufsicht der Kreuzung: Arme maßstäblich im
   Soll-Querschnitt, Kreuzungsbereich je Soll-Typ schematisch (Radfurten, Fußgängerüberwege, Ampeln, Vorfahrt, Plateau).
   Skizzen von Querschnitt und Kreuzung lassen sich per Klick vergrößern.
+
+## design_rules.yaml 0.12.0, plain_language.yaml 0.15.1 – 2026-11-17 (Ladezone, Entscheidung prstolpe)
+- PRF-03 `loading_shares_with: [parking_parallel, tree_strip]`: Die Ladezone bei Geschäftsnutzung liegt im Park- oder
+  Baumstreifen derselben Seite (Ladebuchten wechseln sich mit Parkplätzen oder Baumscheiben ab, keine zusätzliche
+  Breite). Einen eigenen Streifen von 2,50 m gibt es nur ohne beides. Begründung: Ladebuchten sind kurz und liegen
+  zwischen Parkplätzen und Bäumen; der durchgehende Streifen über den ganzen Abschnitt überschätzte den Platzbedarf.
+- PRF-06 D1 „Parken und Ladezone entfernen“ (vorher blieb die Ladezone in jeder Abbaustufe).
+- Neue Profil-Hinweise `loading_shared` und `loading_removed`.
+- Wirkung (Hamburg): eigener Ladestreifen 725 → 309 km; im Park-/Baumstreifen 261 km; durch D1 entfernt 155 km.
+  1 215 Abschnitte wechseln die Passungsklasse, alle zum Besseren: 537 „passt nach Abbau“ → „passt“, 678 „passt nicht“
+  → „passt nach Abbau“ (keiner verschlechtert sich); V-INV-05 1 176 → 533 Abschnitte (145,8 → 81,6 km). Knotentypen unverändert.

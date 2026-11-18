@@ -183,6 +183,21 @@ describe("junction sketch", () => {
     expect(svg).toMatch(/translate\(0,-\d/);
   });
 
+  it("prefers the leg's own axis and starts the arm at its node", () => {
+    const leg = { ...legs[0], bearing: 30, axis: 0, offset: [10, 0] };
+    const svg = junctionSvg(j("equal_right_before_left", "equal", { legs: [leg] }), META_X);
+    expect(svg).toMatch(/translate\(10,-\d/);
+    expect(junctionSvg(j("roundabout_single_lane_cycle_priority", "roundabout", { legs: [leg] }), META_X)).toMatch(/translate\(0,-\d/);
+  });
+
+  it("draws two carriageways of one street as one arm", () => {
+    const a = { ...legs[1], axis: 85, offset: [0, 4], oneway: true, elements: xs(2) };
+    const b = { ...legs[1], axis: 95, offset: [0, -4], oneway: true, elements: [["sidewalk", 2.5], ["carriageway", 4]] };
+    const svg = junctionSvg(j("equal_right_before_left", "equal", { legs: [legs[0], a, b] }), META_X);
+    expect((svg.match(/ m<\/text>/g) || []).length - 1).toBe(2); // width labels: two arms (plus the scale bar)
+    expect(svg).toContain(">15,5 m<");
+  });
+
   it("says when the arm layout or a cross section is estimated", () => {
     expect(junctionSvg(j("equal_right_before_left", "equal", { legs: legs.map(({ bearing, ...l }) => l) }), META_X)).toContain("Lage der Arme schematisch");
     expect(junctionSvg(j("equal_right_before_left", "equal", { legs: legs.map((l) => ({ ...l, elements: null })) }), META_X))

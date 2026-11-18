@@ -1,6 +1,6 @@
 # Bäume und Parkplätze je Soll-Querschnitt (Stufe c09)
 
-Stand 2026-11-17 · design_rules.yaml 0.11.1 · Regeln TP-P-01 bis TP-T-03 · Methode: docs/trees_parking/methode_vorschlag.md
+Stand 2026-11-17 · design_rules.yaml 0.12.0 · Regeln TP-P-01 bis TP-T-03 · Methode: docs/trees_parking/methode_vorschlag.md
 
 Schätzung, keine Planung. Bäume: „möglicherweise betroffen“, nie „wird gefällt“. Fehlende Daten zählen nie als 0.
 
@@ -28,14 +28,14 @@ Schätzung, keine Planung. Bäume: „möglicherweise betroffen“, nie „wird 
 
 | Bezirk | Parkplätze gezählt | davon Straßen vollständig | Ziel (vollständige Straßen) | Bäume | möglicherweise betroffen: Mitte (Spanne) | neu möglich |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Altona | 43 330 | 39 729 | 17 899–18 604 | 20 761 | 2 340 (305–7 434) | 6 894 |
-| Bergedorf | 5 208 | 4 647 | 3 177–3 193 | 11 406 | 1 112 (149–4 106) | 1 964 |
-| Eimsbüttel | 40 697 | 40 289 | 18 699–18 931 | 22 775 | 2 075 (416–6 259) | 7 785 |
-| Hamburg-Mitte | 50 728 | 50 424 | 26 497–27 586 | 35 412 | 4 240 (752–11 388) | 19 809 |
-| Hamburg-Nord | 83 358 | 82 990 | 49 026–50 253 | 30 527 | 3 306 (532–9 222) | 10 942 |
-| Harburg | 8 344 | 8 213 | 3 410–3 531 | 16 166 | 1 733 (209–5 451) | 4 910 |
-| Wandsbek | 23 114 | 22 098 | 14 279–14 685 | 53 520 | 6 480 (1 194–18 340) | 9 642 |
-| Hamburg | 254 779 | 248 390 | 132 987–136 783 | 190 567 | 21 286 (3 557–62 200) | 61 945 |
+| Altona | 43 330 | 39 729 | 17 824–18 529 | 20 761 | 2 408 (341–7 305) | 7 422 |
+| Bergedorf | 5 208 | 4 647 | 2 948–2 964 | 11 406 | 1 117 (150–4 104) | 2 014 |
+| Eimsbüttel | 40 697 | 40 289 | 19 346–19 580 | 22 775 | 2 213 (497–6 185) | 8 422 |
+| Hamburg-Mitte | 50 728 | 50 424 | 27 111–28 236 | 35 412 | 4 328 (834–10 982) | 20 982 |
+| Hamburg-Nord | 83 358 | 82 990 | 49 566–50 793 | 30 527 | 3 480 (575–9 032) | 12 028 |
+| Harburg | 8 344 | 8 213 | 3 385–3 519 | 16 166 | 1 740 (215–5 401) | 5 407 |
+| Wandsbek | 23 114 | 22 098 | 13 977–14 382 | 53 520 | 6 620 (1 288–18 172) | 10 673 |
+| Hamburg | 254 779 | 248 390 | 134 157–138 004 | 190 567 | 21 904 (3 900–61 181) | 66 947 |
 
 ## 30 Zufallsstichproben (Abschnitte mit Parkdaten oder Bäumen)
 
@@ -63,7 +63,7 @@ Schätzung, keine Planung. Bäume: „möglicherweise betroffen“, nie „wird 
 | `seg_62c2e343beea8a1a` | Anita-Sellenschloh-Ring | Hamburg-Nord | 42 (official) | 42–42 | 2 | 0–0 | 0 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[568196,5948040]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Straße](https://api.panoramax.xyz/#focus=map&map=18/53.676637/10.032407) |
 | `seg_6bdccafb8ec72bca` | Kellinghusenstraße | Hamburg-Nord | 0 (osm) | 0–0 | 0 | 0–0 | 1 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[565702,5938592]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Straße](https://api.panoramax.xyz/#focus=map&map=18/53.592049/9.992666) |
 | `seg_6eba4e8b6fdd4b01` | Beim Bergwerk | Harburg | – (none) | ––4 | 5 | 0–0 | 0 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[559118,5923269]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Straße](https://api.panoramax.xyz/#focus=map&map=18/53.455110/9.890306) |
-| `seg_c4d44c0af772088b` | Hohe Straße | Harburg | 0 (osm) | 0–0 | 12 | 0–10 | 3 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564418,5922844]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Straße](https://api.panoramax.xyz/#focus=map&map=18/53.450670/9.970025) |
+| `seg_c4d44c0af772088b` | Hohe Straße | Harburg | 0 (osm) | 0–0 | 12 | 2–10 | 9 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[564418,5922844]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Straße](https://api.panoramax.xyz/#focus=map&map=18/53.450670/9.970025) |
 | `seg_f5cd4013b56425c0` | Heimfelder Straße | Harburg | 63 (osm) | 63–63 | 36 | 0–0 | 0 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[562415,5923960]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Straße](https://api.panoramax.xyz/#focus=map&map=18/53.460944/9.940084) |
 | `seg_0d2cb17653aaca7e` | Kupferdamm | Wandsbek | – (none) | 0–0 | 5 | 0–3 | 0 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[574250,5939132]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Straße](https://api.panoramax.xyz/#focus=map&map=18/53.595760/10.121918) |
 | `seg_0d82d97d854c078d` | Kielbarg | Wandsbek | – (none) | ––69 | 10 | 0–4 | 0 | [Luftbild](https://geoportal-hamburg.de/?MAP/PROJECTION=EPSG:25832&MAP/CENTER=[573212,5948514]&MAP/ZOOMLEVEL=10&MAP/LAYERIDS=19968) | [Straße](https://api.panoramax.xyz/#focus=map&map=18/53.680215/10.108434) |

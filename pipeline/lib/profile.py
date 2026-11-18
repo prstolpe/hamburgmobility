@@ -75,6 +75,7 @@ class ProfileParams:
     tree_categories: frozenset
     tree_sides: int
     loading_sides: int
+    loading_shares_with: tuple   # PRF-03: strips of the same side that take the loading zone, in this order
     parking_positions: frozenset
     parking_by_category: dict    # cat -> frozenset of allowed positions (PRF-03, F11); missing cat = all
     cycle_elements: dict
@@ -135,6 +136,7 @@ class ProfileParams:
             tree_categories=frozenset(prf["PRF-03"]["tree_categories"]),
             tree_sides=int(prf["PRF-03"]["tree_sides"]),
             loading_sides=int(prf["PRF-03"]["loading_sides"]),
+            loading_shares_with=tuple(prf["PRF-03"]["loading_shares_with"]),
             parking_positions=positions,
             parking_by_category=by_cat,
             cycle_elements=dict(prf["PRF-03"]["cycle_elements"]),
@@ -226,6 +228,8 @@ class LanesResult:
 
 CAPACITY_FLAG = "capacity_reduction_needed"
 TREE_PITS_FLAG = "trees_as_pits"
+LOADING_SHARED_FLAG = "loading_shared"    # PRF-03 loading_shares_with: loading bays in the parking or tree strip
+LOADING_REMOVED_FLAG = "loading_removed"  # PRF-06 D1 removed the loading zone
 
 
 def capacity_reduction(dtv, p: ProfileParams) -> tuple[bool, float | None, dict]:
@@ -315,6 +319,7 @@ class _State:
     parking_sides: int
     trees: bool
     at_floor: bool = False
+    loading: bool = False        # loading zone wanted (business use) and not removed by D1
 
 
 def facility_width(facility, seg: SegmentInput, p: ProfileParams) -> float | None:
@@ -369,6 +374,17 @@ def gow30_core_carriageway(st: _State, seg: SegmentInput, p: ProfileParams, flag
     return max(lower, core + lanes) - lanes
 
 
+def _loading_host(st: _State, p: ProfileParams, left: bool) -> str | None:
+    """Strip of this side that takes the loading zone (PRF-03 loading_shares_with), None = own strip or none."""
+    parking = st.parking_sides >= 2 or (st.parking_sides == 1 and not left)
+    trees = st.trees and st.cat in p.tree_categories and (p.tree_sides >= 2 or not left)
+    return next((e for e in p.loading_shares_with if (e == "parking_parallel" and parking) or (e == "tree_strip" and trees)), None)
+
+
+def _loading_here(st: _State, p: ProfileParams, left: bool) -> bool:
+    return st.loading and (p.loading_sides >= 2 or not left)
+
+
 def _side(st: _State, seg: SegmentInput, p: ProfileParams, left: bool) -> list[tuple[str, float]]:
     """Elements of one side, outer to inner (PRF-03, PL-01..PL-03)."""
     out = []
@@ -382,7 +398,7 @@ def _side(st: _State, seg: SegmentInput, p: ProfileParams, left: bool) -> list[t
         out += [("cycle_track", st.cycle_width or 0.0), (cell["buffer"], p.element_m[cell["buffer"]])]
     if st.trees and st.cat in p.tree_categories and (p.tree_sides >= 2 or not left):
         out.append(("tree_strip", p.element_m["tree_strip"]))
-    if seg.business and (p.loading_sides >= 2 or not left):
+    if _loading_here(st, p, left) and _loading_host(st, p, left) is None:
         out.append(("loading_zone", p.element_m["loading_zone"]))
     if parking_here:
         out.append(("parking_parallel", p.element_m["parking_parallel"]))
@@ -433,7 +449,7 @@ class ProfileResult:
 def _apply(step: str, st: _State, seg: SegmentInput, p: ProfileParams, flags: list) -> tuple[_State, dict]:
     """One cascade step; returns the new state and the trace values (PRF-06)."""
     if step == "D1":
-        return replace(st, parking_sides=0), {"parking_sides": st.parking_sides, "loading_kept": seg.business}
+        return replace(st, parking_sides=0, loading=False), {"parking_sides": st.parking_sides, "loading_removed": st.loading}
     if step == "D2":
         # F17: new tree strip -> tree pits in the buffer or side space; existing trees are not in the data
         # (TODO existing_trees_conflict once tree data exist, docs/open_questions.md)
@@ -489,7 +505,7 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
                              _cycle_side(seg.facility, p), lanes.lanes, lanes.bus_lane, lanes.median,
                              lanes.low_confidence, flags, trace, lanes.reduction_dtv)
     st = _State(seg.cat, seg.facility, _num(seg.cycle_width), p.sidewalk_std, lanes.lanes, lanes.bus_lane,
-                lanes.median, seg.parking_sides, True)
+                lanes.median, seg.parking_sides, True, loading=bool(seg.business))
     cell = p.cycle_elements.get(seg.facility) or {}
     if cell.get("rule"):
         trace.append({"id": cell["rule"], "result": cell.get("cycle_side"), "values": {"facility": seg.facility}})
@@ -499,7 +515,8 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
     elements = _build(st, seg, p, flags)
     total = _total(elements)
     trace.append({"id": "PRF-03", "result": len(elements), "values": {
-        "parking_sides": seg.parking_sides, "business": seg.business, "tram": seg.tram, "oneway": seg.oneway}})
+        "parking_sides": seg.parking_sides, "business": seg.business, "tram": seg.tram, "oneway": seg.oneway,
+        "loading_in": _loading_host(st, p, left=False) if seg.business else None}})
     trace.append({"id": "PRF-05", "result": None if available is None else total <= available,
                   "values": {"total_required_m": total, "available_m": available}})
     applied: list[str] = []
@@ -538,6 +555,12 @@ def evaluate_profile(seg: SegmentInput, available, p: ProfileParams, stop_before
         fit = ("fits" if not steps else "fits_after_degrade") if fits else "does_not_fit"
         trace.append({"id": "PRF-06", "result": fit, "values": {"steps": applied, "total_required_m": total,
                                                                   "available_m": available}})
+    if seg.business:
+        sides = [left for left in (True, False) if p.loading_sides >= 2 or not left]
+        if not st.loading:
+            flags.append(LOADING_REMOVED_FLAG)
+        elif any(_loading_host(st, p, left) for left in sides):
+            flags.append(LOADING_SHARED_FLAG)
     return ProfileResult(elements, total, available, fit, applied, proposal, st.facility, st.cycle_width,
                          _cycle_side(st.facility, p), st.lanes, st.bus_lane, st.median, lanes.low_confidence, flags, trace,
                          lanes.reduction_dtv)

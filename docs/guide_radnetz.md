@@ -253,7 +253,9 @@ in design_rules.yaml 0.2.0 (Setzungen sind Annahmen, status draft):
 - **Busfahrstreifen** statt zweitem Kfz-Streifen ab 20 Bussen je Spitzenstunde und Richtung; die Spitzenstunde kommt aus
   dem HVV-GTFS (stärkste Abfahrtsstunde der stärkeren Richtung, Entscheidung 2026-11-06) [B].
 - **Profil:** Gehwege, Radanlage (Lage nach PL-01…03), ÖPNV, Fahrbahn, Trennstreifen, Bäume an GOW, Ladezone bei
-  Geschäftsnutzung und Parken nur, wo es heute Parken gibt und die Kategorie es erlaubt (PRF-03 `parking_by_category`,
+  Geschäftsnutzung (seit design_rules 0.12.0 im Park- oder Baumstreifen derselben Seite – Ladebuchten wechseln sich mit
+  Parkplätzen oder Baumscheiben ab –, eigener Streifen von 2,50 m nur ohne beides; die Abbaustufe D1 entfernt Parken
+  und Ladezone) und Parken nur, wo es heute Parken gibt und die Kategorie es erlaubt (PRF-03 `parking_by_category`,
   seit 0.9.0, F11): GOW50 und ETW_ERF kein Parken, GOW30 nur Parkstreifen (`street_side`, neben Radfahrstreifen mit
   Sicherheitsraum), ETW30 wie heute. Verfügbar = width_p10_m (Verkehrsfläche); die Fassadenbreite zeigt das Potenzial [B].
 - **GOW30-Fahrbahn (PRF-04, F04):** Die CROW-Spannen 5,80–8,40 m (schmal, bis 6 000 Kfz/Tag) und 8,40–10,70 m (breit)

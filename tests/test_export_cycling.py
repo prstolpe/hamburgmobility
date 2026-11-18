@@ -126,7 +126,7 @@ def test_every_junction_type_has_a_group_and_text():
 
 
 def _junction(**kw) -> dict:
-    legs = [{"ids": ["seg_a"], "cat": "GOW50", "cycle_cat": "HAUPT", "facility": "separated_oneway_both", "dtv": 30000.0, "name": "Hauptstraße", "bearing": 90, "lanes": 2},
+    legs = [{"ids": ["seg_a"], "cat": "GOW50", "cycle_cat": "HAUPT", "facility": "separated_oneway_both", "dtv": 30000.0, "name": "Hauptstraße", "bearing": 90, "lanes": 2, "axis": 84, "offset": [3.5, -1.0]},
             {"ids": ["seg_b"], "cat": "GOW50", "cycle_cat": "HAUPT", "facility": "separated_oneway_both", "dtv": 30000.0, "name": "Hauptstraße", "bearing": 270, "lanes": "shared"},
             {"ids": ["seg_c"], "cat": "ETW30", "cycle_cat": "ERSCHL", "facility": "mixed", "dtv": None, "name": "Nebenweg"}]
     row = {"node_id": "123", "names": "Hauptstraße / Nebenweg", "bezirk": "Altona", "pair": "GOW50+ETW30", "legs": json.dumps(legs),
@@ -178,7 +178,7 @@ def test_segment_cycling_block():
     assert b["lanes"]["soll"] == "1" and b["lanes"]["ist"] == 2 and b["lanes"]["change"] == "fewer"
     assert b["side_text"] == TEXTS["cycling"]["side"]["both"]
     assert [s["step"] for s in b["profile"]["steps"]] == ["D1", "D4"]
-    assert b["profile"]["steps"][0]["text"].startswith("Parken entfernen")
+    assert b["profile"]["steps"][0]["text"].startswith("Parken und Ladezone entfernen")
     assert b["profile"]["fit_text"] == TEXTS["cycling"]["fit"]["fits_after_degrade"]
     assert [e["element"] for e in b["profile"]["elements"]][:2] == ["sidewalk", "cycle_track"]
     assert TEXTS["cycling"]["profile_flags"]["D6"] in b["flags"]
@@ -225,6 +225,7 @@ def test_junction_profile():
     assert [leg["name"] for leg in p["legs"]] == ["Hauptstraße", "Hauptstraße", "Nebenweg"]
     assert p["legs"][0]["facility_text"] == TEXTS["cycling"]["facility"]["separated_oneway_both"]
     assert [(leg["bearing"], leg["lanes"]) for leg in p["legs"]] == [(90, 2), (270, 1), (None, None)]
+    assert (p["legs"][0]["axis"], p["legs"][0]["offset"]) == (84, [3.5, -1.0]) and p["legs"][2]["axis"] is None
     assert [leg["facility"] for leg in p["legs"]] == ["separated_oneway_both", "separated_oneway_both", "mixed"]
     assert all(leg["elements"] is None and leg["oneway"] is None for leg in p["legs"])  # without cross sections
 
