@@ -42,8 +42,20 @@ jobs:
       - name: Download site data (release data-latest)
         env:
           GH_TOKEN: ${{ github.token }}
+        # `gh release upload --clobber` removes the old asset before the new one (~170 MB) is complete, so a run
+        # started during an upload finds no asset. Retry for up to 10 minutes before failing.
         run: |
-          gh release download data-latest --pattern site-data.tar.gz --dir "$RUNNER_TEMP"
+          for attempt in $(seq 1 20); do
+            if gh release download data-latest --pattern site-data.tar.gz --dir "$RUNNER_TEMP" --clobber; then
+              break
+            fi
+            if [ "$attempt" -eq 20 ]; then
+              echo "::error::site-data.tar.gz not available in release data-latest after 20 attempts"
+              exit 1
+            fi
+            echo "Attempt $attempt: asset not available (upload in progress?), retrying in 30 s"
+            sleep 30
+          done
           mkdir -p "$RUNNER_TEMP/site-data"
           tar -xzf "$RUNNER_TEMP/site-data.tar.gz" -C "$RUNNER_TEMP/site-data"
           test -f "$RUNNER_TEMP/site-data/tiles/segments.pmtiles"
