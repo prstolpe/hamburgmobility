@@ -13,7 +13,7 @@ import { esc } from "./util.js";
 const isPhone = () => matchMedia("(max-width: 760px)").matches;
 const canHover = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
 const MAX_LIST = 80;
-const SIZES = ["peek", "half", "full"];
+const SHEET_TITLE = { peek: "Legende, Ebenen und Filter", open: "Einklappen" };
 
 // ---- pure HTML (exported for tests) -------------------------------------------------------------
 
@@ -151,9 +151,10 @@ export function featureSentence(f, meta, junctionNames) {
 
 export function createMapPanel({ root, chipsRoot, tipRoot, meta, getState, setState, getMap, showPlace, junctionNames, shareUrl }) {
   const ui = { inView: null, highlight: null, highlightLayer: null, openWhat: new Set(), filtersOpen: false, listOpen: false, listHtml: "", preview: null };
-  root.innerHTML = `<button type="button" class="sheet-handle" id="sheet-handle" aria-expanded="false" aria-controls="map-panel-body">
-      <span class="grip" aria-hidden="true"></span><span id="sheet-title">Legende, Ebenen und Filter</span></button>
-    <button type="button" class="sheet-collapse" id="sheet-collapse">Einklappen</button>
+  // phones: the whole bar opens and closes the sheet (tap again = close); a small button switches half / full height
+  root.innerHTML = `<div class="sheet-bar"><button type="button" class="sheet-handle" id="sheet-handle" aria-expanded="false" aria-controls="map-panel-body">
+      <span class="grip" aria-hidden="true"></span><span class="sheet-label"><svg class="chev" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 7l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span id="sheet-title">${SHEET_TITLE.peek}</span></span></button>
+    <button type="button" class="sheet-size" id="sheet-size" aria-controls="map-panel-body">Größer</button></div>
     <div class="map-panel-body" id="map-panel-body"></div>`;
   root.dataset.size = "peek";
   const body = root.querySelector("#map-panel-body");
@@ -169,7 +170,7 @@ export function createMapPanel({ root, chipsRoot, tipRoot, meta, getState, setSt
     if (ui.listOpen) ui.listHtml = featureListHtml();
     body.innerHTML = panelHtml(st, meta, ui);
     body.scrollTop = scroll;
-    root.querySelector("#sheet-title").textContent = ui.preview ? "Vorschau" : "Legende, Ebenen und Filter";
+    sheetTitle();
     if (focus) restoreFocus(focus);
     applyHighlight();
   }
@@ -296,12 +297,19 @@ export function createMapPanel({ root, chipsRoot, tipRoot, meta, getState, setSt
 
   // ---- sheet (phones) --------------------------------------------------------------------------------
 
+  function sheetTitle() {
+    const open = root.dataset.size !== "peek";
+    root.querySelector("#sheet-title").textContent = open ? SHEET_TITLE.open : ui.preview ? "Vorschau" : SHEET_TITLE.peek;
+    root.querySelector("#sheet-size").textContent = root.dataset.size === "full" ? "Kleiner" : "Größer";
+  }
   function setSize(size) {
     root.dataset.size = size;
     root.querySelector("#sheet-handle").setAttribute("aria-expanded", String(size !== "peek"));
+    sheetTitle();
     requestAnimationFrame(() => getMap()?.resize()); // the map row shrinks or grows with the sheet
   }
-  root.querySelector("#sheet-handle").onclick = () => setSize(SIZES[(SIZES.indexOf(root.dataset.size) + 1) % SIZES.length]);
+  root.querySelector("#sheet-handle").onclick = () => setSize(root.dataset.size === "peek" ? "half" : "peek");
+  root.querySelector("#sheet-size").onclick = () => setSize(root.dataset.size === "full" ? "half" : "full");
 
   // ---- events ----------------------------------------------------------------------------------------
 
@@ -333,7 +341,6 @@ export function createMapPanel({ root, chipsRoot, tipRoot, meta, getState, setSt
     } else if (at("[data-remove]")) removeLayer(at("[data-remove]").dataset.remove);
     else if (at("[data-open]")) { const [kind, id] = at("[data-open]").dataset.open.split(":"); select(kind, id); }
     else if (at("[data-skip]")) { ev.preventDefault(); root.querySelector(`#${at("[data-skip]").dataset.skip}`)?.focus(); }
-    else if (t.id === "sheet-collapse") setSize("peek");
     else if (t.id === "list-btn") { ui.listOpen = !ui.listOpen; render(); }
     else if (t.id === "f-reset") setState({ cats: [], dts: [], prmin: 0, bz: "" });
     else if (t.id === "preview-open") { const p = ui.preview; ui.preview = null; setSize("peek"); select(p.kind, p.id); }

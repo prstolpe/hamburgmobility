@@ -262,9 +262,10 @@ dl.tech dd { margin: 0 0 var(--s1) var(--s3); }
 .prose { overflow-wrap: break-word; }
 
 /* --- map panel (prompt 28) ------------------------------------------------------------------------------ */
-.map-panel { grid-column: 1; grid-row: 1; border-right: 1px solid var(--ink); background: #fff; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
-.map-panel-body { overflow: auto; flex: 1; padding: 0 var(--gutter) var(--s4) var(--margin); }
-.sheet-handle, .sheet-collapse { display: none; }
+/* position: relative on both, so visually hidden inputs and skip links stay inside the scroll box and do not stretch the page */
+.map-panel { position: relative; grid-column: 1; grid-row: 1; border-right: 1px solid var(--ink); background: #fff; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+.map-panel-body { position: relative; overflow: auto; overscroll-behavior: contain; flex: 1; padding: 0 var(--gutter) var(--s4) var(--margin); }
+.sheet-bar, .nav-extra { display: none; }
 .skip-links { margin: 0; }
 .skip-links a { position: absolute; left: -999px; }
 .skip-links a:focus { position: static; display: inline-block; margin: var(--s2) var(--s2) 0 0; }
@@ -332,17 +333,20 @@ nav.main .nav-bmc { display: none; }
 @media (max-width: 760px) {
   .map-page { grid-template-columns: 1fr; grid-template-rows: 1fr auto; min-height: 420px; }
   .map { grid-column: 1; grid-row: 1; }
-  .map-panel { grid-column: 1; grid-row: 2; border-right: 0; border-top: 2px solid var(--ink); height: 50px; }
+  .map-panel { grid-column: 1; grid-row: 2; border-right: 0; border-top: 2px solid var(--ink); height: 56px; }
   .map-panel[data-size="half"] { height: calc((100dvh - var(--hdr, 60px)) * .55); }
   .map-panel[data-size="full"] { height: calc(100dvh - var(--hdr, 60px) - 72px); } /* a strip of map stays visible */
   .map-panel-body { padding: 0 var(--margin) var(--s4); }
-  .sheet-handle { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; min-height: 48px; background: #fff; color: var(--ink);
-    border: 0; border-bottom: 1px solid var(--line); font-weight: 700; padding: var(--s1) 0; flex: none; }
+  .sheet-bar { display: flex; align-items: stretch; flex: none; border-bottom: 1px solid var(--line); background: #fff; }
+  .sheet-handle { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 54px;
+    background: #fff; color: var(--ink); border: 0; font: inherit; font-weight: 700; padding: var(--s1) 0; cursor: pointer; }
   .grip { width: 40px; height: 4px; background: var(--ink); }
-  .map-panel { position: relative; }
-  .sheet-collapse { display: inline-flex; position: absolute; right: var(--margin); top: 2px; min-height: 44px; background: #fff; color: var(--ink);
-    border: 1px solid var(--ink); font-weight: 600; padding: 0 var(--s2); }
-  .map-panel[data-size="peek"] .sheet-collapse { display: none; }
+  .sheet-label { display: inline-flex; align-items: center; gap: var(--s2); text-decoration: underline; text-underline-offset: 3px; }
+  .chev { transition: transform .15s; }
+  .map-panel:not([data-size="peek"]) .chev { transform: rotate(180deg); }
+  .sheet-size { flex: none; min-width: 44px; background: none; border: 0; color: var(--text2); font: inherit; font-size: .875rem;
+    text-decoration: underline; text-underline-offset: 3px; padding: 0 var(--margin) 0 var(--s2); cursor: pointer; }
+  .map-panel[data-size="peek"] .sheet-size { display: none; }
   .map-panel[data-size="peek"] .map-panel-body { visibility: hidden; } /* only the handle; nothing half cut */
   .panel-bar button { padding: var(--s1) var(--s2); white-space: nowrap; }
   .panel-bar .close-word { display: none; }
@@ -365,5 +369,8 @@ nav.main .nav-bmc { display: none; }
     border-bottom: 2px solid var(--ink); padding: var(--s2) var(--margin) var(--s3); }
   .on-karte header.menu-open nav.main { display: flex; }
   .on-karte nav.main .nav-bmc { display: inline-flex; align-self: flex-start; margin-top: var(--s2); }
+  /* the map page does not scroll on phones (scrolling belongs to the sheet); the footer links move into the menu */
+  .on-karte .site-foot { display: none; }
+  .on-karte nav.main .nav-extra { display: block; font-weight: 400; }
 }
 .map .maplibregl-ctrl.maplibregl-ctrl-attrib a { text-decoration: underline; text-underline-offset: 2px; } /* links distinguishable without colour (WCAG 1.4.1) */
