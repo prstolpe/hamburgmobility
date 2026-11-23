@@ -347,3 +347,12 @@ test("phone sheet: tapping the bar again closes it; a small button switches to f
   await expect(panel).toHaveAttribute("data-size", "peek");
   await expect(handle).toHaveAttribute("aria-expanded", "false");
 });
+
+test("phone menu on the map page: imprint, social links and donate button (footer is hidden there)", async ({ page }, info) => {
+  test.skip(info.project.name !== "mobile", "phones only");
+  await ready(page, "#karte");
+  await page.locator("#menu-btn").click();
+  await expect(page.locator("nav.main a", { hasText: "Impressum und Datenschutz" })).toBeVisible();
+  for (const name of ["LinkedIn", "Instagram", "YouTube"]) await expect(page.locator(".nav-social a", { hasText: name })).toBeVisible();
+  await expect(page.locator("nav.main .nav-bmc")).toBeVisible();
+});

@@ -373,5 +373,8 @@ nav.main .nav-bmc { display: none; }
   /* the map page does not scroll on phones (scrolling belongs to the sheet); the footer links move into the menu */
   .on-karte .site-foot { display: none; }
   .on-karte nav.main .nav-extra { display: block; font-weight: 400; }
+  .on-karte nav.main .nav-social { display: flex; gap: var(--s2); margin: var(--s1) 0 0 -12px; } /* 44 px tap targets, icons aligned with the text */
+  .on-karte nav.main .nav-social a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px;
+    padding: 0; color: var(--ink); border: 0; }
 }
 .map .maplibregl-ctrl.maplibregl-ctrl-attrib a { text-decoration: underline; text-underline-offset: 2px; } /* links distinguishable without colour (WCAG 1.4.1) */
