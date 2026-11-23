@@ -1,14 +1,13 @@
-// Map layers, legends and filters. Street function layers use source "sfp" (layers "segments" and "facilities");
+// Map layers and filters (the legend is built from legend_registry.js, prompt 28). Street function layers use source "sfp" (layers "segments" and "facilities");
 // cycling layers (prompt 21) use source "cyc" (tiles/cycling.pmtiles: cycle_network, cycle_segments, cycle_official)
 // and "jct" (tiles/junctions.pmtiles: junctions). map.js adds the cycling sources only when such a layer is shown.
 // Special places (prompts/26) use the GeoJSON source "places" (special_places.geojson), loaded when a place is on.
 import {
   CASING, CATEGORY_STYLE, CYCLE_CAT_STYLE, DISC_TYPE_STYLE, FACILITY_STYLE, FEASIBILITY_STYLE, FIT_STYLE, GAP_STYLE,
-  INK, JUNCTION_STYLE, NEED, NONE, LANES_STYLE, OFFICIAL_STYLE, OVERLAY_COLORS, REFERENCE_COLOR, RURAL_FILL, SHAPES, SPEED_CLASSES, UNKNOWN,
+  INK, JUNCTION_STYLE, NEED, NONE, LANES_STYLE, OFFICIAL_STYLE, OVERLAY_COLORS, REFERENCE_COLOR, SHAPES, SPEED_CLASSES, UNKNOWN,
   WIDTH_STYLE,
 } from "./palette.js";
 import { CYCLING_LAYER_KEYS } from "./state.js";
-import { esc } from "./util.js";
 
 const SRC = "sfp";
 const SEG = "segments";
@@ -80,7 +79,7 @@ function cyclingGroups(layer, meta) {
 
 // Legend of "Abweichung" (prompt 25, item 5, variant a chosen): one statement per type (dash), the strength as width.
 // Display only: the strength classes group disc_max (0.5 steps) into three widths, rules and data unchanged.
-const DISC_WIDTH = { small: 2.5, medium: 4.5, large: 7 }; // below 1.5, 1.5 to below 2.5, from 2.5
+export const DISC_WIDTH = { small: 2.5, medium: 4.5, large: 7 }; // below 1.5, 1.5 to below 2.5, from 2.5
 const dm = ["coalesce", ["get", "dm"], 0];
 const discWidth = zoomWidthExpr(["step", dm, DISC_WIDTH.small, 1.5, DISC_WIDTH.medium, 2.5, DISC_WIDTH.large]);
 const DISC_TEXT = {
@@ -192,7 +191,7 @@ export function sfpLayers(state, meta) {
   if (state.overlays.includes("acc")) {
     out.push({ id: "ov-acc", type: "line", source: SRC, "source-layer": SEG, filter: ["all", [">", ["get", "acc"], 0], filter],
       layout: { "line-cap": "round" },
-      paint: { "line-color": OVERLAY_COLORS.acc, "line-opacity": 0.45,
+      paint: { "line-color": OVERLAY_COLORS.acc, "line-opacity": 0.5,
         "line-width": ["interpolate", ["linear"], ["get", "acc"], 1, 8, 10, 22] } });
   }
   if (cycling && state.layer === "cgap" && meta.overview?.mesh_gaps) {
@@ -235,7 +234,7 @@ export function sfpLayers(state, meta) {
   }
   if (state.overlays.includes("fac")) {
     out.push({ id: "ov-fac", type: "circle", source: SRC, "source-layer": "facilities",
-      paint: { "circle-color": OVERLAY_COLORS.fac, "circle-radius": 5, "circle-stroke-color": CASING, "circle-stroke-width": 2 } });
+      paint: { "circle-color": CASING, "circle-radius": 4.5, "circle-stroke-color": OVERLAY_COLORS.fac, "circle-stroke-width": 2.5 } }); // ring
   }
   if (meta.cycling && state.layer !== "jct") {
     // junctions stay tappable in every theme from zoom 14 (small dots)
@@ -245,11 +244,15 @@ export function sfpLayers(state, meta) {
   }
   if (state.place) out.push(...placeLayers(state, meta));
   const segLayer = cycling && CYCLING_SOURCE[state.layer][1] === "cycle_segments" ? ["cyc", "cycle_segments"] : [SRC, SEG];
-  out.push({ id: "selected", type: "line", source: segLayer[0], "source-layer": segLayer[1], filter: ["==", ["get", "id"], state.seg ?? ""],
-    paint: { "line-color": "#000000", "line-width": zoomWidth(10), "line-opacity": 0.35 } });
-  if (cycling && state.layer === "jct") {
+  // selection (prompt 28): a dark halo under the lines plus a thin ink core on top – clear in every theme
+  const selFilter = ["==", ["get", "id"], state.seg ?? ""];
+  out.unshift({ id: "selected-halo", type: "line", source: segLayer[0], "source-layer": segLayer[1], filter: selFilter,
+    layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": INK, "line-width": zoomWidth(18), "line-opacity": 0.3 } });
+  out.push({ id: "selected", type: "line", source: segLayer[0], "source-layer": segLayer[1], filter: selFilter,
+    layout: { "line-cap": "round" }, paint: { "line-color": INK, "line-width": zoomWidth(2.5), "line-opacity": 0.9 } });
+  if (meta.cycling) {
     out.push({ id: "selected-jct", type: "circle", source: "jct", "source-layer": "junctions", filter: ["==", ["get", "id"], state.jct ?? ""],
-      paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": "#000000", "circle-stroke-width": 3 } });
+      paint: { "circle-radius": 14, "circle-color": "rgba(0,0,0,0)", "circle-stroke-color": INK, "circle-stroke-width": 3 } });
   }
   return out;
 }
@@ -273,16 +276,6 @@ export function placeLayers(state, meta) {
       paint: { "line-color": c.main, "line-width": zoomWidth(7), ...(dashed ? { "line-dasharray": [1.5, 1] } : {}) } });
   }
   return out;
-}
-
-/** Legend entries of the place: one line sample per measure (decorative SVG; the text carries the meaning). */
-export function placeLegendHtml(state, meta) {
-  const p = placeOf(state, meta);
-  if (!p) return "";
-  const c = p.theme.palette;
-  const sample = (dashed) => `<svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${c.casing ?? CASING}" stroke-width="11"/><line x1="2" y1="7" x2="34" y2="7" stroke="${c.main}" stroke-width="7"${dashed ? ' stroke-dasharray="10.5 7"' : ""}/></svg>`;
-  const items = p.measures.map((m) => `<li>${sample(p.theme.pattern?.[m.measure] === "dashed")}<span>${esc(m.label)}${p.theme.pattern?.[m.measure] === "dashed" ? " (gestrichelt)" : ""}</span></li>`).join("");
-  return `<p class="legend-sub">${esc(meta.special_places.texts.legend)}: ${esc(p.title)}</p><ul class="legend">${items}</ul>`;
 }
 
 // Basemap labels above the data (prompt 25): Stadtteil and place names get a white halo and darker text, minor
@@ -325,49 +318,9 @@ export const LAYER_INFO = {
   coff: { title: "Amtliches Radnetz", cycling: true, text: "Das amtliche Radnetz Hamburg zum Vergleich; darunter hell das vorgeschlagene Radnetz." },
 };
 
-export const OVERLAY_INFO = {
-  bus: "Busverkehr (Fahrten je Werktag, Linienbreite)",
-  fac: "Schulen und Kitas",
-  acc: "Unfälle mit Fuß-/Radbeteiligung (Summe je Abschnitt, 5 Jahre)",
-};
-
 /** Symbol of a shape as inline SVG (decorative). */
 export function shapeSvg(shape, color, size = 16) {
   const s = SHAPES[shape];
   const paint = s.mode === "fill" ? `fill="${color}" stroke="${CASING}" stroke-width="1"` : `fill="none" stroke="${color}" stroke-width="2.5"`;
   return `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 16 16"><path d="${s.d}" ${paint}/></svg>`;
-}
-
-/** Legend as HTML (line samples as inline SVG, decorative; the text carries the meaning). */
-function lineSample(g, maxWidth = 6) {
-  const dash = g.dash ? `stroke-dasharray="${g.dash.map((d) => d * 4).join(" ")}"` : "";
-  const w = Math.max(2, Math.min(g.legendWidth ?? (typeof g.width === "number" ? g.width : 4), maxWidth));
-  const inner = g.inner ? `<line x1="2" y1="7" x2="34" y2="7" stroke="${g.inner.color}" stroke-width="${Math.max(1, g.inner.width)}"/>` : "";
-  return `<svg aria-hidden="true" width="36" height="14"><line x1="2" y1="7" x2="34" y2="7" stroke="${CASING}" stroke-width="${w + 4}" stroke-linecap="round"/><line x1="2" y1="7" x2="34" y2="7" stroke="${g.color}" stroke-width="${w}" ${dash}/>${inner}</svg>`;
-}
-
-export function legendHtml(layer, meta) {
-  const disc = layer === "disc";
-  const items = groups(layer, meta).map((g) => {
-    if (g.kind === "symbol") return `<li>${shapeSvg(g.shape, g.color, 18)}<span>${esc(g.label)}</span></li>`;
-    return `<li>${lineSample(g, disc ? 9 : 6)}<span>${esc(g.label)}</span></li>`;
-  });
-  if (disc) {
-    // strength as width: one line with a thin and a wide sample
-    items.push(`<li class="legend-scale">${lineSample({ color: NEED, width: DISC_WIDTH.small })}${lineSample({ color: NEED, width: DISC_WIDTH.large }, 9)}<span>breiter = größere Abweichung</span></li>`);
-  }
-  if (layer === "cgap" && meta.overview?.mesh_gaps) {
-    items.unshift(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${NEED}" fill-opacity="0.2" stroke="${NEED}" stroke-dasharray="4 2"/></svg><span>Netz zu weitmaschig (Fläche)</span></li>`);
-  }
-  if (meta.rural_excluded?.length) {
-    items.push(`<li><svg aria-hidden="true" width="36" height="14"><rect x="2" y="1" width="32" height="12" fill="${RURAL_FILL}" fill-opacity="0.35" stroke="${RURAL_FILL}"/></svg><span>auf dem Land – nicht bewertet</span></li>`);
-  }
-  const notes = [];
-  if (isCyclingLayer(layer) && meta.cycling) {
-    notes.push(`<p class="note">${esc(meta.cycling.disclaimer)}</p>`);
-    if (layer === "jct") notes.push('<p class="muted">Orange und größer: heutiger Knoten passt nicht zum Soll (Umbau nötig).</p>');
-    if (layer === "coff") notes.push(`<p class="muted">${esc(meta.cycling.official_attribution ?? "")}</p>`);
-  }
-  const more = disc ? '<p class="legend-more"><a href="#methode/abweichung">Was heißt das?</a></p>' : "";
-  return `${notes.join("")}<ul class="legend">${items.join("")}</ul>${more}`;
 }

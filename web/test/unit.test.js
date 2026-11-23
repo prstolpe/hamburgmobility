@@ -127,7 +127,9 @@ describe("table per Bezirk", () => {
 
 describe("legend", () => {
   it("explains the grey rural Stadtteile when there are any", async () => {
-    const { legendHtml } = await import("../src/layers.js");
+    const { legendFor } = await import("../src/legend_registry.js");
+    const { layerLegendHtml } = await import("../src/map_panel.js");
+    const legendHtml = (layer, m) => legendFor({ ...DEFAULTS, layer }, m).map((l) => layerLegendHtml(l, { inView: null, highlight: null, openWhat: new Set() })).join("");
     const meta = { categories: { SW: { label: "Schnellverkehrsstraße" } }, discrepancy_types: {}, width_classes_m: {}, feasibility: {} };
     expect(legendHtml("cat", { ...meta, rural_excluded: ["Kirchwerder"] })).toContain("auf dem Land – nicht bewertet");
     expect(legendHtml("cat", meta)).not.toContain("auf dem Land – nicht bewertet");
@@ -136,13 +138,16 @@ describe("legend", () => {
 
 describe("legend categories", () => {
   it("lists only categories present in the data", async () => {
-    const { legendHtml } = await import("../src/layers.js");
+    const { legendFor } = await import("../src/legend_registry.js");
+    const { layerLegendHtml } = await import("../src/map_panel.js");
+    const legendHtml = (layer, m) => legendFor({ ...DEFAULTS, layer }, m).map((l) => layerLegendHtml(l, { inView: null, highlight: null, openWhat: new Set() })).join("");
     const meta = { categories: { SW: { label: "A" }, GOW80: { label: "B" } }, categories_present: ["SW"],
       discrepancy_types: {}, width_classes_m: {}, feasibility: {} };
     const html = legendHtml("cat", meta);
     expect(html).toContain("<span>A</span>");
     expect(html).not.toContain("GOW80");
-    expect(html).not.toMatch(/\bSW\b/); // plain names only, codes stay on level 3 (redesign E4)
+    // plain names only in the visible text, codes stay on level 3 (redesign E4); data-key attributes are not shown
+    expect(html.replace(/<[^>]+>/g, " ")).not.toMatch(/\bSW\b/);
   });
 });
 

@@ -76,7 +76,7 @@ function changes(p) {
 // the map view "Passt das Ziel?" is switched off (prompt 25): the profile explains the feasibility on its own
 const FIT_EXPLAIN = "Gezählt sind Gehwege, Radweg, Fahrbahn, Bäume und Parken des Ziels nebeneinander, an der engsten Stelle der Straße.";
 
-function fitStatement(p) {
+export function fitStatement(p) {
   const pr = p.cycling?.profile;
   if (pr?.fit_text) {
     return { text: `${cap(pr.fit_text)}: ${num(pr.required_m, 1)} m nötig, ${num(pr.available_m, 1)} m vorhanden.`, drawing: true };

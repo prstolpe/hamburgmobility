@@ -30,3 +30,6 @@ docs/*/screenshots/alle/
 # Logo source images (not committed; exports are in web/src/brand/)
 assets/brand/*.jpg
 assets/brand/*.JPG
+
+# Screenshots of prompt 28 not referenced by the report
+docs/map_interaction/img/alle/

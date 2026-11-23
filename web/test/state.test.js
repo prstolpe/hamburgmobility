@@ -16,12 +16,12 @@ describe("themes and views", () => {
 
   it("round-trips theme, view and the other fields", () => {
     const s = { ...DEFAULTS, page: "karte", theme: "abweichung", view: "prio", layer: "prio", overlays: ["acc"], cats: ["GOW30"],
-      dts: ["D1"], prmin: 1, bz: "Altona", seg: "seg_00ab", jct: null, table: false, map: { zoom: 14, lat: 53.57, lon: 9.95 } };
+      dts: ["D1"], prmin: 1, bz: "Altona", seg: "seg_00ab", jct: null, table: false, map: { zoom: 14, lat: 53.57, lon: 9.95, pitch: 0, bearing: 0 } };
     expect(parseHash(toHash(s))).toEqual(s);
   });
 
   it("leaves the default view of a theme out of the URL", () => {
-    expect(toHash({ ...DEFAULTS, theme: "knoten", view: "ziel", layer: "jct" })).toBe("#karte?theme=knoten");
+    expect(toHash({ ...DEFAULTS, theme: "knoten", view: "ziel", layer: "jct" })).toBe("#karte?v=2&theme=knoten"); // URL scheme v2 (prompt 28)
   });
 
   it("ignores unknown themes and views", () => {
@@ -53,7 +53,7 @@ describe("disabled views", () => {
       const s = parseHash(`#karte?theme=${t}&view=${v}`);
       expect([s.theme, s.view], `${t}/${v}`).toEqual([t, viewsOf(t)[0][0]]);
     }
-    expect(toHash(parseHash("#karte?theme=platz&view=ziel"))).toBe("#karte?theme=platz");
+    expect(toHash(parseHash("#karte?theme=platz&view=ziel"))).toBe("#karte?v=2&theme=platz");
     expect(parseHash("#karte?theme=platz").layer).toBe("lanes");
   });
 });
@@ -91,7 +91,7 @@ describe("old links are rewritten", () => {
   it("keeps cat, dt, pr, bz, seg, jct and map", () => {
     const s = parseHash("#karte?layer=disc&cat=GOW30&dt=D1&pr=2&bz=Altona&seg=seg_0a&map=14/53.5/9.9");
     expect([s.cats, s.dts, s.prmin, s.bz, s.seg]).toEqual([["GOW30"], ["D1"], 2, "Altona", "seg_0a"]);
-    expect(s.map).toEqual({ zoom: 14, lat: 53.5, lon: 9.9 });
+    expect(s.map).toEqual({ zoom: 14, lat: 53.5, lon: 9.9, pitch: 0, bearing: 0 });
     expect(parseHash("#karte?layer=jct&jct=123").jct).toBe("123");
   });
 
@@ -141,7 +141,7 @@ describe("special place parameter", () => {
   it("round-trips ?place= and keeps other parameters", () => {
     const s = parseHash("#karte?place=schanze_verkehrsberuhigt&seg=seg_00ab");
     expect([s.place, s.seg]).toEqual(["schanze_verkehrsberuhigt", "seg_00ab"]);
-    expect(toHash(s)).toBe("#karte?seg=seg_00ab&place=schanze_verkehrsberuhigt");
+    expect(toHash(s)).toBe("#karte?v=2&seg=seg_00ab&place=schanze_verkehrsberuhigt");
   });
 
   it("ignores invalid place ids and has no place by default", () => {

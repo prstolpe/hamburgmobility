@@ -208,3 +208,15 @@ lädt am Smartphone schneller. Wer direkt zur Karte will, hat die Suche und den 
   unten). Im Prototyp liegt der Abschnitt teils hinter dem Blatt.
 - **Zeichnung „Querschnitt heute“:** Ein maßstäbliches Ist-Profil gibt es in den Daten nicht. Der Review-Prototyp hat
   es mit angenommenen Breiten gezeichnet. Hier wird nur das Ziel gezeichnet, mit „nötig/vorhanden“.
+
+## Nachtrag Prompt 28 (22.11.2026): Karteninteraktion
+
+- **Zusatzebenen mit eigener Farbe:** Buslinien `#997700` (dunkles Ocker, 4,2:1 auf Weiß), Unfälle `#882255` (Weinrot,
+  8,7:1, als halbtransparentes Band). Schulen und Kitas als weißer Ring mit Ink-Rand statt schwarzem Punkt (der
+  schwarze Punkt bleibt die Kreuzung). Je Farbe weiter genau eine Bedeutung (Test `web/test/design.test.js`).
+  Ocker (Bus) und Orange (Handlungsbedarf) liegen für Menschen mit Rot-Grün-Schwäche nah beieinander; sie
+  unterscheiden sich zusätzlich durch Lage (Bus neben der Straßenlinie) und Form (dünne Begleitlinie).
+- **Keine Rundungen bleibt:** runde Ecken wurden als Ausnahme getestet (`?vorschau=…&ecken=rund`) und verworfen.
+- **Karten-Panel links (Variante C):** Thema und Ansicht mit ihrer Legende oben, darunter jede Ebene als Schalter,
+  eingeschaltet klappt ihre Legende darunter auf. Mobil ein Bottom Sheet als Rasterzeile unter der Karte.
+- **Kompakter Kopf mobil auf der Kartenseite:** Logo, Suche, „Menü“ in einer Zeile.

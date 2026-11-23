@@ -14,11 +14,15 @@ export const NEED = "#B35900";
 export const NONE = "#8a8a8a"; // "fits / no need / other ways": thin and grey, not green
 export const INK = "#111111";
 export const CYCLING = "#007A6E";
+export const BUS = "#997700";
+export const CRASH = "#882255";
 export const COLOR_CONCEPTS = {
   speed: Object.values(SPEED),
   need: [NEED],
   cycling: [CYCLING],
-  neutral: [INK, NONE, "#4a4a4a"],
+  neutral: [INK, NONE],
+  bus: [BUS],
+  crash: [CRASH],
   unknown: [UNKNOWN],
 };
 
@@ -61,7 +65,10 @@ export const WIDTH_STYLE = {
   wide: { color: INK, width: 5, dash: null },
 };
 
-export const OVERLAY_COLORS = { bus: "#4a4a4a", cyc: CYCLING, fac: INK, acc: INK };
+// Prompt 28 (decision 22.11.2026): bus and crashes get their own colours instead of grey/ink. Bus: dark ochre (Paul Tol
+// high-contrast yellow, darkened to 4.2:1 on white); crashes: wine (Tol muted, 8.7:1), drawn as a translucent band.
+// Schools/Kitas: a ring (white with ink edge), so they are no longer the same filled dot as the junctions.
+export const OVERLAY_COLORS = { bus: BUS, cyc: CYCLING, fac: INK, acc: CRASH };
 
 // --- cycling layers: one colour, hierarchy by width, type by dash -----------------------------
 

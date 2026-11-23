@@ -1,13 +1,14 @@
 import "./style.css";
 import { dataHtml } from "./datapage.js";
 import { bindDistrictPage, districtHtml, districtListHtml } from "./districts.js";
-import { isCyclingLayer, LAYER_INFO, legendHtml, OVERLAY_INFO, placeLegendHtml, placeOf } from "./layers.js";
+import { placeOf } from "./layers.js";
+import { copyLink, createMapPanel } from "./map_panel.js";
 import { chapterHtml, referenceHtml, referenceListHtml, resolveRule, summaryHtml } from "./method.js";
 import { imprintHtml } from "./pages.js";
 import { placesHtml } from "./places.js";
 import { junctionHtml, segmentHtml } from "./profile.js";
 import { setupSearch } from "./search.js";
-import { parseHash, THEMES, toHash, viewsOf, withView } from "./state.js";
+import { DEFAULTS, parseHash, toHash, withView } from "./state.js";
 import { renderTable } from "./table.js";
 import { esc } from "./util.js";
 
@@ -19,7 +20,9 @@ const INTRO_KEY = "sfp-intro-seen";
 const mobile = () => matchMedia("(max-width: 760px)").matches;
 let state = parseHash(location.hash);
 let meta, mapView, table, tableBz, lastFocus;
+let panel = null; // map panel (prompt 28)
 const idToStreet = new Map();
+const junctionAt = new Map(); // node id -> [lon, lat] (search_junctions.json)
 
 async function json(url) {
   const r = await fetch(url);
@@ -39,100 +42,20 @@ function setState(patch, { push = false } = {}) {
   render();
 }
 
-// --- map controls: themes above the map, legend and further views next to it ------------------
+// --- map panel (prompt 28): theme, legend, layers, filters on the left; bottom sheet on phones ------------------
 
-function themesHtml() {
-  const views = viewsOf(state.theme).filter(([, v]) => !v.level);
-  return `${Object.entries(THEMES).map(([k, t]) => `<button type="button" data-theme="${k}" aria-pressed="${k === state.theme}">${esc(t.title)}</button>`).join("")}
-    ${views.length > 1 ? `<span class="views" role="group" aria-label="Ansicht"><span class="views-label">Ansicht:</span>${views.map(([k, v]) =>
-      `<button type="button" data-view="${k}" aria-pressed="${k === state.view}">${esc(v.label)}</button>`).join("")}</span>` : ""}`;
-}
-
-/** Special places (prompts/26): one switch per place, like the overlays. */
-function placesControlHtml() {
-  const sp = meta.special_places;
-  if (!sp?.places?.length) return "";
-  const items = sp.places.map((p) => `<label class="opt">
-    <input type="checkbox" name="place" value="${esc(p.id)}" ${state.place === p.id ? "checked" : ""}> <span>${esc(p.title)}<br>
-    <span class="muted t-small">(${esc(p.kind_plain)}, Stand ${esc(new Date(p.status_date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }))})</span></span></label>`).join("");
-  return `<fieldset class="places"><legend>${esc(sp.texts.overlay)}</legend>${items}
-    <p class="t-small"><a href="#orte">Was sind besondere Orte?</a></p></fieldset>`;
-}
-
-function controlsHtml() {
-  const more = Object.entries(THEMES).flatMap(([t, th]) => viewsOf(t).filter(([, v]) => v.level === 3)
-    .map(([v, x]) => `<li><button type="button" class="link" data-theme-view="${t}:${v}" aria-pressed="${state.theme === t && state.view === v}">${esc(th.title)}: ${esc(x.label)}</button></li>`)).join("");
-  const overlays = Object.entries(OVERLAY_INFO).map(([k, v]) => `<label class="opt">
-    <input type="checkbox" name="ov" value="${k}" ${state.overlays.includes(k) ? "checked" : ""}> ${esc(v)}</label>`).join("");
-  const cats = Object.entries(meta.categories).filter(([k]) => !meta.categories_present || meta.categories_present.includes(k)).map(([k, c]) => `<label class="opt">
-    <input type="checkbox" name="cat" value="${k}" ${state.cats.includes(k) ? "checked" : ""}> ${esc(c.label)}</label>`).join("");
-  const dtLabel = (k) => (k === "keine" ? "keine Abweichung" : meta.glossary?.terms?.[k]?.plain ?? meta.discrepancy_types[k]);
-  const dts = [...Object.keys(meta.discrepancy_types), "keine"].map((k) => `<label class="opt">
-    <input type="checkbox" name="dt" value="${k}" ${state.dts.includes(k) ? "checked" : ""}> ${esc(dtLabel(k))}</label>`).join("");
-  return `
-    <h2 class="legend-title">Was die Farben bedeuten</h2>
-    <p id="layer-text">${esc(LAYER_INFO[state.layer].text)}</p>
-    <div id="legend" aria-live="polite">${legendHtml(state.layer, meta)}${placeLegendHtml(state, meta)}</div>
-    <label for="f-bz" class="bz-label">Bezirk</label>
-    <select id="f-bz" name="bz"><option value="">ganz Hamburg</option>${meta.districts.map((b) =>
-      `<option value="${esc(b)}" ${state.bz === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>
-    ${placesControlHtml()}
-    <details class="level l3" ${state.cats.length || state.dts.length || state.prmin || state.overlays.length || THEMES[state.theme].views[state.view].level ? "open" : ""}>
-      <summary>Mehr Ansichten und Filter</summary>
-      <h3>Weitere Ansichten</h3><ul class="plain">${more}</ul>
-      <fieldset><legend>Zusätzlich anzeigen</legend>${overlays}</fieldset>
-      ${isCyclingLayer(state.layer) ? '<p class="muted">Bei den Radverkehrs-Ansichten gilt nur der Bezirk.</p>' : ""}
-      <fieldset><legend>Aufgabe der Straße</legend>${cats}</fieldset>
-      <fieldset><legend>Art der Abweichung</legend>${dts}</fieldset>
-      <label for="f-pr">Dringlichkeit mindestens: <output id="f-pr-out">${state.prmin.toLocaleString("de-DE")}</output></label>
-      <input id="f-pr" name="pr" type="range" min="0" max="3" step="0.25" value="${state.prmin}">
-      <button type="button" id="f-reset" class="secondary">Filter zurücksetzen</button>
-    </details>`;
-}
-
-function bindControls() {
-  $("#themes").onclick = (ev) => {
-    const t = ev.target.closest("[data-theme]");
-    const v = ev.target.closest("[data-view]");
-    if (t) setState({ theme: t.dataset.theme, view: null });
-    else if (v) setState({ view: v.dataset.view });
-  };
-  const root = $("#controls-body");
-  root.onchange = (ev) => {
-    const t = ev.target;
-    const checked = (name) => [...root.querySelectorAll(`input[name="${name}"]:checked`)].map((i) => i.value);
-    if (t.name === "ov") setState({ overlays: checked("ov") });
-    else if (t.name === "cat") setState({ cats: checked("cat") });
-    else if (t.name === "dt") setState({ dts: checked("dt") });
-    else if (t.name === "bz") setState({ bz: t.value });
-    else if (t.name === "place") showPlace(t.checked ? t.value : null);
-    else if (t.name === "pr") setState({ prmin: Number(t.value) });
-  };
-  root.oninput = (ev) => {
-    if (ev.target.name === "pr") $("#f-pr-out").textContent = Number(ev.target.value).toLocaleString("de-DE");
-  };
-  root.onclick = (ev) => {
-    if (ev.target.id === "f-reset") setState({ cats: [], dts: [], prmin: 0, bz: "", overlays: [] });
-    const tv = ev.target.closest("[data-theme-view]");
-    if (tv) { const [theme, view] = tv.dataset.themeView.split(":"); setState({ theme, view }); }
-  };
+/** Link to one segment or junction (version 2 URL, no camera: it zooms to the item). */
+function shareUrl({ kind, id }) {
+  return `${location.origin}${location.pathname}${toHash({ ...DEFAULTS, page: "karte", ...(kind === "jct" ? { jct: id } : { seg: id }) })}`;
 }
 
 /** Switch a special place on (and zoom to it) or off. */
 function showPlace(id, { push = false } = {}) {
+  const fromOtherPage = state.page !== "karte";
   setState({ page: "karte", place: id }, { push });
   const p = placeOf(state, meta);
   if (p?.bbox) setTimeout(() => mapView?.fitBbox(p.bbox), 50);
-}
-
-function renderControls() {
-  const focusName = document.activeElement?.name;
-  const focusValue = document.activeElement?.value;
-  const focusTheme = document.activeElement?.dataset?.theme ?? document.activeElement?.dataset?.view;
-  $("#themes").innerHTML = themesHtml();
-  $("#controls-body").innerHTML = controlsHtml();
-  if (focusTheme) $(`[data-theme="${focusTheme}"], [data-view="${focusTheme}"]`)?.focus();
-  else if (focusName) $("#controls-body").querySelector(`[name="${focusName}"][value="${CSS.escape(focusValue ?? "")}"], [name="${focusName}"]`)?.focus();
+  if (fromOtherPage && id) setTimeout(() => $(`#map-chips [data-remove="place:${CSS.escape(id)}"]`)?.focus({ preventScroll: true }), 60);
 }
 
 // --- intro box on the first visit -----------------------------------------------------------
@@ -148,7 +71,8 @@ function renderIntro() {
   box.innerHTML = `<h2 id="intro-title">${esc(t.intro_title)}</h2><p>${esc(t.intro)}</p><p>${esc(t.intro_hint)}</p>
     <p><a href="#methode">${esc(t.intro_more)}</a></p><button type="button" id="intro-close">Verstanden</button>`;
   box.hidden = false;
-  $("#intro-close").onclick = () => { storage("set", INTRO_KEY, "1"); box.hidden = true; $("#search").focus(); };
+  // focus goes to the map panel, not to the search (on phones that would open the keyboard; walkthrough finding 12)
+  $("#intro-close").onclick = () => { storage("set", INTRO_KEY, "1"); box.hidden = true; $("#map-panel [data-theme][aria-checked='true']")?.focus(); };
 }
 
 // --- panel -----------------------------------------------------------------------------------
@@ -166,6 +90,7 @@ async function openPanel(id, kind = "seg") {
   panel.hidden = false;
   document.body.classList.add("panel-open");
   body.innerHTML = "<p>Lade Steckbrief …</p>";
+  $("#panel-copy-status").textContent = "";
   const opts = { level2Open: !mobile() };
   try {
     if (kind === "jct") {
@@ -183,13 +108,17 @@ async function openPanel(id, kind = "seg") {
   }
   panel.focus();
   mapView?.resize();
+  if (mobile()) mapView?.setBottomPadding(panel.offsetHeight); // keep the selection above the profile sheet
 }
 
 function closePanel() {
   $("#panel").hidden = true;
   document.body.classList.remove("panel-open");
+  mapView?.setBottomPadding(0);
   mapView?.resize();
-  lastFocus?.focus?.();
+  // on phones not back into the search (it would open the keyboard)
+  const back = lastFocus && document.contains(lastFocus) && !(mobile() && lastFocus.id === "search") ? lastFocus : $("#map-panel [data-theme][aria-checked='true']");
+  back?.focus?.({ preventScroll: true });
 }
 
 // A sketch in the panel (cross section, junction) opens enlarged in a modal dialog; focus returns to its button.
@@ -309,22 +238,27 @@ async function render() {
   const chapter = meta.method?.chapters?.find((c) => c.key === state.sub);
   const subTitle = state.page !== "methode" ? null : state.sub === "regeln" ? "Alle Regeln" : chapter?.title;
   document.title = `${meta.site_title}${titles[state.page] ? ` – ${subTitle ? `${titles.methode}: ${subTitle}` : titles[state.page]}` : ""} · ${ORG_NAME}`;
+  document.body.classList.toggle("on-karte", state.page === "karte");
+  setHeaderHeight();
   if (state.page === "karte") {
-    renderControls();
     renderIntro();
     if (!mapView) {
       const { createMap } = await import("./map.js");
       mapView = createMap($("#map"), meta, state, {
-        onSelect: (id) => setState({ seg: id, jct: null }),
-        onSelectJunction: (id) => setState({ jct: id, seg: null }),
+        onSelect: (id) => panel.onFeature("seg", id) || setState({ seg: id, jct: null }, { push: true }),
+        onSelectJunction: (id) => panel.onFeature("jct", id) || setState({ jct: id, seg: null }, { push: true }),
         onMove: (m) => { state = { ...state, map: m }; writeUrl(); },
       });
       const p = placeOf(state, meta);
-      if (p?.bbox && !state.map) mapView.fitBbox(p.bbox);  // ?place= without a map position: zoom to the place
+      // a link without a camera (e.g. from "Link kopieren"): zoom to the selection, else to the place
+      if (!state.map && state.jct && junctionAt.has(state.jct)) mapView.flyTo(junctionAt.get(state.jct), 17);
+      else if (!state.map && state.seg && idToStreet.get(state.seg)) mapView.fitBbox(idToStreet.get(state.seg).bbox);
+      else if (p?.bbox && !state.map) mapView.fitBbox(p.bbox);
     } else {
       mapView.resize();
     }
     mapView.update(state);
+    panel.render();
   }
   if (state.page === "bezirke") await renderDistricts();
   if (state.page === "methode") await renderMethod();
@@ -342,13 +276,19 @@ async function render() {
   if (!want && !$("#panel").hidden) { $("#panel").dataset.id = ""; closePanel(); }
 }
 
+// the map page fills the viewport below the header (style.css --hdr); the compact phone header changes its height
+function setHeaderHeight() {
+  document.documentElement.style.setProperty("--hdr", `${document.querySelector("header.site").offsetHeight}px`);
+}
+
 async function init() {
+  addEventListener("resize", () => { setHeaderHeight(); });
   meta = await json("meta.json");
   const streets = await json("search.json");
   const junctions = meta.overview ? await json("search_junctions.json").catch(() => []) : [];
   for (const s of streets) for (const id of s.ids) idToStreet.set(id, s);
+  for (const j of junctions) junctionAt.set(String(j.id), [j.lon, j.lat]);
   $("#foot-version").textContent = `Version ${meta.version} · Datenstand ${new Date(meta.data_date).toLocaleDateString("de-DE")}`;
-  bindControls();
   if (!meta.special_places?.places?.length) document.querySelector('nav.main a[href="#orte"]')?.remove();  // older data
   const entries = [...streets.map((s) => ({ ...s, kind: "seg" })), ...junctions.map((j) => ({ ...j, kind: "jct" }))];
   setupSearch($("#search"), $("#search-list"), entries, (s) => {
@@ -367,12 +307,27 @@ async function init() {
     if (s) setTimeout(() => mapView?.fitBbox(s.bbox), 50);
   };
   initSketchDialog();
-  document.addEventListener("keydown", (ev) => {
-    if (ev.key === "Escape" && !$("#panel").hidden && !$("#sketch-dialog").open) setState({ seg: null, jct: null });
+  if (mobile()) $("#search").placeholder = "Suchen …"; // the long placeholder is cut off in the compact header
+  panel = createMapPanel({
+    root: $("#map-panel"), chipsRoot: $("#map-chips"), tipRoot: $("#map-tip"), meta, getState: () => state, setState,
+    getMap: () => mapView?.map, showPlace, shareUrl, junctionNames: new Map(junctions.map((j) => [String(j.id), j.name])),
   });
-  for (const a of document.querySelectorAll("nav.main a, a.home, .site-foot a[href^='#']")) {
+  $("#panel-copy").onclick = () => copyLink(shareUrl(state.jct ? { kind: "jct", id: state.jct } : { kind: "seg", id: state.seg }), $("#panel-copy-status"));
+  $("#menu-btn").onclick = () => {
+    const open = $("header.site").classList.toggle("menu-open");
+    $("#menu-btn").setAttribute("aria-expanded", String(open));
+  };
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Escape" || $("#sketch-dialog").open) return;
+    if ($("header.site").classList.contains("menu-open")) { $("#menu-btn").click(); $("#menu-btn").focus(); return; }
+    if (!$("#panel").hidden) setState({ seg: null, jct: null });
+    else if (state.page === "karte") panel.onEscape();
+  });
+  for (const a of document.querySelectorAll("nav.main a[href^='#'], a.home, .site-foot a[href^='#']")) {
     a.addEventListener("click", (ev) => {
       ev.preventDefault();
+      $("header.site").classList.remove("menu-open");
+      $("#menu-btn").setAttribute("aria-expanded", "false");
       const page = a.getAttribute("href").slice(1);
       setState({ page, sub: null, rule: null, ...(page === "bezirke" ? { table: false } : {}) }, { push: true });
       if (a.dataset.anchor) setTimeout(() => document.getElementById(a.dataset.anchor)?.scrollIntoView(), 100);
