@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview --port 4173 --strictPort",
     "test": "vitest run",
-    "a11y": "playwright test && node scripts/a11y-report.mjs"
+    "a11y": "playwright test && node scripts/a11y-report.mjs",
+    "render-card": "node tools/render_card.mjs"
   },
   "dependencies": {
     "@protomaps/basemaps": "5.7.2",

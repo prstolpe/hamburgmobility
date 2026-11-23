@@ -293,3 +293,10 @@ Fachlich:
 - [ ] Baumabstand 12 m für „neu möglich“ und Lageunsicherheit ±1,5 m: fachlich prüfen.
 - [ ] Profilseiten ↔ Straßenseiten: Das Soll-Profil legt einseitige Elemente nicht auf eine bestimmte Straßenseite. Die Rechnung nimmt deshalb beide Zuordnungen als Spanne.
 
+
+## Karteninteraktion (prompts/28, Phase 1)
+- [ ] Adresssuche (Hausnummern): nicht in Prompt 28 (Entscheidung prstolpe 2026-11-22); braucht einen Adressdatensatz in sources.yaml. Späterer Auftrag.
+- [ ] „Warum?“-Text im Steckbrief kann der Überschrift widersprechen („Darum Wohnstraße“ bei einer Hauptstraße nach Abgleich mit den Nachbarn, z. B. Beim Schlump); gefunden im Walkthrough (docs/map_interaction/02_walkthrough.md). Text oder Logik? – prstolpe
+- [ ] Steckbrief: „Parkplätze: keine Daten. (keine Daten)“ doppelt – Textbaustein prüfen.
+- [x] Farbe der Busebene: eigene Farbe `#997700`, Unfälle ebenfalls eigene Farbe `#882255` (Entscheidung prstolpe 2026-11-22, docs/map_interaction/decisions.md).
+- [x] Runde Ecken: nein, Radius 0 bleibt (Entscheidung prstolpe 2026-11-22 nach Test in der Vorschau).

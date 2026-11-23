@@ -4,7 +4,7 @@ import * as maplibregl from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
-import { beforeIdFor, firstSymbolId, sfpLayers, tuneLabels } from "./layers.js";
+import { beforeIdFor, firstSymbolId, LAYER_INFO, sfpLayers, tuneLabels } from "./layers.js";
 import { CASING, JUNCTION_REBUILD, JUNCTION_STYLE, RURAL_FILL, SHAPES } from "./palette.js";
 import { dataUrl } from "./util.js";
 
@@ -15,6 +15,15 @@ maplibregl.addProtocol("pmtiles", protocol.tile);
 const INTERACTIVE_PREFIX = "main-";
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ICON_PX = 40; // icon bitmap size (pixelRatio 2 -> 20 px on the map)
+// German labels of the MapLibre controls (walkthrough: they were English)
+const LOCALE = {
+  "NavigationControl.ZoomIn": "Hineinzoomen", "NavigationControl.ZoomOut": "Herauszoomen",
+  "NavigationControl.ResetBearing": "Karte nach Norden drehen und Neigung zurücksetzen",
+  "ScaleControl.Meters": "m", "ScaleControl.Kilometers": "km",
+  "AttributionControl.ToggleAttribution": "Quellen ein- und ausblenden", "Map.Title": "Karte",
+};
+const canvasLabel = (layer) => `Karte: ${LAYER_INFO[layer]?.title ?? "Straßenfunktionsplan"}. Mit Pfeiltasten verschieben, Plus und Minus zoomen. `
+  + "Die Straßen im Kartenausschnitt gibt es als Liste im Bereich „Karte einstellen“.";
 
 /** Junction symbols as map images, drawn from the same shapes as the legend (palette.js SHAPES). */
 function addJunctionIcons(map) {
@@ -71,7 +80,11 @@ function style(meta, tilesBase) {
   };
 }
 
-export function createMap(container, meta, state, { onSelect, onSelectJunction, onMove }) {
+/**
+ * @param opts.static true for the image renderer (tools/render_card): no interaction, no controls, no fading, drawing
+ *   buffer kept so a screenshot is complete; the card prints the sources itself.
+ */
+export function createMap(container, meta, state, { onSelect, onSelectJunction, onMove }, opts = {}) {
   const tilesBase = meta.tiles_base_url || import.meta.env.VITE_TILES_BASE_URL || null;
   const [w, s, e, n] = meta.bbox;
   const map = new maplibregl.Map({
@@ -79,17 +92,27 @@ export function createMap(container, meta, state, { onSelect, onSelectJunction, 
     bounds: state.map ? undefined : [[w, s], [e, n]],
     center: state.map ? [state.map.lon, state.map.lat] : undefined,
     zoom: state.map ? state.map.zoom : undefined,
-    minZoom: 10, maxZoom: 18, maxBounds: [[w - 0.15, s - 0.08], [e + 0.15, n + 0.08]],
-    attributionControl: { compact: false }, cooperativeGestures: false,
+    pitch: state.map?.pitch ?? 0, bearing: state.map?.bearing ?? 0,
+    minZoom: 10, maxZoom: 18, maxPitch: 60, maxBounds: [[w - 0.15, s - 0.08], [e + 0.15, n + 0.08]],
+    attributionControl: opts.static ? false : { compact: matchMedia("(max-width: 760px)").matches }, cooperativeGestures: false, locale: LOCALE,
+    ...(opts.static ? { interactive: false, fadeDuration: 0, canvasContextAttributes: { preserveDrawingBuffer: true, antialias: true } } : {}),
   });
-  map.addControl(new maplibregl.NavigationControl({ visualizePitch: false, showCompass: false }), "top-right");
+  // the compass appears only when the map is turned or tilted (pitch and bearing are in the URL, prompt 28)
+  if (!opts.static) map.addControl(new maplibregl.NavigationControl({ visualizePitch: true, showCompass: true }), "top-right");
   map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-left");
-  map.getCanvas().setAttribute("aria-label",
-    "Karte der Soll-Kategorien. Mit Pfeiltasten verschieben, Plus und Minus zoomen. Alle Inhalte auch in der Tabellenansicht.");
+  const compass = () => map.getContainer().querySelector(".maplibregl-ctrl-compass");
+  const showCompass = () => { const c = compass(); if (c) c.hidden = Math.abs(map.getBearing()) < 0.5 && map.getPitch() < 0.5; };
+  map.on("load", showCompass);
+  // phones: compact source credit starts closed (MapLibre opens it until the first interaction; it covered the map)
+  map.on("load", () => map.getContainer().querySelector(".maplibregl-ctrl-attrib.maplibregl-compact-show")?.classList.remove("maplibregl-compact-show"));
+  map.on("rotate", showCompass);
+  map.on("pitch", showCompass);
 
   let current = [];
+  let bottomPad = 0; // px of map covered from below (profile sheet on phones)
   let labelId;
   function apply(st) {
+    map.getCanvas().setAttribute("aria-label", canvasLabel(st.layer));
     for (const id of current) if (map.getLayer(id)) map.removeLayer(id);
     const ls = sfpLayers(st, meta);
     ensureSources(map, meta, ls, tilesBase);
@@ -122,14 +145,26 @@ export function createMap(container, meta, state, { onSelect, onSelectJunction, 
   });
   map.on("moveend", () => {
     const c = map.getCenter();
-    onMove({ zoom: map.getZoom(), lat: c.lat, lon: c.lng });
+    onMove({ zoom: map.getZoom(), lat: c.lat, lon: c.lng, pitch: map.getPitch(), bearing: map.getBearing() });
   });
 
   return {
     map,
     update(st) { if (map.isStyleLoaded()) apply(st); else map.once("load", () => apply(st)); },
-    fitBbox(b) { map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 17, ...(reducedMotion() ? { duration: 0 } : {}) }); },
-    flyTo([lon, lat], zoom = 16) { map.flyTo({ center: [lon, lat], zoom, duration: reducedMotion() ? 0 : 800 }); },
+    fitBbox(b, padding = 60) {
+      map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: { top: padding, left: padding, right: padding, bottom: padding + bottomPad },
+        maxZoom: 17, ...(reducedMotion() || opts.static ? { duration: 0 } : {}) });
+    },
+    flyTo([lon, lat], zoom = 16) {
+      map.flyTo({ center: [lon, lat], zoom, padding: { top: 0, left: 0, right: 0, bottom: bottomPad }, duration: reducedMotion() || opts.static ? 0 : 800 });
+    },
     resize() { map.resize(); },
+    /** Keep the map centre above a sheet that covers the lower part of the map (phones, open profile). Waits for a
+     * running camera move (search: fitBbox/flyTo) instead of cancelling it; later moves include the padding. */
+    setBottomPadding(px) {
+      bottomPad = px;
+      const go = () => map.easeTo({ padding: { top: 0, right: 0, left: 0, bottom: px }, duration: reducedMotion() ? 0 : 300 });
+      if (map.isMoving()) map.once("moveend", go); else go();
+    },
   };
 }

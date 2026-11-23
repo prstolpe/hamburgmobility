@@ -27,12 +27,14 @@
         srcset="/src/brand/hmr-header.png 1x, /src/brand/hmr-header@2x.png 2x" width="99" height="28"
         alt="HMR – Hamburg Mobility Revolution"><span><span class="long">Straßenfunktionsplan Hamburg</span><span
         class="short">Straßenfunktionsplan</span> <span class="muted">– Entwurf</span></span></a></p>
-    <nav class="main" aria-label="Hauptnavigation">
+    <button type="button" id="menu-btn" class="menu-btn" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="main" id="main-nav" aria-label="Hauptnavigation">
       <a href="#karte">Karte</a>
       <a href="#bezirke">Bezirke</a>
       <a href="#orte">Orte</a>
       <a href="#methode">Methode</a>
       <a href="#daten">Daten</a>
+      <a class="bmc nav-bmc" href="https://www.buymeacoffee.com/raphael_s" target="_blank" rel="noopener">Spenden<span class="visually-hidden"> (öffnet buymeacoffee.com in neuem Tab)</span></a>
     </nav>
     <div class="search-row">
       <div class="search" role="search">
@@ -52,9 +54,10 @@
   <main id="main" tabindex="-1">
     <section data-page="karte" class="map-page" aria-labelledby="h-karte">
       <h1 id="h-karte" class="visually-hidden">Karte</h1>
-      <div id="themes" class="themes" role="toolbar" aria-label="Thema der Karte"></div>
-      <aside id="controls-body" class="controls" aria-label="Legende und weitere Ansichten" tabindex="0"></aside>
+      <section id="map-panel" class="map-panel" aria-label="Karte einstellen: Thema, Legende, Ebenen und Filter"></section>
       <div id="map" class="map"></div>
+      <div id="map-chips" class="map-chips" role="group" aria-label="Eingeschaltet"></div>
+      <div id="map-tip" class="map-tip" role="tooltip" hidden></div>
       <aside id="intro" class="intro" hidden aria-labelledby="intro-title"></aside>
     </section>
     <section data-page="bezirke" class="page wide" hidden aria-label="Bezirke"><div id="bezirke-root"></div><div id="table-root"></div></section>
@@ -66,13 +69,15 @@
 
   <aside id="panel" class="panel" hidden tabindex="-1" aria-labelledby="panel-title">
     <div class="panel-bar">
+      <button type="button" id="panel-copy" class="secondary">Link kopieren</button>
       <button type="button" id="panel-show" class="secondary" hidden>Auf der Karte zeigen</button>
-      <button type="button" id="panel-close" aria-label="Steckbrief schließen">Schließen ✕</button>
+      <button type="button" id="panel-close" aria-label="Steckbrief schließen"><span class="close-word">Schließen </span><span aria-hidden="true">✕</span></button>
     </div>
+    <p id="panel-copy-status" class="t-small muted panel-status" role="status"></p>
     <div id="panel-body"></div>
   </aside>
   <dialog id="sketch-dialog" class="sketch-dialog" aria-label="Skizze vergrößert">
-    <div class="panel-bar"><button type="button" id="sketch-close" aria-label="Vergrößerte Skizze schließen">Schließen ✕</button></div>
+    <div class="panel-bar"><button type="button" id="sketch-close" aria-label="Vergrößerte Skizze schließen">Schließen <span aria-hidden="true">✕</span></button></div>
     <div class="sketch-dialog-body"></div>
   </dialog>
   <footer class="site-foot">

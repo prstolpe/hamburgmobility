@@ -84,4 +84,6 @@ Ganz Hamburg: alle sieben Bezirke ohne Neuwerk/Scharhörn; 17 ländliche Stadtte
 make fetch | make network | make conflate | make features | make crosssection | make classify |
 make coherence | make discrepancy | make export | make web | make validate | make test
 make rerun FROM=<Stufe> – Neurechnung ab einer Straßenstufe bis zum Export (validate parallel zur Radnetzkette).
+tools/render_card seg|node|place <id> [--format og,portrait,a4] – Karte als Bild (Prompt 28; nach `make web`, Ausgabe data/cards).
+URL-Schema des Kartenzustands: docs/url_scheme.md (Version 2; alte Links werden umgeschrieben).
 Rechenkerne: SFP_WORKERS (Standard alle, 1 = seriell); Cache für den Bus-Abgleich in data/interim/cache.

@@ -918,3 +918,16 @@ Auslöser seit 0.18.0 (Schule/Kita ≤ access_radius 50 m, Breite nur über den 
   „passt“, 99 „passt nicht“ → „passt nach Abbau“), keiner schlechter; V-INV-05 533 → 388 Abschnitte (81,6 → 65,8 km);
   Knotentypen unverändert.
 
+
+## Website: Karteninteraktion und Legenden – 2026-11-22 (Prompt 28, nur Darstellung, keine Regelversion)
+- Regelwerk, `segment_id`/`node_id`, Overrides und Datenexporte unverändert.
+- Legende aus einem Register (`web/src/legend_registry.js`): nur Eingeschaltetes, nicht Sichtbares gedimmt, Eintrag
+  antippen hebt hervor, „?“ erklärt, jede Ansicht verlinkt ihr Methodenkapitel. Bus, Unfälle, Schulen/Kitas haben
+  jetzt Legendeneinträge.
+- Karten-Panel links (Variante C), Chips auf der Karte, Vorschau beim Überfahren/Antippen, Liste „Straßen im
+  Kartenausschnitt“, „Link kopieren“ im Steckbrief; mobil Bottom Sheet unter der Karte und kompakter Kopf.
+- Farben: Buslinien `#997700`, Unfälle `#882255`, Schulen/Kitas als Ring (docs/redesign/tokens.json, `overlay`).
+- URL-Schema Version 2 (docs/url_scheme.md): `v=2`, `layers`, `node`, `z/lat/lon/pitch/bearing`; alte Links
+  (`ov`, `jct`, `map`, `layer`, `place`) werden umgeschrieben und öffnen dieselbe Ansicht.
+- Bild-Renderer `tools/render_card` (Linkvorschau 1200 × 630, hochkant 1080 × 1350, A4-Einklinker 300 dpi),
+  lokal mit eigener Karte, deterministisch, mit Alternativtext.

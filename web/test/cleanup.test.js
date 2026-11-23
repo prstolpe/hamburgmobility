@@ -1,6 +1,12 @@
 // Prompt 25 (cleanup 2026-11): legend of "Abweichung" (variant a), labels above the data layers.
 import { describe, expect, it } from "vitest";
-import { beforeIdFor, firstSymbolId, groups, legendHtml, sfpLayers, tuneLabels } from "../src/layers.js";
+import { beforeIdFor, firstSymbolId, groups, sfpLayers, tuneLabels } from "../src/layers.js";
+import { legendFor } from "../src/legend_registry.js";
+import { layerLegendHtml } from "../src/map_panel.js";
+import { DEFAULTS as D0 } from "../src/state.js";
+
+const UI = { inView: null, highlight: null, openWhat: new Set() };
+const legendHtml = (layer, meta) => layerLegendHtml(legendFor({ ...D0, layer }, meta)[0], UI);
 import { DEFAULTS, withView } from "../src/state.js";
 
 const META = { categories: {}, discrepancy_types: { D1: "a", D2: "b", D3: "c" }, glossary: { terms: {} } };
@@ -12,7 +18,7 @@ describe("legend Abweichung (variant a)", () => {
     expect(html).toContain("passt bereits");
     expect(html).toContain("breiter = größere Abweichung");
     expect(html).toContain('href="#methode/abweichung"');
-    expect(html).toContain("Was heißt das?");
+    expect(html).toContain("Was heißt"); // prompt 28: "?" per entry
     // types differ by dash, not by colour alone
     const dashes = groups("disc", META).slice(0, 3).map((g) => JSON.stringify(g.dash));
     expect(new Set(dashes).size).toBe(3);
@@ -25,8 +31,8 @@ describe("legend Abweichung (variant a)", () => {
     expect(w).toContain(",2.5,");
   });
 
-  it("only the disc legend has the explanation link", () => {
-    expect(legendHtml("speed", META)).not.toContain("Was heißt das?");
+  it("every view links to its method chapter (prompt 28: not only Abweichung)", () => {
+    expect(legendHtml("speed", META)).toContain('href="#methode/aufgabe"');
   });
 });
 

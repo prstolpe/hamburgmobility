@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Image renderer for segments, junctions and special places (prompt 28). See web/tools/render_card.mjs for usage.
+set -euo pipefail
+exec node "$(dirname "$0")/../web/tools/render_card.mjs" "$@"

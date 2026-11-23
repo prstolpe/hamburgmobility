@@ -1,4 +1,7 @@
-// App state <-> URL hash, e.g. #karte?theme=rad&view=luecken&bz=Altona&seg=seg_x&map=14/53.57/9.95
+// App state <-> URL hash. URL scheme version 2 (prompt 28, docs/url_scheme.md), e.g.
+// #karte?v=2&theme=rad&view=amtlich&layers=bus&seg=seg_x&bz=Altona&z=14.00&lat=53.57000&lon=9.95000&pitch=40&bearing=-20
+// Version 1 names are still read and rewritten on load: ov → layers, jct → node, map=z/lat/lon → z, lat, lon.
+// Internal field names stay as before (overlays, jct, map) so the rest of the app is unchanged.
 // ?place=<id> switches on a special place (prompts/26, config/special_places.yaml) and zooms to it.
 // Redesign 2026-11 (package 2): five themes with views instead of 13 layers; each view maps to one map layer of
 // layers.js (state.layer is derived). Old links (?layer=…, #tabelle, #downloads, #quellen) are rewritten on load,
@@ -11,7 +14,8 @@ export const LAYERS = ["cat", "speed", "disc", "prio", "width", "feas", "hvs", .
 // sub pages of "methode": chapters (keys as in meta.method.chapters) and the rule reference; the news page
 // (#methode/neu) was removed in prompt 25, old links fall back to the summary
 export const METHOD_SUBS = ["aufgabe", "abweichung", "platz", "radnetz", "knoten", "baeume_parken", "sicherheit", "daten", "regeln"];
-export const OVERLAYS = ["bus", "cyc", "fac", "acc"];
+export const OVERLAYS = ["bus", "cyc", "fac", "acc"]; // canonical order of layers= (cyc: old links only)
+export const URL_VERSION = 2;
 
 // theme -> {title, views: {view: {label, layer, level, enabled}}}; level 3 views are offered under "Mehr Ansichten".
 // enabled: false switches a view off without deleting it (prompt 25): no button, no data, links fall back to the
@@ -45,7 +49,7 @@ const OLD_LAYER = Object.fromEntries(Object.entries(THEMES).flatMap(([t, th]) =>
 
 export const DEFAULTS = Object.freeze({
   page: "karte", theme: "aufgabe", view: "ziel", layer: "cat", overlays: [], cats: [], dts: [], prmin: 0, bz: "",
-  seg: null, jct: null, table: false, map: null, sub: null, rule: null, place: null,
+  seg: null, jct: null, table: false, map: null, sub: null, rule: null, place: null, // map: {zoom, lat, lon, pitch, bearing}
 });
 
 const list = (v, allowed) => (v ? v.split(",").filter((x) => !allowed || allowed.includes(x)) : []);
@@ -68,7 +72,7 @@ export function parseHash(hash) {
   if (pagePart === "radnetz") { state.page = "methode"; state.sub = "radnetz"; }  // old link
   else if (state.page === "methode" && METHOD_SUBS.includes(subPart)) state.sub = subPart;
   state.rule = /^[A-Za-z0-9-]+$/.test(p.get("regel") || "") ? p.get("regel") : null;
-  state.overlays = list(p.get("ov"), OVERLAYS);
+  state.overlays = OVERLAYS.filter((o) => list(p.get("layers") ?? p.get("ov"), OVERLAYS).includes(o)); // canonical order
   let theme = p.get("theme");
   let view = p.get("view");
   if (!THEMES[theme] && OLD_LAYER[p.get("layer")]) [theme, view] = OLD_LAYER[p.get("layer")];
@@ -84,31 +88,55 @@ export function parseHash(hash) {
   state.bz = p.get("bz") || "";
   state.table = state.page === "bezirke" && Boolean(state.bz) && (pagePart === "tabelle" || p.get("tabelle") === "1");
   state.seg = /^seg_[0-9a-f]+$/.test(p.get("seg") || "") ? p.get("seg") : null;
-  state.jct = /^[0-9]+$/.test(p.get("jct") || "") ? p.get("jct") : null;
+  const node = p.get("node") ?? p.get("jct");
+  state.jct = /^[0-9]+$/.test(node || "") ? node : null;
+  if (state.jct) state.seg = null; // at most one of seg and node; the junction wins (as before)
   state.place = /^[a-z0-9_]+$/.test(p.get("place") || "") ? p.get("place") : null;
-  const m = (p.get("map") || "").split("/").map(Number);
-  if (m.length === 3 && m.every(Number.isFinite)) state.map = { zoom: m[0], lat: m[1], lon: m[2] };
+  const num = (k) => (p.get(k) === null || p.get(k) === "" ? NaN : Number(p.get(k)));
+  const m = p.has("z") ? [num("z"), num("lat"), num("lon")] : (p.get("map") || "").split("/").map((x) => (x === "" ? NaN : Number(x)));
+  if (m.length === 3 && m.every(Number.isFinite)) {
+    const pitch = Number.isFinite(num("pitch")) ? Math.round(Math.min(Math.max(num("pitch"), 0), 60)) : 0;
+    const b = Number.isFinite(num("bearing")) ? Math.round(num("bearing")) : 0;
+    state.map = { zoom: m[0], lat: m[1], lon: m[2], pitch, bearing: ((((b + 180) % 360) + 360) % 360) - 180 };
+  }
   return state;
 }
 
 export function toHash(state) {
   const p = new URLSearchParams();
+  const karte = state.page === "karte";
   if (state.theme !== DEFAULTS.theme) p.set("theme", state.theme);
   if (THEMES[state.theme] && state.view !== firstView(state.theme)) p.set("view", state.view);
-  if (state.overlays.length) p.set("ov", state.overlays.join(","));
+  if (state.overlays.length) p.set("layers", OVERLAYS.filter((o) => state.overlays.includes(o)).join(","));
+  if (state.jct) p.set("node", state.jct);
+  else if (state.seg) p.set("seg", state.seg);
+  if (state.place) p.set("place", state.place);
+  if (state.bz) p.set("bz", state.bz);
   if (state.cats.length) p.set("cat", state.cats.join(","));
   if (state.dts.length) p.set("dt", state.dts.join(","));
   if (state.prmin > 0) p.set("pr", String(state.prmin));
-  if (state.bz) p.set("bz", state.bz);
   if (state.table) p.set("tabelle", "1");
-  if (state.seg) p.set("seg", state.seg);
-  if (state.jct) p.set("jct", state.jct);
-  if (state.place) p.set("place", state.place);
   if (state.page === "methode" && state.sub === "regeln" && state.rule) p.set("regel", state.rule);
-  if (state.map) p.set("map", `${state.map.zoom.toFixed(2)}/${state.map.lat.toFixed(5)}/${state.map.lon.toFixed(5)}`);
-  const q = p.toString().replaceAll("%2C", ",").replaceAll("%2F", "/");
+  if (state.map) {
+    p.set("z", state.map.zoom.toFixed(2));
+    p.set("lat", state.map.lat.toFixed(5));
+    p.set("lon", state.map.lon.toFixed(5));
+    if (Math.round(state.map.pitch ?? 0)) p.set("pitch", String(Math.round(state.map.pitch)));
+    if (Math.round(state.map.bearing ?? 0)) p.set("bearing", String(Math.round(state.map.bearing)));
+  }
+  let q = p.toString().replaceAll("%2C", ",").replaceAll("%2F", "/");
+  if (karte && q) q = `v=${URL_VERSION}&${q}`;
   const path = state.page === "methode" && state.sub ? `methode/${state.sub}` : state.page;
   return `#${path}${q ? `?${q}` : ""}`;
+}
+
+/** Normalise a state the way the URL keeps it (rounded camera), so parseHash(toHash(s)) equals normalize(s). */
+export function normalizeCamera(map) {
+  if (!map) return null;
+  const r = (x, d) => Number(x.toFixed(d));
+  const b = Math.round(map.bearing ?? 0);
+  return { zoom: r(map.zoom, 2), lat: r(map.lat, 5), lon: r(map.lon, 5), pitch: Math.round(Math.min(Math.max(map.pitch ?? 0, 0), 60)),
+    bearing: ((((b + 180) % 360) + 360) % 360) - 180 };
 }
 
 /** Does a table row pass the current filters? (same logic as the map filter in layers.js) */

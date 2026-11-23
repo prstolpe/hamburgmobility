@@ -1,6 +1,12 @@
 // Cycling layers, legends, profiles and URL state (prompts/21_web_validation_cycling.md).
 import { describe, expect, it } from "vitest";
-import { CYCLING_LAYERS, groups, LAYER_INFO, legendHtml, sfpLayers } from "../src/layers.js";
+import { CYCLING_LAYERS, groups, LAYER_INFO, sfpLayers } from "../src/layers.js";
+import { legendFor } from "../src/legend_registry.js";
+import { layerLegendHtml } from "../src/map_panel.js";
+
+// legend of one view as HTML (prompt 28: built from the registry)
+const UI = { inView: null, highlight: null, openWhat: new Set() };
+const legendHtml = (layer, meta) => layerLegendHtml(legendFor({ ...DEFAULTS, layer }, meta)[0], UI);
 import { allColors, CASING, contrast, JUNCTION_STYLE, SHAPES } from "../src/palette.js";
 import { junctionSvg } from "../src/junction_sketch.js";
 import { crossSectionSvg, junctionHtml, profileHtml } from "../src/panel.js";
@@ -37,7 +43,7 @@ describe("URL state for cycling", () => {
   it("round-trips a junction id", () => {
     const s = { ...DEFAULTS, theme: "knoten", view: "ziel", layer: "jct", jct: "1026524904" };
     expect(parseHash(toHash(s))).toEqual(s);
-    expect(toHash(s)).toContain("jct=1026524904");
+    expect(toHash(s)).toContain("node=1026524904"); // URL scheme v2: jct → node (prompt 28)
   });
 
   it("rejects invalid junction ids", () => {

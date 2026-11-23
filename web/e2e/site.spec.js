@@ -30,6 +30,13 @@ const PAGES = {
   "Impressum": "#impressum",
 };
 const results = [];
+// phones: the map panel is a bottom sheet that starts collapsed (prompt 28); open it before using its controls
+async function openSheet(page) {
+  if (await page.locator("#sheet-handle").isVisible()) {
+    await page.locator("#sheet-handle").click();
+    await expect(page.locator("#map-panel")).toHaveAttribute("data-size", "half");
+  }
+}
 
 /** On mobile the level-2 details are closed: open the one holding "Warum?". */
 async function openWhy(page) {
@@ -52,7 +59,9 @@ test("map loads basemap and segment tiles without errors", async ({ page }) => {
   const errors = await ready(page, "#karte");
   await page.waitForFunction(() => document.querySelector("#map canvas"));
   await page.waitForTimeout(3000);
-  await expect(page.locator("#legend li")).toHaveCount(6); // 5 categories in the data + rural Stadtteile
+  // prompt 28: legend from the registry – 5 categories in the data, rural Stadtteile under "Außerdem auf der Karte"
+  await expect(page.locator('#map-panel .legend-layer[data-layer="view:cat"] li.entry')).toHaveCount(5);
+  await expect(page.locator('#map-panel .legend-layer[data-layer="base"]')).toContainText("auf dem Land");
   await page.screenshot({ path: `test-results/karte-${test.info().project.name}.png` });
   expect(errors).toEqual([]);
 });
@@ -72,10 +81,49 @@ test("profile opens from the URL and shows reasons and feedback note", async ({ 
 
 test("theme and view switch are reflected in the URL", async ({ page }) => {
   await ready(page, "#karte");
-  await page.locator('#themes button[data-theme="abweichung"]').click();
+  await openSheet(page);
+  await page.locator('#map-panel button[data-theme="abweichung"]').click();
   await expect(page).toHaveURL(/theme=abweichung/);
   await page.locator('button[data-view="prio"]').click();
   await expect(page).toHaveURL(/view=prio/);
+});
+
+test("map panel: a layer switch shows its legend and a chip; the chip removes it again (prompt 28)", async ({ page }) => {
+  await ready(page, "#karte?map=14/53.5620/9.9600");
+  await openSheet(page);
+  await page.locator('#map-panel input[name="ov"][value="bus"]').check();
+  await expect(page).toHaveURL(/layers=bus/);
+  await expect(page.locator("#map-panel")).toContainText("viele Busse");
+  await page.locator('#map-chips button[data-remove="layer:bus"]').click();
+  await expect(page).not.toHaveURL(/layers=bus/);
+  await expect(page.locator("#map-panel")).not.toContainText("viele Busse");
+  await expect(page.locator('#map-panel input[name="ov"][value="bus"]')).not.toBeChecked();
+});
+
+test("map panel: legend entry highlights, '?' explains, Esc clears (prompt 28)", async ({ page }) => {
+  await ready(page, "#karte?map=14/53.5620/9.9600");
+  await openSheet(page);
+  const entry = page.locator('#map-panel .entry-btn[data-key="GOW50"]');
+  await entry.click();
+  await expect(page.locator('#map-panel .entry-btn[data-key="GOW50"]')).toHaveAttribute("aria-pressed", "true");
+  await page.locator('#map-panel .q[data-what="GOW50"]').click();
+  await expect(page.locator('#map-panel .q[data-what="GOW50"]')).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(page.locator('#map-panel .entry-btn[data-key="GOW50"]')).toHaveAttribute("aria-pressed", "false");
+});
+
+test("map panel: list of streets in view opens a profile with the keyboard (prompt 28)", async ({ page }) => {
+  await ready(page, "#karte?map=15/53.5680/9.9560");
+  await openSheet(page);
+  await page.waitForFunction(() => document.querySelector("#map canvas"));
+  await page.waitForTimeout(2500);
+  await page.locator("#list-btn").click();
+  const first = page.locator("#feature-list button[data-open]").first();
+  await expect(first).toBeVisible();
+  await first.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#panel-title")).toBeVisible();
+  await expect(page).toHaveURL(/(seg|node)=/);
 });
 
 test("old layer link is rewritten", async ({ page }) => {
@@ -93,8 +141,8 @@ test("links to switched-off views open the theme's default view (prompt 25)", as
   await page.reload(); // a hash-only goto does not reload; old links are rewritten on load
   await expect(page).toHaveURL(/theme=platz/);
   await expect(page).not.toHaveURL(/view=/);
-  await expect(page.locator("#themes .views")).toHaveCount(0); // one view left: no view switcher
-  await expect(page.locator("#layer-text")).toContainText("Fahrstreifen");
+  await expect(page.locator("#map-panel .views")).toHaveCount(0); // one view left: no view switcher
+  await expect(page.locator("#map-panel .legend-text").first()).toContainText("Fahrstreifen");
 });
 
 test("no draft banner, no news page; draft note in title and footer (prompt 25)", async ({ page }) => {
@@ -171,10 +219,11 @@ test("cycling layers switch without errors and show the draft note", async ({ pa
   test.skip(!meta.cycling, "no cycling layers in this export");
   const errors = await ready(page, "#karte?map=14/53.57/9.97");
   await page.waitForFunction(() => document.querySelector("#map canvas"));
+  await openSheet(page);
   for (const theme of ["rad", "platz"]) {
-    await page.locator(`#themes button[data-theme="${theme}"]`).click();
+    await page.locator(`#map-panel button[data-theme="${theme}"]`).click();
     await expect(page).toHaveURL(new RegExp(`theme=${theme}`));
-    await expect(page.locator("#legend .note")).toContainText("nicht amtlich");
+    await expect(page.locator("#map-panel .note").first()).toContainText("nicht amtlich");
     await page.waitForTimeout(800);
   }
   await page.screenshot({ path: `test-results/karte-radnetz-${test.info().project.name}.png` });
@@ -258,7 +307,7 @@ test.afterAll(async ({}, info) => {
 test("arm filter: old link to a lane-split point opens its junction, a dropped one explains why", async ({ page }) => {
   // 53120722 (Rentzelstraße, carriageway split) joined 16334337 An der Verbindungsbahn / Rentzelstraße (J-M-01)
   await ready(page, "#karte?theme=knoten&jct=53120722");
-  await expect(page).toHaveURL(/jct=16334337/);
+  await expect(page).toHaveURL(/node=16334337/); // URL scheme v2: jct → node
   await expect(page.locator("#panel-title")).toContainText("Rentzelstraße");
   await page.goto("/#karte?theme=knoten&jct=10031912535");
   await expect(page.locator("#panel-body")).toContainText("gibt es im Entwurf nicht mehr");

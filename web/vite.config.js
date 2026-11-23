@@ -15,7 +15,9 @@ const ogImage = {
 export default defineConfig({
   base: "./",
   publicDir: process.env.SITE_DATA_DIR || "../data/out",
-  build: { outDir: "dist", emptyOutDir: true, chunkSizeWarningLimit: 1500 },
+  // card.html: image renderer page for tools/render_card (prompt 28), not linked from the site
+  build: { outDir: "dist", emptyOutDir: true, chunkSizeWarningLimit: 1500,
+    rollupOptions: { input: { main: new URL("./index.html", import.meta.url).pathname, card: new URL("./card.html", import.meta.url).pathname } } },
   plugins: [ogImage],
   test: { include: ["test/**/*.test.js"] },
 });

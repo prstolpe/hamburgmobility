@@ -1,0 +1,10 @@
+# Musterkarten Prompt 28 (tools/render_card --list docs/map_interaction/cards_samples.txt)
+seg seg_fa69d3625e877ae8   # Hoheluftchaussee, Hauptstraße mit Tempo 50
+seg seg_896df8d623e86dbd   # Eißendorfer Waldweg, Hauptstraße mit Tempo 30
+seg seg_2918b094e23dd272   # Ahlfeld, Wohnstraße mit Tempo 30
+seg seg_bb2a610284237a82   # Max-Herz-Ring, Fußgängerzone oder Spielstraße
+seg seg_6ce9aef17032f285   # Juliusstraße, im besonderen Ort Schanze
+node 250834498             # Curschmannstraße / Eppendorfer Weg / Lenhartzstraße, Umbau nötig
+node 243077324             # Heußweg / Lutterothstraße, Umbau nötig
+node 225473807             # Söderblomstraße / Wichelwisch, kein Umbau
+place schanze_verkehrsberuhigt
