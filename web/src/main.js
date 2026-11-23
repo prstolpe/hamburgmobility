@@ -73,6 +73,12 @@ function renderIntro() {
   box.hidden = false;
   // focus goes to the map panel, not to the search (on phones that would open the keyboard; walkthrough finding 12)
   $("#intro-close").onclick = () => { storage("set", INTRO_KEY, "1"); box.hidden = true; $("#map-panel [data-theme][aria-checked='true']")?.focus(); };
+  // phones: opening the sheet counts as "Verstanden" – otherwise the box would cover the top of the sheet
+  const handle = $("#sheet-handle");
+  if (handle && !handle.dataset.introBound) {
+    handle.dataset.introBound = "1";
+    handle.addEventListener("click", () => { if (!box.hidden) { storage("set", INTRO_KEY, "1"); box.hidden = true; } });
+  }
 }
 
 // --- panel -----------------------------------------------------------------------------------

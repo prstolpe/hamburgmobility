@@ -323,3 +323,27 @@ test("footer links to the LinkedIn and Instagram profiles, opening in a new tab"
     await expect(link).toHaveAttribute("rel", /noopener/);
   }
 });
+
+test("map page: no scrolling into empty space below the map; the panel content scrolls inside the panel", async ({ page }, info) => {
+  await page.goto("#karte");
+  await expect(page.locator("#map-panel")).toBeAttached();
+  await page.waitForTimeout(500);
+  const { sh, ih } = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight }));
+  if (info.project.name === "mobile") expect(sh).toBeLessThanOrEqual(ih + 1);   // phones: page does not scroll at all
+  else expect(sh).toBeLessThanOrEqual(ih + 200);                                // desktop: at most the footer
+});
+
+test("phone sheet: tapping the bar again closes it; a small button switches to full height", async ({ page }, info) => {
+  test.skip(info.project.name !== "mobile", "phones only");
+  await page.goto("#karte");
+  const panel = page.locator("#map-panel"), handle = page.locator("#sheet-handle");
+  await expect(handle).toHaveText(/Legende, Ebenen und Filter/);
+  await handle.click();
+  await expect(panel).toHaveAttribute("data-size", "half");
+  await expect(handle).toHaveText(/Einklappen/);
+  await page.locator("#sheet-size").click();
+  await expect(panel).toHaveAttribute("data-size", "full");
+  await handle.click();
+  await expect(panel).toHaveAttribute("data-size", "peek");
+  await expect(handle).toHaveAttribute("aria-expanded", "false");
+});
