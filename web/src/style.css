@@ -368,7 +368,8 @@ nav.main .nav-bmc { display: none; }
   .on-karte nav.main { display: none; position: absolute; left: 0; right: 0; top: 100%; flex-direction: column; background: #fff;
     border-bottom: 2px solid var(--ink); padding: var(--s2) var(--margin) var(--s3); }
   .on-karte header.menu-open nav.main { display: flex; }
-  .on-karte nav.main .nav-bmc { display: inline-flex; align-self: flex-start; margin-top: var(--s2); }
+  .on-karte nav.main .nav-bmc { display: inline-flex; align-self: flex-start; margin-top: var(--s2); gap: var(--s2); min-height: 48px;
+    padding: 0 var(--s4) 0 var(--s3); font-size: 1rem; }
   /* the map page does not scroll on phones (scrolling belongs to the sheet); the footer links move into the menu */
   .on-karte .site-foot { display: none; }
   .on-karte nav.main .nav-extra { display: block; font-weight: 400; }

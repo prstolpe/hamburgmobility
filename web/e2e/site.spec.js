@@ -313,10 +313,10 @@ test("arm filter: old link to a lane-split point opens its junction, a dropped o
   await expect(page.locator("#panel-body")).toContainText("gibt es im Entwurf nicht mehr");
 });
 
-test("footer links to the LinkedIn and Instagram profiles, opening in a new tab", async ({ page }) => {
+test("footer links to the LinkedIn, Instagram and YouTube profiles, opening in a new tab", async ({ page }) => {
   await ready(page, "#karte");
   for (const [name, href] of [["LinkedIn", "https://www.linkedin.com/company/hamburg-mobility-revolution/"],
-    ["Instagram", "https://www.instagram.com/hamburgmobilityrevolution/"]]) {
+    ["Instagram", "https://www.instagram.com/hamburgmobilityrevolution/"], ["YouTube", "https://www.youtube.com/@HamburgMobilityRevolution"]]) {
     const link = page.locator(".foot-social a", { hasText: name });
     await expect(link).toHaveAttribute("href", href);
     await expect(link).toHaveAttribute("target", "_blank");
